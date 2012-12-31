@@ -37,16 +37,25 @@ describe SeeingIsBelieving do
 
   it 'evalutes to an empty array for lines that it cannot understand' do
     values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
+    values_for("[1].map do |n1|
+                  [2].map do |n2|
+                    n1 + n2
+                  end
+                end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
   end
 
-  # something about nested invalid lines: [3].map do |n|\n [3].map do |n2|\n n+n2\n end\n end
+  it 'records the value immediately, so that it is correct even if it changes' do
+    values_for("a = 'a'\na << 'b'").should == [['"a"'], ['"ab"']]
+  end
 
-  # return arrays of results instead of nil or value
+  it 'records each value when a line is evaluated multiple times' do
+    values_for("(1..2).each do |i|\ni\nend").should == [[], ['1', '2'], ['1..2']]
+  end
 
-  # something about lines that get evaluated multiple times
+
   # something about multi-line strings
-
-  # something about errors
-  # something about stdout
-  # something about stderr
+  # something about raised errors
+  # something about printing to stdout
+  # something about printing to stderr
+  # something about when the whole input is invalid
 end
