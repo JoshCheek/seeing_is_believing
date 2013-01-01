@@ -30,7 +30,7 @@ describe SeeingIsBelieving::ExpressionList do
     i.should == 11
   end
 
-  example 'a sophisticated example' do
+  example 'example1' do
     callbacks = { generate: Proc.new {},
                   on_complete: -> line, children, completions, line_number do
                     line+children.join(' ! ')+completions.join('')
@@ -44,5 +44,33 @@ describe SeeingIsBelieving::ExpressionList do
     list.push('+',   callbacks)
     list.push('y',   callbacks).should == 'x\\+y'
     list.push(')',   callbacks).should == 'a(b+c ! x\\+y)'
+  end
+
+  example 'example2' do
+    list = described_class.new
+    callbacks = { generate: Proc.new {},
+                  on_complete: -> line, children, completions, line_number do
+                    line+children.join("\n")+completions.join("\n")
+                  end
+                }
+    list.push('[1].map do |n1|', callbacks.merge(
+      generate: -> {
+        list.push('  [2].map do |n2|', callbacks.merge(
+          generate: -> {
+            list.push('    n1 + n2', callbacks.merge(
+              generate: -> {
+                list.push('  end', callbacks.merge(
+                  generate: -> { list.push 'end', callbacks }
+                ))
+              }
+            ))
+          }
+        ))
+      }
+    )).should ==  "[1].map do |n1|"\
+                  "  [2].map do |n2|"\
+                  "    n1 + n2"\
+                  "  end"\
+                  "end"
   end
 end

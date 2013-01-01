@@ -44,12 +44,13 @@ describe SeeingIsBelieving do
   end
 
   it 'evalutes to an empty array for lines that it cannot understand' do
-    values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
-    # values_for("[1].map do |n1|
-    #               [2].map do |n2|
-    #                 n1 + n2
-    #               end
-    #             end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
+    # values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
+    values_for("[1].map do |n1|
+                  [2].map do |n2|
+                    n1 + n2
+                  end
+                end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
+
                 # need more examples in here, e.g.
 
                 # [1].map do |n1|
