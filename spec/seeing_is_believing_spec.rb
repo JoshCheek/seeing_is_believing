@@ -53,6 +53,7 @@ describe SeeingIsBelieving do
   end
 
 
+  # something about empty lines
   # something about multi-line strings
   # something about raised errors
   # something about printing to stdout

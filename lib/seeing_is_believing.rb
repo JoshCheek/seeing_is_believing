@@ -1,69 +1,45 @@
 require 'stringio'
 require 'open3'
 
+require 'seeing_is_believing/result'
+
 class SeeingIsBelieving
-  class Result
-    attr_reader :min_index, :max_index
-
-    def initialize
-      @min_index = @max_index = 1
-    end
-
-    def []=(index, value)
-      contains_index index
-      hash[index] << value.inspect
-    end
-
-    def [](index)
-      hash[index]
-    end
-
-    def to_a
-      (min_index..max_index).map { |index| [index, self[index]] }
-    end
-
-    private
-
-    def contains_index(index)
-      @min_index = index if index < @min_index
-      @max_index = index if index > @max_index
-    end
-
-    def hash
-      @hash ||= Hash.new { |hash, index| hash[index] = [] }
-    end
-  end
-
   def initialize(string_or_stream)
-    @stream = to_stream string_or_stream
+    @stream      = to_stream string_or_stream
+    @line_number = 0
+    @program     = ''
+    @result      = Result.new
   end
 
   def call
     # *sigh* 0.o
-    @result ||= begin
-      line_number = 0
-      program     = ''
-      result      = Result.new
-      until @stream.eof?
-        line_number        += 1
-        line               = @stream.gets
-        current_expression = line
-        until valid_ruby? current_expression
-          line_number         += 1
-          line                = @stream.gets
-          line                = record_yahself line, line_number if valid_ruby? line
-          current_expression  << line
-        end
-        program << record_yahself(current_expression, line_number)
-      end
-      $seeing_is_believing_current_result = result # can we make this a threadlocal var on the class?
-      TOPLEVEL_BINDING.eval program
+    @memoized_result ||= begin
+      @program << build_next_expression_on('') until stream.eof?
+      p @program
+      $seeing_is_believing_current_result = @result # can we make this a threadlocal var on the class?
+      TOPLEVEL_BINDING.eval @program
       # maybe just return the hash?
-      result.to_a
+      @result.to_a
     end
   end
 
   private
+
+  attr_reader :stream
+
+  def build_next_expression_on(current_expression='')
+    line = stream.gets
+    @line_number += 1
+
+    if valid_ruby? line
+      current_expression << record_yahself(line, @line_number)
+      return current_expression
+    else
+      current_expression << line
+      build_next_expression_on current_expression until valid_ruby? current_expression
+      record_yahself current_expression, @line_number
+    end
+  end
 
   def to_stream(string_or_stream)
     return string_or_stream if string_or_stream.respond_to? :gets
