@@ -58,7 +58,7 @@ class SeeingIsBelieving
         next unless valid_ruby? expression
         result = on_complete.call(@list[i].expression,
                                   @list[i].children,
-                                  @list[i+1..-1].map(&:expression), # pretty sure I don't need to worry about these having children, but not totally sure
+                                  @list[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
                                   @line_number)
         @list = @list[0, i]
         @list[i-1].children << result unless @list.empty?
