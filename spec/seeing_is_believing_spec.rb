@@ -35,21 +35,60 @@ describe SeeingIsBelieving do
     values_for('self').should == [['main']]
   end
 
-  it 'evalutes to an empty array for lines that it cannot understand' do
-    values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
-    values_for("[1].map do |n1|
-                  [2].map do |n2|
-                    n1 + n2
-                  end
-                end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
-  end
-
   it 'records the value immediately, so that it is correct even if it changes' do
     values_for("a = 'a'\na << 'b'").should == [['"a"'], ['"ab"']]
   end
 
   it 'records each value when a line is evaluated multiple times' do
     values_for("(1..2).each do |i|\ni\nend").should == [[], ['1', '2'], ['1..2']]
+  end
+
+  it 'evalutes to an empty array for lines that it cannot understand' do
+    values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
+    # values_for("[1].map do |n1|
+    #               [2].map do |n2|
+    #                 n1 + n2
+    #               end
+    #             end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
+                # need more examples in here, e.g.
+
+                # [1].map do |n1|
+                #   [2].map do |n2| n1 + n2
+                #   end
+                # end
+
+                # [1].map do |n1|
+                #   [2].map do |n2|
+                #     n1 + n2 end
+                # end
+
+                # [1].map do |n1|
+                #   [2].map do |n2|
+                #     n1 + n2 end end
+
+                # [1].map do |n1|
+                #   [2].map do |n2| n1 + n2 end end
+
+                # [1].map do |n1| [2].map do |n2| n1 + n2 end end
+
+                # [1].map do |n1|
+                #   [2].map do |n2|
+                #     n1 + n2
+                # end end
+
+                # [1].map do |n1| [2].map do |n2|
+                #   n1 + n2
+                # end end
+
+                # [1].map do |n1| [2].map do |n2|
+                #   n1 + n2 end end
+
+                # [1].map do |n1| [2].map do |n2|
+                #   n1 + n2 end
+                # end
+
+                # 1 +
+                #     2
   end
 
 

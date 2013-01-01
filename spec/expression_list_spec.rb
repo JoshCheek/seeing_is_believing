@@ -3,7 +3,7 @@ require 'seeing_is_believing/expression_list'
 describe SeeingIsBelieving::ExpressionList do
   subject :list
 
-  it 'evaluates the on_complete if it is complete' do
+  it 'evaluates and returns the on_complete if it is complete' do
     var = nil
     list.push('a', on_complete: Proc.new { var = 1 }).should == 1
     var.should == 1
