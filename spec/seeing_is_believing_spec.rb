@@ -35,7 +35,7 @@ describe SeeingIsBelieving do
     values_for('self').should == [['main']]
   end
 
-  it 'records the value immediately, so that it is correct even if it changes' do
+  it 'records the value immediately, so that it is correct even if the result is mutated' do
     values_for("a = 'a'\na << 'b'").should == [['"a"'], ['"ab"']]
   end
 
@@ -90,7 +90,11 @@ describe SeeingIsBelieving do
                     2").should == [[], ['3']]
   end
 
-  # something about empty lines
+  it 'has no output for empty lines' do
+    values_for('').should == [[]]
+    values_for("1\n\n2").should == [['1'],[],['2']]
+  end
+
   # something about multi-line strings
   # something about raised errors
   # something about printing to stdout

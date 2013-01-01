@@ -14,7 +14,11 @@ class SeeingIsBelieving
       expression_list = ExpressionList.new generator: lambda { stream.gets.chomp },
                                            on_complete: lambda { |line, children, completions, line_number|
                                              expression = [line, *children, *completions].join("\n")
-                                             record_yahself expression, line_number
+                                             if expression == ''
+                                               expression
+                                             else
+                                               record_yahself expression, line_number
+                                             end
                                            }
       program = ''
       program << expression_list.call until stream.eof?
