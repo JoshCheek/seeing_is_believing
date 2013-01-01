@@ -1,76 +1,68 @@
 require 'seeing_is_believing/expression_list'
 
 describe SeeingIsBelieving::ExpressionList do
-  subject :list
 
-  it 'evaluates and returns the on_complete if it is complete' do
-    var = nil
-    list.push('a', on_complete: Proc.new { var = 1 }).should == 1
-    var.should == 1
-  end
-
-  it 'evaluates generate if it is incomplete' do
-    var = nil
-    list.push('a+', generate: lambda { var = 2 }).should == 2
-    var.should == 2
-  end
-
-  it 'passes the line, children, expressions that complete the current expression, and line number to the on_complete callback' do
-    described_class.new.push 'a', on_complete: lambda { |line, children, completions, line_number|
-      line.should == 'a'
-      line_number.should == 1
-    }
-  end
-
-  it 'increments the line number for each expression added' do
-    i = 0
-    list.push 'a',  on_complete: lambda { |_, _, _, num| num.should == 1; i += 1   }
-    list.push 'b+', on_complete: lambda { |_, _, _, num| num.should == 3; i += 10  }, generate: lambda {}
-    list.push 'a',  on_complete: lambda { |_, _, _, num| num.should == 3; i += 100 }
-    i.should == 11
+  def call(generations, options={}, &block)
+    options = { generator: -> { generations.shift || raise("EMPTY!") }, on_complete: block }.merge(options)
+    described_class.new(options).call
   end
 
   example 'example1' do
-    callbacks = { generate: Proc.new {},
-                  on_complete: -> line, children, completions, line_number do
-                    line+children.join(' ! ')+completions.join('')
-                  end
-                }
-    list.push('a',   callbacks).should == 'a'
-    list.push('a(',  callbacks)
-    list.push('b+',  callbacks)
-    list.push('c',   callbacks).should == 'b+c'
-    list.push('x\\', callbacks)
-    list.push('+',   callbacks)
-    list.push('y',   callbacks).should == 'x\\+y'
-    list.push(')',   callbacks).should == 'a(b+c ! x\\+y)'
+    block_invocations = 0
+    result = call %w[a( b+ c x\\ + y )] do |line, children, completions, line_number|
+      case line_number
+      when 3
+        line.should == 'b+'
+        children.should == []
+        completions.should == ['c']
+        block_invocations += 1
+        'b+c'
+      when 6
+        line.should == 'x\\'
+        children.should == []
+        completions.should == ['+', 'y']
+        block_invocations += 10
+        'x\\+y'
+      when 7
+        line.should == 'a('
+        children.should == ['b+c', 'x\\+y']
+        completions.should == [')']
+        block_invocations += 100
+        'ALL DONE!'
+      else
+        require "pry"
+        binding.pry
+      end
+    end
+    result.should == 'ALL DONE!'
+    block_invocations.should == 111
   end
 
-  example 'example2' do
-    list = described_class.new
-    callbacks = { generate: Proc.new {},
-                  on_complete: -> line, children, completions, line_number do
-                    line+children.join("\n")+completions.join("\n")
-                  end
-                }
-    list.push('[1].map do |n1|', callbacks.merge(
-      generate: -> {
-        list.push('  [2].map do |n2|', callbacks.merge(
-          generate: -> {
-            list.push('    n1 + n2', callbacks.merge(
-              generate: -> {
-                list.push('  end', callbacks.merge(
-                  generate: -> { list.push 'end', callbacks }
-                ))
-              }
-            ))
-          }
-        ))
-      }
-    )).should ==  "[1].map do |n1|"\
-                  "  [2].map do |n2|"\
-                  "    n1 + n2"\
-                  "  end"\
-                  "end"
-  end
+#   example 'example2' do
+#     list = described_class.new
+#     callbacks = { generate: Proc.new {},
+#                   on_complete: -> line, children, completions, line_number do
+#                     line+children.join("\n")+completions.join("\n")
+#                   end
+#                 }
+#     list.push('[1].map do |n1|', callbacks.merge(
+#       generate: -> {
+#         list.push('  [2].map do |n2|', callbacks.merge(
+#           generate: -> {
+#             list.push('    n1 + n2', callbacks.merge(
+#               generate: -> {
+#                 list.push('  end', callbacks.merge(
+#                   generate: -> { list.push 'end', callbacks }
+#                 ))
+#               }
+#             ))
+#           }
+#         ))
+#       }
+#     )).should ==  "[1].map do |n1|"\
+#                   "  [2].map do |n2|"\
+#                   "    n1 + n2"\
+#                   "  end"\
+#                   "end"
+#   end
 end
