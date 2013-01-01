@@ -11,9 +11,13 @@ class SeeingIsBelieving
 
   def call
     @memoized_result ||= begin
-      expression_list = ExpressionList.new
+      expression_list = ExpressionList.new generator: lambda { stream.gets.chomp },
+                                           on_complete: lambda { |line, children, completions, line_number|
+                                             expression = [line, *children, *completions].join("\n")
+                                             record_yahself expression, line_number
+                                           }
       program = ''
-      program << get_next_expression(expression_list) until stream.eof?
+      program << expression_list.call until stream.eof?
       $seeing_is_believing_current_result = @result # can we make this a threadlocal var on the class?
       TOPLEVEL_BINDING.eval program
       @result.to_a # maybe just return the result?
@@ -23,15 +27,6 @@ class SeeingIsBelieving
   private
 
   attr_reader :stream
-
-  def get_next_expression(expression_list)
-    expression_list.push(stream.gets.chomp,
-                         generate:    lambda { get_next_expression expression_list; '' },
-                         on_complete: lambda { |line, children, completions, line_number|
-                           expression = line + children.join("\n") + completions.join("\n")
-                           record_yahself expression, line_number
-                         })
-  end
 
   def to_stream(string_or_stream)
     return string_or_stream if string_or_stream.respond_to? :gets

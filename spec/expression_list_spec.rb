@@ -7,7 +7,7 @@ describe SeeingIsBelieving::ExpressionList do
     described_class.new(options).call
   end
 
-  example 'example1' do
+  example 'shows: multiple children' do
     block_invocations = 0
     result = call %w[a( b+ c x\\ + y )] do |line, children, completions, line_number|
       case line_number
@@ -38,31 +38,33 @@ describe SeeingIsBelieving::ExpressionList do
     block_invocations.should == 111
   end
 
-#   example 'example2' do
-#     list = described_class.new
-#     callbacks = { generate: Proc.new {},
-#                   on_complete: -> line, children, completions, line_number do
-#                     line+children.join("\n")+completions.join("\n")
-#                   end
-#                 }
-#     list.push('[1].map do |n1|', callbacks.merge(
-#       generate: -> {
-#         list.push('  [2].map do |n2|', callbacks.merge(
-#           generate: -> {
-#             list.push('    n1 + n2', callbacks.merge(
-#               generate: -> {
-#                 list.push('  end', callbacks.merge(
-#                   generate: -> { list.push 'end', callbacks }
-#                 ))
-#               }
-#             ))
-#           }
-#         ))
-#       }
-#     )).should ==  "[1].map do |n1|"\
-#                   "  [2].map do |n2|"\
-#                   "    n1 + n2"\
-#                   "  end"\
-#                   "end"
-#   end
+
+  example 'shows: nested children' do
+    expressions = [ '[1].map do |n1|',
+                    '  [2].map do |n2|',
+                    '    n1 + n2',
+                    '  end',
+                    'end',
+                  ]
+    result = call expressions do |line, children, completions, line_number|
+      case line_number
+      when 3
+        [line, children, completions].should == ['    n1 + n2', [], []]
+        line
+      when 4
+        [line, children, completions].should == ['  [2].map do |n2|', ['    n1 + n2'], ['  end']]
+        [line, *children, *completions].join("\n")
+      when 5
+        [line, children, completions].should == ['[1].map do |n1|',
+                                                 ["  [2].map do |n2|\n    n1 + n2\n  end"],
+                                                 ['end']]
+        [line, *children, *completions].join("\n")
+      end
+    end
+    result.should ==  "[1].map do |n1|\n"\
+                      "  [2].map do |n2|\n"\
+                      "    n1 + n2\n"\
+                      "  end\n"\
+                      "end"
+  end
 end

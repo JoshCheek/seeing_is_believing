@@ -52,14 +52,13 @@ class SeeingIsBelieving
       @debug_stream.puts message
     end
 
-    # O.o
     def reduce_expressions
       @list.size.times do |i|
-        expression = @list[i..-1].map(&:expression).join "\n" # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
+        expression = @list[i..-1].map(&:expression).join("\n") # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
         next unless valid_ruby? expression
         result = on_complete.call(@list[i].expression,
                                   @list[i].children,
-                                  @list[i+1..-1].map(&:expression),
+                                  @list[i+1..-1].map(&:expression), # pretty sure I don't need to worry about these having children, but not totally sure
                                   @line_number)
         @list = @list[0, i]
         @list[i-1].children << result unless @list.empty?
