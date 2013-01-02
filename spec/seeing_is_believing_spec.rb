@@ -95,9 +95,22 @@ describe SeeingIsBelieving do
     values_for("1\n\n2").should == [['1'],[],['2']]
   end
 
-  # something about multi-line strings
-  # something about raised errors
+  it 'stops executing on errors and reports them' do
+    result = values_for("12\nraise Exception, 'omg!'\n12")
+    result[0].should == ['12']
+
+    result[1].size.should == 1
+    exception = result[1].first
+    exception.class.should == Exception
+    exception.message.should == 'omg!'
+
+    result[2].should == []
+    result.size.should == 3
+  end
+
   # something about printing to stdout
   # something about printing to stderr
   # something about when the whole input is invalid
+  # something about multi-line strings
+  # does not fuck up __LINE__ macro
 end

@@ -1,34 +1,48 @@
 class SeeingIsBelieving
   class Result
-    attr_reader :min_index, :max_index
+    attr_reader :min_line_number, :max_line_number
 
     def initialize
-      @min_index = @max_index = 1
+      @min_line_number = @max_line_number = 1
     end
 
-    def []=(index, value)
-      contains_index index
-      hash[index] << value.inspect
+    def record_result(line_number, value)
+      contains_line_number line_number
+      results[line_number] << value.inspect
+      value
     end
 
-    def [](index)
-      hash[index]
+    def record_exception(line_number, exception)
+      contains_line_number line_number
+      @exception_line_number = line_number
+      @exception = exception
+    end
+
+    def [](line_number)
+      results[line_number]
     end
 
     # uhm, maybe switch to #each and including Enumerable?
     def to_a
-      (min_index..max_index).map { |index| [index, self[index]] }
+      (min_line_number..max_line_number).map do |line_number|
+        [line_number, [*self[line_number], *Array(exception_at line_number)]]
+      end
+    end
+
+    def contains_line_number(line_number)
+      @min_line_number = line_number if line_number < @min_line_number
+      @max_line_number = line_number if line_number > @max_line_number
     end
 
     private
 
-    def contains_index(index)
-      @min_index = index if index < @min_index
-      @max_index = index if index > @max_index
+    def exception_at(line_number)
+      return unless @exception_line_number == line_number
+      @exception
     end
 
-    def hash
-      @hash ||= Hash.new { |hash, index| hash[index] = [] }
+    def results
+      @results ||= Hash.new { |hash, line_number| hash[line_number] = [] }
     end
   end
 end
