@@ -2,7 +2,7 @@ Seeing Is Believing
 ===================
 
 Evaluates a file, recording the results of each line of code.
-You can then use this to display output values like Bret Victor does with JavaScript in his talk ["Inventing on Principle"][inventing_on_principle].
+You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle][inventing_on_principle].
 Except, obviously, his is like a million better.
 
 Reeaally rough at the moment, but it works for simple examples.
