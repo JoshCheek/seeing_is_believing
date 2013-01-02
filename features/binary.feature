@@ -6,7 +6,7 @@ Feature: Running the binary
   run against every line.
 
   Scenario: Some basic functionality
-    Given the file "f.rb":
+    Given the file "basic_functionality.rb":
     """
     a = '12'
     a + a
@@ -15,9 +15,9 @@ Feature: Running the binary
       i * 2
     end
     """
-    When I run "seeing_is_believing f.rb"
-    And stderr is empty
-    Then the exit status is 0
+    When I run "seeing_is_believing basic_functionality.rb"
+    Then stderr is empty
+    And the exit status is 0
     And stdout is:
     """
     a = '12'        # => "12"
@@ -26,10 +26,25 @@ Feature: Running the binary
     5.times do |i|
       i * 2         # => 0, 2, 4, 6, 8
     end             # => 5
+    """
 
+  Scenario: Raising exceptions
+    Given the file "raises_exception.rb":
+    """
+    1 + 1
+    raise "ZOMG!"
+    1 + 1
+    """
+    When I run "seeing_is_believing raises_exception.rb"
+    Then stderr is "ZOMG!"
+    And the exit status is 1
+    And stdout is:
+    """
+    1 + 1          # => 2
+    raise "ZOMG!"  # ~> RuntimeError: ZOMG!
+    1 + 1
     """
 
   Scenario: Printing within the file
-  Scenario: Raising exceptions
   Scenario: Requiring other files
   Scenario: Syntactically invalid file

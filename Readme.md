@@ -17,7 +17,7 @@ Install
 Use
 ===
 
-    $ cat proving_grounds/f.rb
+    $ cat proving_grounds/basic_functionality.rb
 
 ```ruby
 a = '12'
@@ -28,7 +28,7 @@ a + a
 end
 ```
 
-    $ seeing_is_believing proving_grounds/f.rb
+    $ seeing_is_believing proving_grounds/basic_functionality.rb
 
 ```ruby
 a = '12'        # => "12"
@@ -37,6 +37,28 @@ a + a           # => "1212"
 5.times do |i|
   i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
+```
+
+    $ cat proving_grounds/raises_exception.rb
+
+```ruby
+1 + 1
+raise "ZOMG!"
+1 + 1
+```
+
+    $ bin/seeing_is_believing proving_grounds/raises_exception.rb 2>/dev/null
+
+```ruby
+1 + 1          # => 2
+raise "ZOMG!"  # ~> RuntimeError: ZOMG!
+1 + 1
+```
+
+    $ bin/seeing_is_believing proving_grounds/raises_exception.rb 1>/dev/null
+
+```bash
+ZOMG!
 ```
 
 License

@@ -3,6 +3,16 @@
 $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 require 'seeing_is_believing/example_use'
 
+status = 0
+
 ARGV.each do |filename|
-  puts SeeingIsBelieving::ExampleUse.new(File.read filename).call
+  believer = SeeingIsBelieving::ExampleUse.new(File.read filename)
+  believer.call
+  $stdout.puts believer.output
+  if believer.has_exception?
+    $stderr.puts believer.exception.message
+    status = 1
+  end
 end
+
+exit status
