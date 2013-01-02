@@ -108,6 +108,7 @@ describe SeeingIsBelieving do
     result.size.should == 3
   end
 
+  # it ignores lines that end in comments
   # something about printing to stdout
   # something about printing to stderr
   # something about when the whole input is invalid

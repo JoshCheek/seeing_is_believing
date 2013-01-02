@@ -61,6 +61,15 @@ raise "ZOMG!"  # ~> RuntimeError: ZOMG!
 ZOMG!
 ```
 
+Known Issues
+============
+
+* comments will kill it, probably going to have to actually parse the code to fix this
+* multi-line strings will probably kill it, probably going to have to actually parse the code to fix this
+* I have no idea what happens if you talk to stdout/stderr directly. This should become a non-issue if we evaluate it in its own process like xmpfilter.
+* If it dies, it will take your program with it. Same as above.
+* No idea what happens if you give it a syntactically invalid file. It probably just raises an exception, but might possibly freeze up or something.
+
 License
 =======
 
