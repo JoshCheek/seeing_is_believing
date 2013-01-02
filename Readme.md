@@ -3,7 +3,7 @@ Seeing Is Believing
 
 Evaluates a file, recording the results of each line of code.
 You can then use this to display output values like Bret Victor does with JavaScript in his talk ["Inventing on Principle"][inventing_on_principle].
-Except, obviously, his is way the hell better.
+Except, obviously, his is like a million better.
 
 Reeaally rough at the moment, but it works for simple examples.
 
@@ -17,23 +17,27 @@ Install
 Use
 ===
 
-$ cat proving_grounds/f.rb
+    $ cat proving_grounds/f.rb
 
-    a = '12'
-    a + a
+```ruby
+a = '12'
+a + a
 
-    5.times do |i|
-      i * 2
-    end
+5.times do |i|
+  i * 2
+end
+```
 
-$ seeing_is_believing proving_grounds/f.rb
+    $ seeing_is_believing proving_grounds/f.rb
 
-    a = '12'        # => "12"
-    a + a           # => "1212"
+```ruby
+a = '12'        # => "12"
+a + a           # => "1212"
 
-    5.times do |i|
-      i * 2         # => 0, 2, 4, 6, 8
-    end             # => 5
+5.times do |i|
+  i * 2         # => 0, 2, 4, 6, 8
+end             # => 5
+```
 
 License
 =======
