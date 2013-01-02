@@ -3,6 +3,7 @@ require 'open3'
 class SeeingIsBelieving
   class ExpressionList
     PendingExpression = Struct.new :expression, :children do
+      # coloured debug because there's so much syntax that I get lost trying to parse the output
       def inspect(debug=false)
         colour1 = colour2 = lambda { |s| s }
         colour1 = lambda { |s| "\e[30;46m#{s}\e[0m" } if debug
@@ -62,7 +63,7 @@ class SeeingIsBelieving
                                   @line_number)
         @list = @list[0, i]
         @list[i-1].children << result unless @list.empty?
-        debug? && debug("RESULT: #{result.inspect}, LIST: [#{@list.map { |e| e.inspect debug? }.join(', ')}]")
+        debug? && debug("REDUCED: #{result.inspect}, LIST: [#{inspected_list}]")
         return result
       end
     end

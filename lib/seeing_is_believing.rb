@@ -6,8 +6,8 @@ require 'seeing_is_believing/expression_list'
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
   def initialize(string_or_stream)
-    @stream      = to_stream string_or_stream
-    @result      = Result.new
+    @stream = to_stream string_or_stream
+    @result = Result.new
   end
 
   def call
@@ -47,7 +47,6 @@ class SeeingIsBelieving
   end
 
   def record_exceptions_in(code)
-    require 'pp'
     "begin;"\
       "#{code};"\
     "rescue Exception;"\

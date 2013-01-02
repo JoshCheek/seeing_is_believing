@@ -104,4 +104,13 @@ describe SeeingIsBelieving::ExpressionList do
                         "n1 + n2\n"\
                      "end end"\
   end
+
+  example "example; smoke test debug option" do
+    stream = StringIO.new
+    result = call %w[a+ b], debug: true, debug_stream: stream do |line, children, completions, line_number|
+      [line, *children, *completions].join("\n")
+    end
+    stream.string.should include "GENERATED"
+    stream.string.should include "REDUCED"
+  end
 end
