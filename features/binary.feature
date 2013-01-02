@@ -48,3 +48,6 @@ Feature: Running the binary
   Scenario: Printing within the file
   Scenario: Requiring other files
   Scenario: Syntactically invalid file
+  Scenario: Passing a nonexistent file
+  Scenario: Evaluating a file that requires other files, from a different directory
+  Scenario: Passing the file on stdin
