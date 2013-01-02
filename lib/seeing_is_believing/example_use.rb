@@ -10,7 +10,7 @@ class SeeingIsBelieving
 
     def call
       body.each_line.with_index 1 do |line, index|
-        write_line line.chomp, results[index]
+        output << format_line(line.chomp, results[index])
       end
       output
     end
@@ -19,9 +19,7 @@ class SeeingIsBelieving
       @result ||= ''
     end
 
-    def has_exception?
-      !!@exception
-    end
+    alias has_exception? exception
 
     private
 
@@ -31,19 +29,20 @@ class SeeingIsBelieving
       @results ||= SeeingIsBelieving.new(body).call
     end
 
-    def write_line(line, results)
-      if results.any?
-        output << sprintf("%-#{line_length}s# => %s\n", line, results.join(', '))
-      elsif results.has_exception?
-        self.exception = results.exception
-        output << sprintf("%-#{line_length}s# ~> %s: %s\n", line, results.exception.class, results.exception.message)
-      else
-        output << line << "\n"
-      end
+    # max line length of the body + 2 spaces for padding
+    def line_length
+      @line_length ||= 2 + body.each_line.map(&:chomp).map(&:length).max
     end
 
-    def line_length
-      @line_length ||= body.each_line.map(&:chomp).map(&:length).max + 2
+    def format_line(line, results)
+      if results.any?
+        sprintf "%-#{line_length}s# => %s\n", line, results.join(', ')
+      elsif results.has_exception?
+        self.exception = results.exception
+        sprintf "%-#{line_length}s# ~> %s: %s\n", line, results.exception.class, results.exception.message
+      else
+        line + "\n"
+      end
     end
   end
 end
