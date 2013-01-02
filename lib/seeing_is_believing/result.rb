@@ -22,6 +22,9 @@ class SeeingIsBelieving
 
       alias has_exception? exception
     end
+  end
+
+  class Result
     attr_reader :min_line_number, :max_line_number
 
     def initialize
