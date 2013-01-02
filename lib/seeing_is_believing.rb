@@ -16,7 +16,7 @@ class SeeingIsBelieving
       program << expression_list.call until stream.eof?
       $seeing_is_believing_current_result = @result # can we make this a threadlocal var on the class?
       TOPLEVEL_BINDING.eval record_exceptions_in(program), 'program.rb', 1
-      @result.to_a # maybe just return the result?
+      @result
     end
   end
 
