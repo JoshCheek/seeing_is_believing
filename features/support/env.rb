@@ -34,10 +34,8 @@ module CommandLineHelpers
 
   def root_dir
     @root_dir ||= begin
-      dir = Dir.pwd
-      until Dir.glob("#{dir}/*").map(&File.method(:basename)).include?("features")
-        dir = File.expand_path File.dirname dir
-      end
+      dir = File.expand_path Dir.pwd
+      dir = File.dirname dir until Dir["#{dir}/*"].map { |fn| File.basename fn }.include?('lib')
       dir
     end
   end
