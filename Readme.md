@@ -12,7 +12,11 @@ Also comes with a binary to show how it might be used.
 Install
 =======
 
-    gem install seeing_is_believing
+    $ gem install seeing_is_believing
+
+Or if you haven't fixed your gem home, and you aren't using any version managers:
+
+    $ sudo gem install seeing_is_believing
 
 Use
 ===
