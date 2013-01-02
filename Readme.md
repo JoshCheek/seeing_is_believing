@@ -23,12 +23,15 @@ Use
 
 ```ruby
 # $ seeing_is_believing proving_grounds/basic_functionality.rb
-a = '12'        # => "12"
-a + a           # => "1212"
-
 5.times do |i|
   i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
+
+def meth(n)
+  n             # => "12", "34"
+end             # => nil
+meth "12"       # => "12"
+meth "34"       # => "34"
 ```
 
 ```ruby

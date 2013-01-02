@@ -8,24 +8,30 @@ Feature: Running the binary
   Scenario: Some basic functionality
     Given the file "basic_functionality.rb":
     """
-    a = '12'
-    a + a
-
     5.times do |i|
       i * 2
     end
+
+    def meth(n)
+      n
+    end
+    meth "12"
+    meth "34"
     """
     When I run "seeing_is_believing basic_functionality.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
-    a = '12'        # => "12"
-    a + a           # => "1212"
-
     5.times do |i|
       i * 2         # => 0, 2, 4, 6, 8
     end             # => 5
+
+    def meth(n)
+      n             # => "12", "34"
+    end             # => nil
+    meth "12"       # => "12"
+    meth "34"       # => "34"
     """
 
   Scenario: Raising exceptions
