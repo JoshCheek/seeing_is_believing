@@ -8,7 +8,7 @@ class SeeingIsBelieving
 
     def call
       body.each_line.with_index 1 do |line, index|
-        write_line line.chomp, results[index], line_length
+        write_line line.chomp, results[index]
       end
       output
     end
@@ -25,7 +25,7 @@ class SeeingIsBelieving
       @result ||= ''
     end
 
-    def write_line(line, results, line_length)
+    def write_line(line, results)
       if results.any?
         output << sprintf("%-#{line_length}s# => %s\n", line, results.join(', '))
       else
