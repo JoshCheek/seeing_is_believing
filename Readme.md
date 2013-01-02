@@ -9,15 +9,6 @@ Reeaally rough at the moment, but it works for simple examples.
 
 Also comes with a binary to show how it might be used.
 
-Install
-=======
-
-    $ gem install seeing_is_believing
-
-Or if you haven't fixed your gem home, and you aren't using any version managers:
-
-    $ sudo gem install seeing_is_believing
-
 Use
 ===
 
@@ -45,6 +36,15 @@ raise "ZOMG!"  # ~> RuntimeError: ZOMG!
 # $ bin/seeing_is_believing proving_grounds/raises_exception.rb 1>/dev/null
 ZOMG!
 ```
+
+Install
+=======
+
+    $ gem install seeing_is_believing
+
+Or if you haven't fixed your gem home, and you aren't using any version managers:
+
+    $ sudo gem install seeing_is_believing
 
 Known Issues
 ============
