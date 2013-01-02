@@ -55,6 +55,7 @@ class SeeingIsBelieving
 
     def reduce_expressions
       @list.size.times do |i|
+        # uhm, should this expression we are checking for validity consider the children?
         expression = @list[i..-1].map(&:expression).join("\n") # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
         next unless valid_ruby? expression
         result = on_complete.call(@list[i].expression,
@@ -63,7 +64,7 @@ class SeeingIsBelieving
                                   @line_number)
         @list = @list[0, i]
         @list[i-1].children << result unless @list.empty?
-        debug? && debug("REDUCED: #{result.inspect}, LIST: [#{inspected_list}]")
+        debug? && debug("REDUCED: #{result.inspect}, LIST: #{inspected_list}")
         return result
       end
     end
