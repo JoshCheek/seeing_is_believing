@@ -19,8 +19,8 @@ module CommandLineHelpers
 
   def execute(command)
     in_proving_grounds do
-      command = "PATH=#{bin_dir}:$PATH #{command}"
-      Invocation.new *Open3.capture3(command)
+      bin_in_path = {'PATH' => "#{bin_dir}:#{ENV['PATH']}"}
+      Invocation.new *Open3.capture3(bin_in_path, command)
     end
   end
 
