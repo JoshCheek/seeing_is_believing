@@ -98,6 +98,8 @@ describe SeeingIsBelieving do
 
   it 'has no output for empty lines' do
     values_for('').should == [[]]
+    values_for('  ').should == [[]]
+    values_for("  \n").should == [[]]
     values_for("1\n\n2").should == [['1'],[],['2']]
   end
 
