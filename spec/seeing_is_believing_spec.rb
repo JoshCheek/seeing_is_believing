@@ -90,6 +90,12 @@ describe SeeingIsBelieving do
                     2").should == [[], ['3']]
   end
 
+  it 'does not record expressions that end in a comment' do
+    values_for("1
+                2 # on internal expression
+                3 # at end of program").should == [['1'], [], []]
+  end
+
   it 'has no output for empty lines' do
     values_for('').should == [[]]
     values_for("1\n\n2").should == [['1'],[],['2']]

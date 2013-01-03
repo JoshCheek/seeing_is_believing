@@ -29,7 +29,7 @@ class SeeingIsBelieving
                                             on_complete: lambda { |line, children, completions, line_number|
                                               @result.contains_line_number line_number
                                               expression = [line, *children, *completions].join("\n")
-                                              if expression == ''
+                                              if expression == '' || ends_in_comment?(expression)
                                                 expression
                                               else
                                                 record_yahself expression, line_number
@@ -47,11 +47,16 @@ class SeeingIsBelieving
   end
 
   def record_exceptions_in(code)
+    # must use newline after code, or comments will comment out rescue section
     "begin;"\
-      "#{code};"\
+      "#{code}\n"\
     "rescue Exception;"\
       "line_number = $!.backtrace.first[/:\\d+:/][1..-2].to_i;"\
       "$seeing_is_believing_current_result.record_exception line_number, $!;"\
     "end"
+  end
+
+  def ends_in_comment?(expression)
+    SyntaxAnalyzer.ends_in_comment? expression
   end
 end

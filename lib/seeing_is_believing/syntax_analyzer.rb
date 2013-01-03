@@ -1,6 +1,6 @@
 require 'ripper'
 
-class SyntaxRecorder < Ripper::SexpBuilder
+class SyntaxAnalyzer < Ripper::SexpBuilder
 
   # I don't actually know if all of the error methods should invoke has_error!
   # or just parse errors. I don't actually know how to produce the other errors O.o
@@ -14,23 +14,36 @@ class SyntaxRecorder < Ripper::SexpBuilder
   instance_methods.grep(/error/i).each do |error_meth|
     class_eval "
       def #{error_meth}(*)
-        has_error!
+        @has_error = true
         super
       end
     "
   end
 
-  def self.valid_ruby?(code)
+  def on_comment(*)
+    @has_comment = true
+    super
+  end
+
+  def self.parsed(code)
     instance = new code
     instance.parse
-    !instance.has_error?
+    instance
+  end
+
+  def self.valid_ruby?(code)
+    !parsed(code).has_error?
+  end
+
+  def self.ends_in_comment?(code)
+    parsed(code.lines.to_a.last).has_comment?
   end
 
   def has_error?
-    @error
+    @has_error
   end
 
-  def has_error!
-    @error = true
+  def has_comment?
+    @has_comment
   end
 end

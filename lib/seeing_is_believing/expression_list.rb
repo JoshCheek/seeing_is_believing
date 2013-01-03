@@ -71,7 +71,7 @@ class SeeingIsBelieving
     end
 
     def valid_ruby?(expression)
-      SyntaxRecorder.valid_ruby? expression
+      SyntaxAnalyzer.valid_ruby? expression
     end
   end
 end
