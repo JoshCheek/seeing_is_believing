@@ -54,7 +54,6 @@ Known Issues
 * I have no idea what happens if you talk to stdout/stderr directly. This should become a non-issue if we evaluate it in its own process like xmpfilter.
 * If it dies, it will take your program with it. Same as above.
 * No idea what happens if you give it a syntactically invalid file. It probably just raises an exception, but might possibly freeze up or something.
-* It's slooooooooow because it checks for valid syntax with `Open3.capture3('ruby -c', stdin_data: expression).last.success?` I don't know of a better way to do this, but it has to run this a LOT. It also will become exponentially slower with nesting, because it must always check if the highest-level expression is completed, so if you have several classes inside of each other, expect to feel it. It seems like Ripper should have a way to check this, but I looked around and didn't see anything.
 
 License
 =======

@@ -1,4 +1,5 @@
 require 'open3'
+require 'seeing_is_believing/syntax_analyzer'
 
 class SeeingIsBelieving
   class ExpressionList
@@ -70,7 +71,7 @@ class SeeingIsBelieving
     end
 
     def valid_ruby?(expression)
-      Open3.capture3('ruby -c', stdin_data: expression).last.success?
+      SyntaxRecorder.valid_ruby? expression
     end
   end
 end
