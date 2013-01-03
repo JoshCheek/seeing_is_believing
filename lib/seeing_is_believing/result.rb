@@ -4,6 +4,8 @@ class SeeingIsBelieving
   class Result
     include HasException
 
+    Line = Class.new(Array) { include HasException }
+
     attr_reader :min_line_number, :max_line_number
 
     def initialize
@@ -42,7 +44,7 @@ class SeeingIsBelieving
 
     def results
       @results ||= Hash.new do |hash, line_number|
-        hash[line_number] = Array.new.extend HasException
+        hash[line_number] = Line.new
       end
     end
   end
