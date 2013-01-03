@@ -38,7 +38,7 @@ class SeeingIsBelieving
     def generate
       @line_number += 1
       expression = generator.call
-      debug? && debug("GENERATED: #{expression.inspect}, ADDING IT TO #{inspected_list}")
+      debug { "GENERATED: #{expression.inspect}, ADDING IT TO #{inspected_list}" }
       @list << PendingExpression.new(expression, [])
     end
 
@@ -50,8 +50,8 @@ class SeeingIsBelieving
       @should_debug
     end
 
-    def debug(message)
-      @debug_stream.puts message
+    def debug
+      @debug_stream.puts yield if debug?
     end
 
     def reduce_expressions
@@ -65,7 +65,7 @@ class SeeingIsBelieving
                                   @line_number)
         @list = @list[0, i]
         @list[i-1].children << result unless @list.empty?
-        debug? && debug("REDUCED: #{result.inspect}, LIST: #{inspected_list}")
+        debug { "REDUCED: #{result.inspect}, LIST: #{inspected_list}" }
         return result
       end
     end

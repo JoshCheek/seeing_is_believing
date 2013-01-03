@@ -2,7 +2,7 @@ require 'ripper'
 
 class SyntaxAnalyzer < Ripper::SexpBuilder
 
-  # I don't actually know if all of the error methods should invoke has_error!
+  # I don't actually know if all of the error methods should set @has_error
   # or just parse errors. I don't actually know how to produce the other errors O.o
   #
   # Here is what it is defining as of ruby-1.9.3-p125:
@@ -14,6 +14,7 @@ class SyntaxAnalyzer < Ripper::SexpBuilder
   instance_methods.grep(/error/i).each do |error_meth|
     class_eval "
       def #{error_meth}(*)
+        # puts 'ERROR: #{error_meth}'
         @has_error = true
         super
       end
