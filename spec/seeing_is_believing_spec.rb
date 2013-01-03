@@ -104,16 +104,19 @@ describe SeeingIsBelieving do
   end
 
   it 'stops executing on errors and reports them' do
-    result = values_for("12\nraise Exception, 'omg!'\n12")
-    result[0].should == ['12']
+    invoke("'no exception'").should_not have_exception
 
-    result[1].size.should == 1
-    exception = result[1].first
-    exception.class.should == Exception
-    exception.message.should == 'omg!'
+    result = invoke("12\nraise Exception, 'omg!'\n12")
+    result.should have_exception
+    expect { raise result.exception }.to raise_exception Exception, "omg!"
+
+    result[1].should == ['12']
 
     result[2].should == []
-    result.size.should == 3
+    result[2].exception.should == result.exception
+
+    result[3].should == []
+    result.to_a.size.should == 3
   end
 
   # it ignores lines that end in comments

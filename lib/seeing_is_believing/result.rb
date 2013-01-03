@@ -1,10 +1,8 @@
-class SeeingIsBelieving
+require 'seeing_is_believing/has_exception'
 
+class SeeingIsBelieving
   class Result
-    module HasException
-      attr_accessor :exception
-      alias has_exception? exception
-    end
+    include HasException
 
     attr_reader :min_line_number, :max_line_number
 
@@ -19,6 +17,7 @@ class SeeingIsBelieving
     end
 
     def record_exception(line_number, exception)
+      @exception = exception
       contains_line_number line_number
       results[line_number].exception = exception
     end
@@ -27,7 +26,7 @@ class SeeingIsBelieving
       results[line_number]
     end
 
-    # probably not really useful, just exists to satisfy the tests
+    # probably not really useful, just exists to satisfy the tests, which specified too simple of an interface
     def to_a
       (min_line_number..max_line_number).map do |line_number|
         [line_number, [*self[line_number], *Array(self[line_number].exception)]]

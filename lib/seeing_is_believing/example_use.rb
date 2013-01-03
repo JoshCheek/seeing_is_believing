@@ -1,19 +1,22 @@
 require 'seeing_is_believing'
+require 'seeing_is_believing/has_exception'
 
 class SeeingIsBelieving
   class ExampleUse
-    attr_accessor :exception
+    include HasException
 
     def initialize(body)
       self.body = body
     end
 
     def call
+      result = SeeingIsBelieving.new(body).call
+      self.exception = result.exception
+
       body.each_line.with_index 1 do |line, index|
-        line_results = results[index]
-        self.exception = line_results.exception if line_results.has_exception?
-        output << format_line(line.chomp, line_results)
+        output << format_line(line.chomp, result[index])
       end
+
       output
     end
 
@@ -21,15 +24,9 @@ class SeeingIsBelieving
       @result ||= ''
     end
 
-    alias has_exception? exception
-
     private
 
     attr_accessor :body
-
-    def results
-      @results ||= SeeingIsBelieving.new(body).call
-    end
 
     # max line length of the body + 2 spaces for padding
     def line_length
