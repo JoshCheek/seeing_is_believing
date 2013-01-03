@@ -14,5 +14,6 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_comment["a \n b # whatev"].should be_true
     is_comment['a'].should be_false
     is_comment["a # whatev \n b"].should be_false
+    is_comment[""].should be_false
   end
 end

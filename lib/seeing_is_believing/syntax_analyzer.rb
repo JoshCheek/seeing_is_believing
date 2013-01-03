@@ -36,7 +36,7 @@ class SyntaxAnalyzer < Ripper::SexpBuilder
   end
 
   def self.ends_in_comment?(code)
-    parsed(code.lines.to_a.last).has_comment?
+    parsed(code.lines.to_a.last.to_s).has_comment?
   end
 
   def has_error?

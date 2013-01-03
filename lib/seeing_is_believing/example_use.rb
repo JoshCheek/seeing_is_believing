@@ -33,7 +33,11 @@ class SeeingIsBelieving
 
     # max line length of the body + 2 spaces for padding
     def line_length
-      @line_length ||= 2 + body.each_line.map(&:chomp).map(&:length).max
+      @line_length ||= 2 + body.each_line
+                               .map(&:chomp)
+                               .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
+                               .map(&:length)
+                               .max
     end
 
     def format_line(line, line_results)

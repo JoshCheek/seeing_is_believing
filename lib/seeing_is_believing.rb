@@ -30,9 +30,9 @@ class SeeingIsBelieving
                                               @result.contains_line_number line_number
                                               expression = [line, *children, *completions].join("\n")
                                               if expression == '' || ends_in_comment?(expression)
-                                                expression
+                                                expression + "\n"
                                               else
-                                                record_yahself expression, line_number
+                                                record_yahself(expression, line_number) + "\n"
                                               end
                                             }
   end
@@ -43,7 +43,7 @@ class SeeingIsBelieving
   end
 
   def record_yahself(line, line_number)
-    "($seeing_is_believing_current_result.record_result(#{line_number}, (#{line})))\n"
+    "($seeing_is_believing_current_result.record_result(#{line_number}, (#{line})))"
   end
 
   def record_exceptions_in(code)
