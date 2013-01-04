@@ -19,7 +19,7 @@ class SeeingIsBelieving
     end
 
     def record_exception(line_number, exception)
-      @exception = exception
+      self.exception = exception
       contains_line_number line_number
       results[line_number].exception = exception
     end

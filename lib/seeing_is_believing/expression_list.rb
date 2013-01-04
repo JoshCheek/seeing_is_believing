@@ -18,8 +18,8 @@ class SeeingIsBelieving
       self.should_debug = options.fetch :debug, false
       self.generator    = options.fetch :generator
       self.on_complete  = options.fetch :on_complete
-      self.line_number  = 0
       self.list         = []
+      @line_number      = 0
     end
 
     def call
@@ -33,17 +33,17 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :debug_stream, :should_debug, :generator, :on_complete, :line_number, :list
+    attr_accessor :debug_stream, :should_debug, :generator, :on_complete, :list
 
     def generate
       @line_number += 1
       expression = generator.call
       debug { "GENERATED: #{expression.inspect}, ADDING IT TO #{inspected_list}" }
-      @list << PendingExpression.new(expression, [])
+      list << PendingExpression.new(expression, [])
     end
 
     def inspected_list
-      "[#{@list.map { |pe| pe.inspect debug? }.join(', ')}]"
+      "[#{list.map { |pe| pe.inspect debug? }.join(', ')}]"
     end
 
     def debug?
@@ -55,16 +55,16 @@ class SeeingIsBelieving
     end
 
     def reduce_expressions
-      @list.size.times do |i|
+      list.size.times do |i|
         # uhm, should this expression we are checking for validity consider the children?
-        expression = @list[i..-1].map(&:expression).join("\n") # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
+        expression = list[i..-1].map(&:expression).join("\n") # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
         next unless valid_ruby? expression
-        result = on_complete.call(@list[i].expression,
-                                  @list[i].children,
-                                  @list[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
+        result = on_complete.call(list[i].expression,
+                                  list[i].children,
+                                  list[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
                                   @line_number)
-        @list = @list[0, i]
-        @list[i-1].children << result unless @list.empty?
+        self.list = list[0, i]
+        list[i-1].children << result unless list.empty?
         debug { "REDUCED: #{result.inspect}, LIST: #{inspected_list}" }
         return result
       end
