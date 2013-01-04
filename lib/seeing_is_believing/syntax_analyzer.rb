@@ -69,7 +69,7 @@ class SyntaxAnalyzer < Ripper::SexpBuilder
   end
 
   def on_tstring_end(ending)
-    if @string_opens.any? && STRING_MAP[@string_opens.last.chars.to_a.last] == ending
+    if @string_opens.any? && STRING_MAP[@string_opens.last[-1]] == ending
       @string_opens.pop
     end
     super
