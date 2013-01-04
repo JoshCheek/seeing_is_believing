@@ -64,7 +64,7 @@ class SyntaxAnalyzer < Ripper::SexpBuilder
   STRING_MAP['{'] = '}'
 
   def on_tstring_beg(opener)
-    @string_opens << opener
+    @string_opens.push opener
     super
   end
 
