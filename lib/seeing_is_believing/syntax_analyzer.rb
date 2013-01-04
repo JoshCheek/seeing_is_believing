@@ -13,13 +13,11 @@ class SeeingIsBelieving
     #   on_param_error
     #   on_parse_error
     instance_methods.grep(/error/i).each do |error_meth|
-      class_eval "
-        def #{error_meth}(*)
-          # puts 'ERROR: #{error_meth}'
-          @has_error = true
-          super
-        end
-      "
+      super_meth = instance_method error_meth
+      define_method error_meth do |*args, &block|
+        @has_error = true
+        super_meth.bind(self).call(*args, &block)
+      end
     end
 
     def self.parsed(code)
