@@ -22,11 +22,6 @@ class SeeingIsBelieving
       "
     end
 
-    def initialize(*)
-      @string_opens = []
-      super
-    end
-
     def self.parsed(code)
       instance = new code
       instance.parse
@@ -66,20 +61,22 @@ class SeeingIsBelieving
     STRING_MAP['['] = ']'
     STRING_MAP['{'] = '}'
 
-    def on_tstring_beg(opener)
-      @string_opens.push opener
+    def string_opens
+      @string_opens ||= []
+    end
+
+    def on_tstring_beg(opening)
+      string_opens.push opening
       super
     end
 
     def on_tstring_end(ending)
-      if @string_opens.any? && STRING_MAP[@string_opens.last[-1]] == ending
-        @string_opens.pop
-      end
+      string_opens.pop if string_opens.any? && STRING_MAP[string_opens.last[-1]] == ending
       super
     end
 
     def unclosed_string?
-      @string_opens.any?
+      string_opens.any?
     end
   end
 end
