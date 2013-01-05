@@ -21,6 +21,8 @@ end             # => 5
 def meth(n)
   n             # => "12", "34"
 end             # => nil
+
+# some invocations
 meth "12"       # => "12"
 meth "34"       # => "34"
 ```
