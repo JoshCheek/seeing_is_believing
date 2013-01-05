@@ -1,6 +1,8 @@
 require 'open3'
 require 'seeing_is_believing/syntax_analyzer'
 
+# A lot of colouring going on in this file, maybe should extract a debugging object to contain it
+
 class SeeingIsBelieving
   class ExpressionList
     PendingExpression = Struct.new :expression, :children do
@@ -56,8 +58,9 @@ class SeeingIsBelieving
 
     def reduce_expressions
       list.size.times do |i|
-        # uhm, should this expression we are checking for validity consider the children?
-        expression = list[i..-1].map(&:expression).join("\n") # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
+        expression = list[i..-1].map(&:expression) # uhm, should this expression we are checking for validity consider the children?
+                                .join("\n")        # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
+        return if children_will_never_be_valid? expression
         next unless valid_ruby? expression
         result = on_complete.call(list[i].expression,
                                   list[i].children,
@@ -71,7 +74,13 @@ class SeeingIsBelieving
     end
 
     def valid_ruby?(expression)
-      SyntaxAnalyzer.valid_ruby? expression
+      valid = SyntaxAnalyzer.valid_ruby? expression
+      debug { "#{valid ? "\e[31mIS NOT VALID:" : "\e[32mIS VALID:"}: #{expression.inspect}\e[0m" }
+      valid
+    end
+
+    def children_will_never_be_valid?(expression)
+      SyntaxAnalyzer.unclosed_string?(expression)
     end
   end
 end

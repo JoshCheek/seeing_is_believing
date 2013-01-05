@@ -88,6 +88,12 @@ describe SeeingIsBelieving do
 
     values_for("1 +
                     2").should == [[], ['3']]
+
+    values_for("'\n1\n'").should == [[], [], ['"\n1\n"']]
+
+    # fails b/c parens should go around line 1, not around entire expression -.^
+    # values_for("<<HEREDOC\n1\nHEREDOC").should == [[], [], ['"\n1\n"']]
+    # values_for("<<-HEREDOC\n1\nHEREDOC").should == [[], [], ['"\n1\n"']]
   end
 
   it 'does not record expressions that end in a comment' do

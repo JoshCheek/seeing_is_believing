@@ -105,11 +105,19 @@ describe SeeingIsBelieving::ExpressionList do
                      "end end"\
   end
 
-  example "example; smoke test debug option" do
-    stream = StringIO.new
-    result = call %w[a+ b], debug: true, debug_stream: stream do |line, children, completions, line_number|
-      [line, *children, *completions].join("\n")
+  example 'example: multiline strings with valid code in them' do
+    block_invocations = 0
+    call ["'", "1", "'"] do |*expressions, line_number|
+      expressions.join('').should == "'1'"
+      line_number.should == 3
+      block_invocations += 1
     end
+    block_invocations.should == 1
+  end
+
+  example "example: smoke test debug option" do
+    stream = StringIO.new
+    call(%w[a+ b], debug: true, debug_stream: stream) { |*expressions, _| expressions.join("\n") }
     stream.string.should include "GENERATED"
     stream.string.should include "REDUCED"
   end

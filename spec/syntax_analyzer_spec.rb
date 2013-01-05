@@ -3,8 +3,13 @@ require 'seeing_is_believing'
 describe SeeingIsBelieving::SyntaxAnalyzer do
   it 'knows if syntax is valid' do
     is_valid = lambda { |code| described_class.valid_ruby? code }
-    is_valid['+'].should be_false
     is_valid['1+2'].should be_true
+    is_valid['+'].should be_false
+
+    # due to what are possibly bugs in Ripper
+    # these don't raise any errors, so have to check them explicitly
+    is_valid["'"].should be_false
+    pending("Doesn't handle unclosed regexps correctly") { is_valid["/"].should be_false }
   end
 
   it 'knows if the last line is a comment' do

@@ -27,7 +27,7 @@ class SeeingIsBelieving
     end
 
     def self.valid_ruby?(code)
-      !parsed(code).has_error?
+      parsed(code).valid_ruby?
     end
 
     def self.ends_in_comment?(code)
@@ -38,8 +38,12 @@ class SeeingIsBelieving
       parsed(code).unclosed_string?
     end
 
-    def has_error?
-      @has_error
+    def valid_ruby?
+      !invalid_ruby?
+    end
+
+    def invalid_ruby?
+      @has_error || unclosed_string?
     end
 
     def has_comment?
