@@ -69,12 +69,45 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
      %(%q[),
      %(%Q(\#{)),
      %("\#{),
-     %("\#{),
      %("\#{'}"),
      %("\#{"}"),
      %("\#{%(\#{%[\#{%[}]})}"),
     ].each do |string|
       unclosed_string[string].should be_true, "Expected #{string.inspect} to be unclosed"
+    end
+  end
+
+  it 'knows if the code contains an unclosed regexp' do
+    unclosed_regexp = lambda { |code| described_class.unclosed_regexp? code }
+    [%(a),
+     %(/a/),
+     %(/a \n/),
+     %(/a \n a/),
+     %(a \n/ a/),
+     %(/a\\//),
+     %(/\#{//}/),
+     %(%r()),
+     %(%r{}),
+     %(%r<>),
+     %(%r..),
+    ].each do |code|
+      unclosed_regexp[code].should be_false, "Expected #{code.inspect} to be closed"
+    end
+
+    [%(a + /),
+     %(/a \n),
+     %(a \n /a\n),
+     %(/a/\n/b),
+     %(/a\\/),
+     %(%r\(),
+     %(%r<),
+     %(%r[),
+     %(%r{),
+     %(%r(\#{)),
+     %(%r[\#{),
+     %("\#{%r[}"),
+    ].each do |code|
+      unclosed_regexp[code].should be_true, "Expected #{code.inspect} to be unclosed"
     end
   end
 end

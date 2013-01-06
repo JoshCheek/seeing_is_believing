@@ -38,6 +38,10 @@ class SeeingIsBelieving
       parsed(code).unclosed_string?
     end
 
+    def self.unclosed_regexp?(code)
+      parsed(code).unclosed_regexp?
+    end
+
     def valid_ruby?
       !invalid_ruby?
     end
@@ -57,28 +61,50 @@ class SeeingIsBelieving
 
     # We have to do this b/c Ripper sometimes calls on_tstring_end even when the string doesn't get ended
     # e.g. SyntaxAnalyzer.new('"a').parse
-    STRING_MAP = Hash.new { |_, char| char }
-    STRING_MAP['<'] = '>'
-    STRING_MAP['('] = ')'
-    STRING_MAP['['] = ']'
-    STRING_MAP['{'] = '}'
+    ENDINGS_BY_BEGINNINGS = Hash.new { |_, char| char }
+    ENDINGS_BY_BEGINNINGS['<'] = '>'
+    ENDINGS_BY_BEGINNINGS['('] = ')'
+    ENDINGS_BY_BEGINNINGS['['] = ']'
+    ENDINGS_BY_BEGINNINGS['{'] = '}'
+
+    # STRINGS
 
     def string_opens
       @string_opens ||= []
     end
 
-    def on_tstring_beg(opening)
-      string_opens.push opening
+    def on_tstring_beg(beginning)
+      string_opens.push beginning
       super
     end
 
     def on_tstring_end(ending)
-      string_opens.pop if string_opens.any? && STRING_MAP[string_opens.last[-1]] == ending
+      string_opens.pop if string_opens.any? && ENDINGS_BY_BEGINNINGS[string_opens.last[-1]] == ending
       super
     end
 
     def unclosed_string?
       string_opens.any?
+    end
+
+    # REGEXPS
+
+    def regexp_opens
+      @regexp_opens ||= []
+    end
+
+    def on_regexp_beg(beginning)
+      regexp_opens.push beginning
+      super
+    end
+
+    def on_regexp_end(ending)
+      regexp_opens.pop if regexp_opens.any? && ENDINGS_BY_BEGINNINGS[regexp_opens.last[-1]] == ending
+      super
+    end
+
+    def unclosed_regexp?
+      regexp_opens.any?
     end
   end
 end
