@@ -125,10 +125,17 @@ describe SeeingIsBelieving do
     result.to_a.size.should == 3
   end
 
+  it 'does not fuck up __LINE__ macro' do
+    values_for('__LINE__
+                __LINE__
+
+                # comment
+                __LINE__').should == [['1'], ['2'], [], [], ['5']]
+  end
+
   # it ignores lines that end in comments
   # something about printing to stdout
   # something about printing to stderr
   # something about when the whole input is invalid
   # something about multi-line strings
-  # does not fuck up __LINE__ macro
 end
