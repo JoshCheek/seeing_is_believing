@@ -9,7 +9,7 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     # due to what are possibly bugs in Ripper
     # these don't raise any errors, so have to check them explicitly
     is_valid["'"].should be_false
-    pending("Doesn't handle unclosed regexps correctly") { is_valid["/"].should be_false }
+    is_valid["/"].should be_false
   end
 
   it 'knows if the last line is a comment' do

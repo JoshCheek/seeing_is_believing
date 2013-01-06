@@ -47,7 +47,7 @@ class SeeingIsBelieving
     end
 
     def invalid_ruby?
-      @has_error || unclosed_string?
+      @has_error || unclosed_string? || unclosed_regexp?
     end
 
     def has_comment?
