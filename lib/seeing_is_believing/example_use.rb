@@ -6,7 +6,7 @@ class SeeingIsBelieving
     include HasException
 
     def initialize(body)
-      self.body = body
+      self.body = body.gsub(/\s+# [~=]>.*?$/, '')
     end
 
     def call

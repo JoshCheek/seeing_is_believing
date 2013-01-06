@@ -55,6 +55,21 @@ Feature: Running the binary
     1 + 1
     """
 
+  Scenario: Passing previous output back into input
+    Given the file "previous_output.rb":
+    """
+    1 + 1  # => not 2
+    2 + 2  # ~> Exception, something
+    """
+    When I run "seeing_is_believing previous_output.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 + 1  # => 2
+    2 + 2  # => 4
+    """
+
   Scenario: Printing within the file
   Scenario: Requiring other files
   Scenario: Syntactically invalid file
