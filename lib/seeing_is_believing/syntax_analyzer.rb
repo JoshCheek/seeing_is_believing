@@ -119,5 +119,22 @@ class SeeingIsBelieving
       @has_comment = true
       super
     end
+
+    # RETURNS
+
+    def self.contains_return?(code)
+      parsed(code).contains_return?
+    end
+
+    # unfortunately, this invokes `on_kw("return")` when it seems like it shouldn't,
+    # e.g. in `SyntaxAnalyzer.contains_return?(":return")`
+    def on_kw(keyword)
+      @contains_return = true if keyword == 'return'
+      super
+    end
+
+    def contains_return?
+      @contains_return
+    end
   end
 end

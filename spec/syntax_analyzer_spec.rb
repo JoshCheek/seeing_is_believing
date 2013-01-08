@@ -110,4 +110,18 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
       unclosed_regexp[code].should be_true, "Expected #{code.inspect} to be unclosed"
     end
   end
+
+  it "knows if the code contains a return (can't capture a void value)" do
+    contains_return = -> code { described_class.contains_return? code }
+    contains_return["return 1"].should be_true
+    contains_return["return 1 if true"].should be_true
+    contains_return["return 1 if false"].should be_true
+    contains_return["o.return"].should be_false
+    contains_return[":return"].should be_false
+    contains_return["'return'"].should be_false
+    contains_return["'return\nreturn\nreturn'"].should be_false
+    contains_return["def a\nreturn 1\nend"].should be_false
+    contains_return["-> {\nreturn 1\n}"].should be_false
+    contains_return["Proc.new {\nreturn 1\n}"].should be_false
+  end
 end
