@@ -147,7 +147,11 @@ describe SeeingIsBelieving do
     # values_for("-> { return 1 }.call"        ).should == [['1']]
   end
 
-  # it ignores lines that end in comments
+  it 'does not affect its environment' do
+    invoke 'def Object.abc() end'
+    Object.should_not respond_to :abc
+  end
+
   # something about printing to stdout
   # something about printing to stderr
   # something about when the whole input is invalid
