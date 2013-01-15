@@ -9,8 +9,8 @@ Reeaally rough at the moment, but it works for simple examples.
 
 Also comes with a binary to show how it might be used.
 
-Use
-===
+Use The Binary
+==============
 
 ```ruby
 # $ seeing_is_believing proving_grounds/basic_functionality.rb
@@ -39,6 +39,27 @@ raise "ZOMG!"  # ~> RuntimeError: ZOMG!
 ZOMG!
 ```
 
+Use The Lib
+===========
+
+```ruby
+require 'seeing_is_believing'
+
+believer = SeeingIsBelieving.new("%w[a b c].each do |i|
+                                    i.upcase
+                                  end")
+
+result = believer.call
+result      # => #<SeeingIsBelieving::Result:0x007faeed1a5b78 @max_line_number=3, @min_line_number=1, @results={2=>['"A"', '"B"', '"C"'], 3=>['["a", "b", "c"]']}>
+
+result.to_a # => [ [1, []],
+            #      [2, ['"A"', '"B"', '"C"']],
+            #      [3, ['["a", "b", "c"]']]
+            #    ]
+
+result[2]   # => ['"A"', '"B"', '"C"']
+```
+
 Install
 =======
 
@@ -51,11 +72,10 @@ Or if you haven't fixed your gem home, and you aren't using any version managers
 Known Issues
 ============
 
-* comments will kill it, probably going to have to actually parse the code to fix this
-* I have no idea what happens if you talk to stdout/stderr directly. This should become a non-issue if we evaluate it in its own process like xmpfilter.
+* I have no idea what happens if you talk to `stdout/stderr` directly. This should become a non-issue if we evaluate it in its own process like xmpfilter.
 * If it dies, it will take your program with it. Same as above. (e.g. running the binary against itself will cause it to recursively invoke itself forever WARNING: DON'T REALLY DO THAT, ITS CRAYAZAY)
 * No idea what happens if you give it a syntactically invalid file. It probably just raises an exception, but might possibly freeze up or something.
-* return keyword and heredocs break things, __END__ probably does too, maybe also BEGIN/END and =begin/=end
+* `return` keyword and heredocs break things, `__END__` probably does too, maybe also `BEGIN/END` and `=begin/=end`
 
 License
 =======
