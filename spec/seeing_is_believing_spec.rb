@@ -129,8 +129,22 @@ describe SeeingIsBelieving do
     values_for('__LINE__
                 __LINE__
 
+                def meth
+                  __LINE__
+                end
+                meth
+
                 # comment
-                __LINE__').should == [['1'], ['2'], [], [], ['5']]
+                __LINE__').should == [['1'], ['2'], [], [], ['5'], ['nil'], ['5'], [], [], ['10']]
+  end
+
+  it 'does not try to record a return statement when that will break it' do
+    values_for("def meth \n return 1          \n end \n meth").should == [[], [], ['nil'], ['1']]
+    values_for("def meth \n return 1 if true  \n end \n meth").should == [[], [], ['nil'], ['1']]
+    values_for("def meth \n return 1 if false \n end \n meth").should == [[], [], ['nil'], ['nil']]
+    values_for("-> {  \n return 1          \n }.call"        ).should == [[], [], ['1']]
+    # this doesn't work because the return detecting code is a very conservative regexp
+    # values_for("-> { return 1 }.call"        ).should == [['1']]
   end
 
   # it ignores lines that end in comments

@@ -122,19 +122,10 @@ class SeeingIsBelieving
 
     # RETURNS
 
-    def self.contains_return?(code)
-      parsed(code).contains_return?
-    end
-
-    # unfortunately, this invokes `on_kw("return")` when it seems like it shouldn't,
-    # e.g. in `SyntaxAnalyzer.contains_return?(":return")`
-    def on_kw(keyword)
-      @contains_return = true if keyword == 'return'
-      super
-    end
-
-    def contains_return?
-      @contains_return
+    # this is conspicuosuly inferior, but I can't figure out how to actually parse it
+    # see: http://www.ruby-forum.com/topic/4409633
+    def self.will_return?(code)
+      /(^|\s)return.*?\Z$/ =~ code
     end
   end
 end

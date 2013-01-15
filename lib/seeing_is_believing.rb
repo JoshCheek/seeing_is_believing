@@ -6,6 +6,7 @@ require 'seeing_is_believing/expression_list'
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
   def initialize(string_or_stream)
+    @string = string_or_stream
     @stream = to_stream string_or_stream
     @result = Result.new
   end
@@ -28,8 +29,8 @@ class SeeingIsBelieving
     @expression_list ||= ExpressionList.new generator: lambda { stream.gets.chomp },
                                             on_complete: lambda { |line, children, completions, line_number|
                                               @result.contains_line_number line_number
-                                              expression = [line, *children, *completions].join("\n")
-                                              if expression =~ /\A\s*\Z/ || SyntaxAnalyzer.ends_in_comment?(expression)
+                                              expression = [line, *children, *completions].map(&:chomp).join("\n")
+                                              if expression =~ /\A\s*\Z/ || SyntaxAnalyzer.ends_in_comment?(expression) || SyntaxAnalyzer.will_return?(expression)
                                                 expression + "\n"
                                               else
                                                 record_yahself(expression, line_number) + "\n"
