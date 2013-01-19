@@ -20,32 +20,33 @@ class SeeingIsBelieving
       self.should_debug = options.fetch :debug, false
       self.generator    = options.fetch :generator
       self.on_complete  = options.fetch :on_complete
-      self.list         = []
       @line_number      = 0
     end
 
     def call
+      expressions = []
       expression = nil
       begin
-        generate
-        expression = reduce_expressions
-      end until list.empty?
+        pending_expression = generate
+        debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
+        expressions << pending_expression
+        expression = reduce expressions
+      end until expressions.empty?
       expression
     end
 
     private
 
-    attr_accessor :debug_stream, :should_debug, :generator, :on_complete, :list
+    attr_accessor :debug_stream, :should_debug, :generator, :on_complete, :expressions
 
     def generate
       @line_number += 1
       expression = generator.call
-      debug { "GENERATED: #{expression.inspect}, ADDING IT TO #{inspected_list}" }
-      list << PendingExpression.new(expression, [])
+      PendingExpression.new(expression, [])
     end
 
-    def inspected_list
-      "[#{list.map { |pe| pe.inspect debug? }.join(', ')}]"
+    def inspected_expressions(expressions)
+      "[#{expressions.map { |pe| pe.inspect debug? }.join(', ')}]"
     end
 
     def debug?
@@ -56,19 +57,19 @@ class SeeingIsBelieving
       @debug_stream.puts yield if debug?
     end
 
-    def reduce_expressions
-      list.size.times do |i|
-        expression = list[i..-1].map(&:expression) # uhm, should this expression we are checking for validity consider the children?
-                                .join("\n")        # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
+    def reduce(expressions)
+      expressions.size.times do |i|
+        expression = expressions[i..-1].map(&:expression) # uhm, should this expression we are checking for validity consider the children?
+                                       .join("\n")        # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
         return if children_will_never_be_valid? expression
         next unless valid_ruby? expression
-        result = on_complete.call(list[i].expression,
-                                  list[i].children,
-                                  list[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
+        result = on_complete.call(expressions[i].expression,
+                                  expressions[i].children,
+                                  expressions[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
                                   @line_number)
-        self.list = list[0, i]
-        list[i-1].children << result unless list.empty?
-        debug { "REDUCED: #{result.inspect}, LIST: #{inspected_list}" }
+        expressions.replace expressions[0, i]
+        expressions[i-1].children << result unless expressions.empty?
+        debug { "REDUCED: #{result.inspect}, LIST: #{inspected_expressions expressions}" }
         return result
       end
     end
