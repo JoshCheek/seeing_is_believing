@@ -114,7 +114,7 @@ describe SeeingIsBelieving do
 
     result = invoke("12\nraise Exception, 'omg!'\n12")
     result.should have_exception
-    expect { raise result.exception }.to raise_exception Exception, "omg!"
+    result.exception.message.should == 'omg!'
 
     result[1].should == ['12']
 
@@ -123,6 +123,10 @@ describe SeeingIsBelieving do
 
     result[3].should == []
     result.to_a.size.should == 3
+
+    pending 'Not sure how to force the backtrace to render' do
+      result.exception.backtrace.should be_a_kind_of Array
+    end
   end
 
   it 'does not fuck up __LINE__ macro' do

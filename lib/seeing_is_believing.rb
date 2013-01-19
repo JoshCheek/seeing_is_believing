@@ -1,23 +1,24 @@
 require 'stringio'
+require 'yaml'
+require 'open3'
 
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/expression_list'
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
+  include TracksLineNumbersSeen
+
   def initialize(string_or_stream)
     @string = string_or_stream
     @stream = to_stream string_or_stream
-    @result = Result.new
   end
 
   def call
     @memoized_result ||= begin
       program = ''
       program << expression_list.call until stream.eof?
-      $seeing_is_believing_current_result = @result # can we make this a threadlocal var on the class?
-      TOPLEVEL_BINDING.eval record_exceptions_in(program), 'program.rb', 1
-      @result
+      result_for record_exceptions_in(program), min_line_number, max_line_number
     end
   end
 
@@ -28,7 +29,7 @@ class SeeingIsBelieving
   def expression_list
     @expression_list ||= ExpressionList.new generator: lambda { stream.gets.chomp },
                                             on_complete: lambda { |line, children, completions, line_number|
-                                              @result.contains_line_number line_number
+                                              track_line_number line_number
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
                                               if expression =~ /\A\s*\Z/ || SyntaxAnalyzer.ends_in_comment?(expression) || SyntaxAnalyzer.will_return?(expression)
                                                 expression + "\n"
@@ -55,5 +56,29 @@ class SeeingIsBelieving
       "line_number = $!.backtrace.first[/:\\d+:/][1..-2].to_i;"\
       "$seeing_is_believing_current_result.record_exception line_number, $!;"\
     "end"
+  end
+
+  def result_for(program, min_line_number, max_line_number)
+    stdout, stderr, exitstatus = Open3.capture3('ruby', '-I', File.dirname(__FILE__),
+                                                        '-r', 'seeing_is_believing/the_matrix',
+                                                        stdin_data: program)
+    raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}" unless exitstatus.success?
+    # should we raise here if there is an unsuccessful exitstatus?
+    YAML.load(stdout).tap do |result|
+      result.track_line_number min_line_number
+      result.track_line_number max_line_number
+    end
+  rescue Exception
+    $stderr.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
+    $stderr.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
+    $stderr.puts
+    $stderr.puts "Program: #{program.inspect}"
+    $stderr.puts
+    $stderr.puts "Stdout: #{stdout.inspect}"
+    $stderr.puts
+    $stderr.puts "Stderr: #{stderr.inspect}"
+    $stderr.puts
+    $stdout.puts "Status: #{exitstatus.inspect}"
+    raise $!
   end
 end
