@@ -19,6 +19,11 @@ Feature: Running the binary
     # some invocations
     meth "12"
     meth "34"
+
+    # multilinezzz
+    "a
+     b
+     c"
     """
     When I run "seeing_is_believing basic_functionality.rb"
     Then stderr is empty
@@ -36,6 +41,11 @@ Feature: Running the binary
     # some invocations
     meth "12"       # => "12"
     meth "34"       # => "34"
+
+    # multilinezzz
+    "a
+     b
+     c"             # => "a\n b\n c"
     """
 
   Scenario: Raising exceptions
