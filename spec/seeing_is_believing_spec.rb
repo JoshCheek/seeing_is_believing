@@ -147,8 +147,9 @@ describe SeeingIsBelieving do
     values_for("def meth \n return 1 if true  \n end \n meth").should == [[], [], ['nil'], ['1']]
     values_for("def meth \n return 1 if false \n end \n meth").should == [[], [], ['nil'], ['nil']]
     values_for("-> {  \n return 1          \n }.call"        ).should == [[], [], ['1']]
-    # this doesn't work because the return detecting code is a very conservative regexp
-    # values_for("-> { return 1 }.call"        ).should == [['1']]
+    pending "this doesn't work because the return detecting code is a very conservative regexp" do
+      values_for("-> { return 1 }.call"        ).should == [['1']]
+    end
   end
 
   it 'does not affect its environment' do
