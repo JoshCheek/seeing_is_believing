@@ -59,8 +59,9 @@ class SeeingIsBelieving
   end
 
   def result_for(program, min_line_number, max_line_number)
-    stdout, stderr, exitstatus = Open3.capture3('ruby', '-I', File.dirname(__FILE__),
-                                                        '-r', 'seeing_is_believing/the_matrix',
+    stdout, stderr, exitstatus = Open3.capture3('ruby', '-W0',                                   # no warnings (b/c I hijack STDOUT/STDERR)
+                                                        '-I', File.dirname(__FILE__),            # fix load path
+                                                        '-r', 'seeing_is_believing/the_matrix',  # run program in the matrix
                                                         stdin_data: program)
     raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}" unless exitstatus.success?
     # should we raise here if there is an unsuccessful exitstatus?

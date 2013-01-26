@@ -13,8 +13,31 @@ class SeeingIsBelieving
       result = SeeingIsBelieving.new(body).call
       self.exception = result.exception
 
+      has_seen_stdout = false
+      has_seen_stderr = false
+
       body.each_line.with_index 1 do |line, index|
+        if is_stdout?(line)
+          output.chomp! unless has_seen_stdout
+          has_seen_stdout = true
+          next
+        end
+        if is_stderr?(line)
+          output.chomp! unless has_seen_stderr
+          has_seen_stderr = true
+          next
+        end
         output << format_line(line.chomp, result[index])
+      end
+
+      if result.has_stdout?
+        output << "\n"
+        result.stdout.each_line { |line| output << "# >> #{line}" }
+      end
+
+      if result.has_stderr?
+        output << "\n"
+        result.stderr.each_line { |line| output << "# !> #{line}" }
       end
 
       output
@@ -27,6 +50,14 @@ class SeeingIsBelieving
     private
 
     attr_accessor :body
+
+    def is_stdout?(line)
+      line.start_with? '# >>'
+    end
+
+    def is_stderr?(line)
+      line.start_with? '# !>'
+    end
 
     # max line length of the body + 2 spaces for padding
     def line_length

@@ -157,8 +157,24 @@ describe SeeingIsBelieving do
     Object.should_not respond_to :abc
   end
 
-  # something about printing to stdout
-  # something about printing to stderr
+  it 'captures the standard output and error' do
+    result = invoke "2.times { puts 'a', 'b' }
+                     STDOUT.puts 'c'
+                     $stdout.puts 'd'
+                     STDERR.puts '1', '2'
+                     $stderr.puts '3'
+                     $stdout = $stderr
+                     puts '4'"
+    result.stdout.should == "a\nb\n" "a\nb\n" "c\n" "d\n"
+    result.stderr.should == "1\n2\n" "3\n" "4\n"
+    result.should have_stdout
+    result.should have_stderr
+
+    result = invoke '1+1'
+    result.should_not have_stdout
+    result.should_not have_stderr
+  end
+
   # something about when the whole input is invalid
   # something about multi-line strings
 end

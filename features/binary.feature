@@ -70,6 +70,11 @@ Feature: Running the binary
     """
     1 + 1  # => not 2
     2 + 2  # ~> Exception, something
+
+
+    # >> some stdout output
+
+    # !> some stderr output
     """
     When I run "seeing_is_believing previous_output.rb"
     Then stderr is empty
@@ -78,9 +83,33 @@ Feature: Running the binary
     """
     1 + 1  # => 2
     2 + 2  # => 4
+
     """
 
   Scenario: Printing within the file
+    Given the file "printing.rb":
+    """
+    print "hel"
+    puts  "lo!"
+    puts  ":)"
+    $stderr.puts "goodbye"
+    """
+    When I run "seeing_is_believing printing.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    print "hel"             # => nil
+    puts  "lo!"             # => nil
+    puts  ":)"              # => nil
+    $stderr.puts "goodbye"  # => nil
+
+    # >> hello!
+    # >> :)
+
+    # !> goodbye
+    """
+
   Scenario: Requiring other files
   Scenario: Syntactically invalid file
   Scenario: Passing a nonexistent file

@@ -3,10 +3,21 @@ require 'seeing_is_believing/tracks_line_numbers_seen'
 
 class SeeingIsBelieving
   class Result
+
+    Line = Class.new(Array) { include HasException }
+
     include HasException
     include TracksLineNumbersSeen
 
-    Line = Class.new(Array) { include HasException }
+    attr_accessor :stdout, :stderr
+
+    def has_stdout?
+      stdout && !stdout.empty?
+    end
+
+    def has_stderr?
+      stderr && !stderr.empty?
+    end
 
     def initialize
       @min_line_number = @max_line_number = 1
