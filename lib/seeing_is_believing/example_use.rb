@@ -5,58 +5,61 @@ class SeeingIsBelieving
   class ExampleUse
     include HasException
 
+       STDOUT_PREFIX = '# >>'
+       STDERR_PREFIX = '# !>'
+    EXCEPTION_PREFIX = '# ~>'
+       RESULT_PREFIX = '# =>'
+
     def initialize(body)
-      self.body = body.gsub(/\s+# [~=]>.*?$/, '')
-    end
-
-    def call
-      result = SeeingIsBelieving.new(body).call
-      self.exception = result.exception
-
-      has_seen_stdout = false
-      has_seen_stderr = false
-
-      body.each_line.with_index 1 do |line, index|
-        if is_stdout?(line)
-          output.chomp! unless has_seen_stdout
-          has_seen_stdout = true
-          next
-        end
-        if is_stderr?(line)
-          output.chomp! unless has_seen_stderr
-          has_seen_stderr = true
-          next
-        end
-        output << format_line(line.chomp, result[index])
-      end
-
-      if result.has_stdout?
-        output << "\n"
-        result.stdout.each_line { |line| output << "# >> #{line}" }
-      end
-
-      if result.has_stderr?
-        output << "\n"
-        result.stderr.each_line { |line| output << "# !> #{line}" }
-      end
-
-      output
+      self.body = remove_previous_output_from body
     end
 
     def output
-      @result ||= ''
+      @output ||= ''
+    end
+
+    def call
+      inherit_exception
+      print_each_line
+      print_stdout
+      print_stderr
+      output
     end
 
     private
 
     attr_accessor :body
 
-    def is_stdout?(line)
-      line.start_with? '# >>'
+    def file_result
+      @file_result ||= SeeingIsBelieving.new(body).call
     end
 
-    def is_stderr?(line)
-      line.start_with? '# !>'
+    def remove_previous_output_from(string)
+      string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
+            .gsub(/(\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,        '')
+            .gsub(/(\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,        '')
+    end
+
+    def inherit_exception
+      self.exception = file_result.exception
+    end
+
+    def print_each_line
+      body.each_line.with_index 1 do |line, index|
+        output << format_line(line.chomp, file_result[index])
+      end
+    end
+
+    def print_stdout
+      return unless file_result.has_stdout?
+      output << "\n"
+      file_result.stdout.each_line { |line| output << "#{STDOUT_PREFIX} #{line}" }
+    end
+
+    def print_stderr
+      return unless file_result.has_stderr?
+      output << "\n"
+      file_result.stderr.each_line { |line| output << "#{STDERR_PREFIX} #{line}" }
     end
 
     # max line length of the body + 2 spaces for padding
@@ -70,9 +73,9 @@ class SeeingIsBelieving
 
     def format_line(line, line_results)
       if line_results.has_exception?
-        sprintf "%-#{line_length}s# ~> %s: %s\n", line, line_results.exception.class, line_results.exception.message
+        sprintf "%-#{line_length}s#{EXCEPTION_PREFIX} %s: %s\n", line, line_results.exception.class, line_results.exception.message
       elsif line_results.any?
-        sprintf "%-#{line_length}s# => %s\n", line, line_results.join(', ')
+        sprintf "%-#{line_length}s#{RESULT_PREFIX} %s\n", line, line_results.join(', ')
       else
         line + "\n"
       end
