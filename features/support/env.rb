@@ -13,6 +13,7 @@ module CommandLineHelpers
 
   def write_file(filename, body)
     in_proving_grounds do
+      FileUtils.mkdir_p File.dirname filename
       File.open(filename, 'w') { |file| file.write body }
     end
   end

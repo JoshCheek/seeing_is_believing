@@ -110,6 +110,40 @@ Feature: Running the binary
     # !> goodbye
     """
 
+  @wip
+  Scenario: Respects macros
+    Given the file "some_dir/uses_macros.rb":
+    """
+    __FILE__
+    __LINE__
+    $stdout.puts "omg"
+    $stderr.puts "hi"
+    DATA.read
+    __LINE__
+    __END__
+    1
+    2
+    """
+    When I run "seeing_is_believing some_dir/uses_macros.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    __FILE__            # => "./some_dir/uses_macros.rb"
+    __LINE__            # => 2
+    $stdout.puts "omg"  # => nil
+    $stderr.puts "hi"   # => nil
+    DATA.read           # => "1\n2"
+    __LINE__            # => 6
+
+    # >> omg
+
+    # !> hi
+    __END__
+    1
+    2
+    """
+
   Scenario: Requiring other files
   Scenario: Syntactically invalid file
   Scenario: Passing a nonexistent file
