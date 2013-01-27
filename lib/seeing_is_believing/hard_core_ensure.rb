@@ -1,5 +1,9 @@
 class SeeingIsBelieving
   class HardCoreEnsure
+    def self.call(options)
+      new(options).call
+    end
+
     def initialize(options)
       self.options = options
       validate_options

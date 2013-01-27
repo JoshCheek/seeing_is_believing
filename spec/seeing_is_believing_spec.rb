@@ -14,6 +14,8 @@ describe SeeingIsBelieving do
     StringIO.new string
   end
 
+  let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
+
   it 'takes a string or stream and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "1+1\n'2'+'2'"
     output = [[1, ["2"]], [2, ['"22"']]]
@@ -173,6 +175,31 @@ describe SeeingIsBelieving do
     result = invoke '1+1'
     result.should_not have_stdout
     result.should_not have_stderr
+  end
+
+  it 'defaults the filename to temp_dir/program.rb' do
+    result = invoke('print File.expand_path __FILE__')
+    File.basename(result.stdout).should == 'program.rb'
+  end
+
+  it 'can be told to run as a given file (in a given dir/with a given filename)' do
+    filename = File.join proving_grounds_dir, 'mah_file.rb'
+    FileUtils.rm_f filename
+    result   = described_class.new('print File.expand_path __FILE__', filename: filename).call
+    result.stdout.should == filename
+  end
+
+  specify 'cwd is the directory of the file' do
+    filename = File.join proving_grounds_dir, 'mah_file.rb'
+    FileUtils.rm_f filename
+    result   = described_class.new('print File.expand_path __FILE__', filename: filename).call
+    result   = described_class.new('print File.expand_path(Dir.pwd)', filename: filename).call
+    result.stdout.should == proving_grounds_dir
+  end
+
+  it 'does not capture output from __END__ onward' do
+    pending
+    values_for("1+1\n__END__\n1").should == [['2'], [], []]
   end
 
   # something about when the whole input is invalid

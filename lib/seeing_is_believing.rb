@@ -1,17 +1,19 @@
 require 'stringio'
-require 'yaml'
-require 'open3'
+require 'tmpdir'
 
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/expression_list'
+require 'seeing_is_believing/evaluate_by_moving_files'
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
   include TracksLineNumbersSeen
+  BLANK_REGEX = /\A\s*\Z/
 
-  def initialize(string_or_stream)
-    @string = string_or_stream
-    @stream = to_stream string_or_stream
+  def initialize(string_or_stream, options={})
+    @string   = string_or_stream
+    @stream   = to_stream string_or_stream
+    @filename = options[:filename]
   end
 
   def call
@@ -31,7 +33,7 @@ class SeeingIsBelieving
                                             on_complete: lambda { |line, children, completions, line_number|
                                               track_line_number line_number
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
-                                              if expression =~ /\A\s*\Z/ || SyntaxAnalyzer.ends_in_comment?(expression) || SyntaxAnalyzer.will_return?(expression)
+                                              if expression =~ BLANK_REGEX || SyntaxAnalyzer.ends_in_comment?(expression) || SyntaxAnalyzer.will_return?(expression)
                                                 expression + "\n"
                                               else
                                                 record_yahself(expression, line_number) + "\n"
@@ -59,27 +61,12 @@ class SeeingIsBelieving
   end
 
   def result_for(program, min_line_number, max_line_number)
-    stdout, stderr, exitstatus = Open3.capture3('ruby', '-W0',                                   # no warnings (b/c I hijack STDOUT/STDERR)
-                                                        '-I', File.dirname(__FILE__),            # fix load path
-                                                        '-r', 'seeing_is_believing/the_matrix',  # run program in the matrix
-                                                        stdin_data: program)
-    raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}" unless exitstatus.success?
-    # should we raise here if there is an unsuccessful exitstatus?
-    YAML.load(stdout).tap do |result|
-      result.track_line_number min_line_number
-      result.track_line_number max_line_number
+    Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
+      filename = @filename || File.join(dir, 'program.rb')
+      EvaluateByMovingFiles.new(program, filename).call.tap do |result|
+        result.track_line_number min_line_number
+        result.track_line_number max_line_number
+      end
     end
-  rescue Exception
-    $stderr.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
-    $stderr.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
-    $stderr.puts
-    $stderr.puts "Program: #{program.inspect}"
-    $stderr.puts
-    $stderr.puts "Stdout: #{stdout.inspect}"
-    $stderr.puts
-    $stderr.puts "Stderr: #{stderr.inspect}"
-    $stderr.puts
-    $stdout.puts "Status: #{exitstatus.inspect}"
-    raise $!
   end
 end
