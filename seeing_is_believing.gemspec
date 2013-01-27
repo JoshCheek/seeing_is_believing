@@ -20,4 +20,5 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "rspec",    "~> 2.12.0"
   s.add_development_dependency "cucumber", "~> 1.2.1"
+  s.add_development_dependency "ichannel", "~> 5.1.1"
 end
