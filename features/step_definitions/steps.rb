@@ -7,11 +7,11 @@ When 'I run "$command"' do |command|
 end
 
 Then /^(stderr|stdout) is:$/ do |stream_name, output|
-  @last_executed.send(stream_name).chomp.should == output
+  @last_executed.send(stream_name).chomp.should == eval_curlies(output)
 end
 
 Then /^(stderr|stdout) is "(.*?)"$/ do |stream_name, output|
-  @last_executed.send(stream_name).chomp.should == output
+  @last_executed.send(stream_name).chomp.should == eval_curlies(output)
 end
 
 Then 'the exit status is $status' do |status|

@@ -6,7 +6,7 @@ require 'seeing_is_believing/example_use'
 status = 0
 
 ARGV.each do |filename|
-  believer = SeeingIsBelieving::ExampleUse.new(File.read filename)
+  believer = SeeingIsBelieving::ExampleUse.new File.read(filename), filename
   believer.call
   $stdout.puts believer.output
   if believer.has_exception?

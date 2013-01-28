@@ -198,8 +198,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not capture output from __END__ onward' do
-    pending
-    values_for("1+1\n__END__\n1").should == [['2'], [], []]
+    values_for("1+1\nDATA.read\n__END__\n....").should == [['2'], ['"...."']]
   end
 
   # something about when the whole input is invalid

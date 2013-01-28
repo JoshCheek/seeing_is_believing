@@ -19,8 +19,10 @@ class SeeingIsBelieving
   def call
     @memoized_result ||= begin
       program = ''
-      program << expression_list.call until stream.eof?
-      result_for record_exceptions_in(program), min_line_number, max_line_number
+      program << expression_list.call until eof? || data_segment?
+      program = record_exceptions_in program
+      program << "\n" << the_rest_of_the_stream if data_segment?
+      result_for program, min_line_number, max_line_number
     end
   end
 
@@ -29,7 +31,7 @@ class SeeingIsBelieving
   attr_reader :stream
 
   def expression_list
-    @expression_list ||= ExpressionList.new generator: lambda { stream.gets.chomp },
+    @expression_list ||= ExpressionList.new generator:   lambda { get_next_line },
                                             on_complete: lambda { |line, children, completions, line_number|
                                               track_line_number line_number
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
@@ -68,5 +70,35 @@ class SeeingIsBelieving
         result.track_line_number max_line_number
       end
     end
+  end
+
+  def eof?
+    next_line.nil?
+  end
+
+  def data_segment?
+    next_line == '__END__'
+  end
+
+  # rename to peek_next_line
+  def next_line
+    @next_line ||= begin
+      line = stream.gets
+      line && line.chomp
+    end
+  end
+
+  def get_next_line
+    if @next_line
+      line = next_line
+      @next_line = nil
+      line
+    else
+      next_line && get_next_line
+    end
+  end
+
+  def the_rest_of_the_stream
+    get_next_line << "\n" << stream.read
   end
 end

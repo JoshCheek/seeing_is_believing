@@ -73,7 +73,7 @@ Known Issues
 ============
 
 * No idea what happens if you give it a syntactically invalid file. It probably just raises an exception, but might possibly freeze up or something.
-* `return` keyword and heredocs break things, `__END__` probably does too, maybe also `BEGIN/END` and `=begin/=end`
+* heredocs breaks things maybe also `BEGIN/END` and `=begin/=end`
 * There are expressions which continue on the next line even though the previous line is a valid expression, e.g. "3\n.times { |i| i }" which will blow up. This is a fundamental flaw in the algorithm and will either require a smarter algorithm, or some sort of more sophisticated parsing in order to handle correctly
 * Probably doesn't handle stdin correctly
 

@@ -48,6 +48,18 @@ module CommandLineHelpers
   def bin_dir
     File.join root_dir, "bin"
   end
+
+  def path_to(filename)
+    in_proving_grounds { File.join proving_grounds_dir, filename }
+  end
 end
 
 CommandLineHelpers.make_proving_grounds
+
+module GeneralHelpers
+  def eval_curlies(string)
+    string.gsub(/{{(.*?)}}/) { eval $1 }
+  end
+end
+
+World GeneralHelpers

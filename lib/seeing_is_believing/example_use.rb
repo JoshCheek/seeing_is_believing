@@ -10,8 +10,9 @@ class SeeingIsBelieving
     EXCEPTION_PREFIX = '# ~>'
        RESULT_PREFIX = '# =>'
 
-    def initialize(body)
-      self.body = remove_previous_output_from body
+    def initialize(body, filename=nil)
+      self.body     = remove_previous_output_from body
+      self.filename = filename
     end
 
     def output
@@ -20,18 +21,19 @@ class SeeingIsBelieving
 
     def call
       inherit_exception
-      print_each_line
+      print_each_line_until_data_segment
       print_stdout
       print_stderr
+      print_data_segment
       output
     end
 
     private
 
-    attr_accessor :body
+    attr_accessor :body, :filename
 
     def file_result
-      @file_result ||= SeeingIsBelieving.new(body).call
+      @file_result ||= SeeingIsBelieving.new(body, filename: filename).call
     end
 
     def remove_previous_output_from(string)
@@ -44,10 +46,21 @@ class SeeingIsBelieving
       self.exception = file_result.exception
     end
 
-    def print_each_line
+    def print_each_line_until_data_segment
       body.each_line.with_index 1 do |line, index|
+        break if start_of_data_segment? line
         output << format_line(line.chomp, file_result[index])
       end
+    end
+
+    def print_data_segment
+      body.each_line
+          .drop_while { |line| not start_of_data_segment? line }
+          .each { |line| output << line }
+    end
+
+    def start_of_data_segment?(line)
+      line.chomp == '__END__'
     end
 
     def print_stdout
