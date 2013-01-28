@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    seeing_is_believing (0.0.3)
+    seeing_is_believing (0.0.4)
 
 GEM
   remote: http://rubygems.org/
@@ -15,6 +15,7 @@ GEM
     diff-lcs (1.1.3)
     gherkin (2.11.5)
       json (>= 1.4.6)
+    ichannel (5.1.1)
     json (1.7.6)
     rspec (2.12.0)
       rspec-core (~> 2.12.0)
@@ -30,5 +31,6 @@ PLATFORMS
 
 DEPENDENCIES
   cucumber (~> 1.2.1)
+  ichannel (~> 5.1.1)
   rspec (~> 2.12.0)
   seeing_is_believing!
