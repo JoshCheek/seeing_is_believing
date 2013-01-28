@@ -28,51 +28,25 @@ class SeeingIsBelieving
       self.error_stream = options.fetch :error_stream, $stderr
     end
 
-    # clean me up *ugh*
     def call
-      moved = false
-
-      HardCoreEnsure.call \
-        ensure: -> { FileUtils.mv temp_filename, filename if moved },
-
+      @result ||= HardCoreEnsure.call(
         code: -> {
-          if File.exist? temp_filename
-            raise TempFileAlreadyExists,
-              "Trying to back up #{filename.inspect} (FILE) to #{temp_filename.inspect} (TEMPFILE) but TEMPFILE already exists."\
-              " You should check the contents of these files. If FILE is correct, then delete TEMPFILE."\
-              " Otherwise rename TEMPFILE to FILE."
-          end
-
-          if File.exist? filename
-            FileUtils.mv filename, temp_filename
-            moved = true
-          end
-
-          File.open(filename, 'w') { |f| f.write program.to_s }
-
+          dont_overwrite_existing_tempfile!
+          move_file_to_tempfile
+          write_program_to_file
           begin
-            stdout, stderr, exitstatus = Open3.capture3(
-              'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
-                      '-I', File.expand_path('../..', __FILE__), # fix load path
-                      '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
-                      '-C', file_directory,                      # run in the file's directory
-                      filename)
-            raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}" unless exitstatus.success?
-            YAML.load stdout
+            evaluate_file
+            fail unless exitstatus.success?
+            deserialize_result
           rescue Exception
-            error_stream.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
-            error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
-            error_stream.puts
-            error_stream.puts "Program: #{program.inspect}"
-            error_stream.puts
-            error_stream.puts "Stdout: #{stdout.inspect}"
-            error_stream.puts
-            error_stream.puts "Stderr: #{stderr.inspect}"
-            error_stream.puts
-            error_stream.puts "Status: #{exitstatus.inspect}"
+            record_error
             raise $!
           end
+        },
+        ensure: -> {
+          restore_backup
         }
+      )
     end
 
     def file_directory
@@ -81,6 +55,64 @@ class SeeingIsBelieving
 
     def temp_filename
       File.join file_directory, "seeing_is_believing_backup.#{File.basename filename}"
+    end
+
+    private
+
+    attr_accessor :stdout, :stderr, :exitstatus
+
+    def dont_overwrite_existing_tempfile!
+      return unless File.exist? temp_filename
+      raise TempFileAlreadyExists,
+        "Trying to back up #{filename.inspect} (FILE) to #{temp_filename.inspect} (TEMPFILE) but TEMPFILE already exists."\
+        " You should check the contents of these files. If FILE is correct, then delete TEMPFILE."\
+        " Otherwise rename TEMPFILE to FILE."
+    end
+
+    def move_file_to_tempfile
+      return unless File.exist? filename
+      FileUtils.mv filename, temp_filename
+      @was_backed_up = true
+    end
+
+    def restore_backup
+      return unless @was_backed_up
+      FileUtils.mv temp_filename, filename
+    end
+
+    def write_program_to_file
+      File.open(filename, 'w') { |f| f.write program.to_s }
+    end
+
+    def evaluate_file
+      self.stdout, self.stderr, self.exitstatus = Open3.capture3(
+        'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
+                '-I', File.expand_path('../..', __FILE__), # fix load path
+                '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
+                '-C', file_directory,                      # run in the file's directory
+                filename
+      )
+    end
+
+    def fail
+      raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}"
+    end
+
+    def deserialize_result
+      YAML.load stdout
+    end
+
+    def record_error
+      error_stream.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
+      error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
+      error_stream.puts
+      error_stream.puts "Program: #{program.inspect}"
+      error_stream.puts
+      error_stream.puts "Stdout: #{stdout.inspect}"
+      error_stream.puts
+      error_stream.puts "Stderr: #{stderr.inspect}"
+      error_stream.puts
+      error_stream.puts "Status: #{exitstatus.inspect}"
     end
   end
 end
