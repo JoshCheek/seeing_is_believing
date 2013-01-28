@@ -75,6 +75,7 @@ Feature: Running the binary
     # >> some stdout output
 
     # !> some stderr output
+    __END__
     """
     When I run "seeing_is_believing previous_output.rb"
     Then stderr is empty
@@ -84,6 +85,7 @@ Feature: Running the binary
     1 + 1  # => 2
     2 + 2  # => 4
 
+    __END__
     """
 
   Scenario: Printing within the file
