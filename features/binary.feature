@@ -149,6 +149,48 @@ Feature: Running the binary
     2
     """
 
+  @not-implemented
+  Scenario: Doesn't record BEGIN/END since that's apparently a syntax error
+    Given the file "BEGIN_and_END.rb":
+    """
+    puts 1
+    BEGIN {
+      puts "begin code"
+      some_var = 2
+    }
+    puts 3
+    END {
+      puts "end code"
+      puts some_var
+    }
+    puts 4
+    """
+    When I run "seeing_is_believing BEGIN_and_END.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    puts 1               # => nil
+    BEGIN {
+      puts "begin code"  # => nil
+      some_var = 2       # => 2
+    }
+    puts 3               # => nil
+    END {
+      puts "end code"    # => nil
+      puts some_var      # => nil
+    }
+    puts 4               # => nil
+
+    # >> begin code
+    # >> 1
+    # >> 3
+    # >> 4
+    # >> end code
+    # >> 2
+    """
+
+
   Scenario: Requiring other files
   Scenario: Syntactically invalid file
   Scenario: Passing a nonexistent file
