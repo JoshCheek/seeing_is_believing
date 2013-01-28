@@ -7,8 +7,7 @@ status = 0
 
 ARGV.each do |filename|
   believer = SeeingIsBelieving::ExampleUse.new File.read(filename), filename
-  believer.call
-  $stdout.puts believer.output
+  $stdout.puts believer.call
   if believer.has_exception?
     $stderr.puts believer.exception.message
     status = 1

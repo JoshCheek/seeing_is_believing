@@ -15,25 +15,30 @@ class SeeingIsBelieving
       self.filename = filename
     end
 
-    def output
-      @output ||= ''
+    def new_body
+      @new_body ||= ''
     end
 
     def call
+      evaluate_program
       inherit_exception
-      print_each_line_until_data_segment
-      print_stdout
-      print_stderr
-      print_data_segment
-      output
+      add_each_line_until_data_segment
+      add_stdout
+      add_stderr
+      add_data_segment
+      new_body
     end
 
     private
 
-    attr_accessor :body, :filename
+    attr_accessor :body, :filename, :file_result
 
-    def file_result
-      @file_result ||= SeeingIsBelieving.new(body, filename: filename).call
+    def evaluate_program
+      self.file_result = SeeingIsBelieving.new(body, filename: filename).call
+    end
+
+    def inherit_exception
+      self.exception = file_result.exception
     end
 
     def remove_previous_output_from(string)
@@ -42,37 +47,33 @@ class SeeingIsBelieving
             .gsub(/(\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,        '')
     end
 
-    def inherit_exception
-      self.exception = file_result.exception
-    end
-
-    def print_each_line_until_data_segment
+    def add_each_line_until_data_segment
       body.each_line.with_index 1 do |line, index|
         break if start_of_data_segment? line
-        output << format_line(line.chomp, file_result[index])
+        new_body << format_line(line.chomp, file_result[index])
       end
     end
 
-    def print_data_segment
+    def add_data_segment
       body.each_line
           .drop_while { |line| not start_of_data_segment? line }
-          .each { |line| output << line }
+          .each { |line| new_body << line }
     end
 
     def start_of_data_segment?(line)
       line.chomp == '__END__'
     end
 
-    def print_stdout
+    def add_stdout
       return unless file_result.has_stdout?
-      output << "\n"
-      file_result.stdout.each_line { |line| output << "#{STDOUT_PREFIX} #{line}" }
+      new_body << "\n"
+      file_result.stdout.each_line { |line| new_body << "#{STDOUT_PREFIX} #{line}" }
     end
 
-    def print_stderr
+    def add_stderr
       return unless file_result.has_stderr?
-      output << "\n"
-      file_result.stderr.each_line { |line| output << "#{STDERR_PREFIX} #{line}" }
+      new_body << "\n"
+      file_result.stderr.each_line { |line| new_body << "#{STDERR_PREFIX} #{line}" }
     end
 
     # max line length of the body + 2 spaces for padding
