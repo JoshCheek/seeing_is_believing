@@ -73,15 +73,14 @@ class SeeingIsBelieving
   end
 
   def eof?
-    next_line.nil?
+    peek_next_line.nil?
   end
 
   def data_segment?
-    next_line == '__END__'
+    peek_next_line == '__END__'
   end
 
-  # rename to peek_next_line
-  def next_line
+  def peek_next_line
     @next_line ||= begin
       line = stream.gets
       line && line.chomp
@@ -90,11 +89,11 @@ class SeeingIsBelieving
 
   def get_next_line
     if @next_line
-      line = next_line
+      line = peek_next_line
       @next_line = nil
       line
     else
-      next_line && get_next_line
+      peek_next_line && get_next_line
     end
   end
 
