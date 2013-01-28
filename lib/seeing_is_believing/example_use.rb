@@ -41,12 +41,6 @@ class SeeingIsBelieving
       self.exception = file_result.exception
     end
 
-    def remove_previous_output_from(string)
-      string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
-            .gsub(/(\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,        '')
-            .gsub(/(\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,        '')
-    end
-
     def add_each_line_until_data_segment
       body.each_line.with_index 1 do |line, index|
         break if start_of_data_segment? line
@@ -64,6 +58,22 @@ class SeeingIsBelieving
       line.chomp == '__END__'
     end
 
+    # max line length of the body + 2 spaces for padding
+    def line_length
+      @line_length ||= 2 + body.each_line
+                               .map(&:chomp)
+                               .take_while { |line| not start_of_data_segment? line }
+                               .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
+                               .map(&:length)
+                               .max
+    end
+
+    def remove_previous_output_from(string)
+      string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
+            .gsub(/(\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,        '')
+            .gsub(/(\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,        '')
+    end
+
     def add_stdout
       return unless file_result.has_stdout?
       new_body << "\n"
@@ -74,16 +84,6 @@ class SeeingIsBelieving
       return unless file_result.has_stderr?
       new_body << "\n"
       file_result.stderr.each_line { |line| new_body << "#{STDERR_PREFIX} #{line}" }
-    end
-
-    # max line length of the body + 2 spaces for padding
-    def line_length
-      @line_length ||= 2 + body.each_line
-                               .map(&:chomp)
-                               .take_while { |line| not start_of_data_segment? line }
-                               .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
-                               .map(&:length)
-                               .max
     end
 
     def format_line(line, line_results)
