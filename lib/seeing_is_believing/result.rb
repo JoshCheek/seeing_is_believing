@@ -1,10 +1,29 @@
+require 'forwardable'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/tracks_line_numbers_seen'
 
 class SeeingIsBelieving
   class Result
 
-    Line = Class.new(Array) { include HasException }
+    class Line
+      include HasException
+
+      extend Forwardable
+      def_delegators :@array, :[], :<<, :any?, :join, :to_ary, :to_a
+
+      def initialize
+        @array ||= []
+      end
+
+      def ==(ary_or_line)
+        if Array === ary_or_line
+          @array == ary_or_line
+        else
+          @array == ary_or_line &&
+            has_exception? == ary_or_line.has_exception?
+        end
+      end
+    end
 
     include HasException
     include TracksLineNumbersSeen
@@ -42,7 +61,7 @@ class SeeingIsBelieving
     # probably not really useful, just exists to satisfy the tests, which specified too simple of an interface
     def to_a
       (min_line_number..max_line_number).map do |line_number|
-        [line_number, [*self[line_number], *Array(self[line_number].exception)]]
+        [line_number, [*self[line_number].to_ary, *Array(self[line_number].exception)]]
       end
     end
 

@@ -51,17 +51,21 @@ Feature: Running the binary
   Scenario: Raising exceptions
     Given the file "raises_exception.rb":
     """
-    1 + 1
     raise "ZOMG!"
+    """
+    And the file "requires_exception_raising_code.rb":
+    """
+    1 + 1
+    require_relative 'raises_exception'
     1 + 1
     """
-    When I run "seeing_is_believing raises_exception.rb"
+    When I run "seeing_is_believing requires_exception_raising_code.rb"
     Then stderr is "ZOMG!"
     And the exit status is 1
     And stdout is:
     """
-    1 + 1          # => 2
-    raise "ZOMG!"  # ~> RuntimeError: ZOMG!
+    1 + 1                                # => 2
+    require_relative 'raises_exception'  # ~> RuntimeError: ZOMG!
     1 + 1
     """
 
