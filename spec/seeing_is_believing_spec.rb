@@ -125,8 +125,11 @@ describe SeeingIsBelieving do
 
     result[3].should == []
     result.to_a.size.should == 3
+  end
 
+  it 'records the backtrace on the errors' do
     pending 'Not sure how to force the backtrace to render' do
+      result = invoke("12\nraise Exception, 'omg!'\n12")
       result.exception.backtrace.should be_a_kind_of Array
     end
   end
@@ -149,9 +152,8 @@ describe SeeingIsBelieving do
     values_for("def meth \n return 1 if true  \n end \n meth").should == [[], [], ['nil'], ['1']]
     values_for("def meth \n return 1 if false \n end \n meth").should == [[], [], ['nil'], ['nil']]
     values_for("-> {  \n return 1          \n }.call"        ).should == [[], [], ['1']]
-    pending "this doesn't work because the return detecting code is a very conservative regexp" do
-      values_for("-> { return 1 }.call"        ).should == [['1']]
-    end
+    # this doesn't work because the return detecting code is a very conservative regexp
+    # values_for("-> { return 1 }.call"        ).should == [['1']]
   end
 
   it 'does not affect its environment' do

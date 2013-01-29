@@ -121,10 +121,12 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     will_return["o.return"].should be_false
     will_return[":return"].should be_false
     will_return["'return'"].should be_false
-    # will_return["'return\nreturn\nreturn'"].should be_false
     will_return["def a\nreturn 1\nend"].should be_false
     will_return["-> {\nreturn 1\n}"].should be_false
     will_return["Proc.new {\nreturn 1\n}"].should be_false
-    # will_return["return \\\n1"].should be_true
+    pending "this doesn't work because the return detecting code is an insufficient regexp" do
+      will_return["'return\nreturn\nreturn'"].should be_false
+      will_return["return \\\n1"].should be_true
+    end
   end
 end
