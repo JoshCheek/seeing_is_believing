@@ -203,6 +203,7 @@ describe SeeingIsBelieving do
     values_for("1+1\nDATA.read\n__END__\n....").should == [['2'], ['"...."']]
   end
 
-  # something about when the whole input is invalid
-  # something about multi-line strings
+  it 'raises a SyntaxError when the whole program is invalid' do
+    expect { invoke '"' }.to raise_error SyntaxError
+  end
 end

@@ -42,6 +42,7 @@ class SeeingIsBelieving
     def generate
       @line_number += 1
       expression = generator.call
+      raise SyntaxError unless expression
       PendingExpression.new(expression, [])
     end
 

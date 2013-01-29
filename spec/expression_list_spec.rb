@@ -131,4 +131,15 @@ describe SeeingIsBelieving::ExpressionList do
     stream.string.should include "GENERATED"
     stream.string.should include "REDUCED"
   end
+
+  # in reality, the problem may just lie with our lib
+  # but it should be correct in most cases
+  it 'Raises a syntax error if it cannot generate the expression' do
+    generations = ["'"]
+    expect do
+      described_class.new(
+        on_complete: -> { "" }, generator: -> { generations.shift }
+      ).call
+    end.to raise_error SyntaxError
+  end
 end
