@@ -11,7 +11,6 @@
 # I did look at Ripper, and it will invoke on_kw("__FILE__")
 # when it sees this.
 
-require 'yaml'
 require 'open3'
 require 'fileutils'
 require 'seeing_is_believing/error'
@@ -99,7 +98,7 @@ class SeeingIsBelieving
     end
 
     def deserialize_result
-      YAML.load stdout
+      Marshal.load stdout
     end
 
     def record_error

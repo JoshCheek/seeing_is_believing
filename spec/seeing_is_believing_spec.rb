@@ -128,10 +128,8 @@ describe SeeingIsBelieving do
   end
 
   it 'records the backtrace on the errors' do
-    pending 'Not sure how to force the backtrace to render' do
-      result = invoke("12\nraise Exception, 'omg!'\n12")
-      result.exception.backtrace.should be_a_kind_of Array
-    end
+    result = invoke("12\nraise Exception, 'omg!'\n12")
+    result.exception.backtrace.should be_a_kind_of Array
   end
 
   it 'does not fuck up __LINE__ macro' do
