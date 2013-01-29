@@ -5,7 +5,7 @@ end
 
 desc 'run cukes'
 task :cuke do
-  sh 'cucumber -t ~@not-implemented'
+  sh 'cucumber -t ~@not-implemented -t ~@wip'
 end
 
 namespace :cuke do
