@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 
 require 'open3'
-require 'seeing_is_believing/print_results_next_to_lines'
+require 'seeing_is_believing/binary'
 
 program_status = 0
 
