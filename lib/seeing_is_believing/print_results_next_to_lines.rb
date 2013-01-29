@@ -2,7 +2,7 @@ require 'seeing_is_believing'
 require 'seeing_is_believing/has_exception'
 
 class SeeingIsBelieving
-  class ExampleUse
+  class PrintResultsNextToLines
     include HasException
 
        STDOUT_PREFIX = '# >>'
