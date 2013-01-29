@@ -11,33 +11,30 @@ class SeeingIsBelieving
       self.stderr = stderr
     end
 
-    def exitstatus
-      call
-      @exitstatus
-    end
-
     def call
       return if @already_called
       @already_called = true
 
-      program_status = 0
+      @exitstatus = 0
 
-      argv.each do |filename|
-        out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
-        unless syntax_status.success?
-          program_status = 1
-          stderr.puts err
-          next
-        end
+      filename = argv.first
+      out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
+      if syntax_status.success?
         believer = SeeingIsBelieving::PrintResultsNextToLines.new File.read(filename), filename
         stdout.puts believer.call
         if believer.has_exception?
           stderr.puts believer.exception.message
-          program_status = 1
+          @exitstatus = 1
         end
+      else
+        @exitstatus = 1
+        stderr.puts err
       end
+    end
 
-      @exitstatus = program_status
+    def exitstatus
+      call
+      @exitstatus
     end
   end
 end
