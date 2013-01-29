@@ -38,3 +38,7 @@ Feature: Running the binary unsuccessfully
     And stdout is empty
 
   Scenario: Passing a nonexistent file
+    When I run "seeing_is_believing this_file_does_not_exist.rb"
+    Then stderr is "this_file_does_not_exist.rb does not exist!"
+    And the exit status is 1
+    And stdout is empty

@@ -15,6 +15,12 @@ class SeeingIsBelieving
       return if @already_called
       @already_called = true
 
+      unless File.exist? filename
+        @exitstatus = 1
+        stderr.puts "#{filename} does not exist!"
+        return
+      end
+
       out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
       unless syntax_status.success?
         @exitstatus = 1
