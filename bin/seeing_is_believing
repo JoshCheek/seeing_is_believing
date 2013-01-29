@@ -5,21 +5,4 @@ $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 require 'open3'
 require 'seeing_is_believing/binary'
 
-program_status = 0
-
-ARGV.each do |filename|
-  out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
-  unless syntax_status.success?
-    program_status = 1
-    $stderr.puts err
-    next
-  end
-  believer = SeeingIsBelieving::PrintResultsNextToLines.new File.read(filename), filename
-  $stdout.puts believer.call
-  if believer.has_exception?
-    $stderr.puts believer.exception.message
-    program_status = 1
-  end
-end
-
-exit program_status
+exit SeeingIsBelieving::Binary.new(ARGV, $stdin, $stdout, $stderr).exitstatus
