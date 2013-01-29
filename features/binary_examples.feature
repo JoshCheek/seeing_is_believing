@@ -1,4 +1,5 @@
-Feature: Running the binary
+Feature: Running the binary successfully
+
   They say seeing is believing. So to believe that this works
   I want to see that it works by making a binary to use the lib.
 
@@ -46,27 +47,6 @@ Feature: Running the binary
     "a
      b
      c"             # => "a\n b\n c"
-    """
-
-  Scenario: Raising exceptions
-    Given the file "raises_exception.rb":
-    """
-    raise "ZOMG!"
-    """
-    And the file "requires_exception_raising_code.rb":
-    """
-    1 + 1
-    require_relative 'raises_exception'
-    1 + 1
-    """
-    When I run "seeing_is_believing requires_exception_raising_code.rb"
-    Then stderr is "ZOMG!"
-    And the exit status is 1
-    And stdout is:
-    """
-    1 + 1                                # => 2
-    require_relative 'raises_exception'  # ~> RuntimeError: ZOMG!
-    1 + 1
     """
 
   Scenario: Passing previous output back into input
@@ -190,9 +170,6 @@ Feature: Running the binary
     # >> 2
     """
 
-
   Scenario: Requiring other files
-  Scenario: Syntactically invalid file
-  Scenario: Passing a nonexistent file
   Scenario: Evaluating a file that requires other files, from a different directory
   Scenario: Passing the file on stdin
