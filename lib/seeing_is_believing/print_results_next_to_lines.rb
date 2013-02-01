@@ -59,7 +59,7 @@ class SeeingIsBelieving
       line.chomp == '__END__'
     end
 
-    # max line length of the body + 2 spaces for padding
+    # max line length of the body (exempting coments) + 2 spaces for padding
     def line_length
       @line_length ||= 2 + body.each_line
                                .map(&:chomp)
