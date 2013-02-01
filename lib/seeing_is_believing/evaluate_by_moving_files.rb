@@ -63,11 +63,7 @@ class SeeingIsBelieving
     attr_accessor :stdout, :stderr, :exitstatus
 
     def dont_overwrite_existing_tempfile!
-      return unless File.exist? temp_filename
-      raise TempFileAlreadyExists,
-        "Trying to back up #{filename.inspect} (FILE) to #{temp_filename.inspect} (TEMPFILE) but TEMPFILE already exists."\
-        " You should check the contents of these files. If FILE is correct, then delete TEMPFILE."\
-        " Otherwise rename TEMPFILE to FILE."
+      raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename
     end
 
     def move_file_to_tempfile
