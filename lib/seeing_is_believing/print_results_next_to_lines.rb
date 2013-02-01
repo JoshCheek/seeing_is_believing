@@ -64,7 +64,7 @@ class SeeingIsBelieving
       @line_length ||= 2 + body.each_line
                                .map(&:chomp)
                                .take_while { |line| not start_of_data_segment? line }
-                               .reject { |line| not not (line == "=begin") .. (line == "=end") }
+                               .select { |line| not (line == "=begin") .. (line == "=end") }
                                .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
                                .map(&:length)
                                .max
