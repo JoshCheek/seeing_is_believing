@@ -100,7 +100,6 @@ class SeeingIsBelieving
         self.stdout     = out_reader.value
         self.stderr     = err_reader.value
         self.exitstatus = t.value
-        [stdout, stderr, exitstatus]
       end
     end
 
