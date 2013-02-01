@@ -86,30 +86,22 @@ class SeeingIsBelieving
     end
 
     def evaluate_file
-      self.stdout, self.stderr, self.exitstatus = Open3.capture3(
-        'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
-                '-I', File.expand_path('../..', __FILE__), # fix load path
-                '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
-                '-C', file_directory,                      # run in the file's directory
-                filename,
-                stdin_data: input_stream.read # <-- Need to make this not so shitty
-
-                # Should be able to do something like this:
-                #
-                # Open3.popen3('ruby', '-e', 'puts gets') {|i, o, e, t|
-                #   out_reader = Thread.new { o.read }
-                #   err_reader = Thread.new { e.read }
-                #   Thread.new do
-                #     reader.each_char { |char| i.write char }
-                #     i.close
-                #   end
-                #   writer.write "abc"
-                #   writer.write "def"
-                #   writer.close
-                #   out_reader.value # => "abcdef\n"
-                #   [out_reader.value, err_reader.value, t.value]
-                # }
-      )
+      Open3.popen3 'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
+                           '-I', File.expand_path('../..', __FILE__), # fix load path
+                           '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
+                           '-C', file_directory,                      # run in the file's directory
+                           filename do |i, o, e, t|
+        out_reader = Thread.new { o.read }
+        err_reader = Thread.new { e.read }
+        Thread.new do
+          input_stream.each_char { |char| i.write char }
+          i.close
+        end
+        self.stdout     = out_reader.value
+        self.stderr     = err_reader.value
+        self.exitstatus = t.value
+        [stdout, stderr, exitstatus]
+      end
     end
 
     def fail
