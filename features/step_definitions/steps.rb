@@ -2,8 +2,12 @@ Given 'the file "$filename":' do |filename, body|
   CommandLineHelpers.write_file filename, body
 end
 
+Given 'I have the stdin content "$content"' do |content|
+  @stdin_data = content
+end
+
 When 'I run "$command"' do |command|
-  @last_executed = CommandLineHelpers.execute command
+  @last_executed = CommandLineHelpers.execute command, @stdin_data
 end
 
 Then /^(stderr|stdout) is:$/ do |stream_name, output|

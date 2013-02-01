@@ -2,8 +2,8 @@ require 'seeing_is_believing'
 require 'stringio'
 
 describe SeeingIsBelieving do
-  def invoke(input)
-    described_class.new(input).call
+  def invoke(input, options={})
+    described_class.new(input, options).call
   end
 
   def values_for(input)
@@ -185,15 +185,16 @@ describe SeeingIsBelieving do
   it 'can be told to run as a given file (in a given dir/with a given filename)' do
     filename = File.join proving_grounds_dir, 'mah_file.rb'
     FileUtils.rm_f filename
-    result   = described_class.new('print File.expand_path __FILE__', filename: filename).call
+    result   = invoke 'print File.expand_path __FILE__', filename: filename
     result.stdout.should == filename
   end
 
+  # this can be refactored to use invoke
   specify 'cwd is the directory of the file' do
     filename = File.join proving_grounds_dir, 'mah_file.rb'
     FileUtils.rm_f filename
-    result   = described_class.new('print File.expand_path __FILE__', filename: filename).call
-    result   = described_class.new('print File.expand_path(Dir.pwd)', filename: filename).call
+    result   = invoke 'print File.expand_path __FILE__', filename: filename
+    result   = invoke 'print File.expand_path(Dir.pwd)', filename: filename
     result.stdout.should == proving_grounds_dir
   end
 
@@ -203,5 +204,17 @@ describe SeeingIsBelieving do
 
   it 'raises a SyntaxError when the whole program is invalid' do
     expect { invoke '"' }.to raise_error SyntaxError
+  end
+
+  it 'can be given a stdin stream' do
+    invoke('$stdin.read', stdin: StringIO.new("input"))[1].should == ['"input"']
+  end
+
+  it 'can be given a stdin string' do
+    invoke('$stdin.read', stdin: "input")[1].should == ['"input"']
+  end
+
+  it 'defaults the stdin stream to an empty string' do
+    invoke('$stdin.read')[1].should == ['""']
   end
 end

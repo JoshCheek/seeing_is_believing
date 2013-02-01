@@ -12,6 +12,7 @@
 # when it sees this.
 
 require 'open3'
+require 'stringio'
 require 'fileutils'
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
@@ -19,12 +20,13 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream
+    attr_accessor :program, :filename, :error_stream, :input_stream
 
     def initialize(program, filename, options={})
       self.program      = program
       self.filename     = File.expand_path(filename)
-      self.error_stream = options.fetch :error_stream, $stderr
+      self.error_stream = options.fetch :error_stream, $stderr # hmm, not really liking the global here
+      self.input_stream = options.fetch :input_stream, StringIO.new('')
     end
 
     def call
@@ -89,7 +91,24 @@ class SeeingIsBelieving
                 '-I', File.expand_path('../..', __FILE__), # fix load path
                 '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
                 '-C', file_directory,                      # run in the file's directory
-                filename
+                filename,
+                stdin_data: input_stream.read # <-- Need to make this not so shitty
+
+                # Should be able to do something like this:
+                #
+                # Open3.popen3('ruby', '-e', 'puts gets') {|i, o, e, t|
+                #   out_reader = Thread.new { o.read }
+                #   err_reader = Thread.new { e.read }
+                #   Thread.new do
+                #     reader.each_char { |char| i.write char }
+                #     i.close
+                #   end
+                #   writer.write "abc"
+                #   writer.write "def"
+                #   writer.close
+                #   out_reader.value # => "abcdef\n"
+                #   [out_reader.value, err_reader.value, t.value]
+                # }
       )
     end
 

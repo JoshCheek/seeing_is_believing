@@ -10,9 +10,10 @@ class SeeingIsBelieving
     EXCEPTION_PREFIX = '# ~>'
        RESULT_PREFIX = '# =>'
 
-    def initialize(body, filename=nil)
+    def initialize(body, stdin, filename=nil)
       self.body     = remove_previous_output_from body
       self.filename = filename
+      self.stdin    = stdin
     end
 
     def new_body
@@ -31,10 +32,10 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :body, :filename, :file_result
+    attr_accessor :body, :filename, :file_result, :stdin
 
     def evaluate_program
-      self.file_result = SeeingIsBelieving.new(body, filename: filename).call
+      self.file_result = SeeingIsBelieving.new(body, filename: filename, stdin: stdin).call
     end
 
     def inherit_exception

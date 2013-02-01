@@ -170,6 +170,18 @@ Feature: Running the binary successfully
     # >> 2
     """
 
-  Scenario: Requiring other files
-  Scenario: Evaluating a file that requires other files, from a different directory
   Scenario: Passing the file on stdin
+    Given I have the stdin content "hi!"
+    And the file "reads_from_stdin.rb":
+    """
+    puts "You said: #{gets}"
+    """
+    When I run "seeing_is_believing reads_from_stdin.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    puts "You said: #{gets}"  # => nil
+
+    # >> You said: hi!
+    """

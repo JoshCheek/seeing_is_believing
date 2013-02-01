@@ -18,10 +18,11 @@ module CommandLineHelpers
     end
   end
 
-  def execute(command)
+  def execute(command, stdin_data=nil)
+    stdin_data ||= ''
     in_proving_grounds do
       bin_in_path = {'PATH' => "#{bin_dir}:#{ENV['PATH']}"}
-      Invocation.new *Open3.capture3(bin_in_path, command)
+      Invocation.new *Open3.capture3(bin_in_path, command, stdin_data: stdin_data)
     end
   end
 

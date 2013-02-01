@@ -14,6 +14,7 @@ class SeeingIsBelieving
     @string   = string_or_stream
     @stream   = to_stream string_or_stream
     @filename = options[:filename]
+    @stdin    = to_stream options.fetch(:stdin, '')
   end
 
   def call
@@ -65,7 +66,7 @@ class SeeingIsBelieving
   def result_for(program, min_line_number, max_line_number)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.new(program, filename).call.tap do |result|
+      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin).call.tap do |result|
         result.track_line_number min_line_number
         result.track_line_number max_line_number
       end
