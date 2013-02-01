@@ -28,7 +28,7 @@ class SeeingIsBelieving
         return
       end
 
-      believer = SeeingIsBelieving::PrintResultsNextToLines.new File.read(filename), $stdin, filename
+      believer = PrintResultsNextToLines.new File.read(filename), stdin, filename
       stdout.puts believer.call
       if believer.has_exception?
         stderr.puts believer.exception.message
