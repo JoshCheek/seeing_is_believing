@@ -125,6 +125,16 @@ describe SeeingIsBelieving::ExpressionList do
     block_invocations.should == 1
   end
 
+  example "example: =begin/=end comments" do
+    block_invocations = 0
+    call ['=begin', '1', '=end'] do |*expressions, line_number|
+      expressions.join('').should == "=begin1=end"
+      line_number.should == 3
+      block_invocations += 1
+    end
+    block_invocations.should == 1
+  end
+
   example "example: smoke test debug option" do
     stream = StringIO.new
     call(%w[a+ b], debug: true, debug_stream: stream) { |*expressions, _| expressions.join("\n") }

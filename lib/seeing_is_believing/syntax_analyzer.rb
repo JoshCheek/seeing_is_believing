@@ -46,7 +46,13 @@ class SeeingIsBelieving
     end
 
     def self.valid_ruby?(code)
-      parsed(code).valid_ruby?
+      parsed(code).valid_ruby? && begin_and_end_comments_are_complete?(code)
+    end
+
+    def self.begin_and_end_comments_are_complete?(code)
+      code.scan(/^=(?:begin|end)$/)
+          .each_slice(2)
+          .all? { |b, e| b == '=begin' && e == '=end' }
     end
 
     def valid_ruby?
@@ -108,7 +114,11 @@ class SeeingIsBelieving
     # COMMENTS
 
     def self.ends_in_comment?(code)
-      parsed(code.lines.to_a.last.to_s).has_comment?
+      code =~ /^=end\Z/ || parsed(code.lines.to_a.last.to_s).has_comment?
+    end
+
+    def self.unclosed_comment?(code)
+      !begin_and_end_comments_are_complete?(code)
     end
 
     def has_comment?

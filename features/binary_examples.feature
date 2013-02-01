@@ -21,6 +21,11 @@ Feature: Running the binary successfully
     meth "12"
     meth "34"
 
+    =begin
+    I don't ever actually write
+      comments like this
+    =end
+
     # multilinezzz
     "a
      b
@@ -42,6 +47,11 @@ Feature: Running the binary successfully
     # some invocations
     meth "12"       # => "12"
     meth "34"       # => "34"
+
+    =begin
+    I don't ever actually write
+      comments like this
+    =end
 
     # multilinezzz
     "a

@@ -84,7 +84,7 @@ class SeeingIsBelieving
     def children_will_never_be_valid?(expression)
       analyzer = SyntaxAnalyzer.new(expression)
       analyzer.parse
-      analyzer.unclosed_string? || analyzer.unclosed_regexp?
+      analyzer.unclosed_string? || analyzer.unclosed_regexp? || SyntaxAnalyzer.unclosed_comment?(expression)
     end
   end
 end

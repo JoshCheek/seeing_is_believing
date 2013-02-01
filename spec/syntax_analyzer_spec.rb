@@ -5,21 +5,45 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_valid = lambda { |code| described_class.valid_ruby? code }
     is_valid['1+2'].should be_true
     is_valid['+'].should be_false
+    is_valid["=begin\n1\n=end"].should be_true
 
     # due to what are possibly bugs in Ripper
     # these don't raise any errors, so have to check them explicitly
     is_valid["'"].should be_false
     is_valid["/"].should be_false
+    is_valid["=begin"].should be_false
+    is_valid[" =begin"].should be_false
+    is_valid[" = begin"].should be_false
+    is_valid["=begin\n1"].should be_false
+    is_valid["=begin\n1\n=end\n=begin"].should be_false
+    is_valid["=begin\n1\n=end\n=end"].should be_false
   end
 
   it 'knows if the last line is a comment' do
     is_comment = lambda { |code| described_class.ends_in_comment? code }
+
+    # true
     is_comment['# whatev'].should be_true
     is_comment['a # whatev'].should be_true
     is_comment["a \n b # whatev"].should be_true
+    is_comment["=begin\n1\n=end"].should be_true
+
+    # false
     is_comment['a'].should be_false
     is_comment["a # whatev \n b"].should be_false
     is_comment[""].should be_false
+    is_comment["=begin\n=end\n\n =end"].should be_false
+  end
+
+  it 'knows if it contains an unclosed comment' do
+    unclosed_comment = lambda { |code| described_class.unclosed_comment? code }
+    unclosed_comment["=begin"].should be_true
+    unclosed_comment["=begin\n"].should be_true
+    unclosed_comment["=begin\n1"].should be_true
+    unclosed_comment["1\n=begin\n1\n"].should be_true
+    unclosed_comment["1\n=begin\n1\n =end"].should be_true
+    unclosed_comment["1\n=begin\n1\n=end"].should be_false
+    unclosed_comment[" =begin"].should be_false
   end
 
   # probably don't really need this many tests, but I'm unfamiliar with how thorough Ripper is
