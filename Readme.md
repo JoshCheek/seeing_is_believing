@@ -64,15 +64,6 @@ result[2]   # => ['"A"', '"B"', '"C"']
 Install
 =======
 
-For now, since Rubygems is not allowing pushes:
-
-    $ git clone https://github.com/JoshCheek/seeing_is_believing/
-    $ cd seeing_is_believing
-    $ gem build seeing_is_believing.gemspec
-    $ gem install seeing_is_believing-0.0.7.gem
-    $ cd ..
-    $ rm -rf "./seeing_is_believing"
-
 When Rubygems gets back up:
 
     $ gem install seeing_is_believing
@@ -80,6 +71,15 @@ When Rubygems gets back up:
 Or if you haven't fixed your gem home, and you aren't using any version managers:
 
     $ sudo gem install seeing_is_believing
+
+Rubygems is allowing pushes again, but if it goes back down, you can install like this:
+
+    $ git clone https://github.com/JoshCheek/seeing_is_believing/
+    $ cd seeing_is_believing
+    $ gem build seeing_is_believing.gemspec
+    $ gem install seeing_is_believing-0.0.8.gem
+    $ cd ..
+    $ rm -rf "./seeing_is_believing"
 
 Hook it into TextMate
 =====================
