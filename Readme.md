@@ -72,9 +72,9 @@ Or if you haven't fixed your gem home, and you aren't using any version managers
 Known Issues
 ============
 
-* Heredocs breaks things b/c they're totally weird
-* `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial, but there is currently a cuke for it
 * There are expressions which continue on the next line even though the previous line is a valid expression, e.g. "3\n.times { |i| i }" which will blow up. This is a fundamental flaw in the algorithm and will either require a smarter algorithm, or some sort of more sophisticated parsing in order to handle correctly
+* `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial, but there is currently a cuke for it
+* Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
 
 License
 =======

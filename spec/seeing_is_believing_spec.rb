@@ -104,6 +104,15 @@ describe SeeingIsBelieving do
                 3 # at end of program").should == [['1'], [], []]
   end
 
+  it "does not record expressions that are here docs (only really b/c it's not smart enough)" do
+    values_for("<<A\n1\nA").should be_all &:empty?
+    values_for(" <<A\n1\nA").should be_all &:empty?
+    values_for("<<-A\n1\n A").should be_all &:empty?
+    values_for(" <<-A\n1\n A").should be_all &:empty?
+    values_for("s=<<-A\n1\n A").should be_all &:empty?
+    values_for("def meth\n<<-A\n1\nA\nend").should == [[], [], [], [], ['nil']]
+  end
+
   it 'has no output for empty lines' do
     values_for('').should == [[]]
     values_for('  ').should == [[]]

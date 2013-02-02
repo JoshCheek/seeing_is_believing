@@ -30,6 +30,11 @@ Feature: Running the binary successfully
     "a
      b
      c"
+
+    # don't record heredocs b/c they're just too fucking different
+    <<HERE
+    is a doc
+    HERE
     """
     When I run "seeing_is_believing basic_functionality.rb"
     Then stderr is empty
@@ -57,6 +62,11 @@ Feature: Running the binary successfully
     "a
      b
      c"             # => "a\n b\n c"
+
+    # don't record heredocs b/c they're just too fucking different
+    <<HERE
+    is a doc
+    HERE
     """
 
   Scenario: Passing previous output back into input

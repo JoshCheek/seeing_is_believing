@@ -36,7 +36,7 @@ class SeeingIsBelieving
                                             on_complete: lambda { |line, children, completions, line_number|
                                               track_line_number line_number
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
-                                              if expression =~ BLANK_REGEX || SyntaxAnalyzer.ends_in_comment?(expression) || SyntaxAnalyzer.will_return?(expression)
+                                              if do_not_record? expression
                                                 expression + "\n"
                                               else
                                                 record_yahself(expression, line_number) + "\n"
@@ -100,5 +100,12 @@ class SeeingIsBelieving
 
   def the_rest_of_the_stream
     get_next_line << "\n" << stream.read
+  end
+
+  def do_not_record?(code)
+    code =~ BLANK_REGEX                     ||
+      SyntaxAnalyzer.ends_in_comment?(code) ||
+      SyntaxAnalyzer.will_return?(code)     ||
+      SyntaxAnalyzer.here_doc?(code)
   end
 end

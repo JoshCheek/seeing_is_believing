@@ -19,6 +19,22 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_valid["=begin\n1\n=end\n=end"].should be_false
   end
 
+  it 'knows if the expression is a heredoc' do
+    is_here_doc = lambda { |code| described_class.here_doc? code }
+    is_here_doc["<<A\nA"].should be_true
+    is_here_doc["a=<<A\nabc\nA"].should be_true
+    is_here_doc["meth(<<A)\nabc\nA"].should be_true
+    is_here_doc["meth(<<A)\nabc\nA"].should be_true
+    is_here_doc["meth(<<-A)\n abc\n A"].should be_true
+    is_here_doc["meth(<<-\"a b\")\n abc\n a b"].should be_true
+    is_here_doc["meth(<<-\"a b\", <<something)\n 1\n a b\n2\nsomething"].should be_true
+
+    is_here_doc["a=<<A\nabc\nA\na"].should be_false
+    is_here_doc["def meth\nwhateva(<<A)\nabc\nA\nend"].should be_false
+    is_here_doc["a << b\nb"].should be_false
+    is_here_doc["a<<b\nb"].should be_false
+  end
+
   it 'knows if the last line is a comment' do
     is_comment = lambda { |code| described_class.ends_in_comment? code }
 

@@ -137,5 +137,37 @@ class SeeingIsBelieving
     def self.will_return?(code)
       /(^|\s)return.*?\Z$/ =~ code
     end
+
+    # HERE DOCS
+
+    def self.here_doc?(code)
+      instance = parsed code
+      instance.has_heredoc? && code.scan("\n").size.next <= instance.here_doc_last_line_number
+    end
+
+    def heredocs
+      @heredocs ||= []
+    end
+
+    def on_heredoc_beg(beginning)
+      heredocs << [beginning]
+      super
+    end
+
+    def on_heredoc_end(ending)
+      result      = super
+      line_number = result.last.first
+      doc = heredocs.find { |(beginning)| beginning.include? ending.strip }
+      doc << ending << line_number
+      result
+    end
+
+    def has_heredoc?
+      heredocs.any?
+    end
+
+    def here_doc_last_line_number
+      heredocs.last.last
+    end
   end
 end
