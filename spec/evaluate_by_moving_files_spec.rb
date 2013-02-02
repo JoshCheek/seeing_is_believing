@@ -1,8 +1,11 @@
 require 'seeing_is_believing/evaluate_by_moving_files'
+require 'fileutils'
 
 describe SeeingIsBelieving::EvaluateByMovingFiles do
   let(:filedir)  { File.expand_path '../../proving_grounds', __FILE__ }
   let(:filename) { File.join filedir, 'some_filename' }
+
+  before { FileUtils.mkdir_p filedir }
 
   def invoke(program, options={})
     evaluator = described_class.new(program, filename, options)
