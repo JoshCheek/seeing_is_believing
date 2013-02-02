@@ -135,6 +135,17 @@ describe SeeingIsBelieving::ExpressionList do
     block_invocations.should == 1
   end
 
+  example "example: heredoc" do
+    pending 'Not sure how to do this, for now just catch it at a higher level' do
+      result = call ['strings = [<<A, <<-B]', '1', 'A', '2', ' B'] do |*expressions, line_number|
+        line_number.should == 1
+        expressions.should == ['strings = [<<A, <<B]']
+        'zomg!'
+      end
+      result.should == "zomg!\n1\nA\n2\n B"
+    end
+  end
+
   example "example: smoke test debug option" do
     stream = StringIO.new
     call(%w[a+ b], debug: true, debug_stream: stream) { |*expressions, _| expressions.join("\n") }
