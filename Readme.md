@@ -5,11 +5,10 @@ Evaluates a file, recording the results of each line of code.
 You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle][inventing_on_principle].
 Except, obviously, his is like a million better.
 
-Reeaally rough at the moment, but it works for simple examples.
-
 Also comes with a binary to show how it might be used.
 
-<iframe src="http://player.vimeo.com/video/58766950" width="500" height="281" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+For whatever reason, I can't embed videos, but here's a ~1 minute [video][video] showing it off.
+
 
 Use The Binary
 ==============
@@ -112,3 +111,4 @@ License
 
 [inventing_on_principle]: http://vimeo.com/36579366
 [textmate-integration]:   https://raw.github.com/JoshCheek/seeing_is_believing/master/textmate-integration.png
+[video]:                  http://vimeo.com/58766950
