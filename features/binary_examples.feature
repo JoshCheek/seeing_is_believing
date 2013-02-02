@@ -35,6 +35,9 @@ Feature: Running the binary successfully
     <<HERE
     is a doc
     HERE
+
+    [*1..10]
+      .select(&:even?)
     """
     When I run "seeing_is_believing basic_functionality.rb"
     Then stderr is empty
@@ -42,16 +45,16 @@ Feature: Running the binary successfully
     And stdout is:
     """
     5.times do |i|
-      i * 2         # => 0, 2, 4, 6, 8
-    end             # => 5
+      i * 2             # => 0, 2, 4, 6, 8
+    end                 # => 5
 
     def meth(n)
-      n             # => "12", "34"
-    end             # => nil
+      n                 # => "12", "34"
+    end                 # => nil
 
     # some invocations
-    meth "12"       # => "12"
-    meth "34"       # => "34"
+    meth "12"           # => "12"
+    meth "34"           # => "34"
 
     =begin
     I don't ever actually write
@@ -61,12 +64,15 @@ Feature: Running the binary successfully
     # multilinezzz
     "a
      b
-     c"             # => "a\n b\n c"
+     c"                 # => "a\n b\n c"
 
     # don't record heredocs b/c they're just too fucking different
     <<HERE
     is a doc
     HERE
+
+    [*1..10]
+      .select(&:even?)  # => [2, 4, 6, 8, 10]
     """
 
   Scenario: Passing previous output back into input

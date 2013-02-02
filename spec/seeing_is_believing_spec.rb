@@ -226,4 +226,9 @@ describe SeeingIsBelieving do
   it 'defaults the stdin stream to an empty string' do
     invoke('$stdin.read')[1].should == ['""']
   end
+
+  it 'can deal with methods that are invoked entirely on the next line', wip:true do
+    values_for("1\n.even?").should == [[], ['false']]
+    values_for("1\n.even?\n__END__").should == [[], ['false']]
+  end
 end

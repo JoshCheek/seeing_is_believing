@@ -16,11 +16,12 @@ class SeeingIsBelieving
     end
 
     def initialize(options)
-      self.debug_stream = options.fetch :debug_stream, $stdout
-      self.should_debug = options.fetch :debug, false
-      self.generator    = options.fetch :generator
-      self.on_complete  = options.fetch :on_complete
-      @line_number      = 0
+      self.debug_stream   = options.fetch :debug_stream, $stdout
+      self.should_debug   = options.fetch :debug, false
+      self.get_next_line  = options.fetch :get_next_line
+      self.peek_next_line = options.fetch :peek_next_line
+      self.on_complete    = options.fetch :on_complete
+      @line_number        = 0
     end
 
     def call
@@ -30,20 +31,28 @@ class SeeingIsBelieving
         pending_expression = generate
         debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
         expressions << pending_expression
-        expression = reduce expressions
+        expression = reduce expressions unless next_line_modifies_current?
       end until expressions.empty?
       expression
     end
 
     private
 
-    attr_accessor :debug_stream, :should_debug, :generator, :on_complete, :expressions
+    attr_accessor :debug_stream, :should_debug, :get_next_line, :peek_next_line, :on_complete, :expressions
 
     def generate
       @line_number += 1
-      expression = generator.call
+      expression = get_next_line.call
       raise SyntaxError unless expression
       PendingExpression.new(expression, [])
+    end
+
+    def next_line_modifies_current?
+      # method invocations can be put on the next line, and begin with a dot.
+      # I think that's the only case we need to worry about. e.g:
+      # 3
+      #  .times { |i| p i }
+      peek_next_line.call && peek_next_line.call =~ /^\s*\./
     end
 
     def inspected_expressions(expressions)

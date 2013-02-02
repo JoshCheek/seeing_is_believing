@@ -2,9 +2,16 @@ require 'seeing_is_believing/expression_list'
 
 describe SeeingIsBelieving::ExpressionList do
 
+  def list_for(generations, options={}, &block)
+    described_class.new({
+      on_complete:    block,
+      get_next_line:  -> { generations.shift || raise("EMPTY!") },
+      peek_next_line: -> { generations.first },
+    }.merge(options))
+  end
+
   def call(generations, options={}, &block)
-    options = { on_complete: block, generator: -> { generations.shift || raise("EMPTY!") } }.merge(options)
-    described_class.new(options).call
+    list_for(generations, options, &block).call
   end
 
   example 'example: multiple children' do
@@ -146,6 +153,24 @@ describe SeeingIsBelieving::ExpressionList do
     end
   end
 
+  example "example: method invocations on next line" do
+    # example 1: consume the expression with lines after
+    list = list_for ['a', '.b', ' .c', 'irrelevant'] do |*expressions, line_number|
+      line_number.should == 3
+      expressions.flatten.join('').should == 'a.b .c'
+      'a.b.c'
+    end
+    list.call.should == 'a.b.c'
+
+    # example 2: consume the expression with no lines after
+    list = list_for ['a', '.b'] do |*expressions, line_number|
+      line_number.should == 2
+      expressions.flatten.join('').should == 'a.b'
+      'result'
+    end
+    list.call.should == 'result'
+  end
+
   example "example: smoke test debug option" do
     stream = StringIO.new
     call(%w[a+ b], debug: true, debug_stream: stream) { |*expressions, _| expressions.join("\n") }
@@ -159,7 +184,9 @@ describe SeeingIsBelieving::ExpressionList do
     generations = ["'"]
     expect do
       described_class.new(
-        on_complete: -> { "" }, generator: -> { generations.shift }
+        on_complete:    -> { "" },
+        get_next_line:  -> { generations.shift },
+        peek_next_line: -> { generations.first }
       ).call
     end.to raise_error SyntaxError
   end
