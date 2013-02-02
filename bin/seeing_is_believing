@@ -2,7 +2,5 @@
 
 $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 
-require 'open3'
 require 'seeing_is_believing/binary'
-
 exit SeeingIsBelieving::Binary.new(ARGV, $stdin, $stdout, $stderr).exitstatus
