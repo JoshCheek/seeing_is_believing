@@ -69,6 +69,19 @@ Or if you haven't fixed your gem home, and you aren't using any version managers
 
     $ sudo gem install seeing_is_believing
 
+Hook it into TextMate
+=====================
+
+Go to the bundle editor, create this new command in the Ruby bundle:
+
+    "${TM_RUBY}" -r seeing_is_believing/binary -e '
+      SeeingIsBelieving::Binary.new(ARGV, $stdin, $stdout, $stderr).call
+    '  $TM_FILEPATH
+
+It should look like this:
+
+![textmate-integration][textmate-integration]
+
 Known Issues
 ============
 
@@ -96,3 +109,4 @@ License
 
 
 [inventing_on_principle]: http://vimeo.com/36579366
+[textmate-integration]:   https://raw.github.com/JoshCheek/seeing_is_believing/master/textmate-integration.png
