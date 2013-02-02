@@ -27,7 +27,7 @@ class SeeingIsBelieving
       add_stdout
       add_stderr
       add_data_segment
-      new_body
+      return new_body
     end
 
     private
