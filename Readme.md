@@ -76,7 +76,7 @@ Go to the bundle editor, create this new command in the Ruby bundle:
 
     "${TM_RUBY}" -r seeing_is_believing/binary -e '
       SeeingIsBelieving::Binary.new(ARGV, $stdin, $stdout, $stderr).call
-    '  $TM_FILEPATH
+    '  $TM_FILEPATH 2>/dev/null
 
 It should look like this:
 
