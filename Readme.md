@@ -64,6 +64,17 @@ result[2]   # => ['"A"', '"B"', '"C"']
 Install
 =======
 
+For now, since Rubygems is not allowing pushes:
+
+   $ git clone https://github.com/JoshCheek/seeing_is_believing/
+   $ cd seeing_is_believing
+   $ gem build seeing_is_believing.gemspec
+   $ gem install seeing_is_believing-0.0.7.gem
+   $ cd ..
+   $ rm -rf "./seeing_is_believing"
+
+When Rubygems gets back up:
+
     $ gem install seeing_is_believing
 
 Or if you haven't fixed your gem home, and you aren't using any version managers:
