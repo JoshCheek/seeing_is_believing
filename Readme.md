@@ -7,7 +7,7 @@ Except, obviously, his is like a million better.
 
 Also comes with a binary to show how it might be used.
 
-For whatever reason, I can't embed videos, but here's a ~1 minute [video][video] showing it off.
+For whatever reason, I can't embed videos, but **here's a ~1 minute [video][video]** showing it off.
 
 
 Use The Binary
