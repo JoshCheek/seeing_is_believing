@@ -190,7 +190,7 @@ Feature: Running the binary successfully
     # >> 2
     """
 
-  Scenario: Passing the file on stdin
+  Scenario: Reading from stdin
     Given I have the stdin content "hi!"
     And the file "reads_from_stdin.rb":
     """
@@ -205,3 +205,11 @@ Feature: Running the binary successfully
 
     # >> You said: hi!
     """
+
+  Scenario: Passing the file on stdin
+    Given I have the stdin content "1 + 1"
+    When I run "seeing_is_believing"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is "1 + 1  # => 2"
+
