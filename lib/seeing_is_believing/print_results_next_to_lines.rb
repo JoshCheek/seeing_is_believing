@@ -72,8 +72,8 @@ class SeeingIsBelieving
 
     def remove_previous_output_from(string)
       string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
-            .gsub(/(\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,        '')
-            .gsub(/(\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,        '')
+            .gsub(/\n?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,          '')
+            .gsub(/\n?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,          '')
     end
 
     def add_stdout
