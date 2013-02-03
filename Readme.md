@@ -5,7 +5,7 @@ Seeing Is Believing
 
 Evaluates a file, recording the results of each line of code.
 You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle][inventing_on_principle].
-Except, obviously, his is like a million better.
+Except, obviously, his is like a million times better.
 
 Also comes with a binary to show how it might be used.
 
@@ -82,8 +82,8 @@ Rubygems is allowing pushes again, but if it goes back down, you can install lik
     $ cd ..
     $ rm -rf "./seeing_is_believing"
 
-Hook it into TextMate
-=====================
+TextMate Integration
+====================
 
 Go to the bundle editor, create this new command in the Ruby bundle:
 
@@ -94,6 +94,25 @@ Go to the bundle editor, create this new command in the Ruby bundle:
 It should look like this:
 
 ![textmate-integration][textmate-integration]
+
+Emacs Integration
+=================
+
+Add this function to your Emacs configuration:
+
+~~~~ scheme
+(defun seeing-is-believing ()
+  "Replace the current region (or the whole buffer, if none) with the output
+of seeing_is_believing."
+  (interactive)
+  (let ((beg (if (region-active-p) (region-beginning) (point-min)))
+        (end (if (region-active-p) (region-end) (point-max))))
+    (shell-command-on-region beg end "seeing_is_believing" nil 'replace)))
+~~~~
+
+You can now call `seeing-is-believing` to replace the current region
+or current buffer contents with the output of running it through
+`seeing_is_believing`.
 
 Known Issues
 ============
