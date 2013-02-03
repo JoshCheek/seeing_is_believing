@@ -18,7 +18,7 @@ class SeeingIsBelieving
       file_exists_or_is_on_stdin &&
         syntax_is_valid          &&
         print_program            &&
-        display_exceptions
+        has_no_exceptions
     end
 
     def exitstatus
@@ -67,13 +67,8 @@ class SeeingIsBelieving
       true
     end
 
-    def display_exceptions
-      if believer.has_exception?
-        stderr.puts believer.exception.message
-        @exitstatus = 1
-      else
-        @exitstatus = 0
-      end
+    def has_no_exceptions
+      @exitstatus = (believer.has_exception? ? 1 : 0)
     end
   end
 end

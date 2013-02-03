@@ -31,15 +31,10 @@ meth "34"       # => "34"
 ```
 
 ```ruby
-# $ bin/seeing_is_believing proving_grounds/raises_exception.rb 2>/dev/null
+# $ bin/seeing_is_believing proving_grounds/raises_exception.rb
 1 + 1          # => 2
 raise "ZOMG!"  # ~> RuntimeError: ZOMG!
 1 + 1
-```
-
-```bash
-# $ bin/seeing_is_believing proving_grounds/raises_exception.rb 1>/dev/null
-ZOMG!
 ```
 
 Use The Lib

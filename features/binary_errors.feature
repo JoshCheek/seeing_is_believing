@@ -15,7 +15,7 @@ Feature: Running the binary unsuccessfully
     1 + 1
     """
     When I run "seeing_is_believing requires_exception_raising_code.rb"
-    Then stderr is "ZOMG!"
+    Then stderr is empty
     And the exit status is 1
     And stdout is:
     """
