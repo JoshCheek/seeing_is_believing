@@ -66,7 +66,6 @@ result[2]   # => ['"A"', '"B"', '"C"']
 Install
 =======
 
-When Rubygems gets back up:
 
     $ gem install seeing_is_believing
 
