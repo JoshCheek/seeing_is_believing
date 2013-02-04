@@ -51,20 +51,16 @@ describe SeeingIsBelieving::ArgParser do
       parse(['a', '-x'])[:filename].should == 'a'
     end
 
-    it 'sets an error if given no filenames' do
-      parse(['a']).should_not have_error /Must have one filename/
-      parse([]).should have_error /Must have one filename/
-    end
-
     it 'sets an error if given multiple filenames' do
+      parse([]).should_not have_error /name/
       parse(['a']).should_not have_error /Can only have one filename/
       parse(['a', 'b']).should have_error 'Can only have one filename, but had: "a", "b"'
     end
   end
 
   describe ':start_line' do
-    it 'defaults to 0' do
-      parse([])[:start_line].should equal 0
+    it 'defaults to 1' do
+      parse([])[:start_line].should equal 1
     end
 
     it 'is set with -l and --start-line' do
@@ -72,11 +68,13 @@ describe SeeingIsBelieving::ArgParser do
       parse(['--start-line', '12'])[:start_line].should == 12
     end
 
-    it 'sets an error if it cannot be turned into an integer' do
+    it 'sets an error if it cannot be turned into a positive integer' do
       line_error_assertions = lambda do |flag|
         parse([flag, '1']).should_not have_error /#{flag}/
+        parse([flag, '0']).should have_error /#{flag}/
         parse([flag, 'a']).should have_error /#{flag}/
         parse([flag, '']).should have_error /#{flag}/
+        parse([flag, '1.0']).should have_error /#{flag}/
         parse([flag]).should have_error /#{flag}/
       end
       line_error_assertions['-l']
@@ -104,6 +102,11 @@ describe SeeingIsBelieving::ArgParser do
       line_error_assertions['-L']
       line_error_assertions['--end-line']
     end
+  end
+
+  it 'swaps start and end line around if they are out of order' do
+    parse(%w[-l 2 -L 1])[:start_line].should == 1
+    parse(%w[-l 2 -L 1])[:end_line].should == 2
   end
 
   describe ':help' do

@@ -23,10 +23,11 @@ class SeeingIsBelieving
           # start_line
           when '-l', '--start-line'
             start_line = args.shift
-            if start_line.to_i.to_s == start_line
+            i_start_line = start_line.to_i
+            if i_start_line.to_s == start_line && !i_start_line.zero?
               options[:start_line] = start_line.to_i
             else
-              options[:errors] << "#{arg} expect an integer argument"
+              options[:errors] << "#{arg} expects a positive integer argument"
             end
 
           when '-L', '--end-line'
@@ -47,7 +48,7 @@ class SeeingIsBelieving
             options[:filename] = arg
           end
         end
-        validate
+        normalize_and_validate
         options
       end
     end
@@ -56,11 +57,13 @@ class SeeingIsBelieving
 
     attr_accessor :filenames
 
-    def validate
-      if filenames.size == 0
-        options[:errors] << "Must have one filename"
-      elsif 1 < filenames.size
+    def normalize_and_validate
+      if 1 < filenames.size
         options[:errors] << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
+      end
+
+      if options[:end_line] < options[:start_line]
+        options[:start_line], options[:end_line] = options[:end_line], options[:start_line]
       end
     end
 
@@ -68,7 +71,7 @@ class SeeingIsBelieving
       @options ||= {
         filename:     nil,
         errors:       [],
-        start_line:   0,
+        start_line:   1,
         end_line:     Float::INFINITY,
       }
     end
