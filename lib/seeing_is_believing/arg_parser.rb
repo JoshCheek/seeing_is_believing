@@ -20,7 +20,7 @@ class SeeingIsBelieving
           when '-h', '--help'
             options[:help] = self.class.help_screen
 
-          # start_line
+          # start line
           when '-l', '--start-line'
             start_line = args.shift
             i_start_line = start_line.to_i
@@ -30,6 +30,7 @@ class SeeingIsBelieving
               options[:errors] << "#{arg} expects a positive integer argument"
             end
 
+          # end line
           when '-L', '--end-line'
             end_line = args.shift
             if end_line.to_i.to_s == end_line
@@ -83,7 +84,7 @@ Usage: #{$0} [options] [filename]
 
   #{$0} is a program and library that will evaluate a Ruby file and capture/display the results.
 
-  If no filename is provided, the binary will read from standard input.
+  If no filename is provided, the binary will read the program from standard input.
 
   -l, --start-line  # line number to begin showing results on
   -L, --end-line    # line number to stop showing results on

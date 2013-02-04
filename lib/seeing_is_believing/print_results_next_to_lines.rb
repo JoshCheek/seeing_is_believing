@@ -67,20 +67,14 @@ class SeeingIsBelieving
     end
 
     def line_queue
-      # This is so obnoxious, I don't really understand why I caon't do:
-      # Queue.new &body.each_line.with_index(1).method(:each)
-      @line_queue ||= begin
-                        # lines_with_numbers = body.each_line.each.with_index(1).to_a
-                        # Queue.new { lines_with_numbers.shift }
-                        Queue.new &body.each_line.each.with_index(1).to_a.method(:shift)
-                      end
+      @line_queue ||= Queue.new &body.each_line.with_index(1).to_a.method(:shift)
     end
 
     def start_of_data_segment?(line)
       line.chomp == '__END__'
     end
 
-    # max line length of the output lines (exempting coments) + 2 spaces for padding
+    # max line length of the lines to output (exempting coments) + 2 spaces for padding
     def line_length
       @line_length ||= 2 + body.each_line
                                .map(&:chomp)

@@ -12,45 +12,33 @@ class SeeingIsBelieving
       self.stderr = stderr
     end
 
-    # used to like this, but now it's ick,
-    # the command/query violation is confusing
     def call
-      return if @already_called
-      @already_called = true
-
-      flags_are_valid && (
-        print_help || (
-          file_exists_or_is_on_stdin  &&
-          syntax_is_valid             &&
-          print_program               &&
-          has_no_exceptions))
+      @exitstatus ||= if    flags_have_errors?          then print_errors       ; 1
+                      elsif should_print_help?          then print_help         ; 0
+                      elsif has_filename? && file_dne?  then print_file_dne     ; 1
+                      elsif invalid_syntax?             then print_syntax_error ; 1
+                      else                                   print_program      ; (printer.has_exception? ? 1 : 0)
+                      end
     end
 
-    def exitstatus
-      call
-      @exitstatus
-    end
+    alias exitstatus call
 
     private
-
-    def on_stdin?
-      filename.nil?
-    end
 
     def filename
       flags[:filename]
     end
+    alias has_filename? filename
 
-    # rename this, it's no longer accurate
-    # refactor this shiz
-    def believer
-      @believer ||= begin
-        if on_stdin?
+    # le sigh
+    def printer
+      @printer ||= begin
+        if file_is_on_stdin?
           body  = stdin.read
           stdin = ''
         else
           body  = File.read(filename)
-          stdin = stdin()
+          stdin = self.stdin
         end
         PrintResultsNextToLines.new body,
                                     stdin,
@@ -64,43 +52,50 @@ class SeeingIsBelieving
       @flags ||= ArgParser.parse argv
     end
 
-    def flags_are_valid
-      return true if flags[:errors].empty?
-      @exitstatus = 1
-      flags[:errors].each { |error| stderr.puts error }
-      false
+    def flags_have_errors?
+      flags[:errors].any?
     end
 
-    def file_exists_or_is_on_stdin
-      return true if on_stdin? || File.exist?(filename)
-      @exitstatus = 1
-      stderr.puts "#{filename} does not exist!"
-      false
+    def print_errors
+      stderr.puts flags[:errors].join("\n")
     end
 
-    def syntax_is_valid
-      return true if on_stdin? # <-- should probably check stdin too
-      out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
-      return true if syntax_status.success?
-      @exitstatus = 1
-      stderr.puts err
-      false
+    def should_print_help?
+      flags[:help]
     end
 
     def print_help
-      return unless flags[:help]
       stdout.puts flags[:help]
-      @exitstatus = 0
-      true
+    end
+
+    def file_is_on_stdin?
+      filename.nil?
+    end
+
+    def file_dne?
+      !File.exist?(filename)
+    end
+
+    def print_file_dne
+      stderr.puts "#{filename} does not exist!"
     end
 
     def print_program
-      stdout.puts believer.call
-      true
+      stdout.puts printer.call
     end
 
-    def has_no_exceptions
-      @exitstatus = (believer.has_exception? ? 1 : 0)
+    def syntax_error_notice
+      return if file_is_on_stdin? # <-- should probably check stdin too
+      out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
+      return err unless syntax_status.success?
+    end
+
+    def invalid_syntax?
+      !!syntax_error_notice
+    end
+
+    def print_syntax_error
+      stderr.puts syntax_error_notice
     end
   end
 end
