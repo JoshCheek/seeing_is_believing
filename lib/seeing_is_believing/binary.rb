@@ -1,3 +1,4 @@
+require 'seeing_is_believing/arg_parser'
 require 'seeing_is_believing/print_results_next_to_lines'
 
 class SeeingIsBelieving
@@ -15,9 +16,10 @@ class SeeingIsBelieving
       return if @already_called
       @already_called = true
 
-      file_exists_or_is_on_stdin &&
-        syntax_is_valid          &&
-        print_program            &&
+      flags_are_valid              &&
+        file_exists_or_is_on_stdin &&
+        syntax_is_valid            &&
+        print_program              &&
         has_no_exceptions
     end
 
@@ -29,21 +31,39 @@ class SeeingIsBelieving
     private
 
     def on_stdin?
-      argv.empty?
+      filename.nil?
     end
 
     def filename
-      argv.first
+      flags[:filename]
     end
 
     def believer
       @believer ||= begin
         if on_stdin?
-          PrintResultsNextToLines.new stdin.read, ''
+          body  = stdin.read
+          stdin = ''
         else
-          PrintResultsNextToLines.new File.read(filename), stdin, filename
+          body  = File.read(filename)
+          stdin = stdin()
         end
+        PrintResultsNextToLines.new body,
+                                    stdin,
+                                    filename:   filename,
+                                    start_line: flags[:start_line],
+                                    end_line:   flags[:end_line]
       end
+    end
+
+    def flags
+      @flags ||= ArgParser.parse argv
+    end
+
+    def flags_are_valid
+      return true if flags[:errors].empty?
+      @exitstatus = 1
+      flags[:errors].each { |error| stderr.puts error }
+      false
     end
 
     def file_exists_or_is_on_stdin

@@ -1,16 +1,15 @@
-@not-implemented
 Feature: Using flags
 
   Sometimes you want more control over what comes out, for that we give you flags.
 
-  Scenario: --start-index
-    Given the file "start_index.rb":
+  Scenario: --start-line
+    Given the file "start_line.rb":
     """
     1 + 1
     2
     3
     """
-    When I run "seeing_is_believing --start-index 2 start_index.rb"
+    When I run "seeing_is_believing --start-line 2 start_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -20,14 +19,14 @@ Feature: Using flags
     3  # => 3
     """
 
-  Scenario: --end-index
-    Given the file "end_index.rb":
+  Scenario: --end-line
+    Given the file "end_line.rb":
     """
     1
     2
     3 + 3
     """
-    When I run "seeing_is_believing --end-index 2 end_index.rb"
+    When I run "seeing_is_believing --end-line 2 end_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -37,15 +36,15 @@ Feature: Using flags
     3 + 3
     """
 
-  Scenario: --start-index and --end-index
-    Given the file "start_and_end_index.rb":
+  Scenario: --start-line and --end-line
+    Given the file "start_and_end_line.rb":
     """
     1 + 1
     2
     3
     4 + 4
     """
-    When I run "seeing_is_believing --start-index 2 --end-index 3 start_and_end_index.rb"
+    When I run "seeing_is_believing --start-line 2 --end-line 3 start_and_end_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
