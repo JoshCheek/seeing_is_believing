@@ -25,3 +25,7 @@ end
 Then /^(stderr|stdout) is empty$/ do |stream_name|
   @last_executed.send(stream_name).should == ''
 end
+
+Then /^(stderr|stdout) includes "([^"]*)"$/ do |stream_name, content|
+  @last_executed.send(stream_name).should include content
+end

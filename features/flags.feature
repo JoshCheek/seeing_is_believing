@@ -54,3 +54,9 @@ Feature: Using flags
     3  # => 3
     4 + 4
     """
+
+  Scenario: --help
+    When I run "seeing_is_believing --help"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout includes "Usage"

@@ -12,15 +12,18 @@ class SeeingIsBelieving
       self.stderr = stderr
     end
 
+    # used to like this, but now it's ick,
+    # the command/query violation is confusing
     def call
       return if @already_called
       @already_called = true
 
-      flags_are_valid              &&
-        file_exists_or_is_on_stdin &&
-        syntax_is_valid            &&
-        print_program              &&
-        has_no_exceptions
+      flags_are_valid && (
+        print_help || (
+          file_exists_or_is_on_stdin  &&
+          syntax_is_valid             &&
+          print_program               &&
+          has_no_exceptions))
     end
 
     def exitstatus
@@ -38,6 +41,8 @@ class SeeingIsBelieving
       flags[:filename]
     end
 
+    # rename this, it's no longer accurate
+    # refactor this shiz
     def believer
       @believer ||= begin
         if on_stdin?
@@ -80,6 +85,13 @@ class SeeingIsBelieving
       @exitstatus = 1
       stderr.puts err
       false
+    end
+
+    def print_help
+      return unless flags[:help]
+      stdout.puts flags[:help]
+      @exitstatus = 0
+      true
     end
 
     def print_program
