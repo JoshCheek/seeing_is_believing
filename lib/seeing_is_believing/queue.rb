@@ -9,20 +9,12 @@ class SeeingIsBelieving
 
     def dequeue
       return if permanently_empty?
-      if @next_value
-        peek.tap { @next_value = nil }
-      else
-        peek && dequeue
-      end
+      peek.tap { @next_value = nil }
     end
 
     def peek
       return if permanently_empty?
-      @next_value ||= begin
-                        value = value_generator.call
-                        @permanently_empty = true unless value
-                        value
-                      end
+      @next_value ||= value_generator.call.tap { |value| @permanently_empty = value.nil? }
     end
 
     def empty?
