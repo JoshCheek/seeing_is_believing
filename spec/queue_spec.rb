@@ -43,5 +43,30 @@ describe SeeingIsBelieving::Queue do
     queue.peek.should == nil
     queue.dequeue.should == nil
   end
-end
 
+  describe 'conditional iteration' do
+    it 'will iterate while a condition is met' do
+      queue = queue_for *1..5
+      seen = []
+      queue.while { |arg| arg < 4 }.each { |arg| seen << arg }
+      seen.should == [1, 2, 3]
+      queue.peek.should == 4
+    end
+
+    it 'will iterate until a condition is met' do
+      queue = queue_for *1..5
+      seen = []
+      queue.until { |arg| arg == 4 }.each { |arg| seen << arg }
+      seen.should == [1, 2, 3]
+      queue.peek.should == 4
+    end
+
+    it 'stops iterating when it hits the end of the queue' do
+      queue = queue_for *1..5
+      seen = []
+      queue.while { true }.each { |arg| seen << arg }
+      seen.should == [*1..5]
+      queue.should be_empty
+    end
+  end
+end
