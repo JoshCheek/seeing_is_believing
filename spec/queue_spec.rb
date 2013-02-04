@@ -44,6 +44,14 @@ describe SeeingIsBelieving::Queue do
     queue.dequeue.should == nil
   end
 
+  it 'can (destructively) iterate over its items until it is empty' do
+    queue = queue_for *1..5
+    seen = []
+    queue.each { |i| seen << i }
+    seen.should == [*1..5]
+    queue.should be_empty
+  end
+
   describe 'conditional iteration' do
     it 'will iterate while a condition is met' do
       queue = queue_for *1..5

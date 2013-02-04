@@ -34,6 +34,10 @@ class SeeingIsBelieving
       permanently_empty? || peek.nil?
     end
 
+    def each(&block)
+      block.call dequeue until empty?
+    end
+
     def until(&block)
       While.new(self) { |*args| !block.call(*args) }
     end
