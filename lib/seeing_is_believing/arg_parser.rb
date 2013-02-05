@@ -1,3 +1,8 @@
+# note:
+#   reserve -e for script in an argument
+#   reserve -I for setting load path
+#   reserve -r for requiring another file
+
 class SeeingIsBelieving
   class ArgParser
     def self.parse(args)
@@ -16,35 +21,22 @@ class SeeingIsBelieving
         until args.empty?
           case (arg = args.shift)
 
-          # help screen
           when '-h', '--help'
             options[:help] = self.class.help_screen
 
-          # start line
           when '-l', '--start-line'
-            start_line     = args.shift
-            int_start_line = start_line.to_i
-            if int_start_line.to_s == start_line && !int_start_line.zero?
-              options[:start_line] = int_start_line
-            else
-              options[:errors] << "#{arg} expects a positive integer argument"
-            end
+            extract_positive_int_for :start_line, arg
 
-          # end line
           when '-L', '--end-line'
-            end_line = args.shift
-            if end_line.to_i.to_s == end_line
-              options[:end_line] = end_line.to_i
-            else
-              options[:errors] << "#{arg} expect an integer argument"
-            end
+            extract_positive_int_for :end_line, arg
 
-          # unknown flags
-          when /^-/
+          when '-d', '--result-length'
+            extract_positive_int_for :result_length, arg
+
+          when /^-/ # unknown flags
             options[:errors] << "Unknown option: #{arg.inspect}"
 
-          # filenames
-          else
+          else # filenames
             filenames << arg
             options[:filename] = arg
           end
@@ -70,11 +62,22 @@ class SeeingIsBelieving
 
     def options
       @options ||= {
-        filename:     nil,
-        errors:       [],
-        start_line:   1,
-        end_line:     Float::INFINITY,
+        filename:      nil,
+        errors:        [],
+        start_line:    1,
+        end_line:      Float::INFINITY,
+        result_length: Float::INFINITY,
       }
+    end
+
+    def extract_positive_int_for(key, flag)
+      string = args.shift
+      int    = string.to_i
+      if int.to_s == string && 0 < int
+        options[key] = int
+      else
+        options[:errors] << "#{flag} expect a positive integer argument"
+      end
     end
   end
 
@@ -86,9 +89,10 @@ Usage: #{$0} [options] [filename]
 
   If no filename is provided, the binary will read the program from standard input.
 
-  -l, --start-line  # line number to begin showing results on
-  -L, --end-line    # line number to stop showing results on
-  -h, --help        # this help screen
+  -l, --start-line    # line number to begin showing results on
+  -L, --end-line      # line number to stop showing results on
+  -d, --result-length # max length of the portion after the "# => "
+  -h, --help          # this help screen
 HELP_SCREEN
   end
 end

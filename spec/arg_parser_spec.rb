@@ -26,6 +26,20 @@ describe SeeingIsBelieving::ArgParser do
     described_class.parse args
   end
 
+  shared_examples 'it requires a positive int argument' do |flags|
+    it 'expects an integer argument' do
+      flags.each do |flag|
+        parse([flag,   '1']).should_not have_error /#{flag}/
+        parse([flag,   '0']).should     have_error /#{flag}/
+        parse([flag,  '-1']).should     have_error /#{flag}/
+        parse([flag, '1.0']).should     have_error /#{flag}/
+        parse([flag,   'a']).should     have_error /#{flag}/
+        parse([flag,   '' ]).should     have_error /#{flag}/
+        parse([flag       ]).should     have_error /#{flag}/
+      end
+    end
+  end
+
   specify 'unknown options set an error' do
     parse(['--abc']).should have_error 'Unknown option: "--abc"'
     parse(['-a']).should have_error 'Unknown option: "-a"'
@@ -68,18 +82,7 @@ describe SeeingIsBelieving::ArgParser do
       parse(['--start-line', '12'])[:start_line].should == 12
     end
 
-    it 'sets an error if it cannot be turned into a positive integer' do
-      line_error_assertions = lambda do |flag|
-        parse([flag, '1']).should_not have_error /#{flag}/
-        parse([flag, '0']).should have_error /#{flag}/
-        parse([flag, 'a']).should have_error /#{flag}/
-        parse([flag, '']).should have_error /#{flag}/
-        parse([flag, '1.0']).should have_error /#{flag}/
-        parse([flag]).should have_error /#{flag}/
-      end
-      line_error_assertions['-l']
-      line_error_assertions['--start-line']
-    end
+    it_behaves_like 'it requires a positive int argument', ['-l', '--start-line']
   end
 
   describe ':end_line' do
@@ -92,21 +95,25 @@ describe SeeingIsBelieving::ArgParser do
       parse(['--end-line', '12'])[:end_line].should == 12
     end
 
-    it 'sets an error if it cannot be turned into an integer' do
-      line_error_assertions = lambda do |flag|
-        parse([flag, '1']).should_not have_error /#{flag}/
-        parse([flag, 'a']).should have_error /#{flag}/
-        parse([flag, '']).should have_error /#{flag}/
-        parse([flag]).should have_error /#{flag}/
-      end
-      line_error_assertions['-L']
-      line_error_assertions['--end-line']
-    end
+    it_behaves_like 'it requires a positive int argument', ['-L', '--end-line']
   end
 
   it 'swaps start and end line around if they are out of order' do
     parse(%w[-l 2 -L 1])[:start_line].should == 1
     parse(%w[-l 2 -L 1])[:end_line].should == 2
+  end
+
+  describe ':result_length' do
+    it 'defaults to infinity' do
+      parse([])[:result_length].should == Float::INFINITY
+    end
+
+    it 'is set with -d and --result-length' do
+      parse(['-d',              '10'])[:result_length].should == 10
+      parse(['--result-length', '10'])[:result_length].should == 10
+    end
+
+    it_behaves_like 'it requires a positive int argument', ['-d', '--result-length']
   end
 
   describe ':help' do
