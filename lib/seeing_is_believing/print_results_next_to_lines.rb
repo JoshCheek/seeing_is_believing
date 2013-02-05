@@ -11,12 +11,19 @@ class SeeingIsBelieving
     EXCEPTION_PREFIX = '# ~>'
        RESULT_PREFIX = '# =>'
 
+    def self.pull_from_options(*args)
+      define_method(args.first) { options.fetch *args }
+    end
+
+    pull_from_options :filename, nil
+    pull_from_options :start_line
+    pull_from_options :end_line
+
+
     def initialize(body, stdin, options={})
-      self.body       = remove_previous_output_from body
-      self.stdin      = stdin
-      self.filename   = options.fetch :filename,   nil
-      self.start_line = options.fetch :start_line
-      self.end_line   = options.fetch :end_line
+      self.body    = remove_previous_output_from body
+      self.stdin   = stdin
+      self.options = options
     end
 
     def new_body
@@ -37,7 +44,7 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :body, :filename, :file_result, :stdin, :start_line, :end_line
+    attr_accessor :body, :file_result, :stdin, :options
 
     def evaluate_program
       self.file_result = SeeingIsBelieving.new(body, filename: filename, stdin: stdin).call
