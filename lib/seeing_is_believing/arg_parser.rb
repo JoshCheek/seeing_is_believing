@@ -22,10 +22,10 @@ class SeeingIsBelieving
 
           # start line
           when '-l', '--start-line'
-            start_line = args.shift
-            i_start_line = start_line.to_i
-            if i_start_line.to_s == start_line && !i_start_line.zero?
-              options[:start_line] = start_line.to_i
+            start_line     = args.shift
+            int_start_line = start_line.to_i
+            if int_start_line.to_s == start_line && !int_start_line.zero?
+              options[:start_line] = int_start_line
             else
               options[:errors] << "#{arg} expects a positive integer argument"
             end

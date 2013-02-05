@@ -49,9 +49,8 @@ class SeeingIsBelieving
 
     def next_line_modifies_current?
       # method invocations can be put on the next line, and begin with a dot.
-      # I think that's the only case we need to worry about. e.g:
-      # 3
-      #  .times { |i| p i }
+      # I think that's the only case we need to worry about.
+      # e.g: `3\n.times { |i| p i }`
       peek_next_line.call && peek_next_line.call =~ /^\s*\./
     end
 

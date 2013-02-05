@@ -30,7 +30,7 @@ class SeeingIsBelieving
     end
 
     def call
-      @result ||= HardCoreEnsure.call(
+      @result ||= HardCoreEnsure.call \
         code: -> {
           dont_overwrite_existing_tempfile!
           move_file_to_tempfile
@@ -47,7 +47,6 @@ class SeeingIsBelieving
         ensure: -> {
           restore_backup
         }
-      )
     end
 
     def file_directory
@@ -83,9 +82,9 @@ class SeeingIsBelieving
 
     def evaluate_file
       Open3.popen3 'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
-                           '-I', File.expand_path('../..', __FILE__), # fix load path
-                           '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it can be recorded
-                           '-C', file_directory,                      # run in the file's directory
+                           '-I', File.expand_path('../..', __FILE__), # add lib to the load path
+                           '-r', 'seeing_is_believing/the_matrix',    # hijack the environment so it gets recorded
+                           '-C', file_directory,                      # run in the file's directory (do I really want this?)
                            filename do |i, o, e, t|
         out_reader = Thread.new { o.read }
         err_reader = Thread.new { e.read }

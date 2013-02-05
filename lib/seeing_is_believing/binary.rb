@@ -28,6 +28,7 @@ class SeeingIsBelieving
     def filename
       flags[:filename]
     end
+
     alias has_filename? filename
 
     # le sigh
@@ -86,7 +87,7 @@ class SeeingIsBelieving
 
     def syntax_error_notice
       return if file_is_on_stdin? # <-- should probably check stdin too
-      out, err, syntax_status = Open3.capture3('ruby', '-c', filename)
+      out, err, syntax_status = Open3.capture3 'ruby', '-c', filename
       return err unless syntax_status.success?
     end
 
