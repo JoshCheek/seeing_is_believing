@@ -87,7 +87,6 @@ Feature: Using flags
     # !> aa...
     """
 
-  @wip
   Scenario: --line-length sets the total length of a given line
     Given the file "line_lengths.rb":
     """
@@ -121,31 +120,10 @@ Feature: Using flags
     """
     When I run "seeing_is_believing --line-length 1 line_lengths2.rb"
     Then stdout is "12345"
-    When I run "seeing_is_believing --line-length 12 line_lengths2.rb"
-    Then stdout is "12345 # => ."
-    When I run "seeing_is_believing --line-length 11 line_lengths2.rb"
+    When I run "seeing_is_believing --line-length 15 line_lengths2.rb"
+    Then stdout is "12345  # => ..."
+    When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
-
-  # Scenario: constrained by shorter of --line-length and --result-length
-  #   Given the file "nine_digits.rb":
-  #   """
-  #   123456789
-  #   """
-  #   When I run "seeing_is_believing --result-length 20 --line-length 6 nine_digits.rb"
-  #   Then stderr is empty
-  #   And the exit status is 0
-  #   And stdout is:
-  #   """
-  #   123456789 # => 12345
-  #   """
-  #   When I run "seeing_is_believing --result-length 22 --line-length 6 nine_digits.rb"
-  #   Then stderr is empty
-  #   And the exit status is 0
-  #   And stdout is:
-  #   """
-  #   123456789 # => 123456
-  #   """
-
 
   Scenario: --help
     When I run "seeing_is_believing --help"
