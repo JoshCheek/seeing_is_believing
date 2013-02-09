@@ -1,5 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/queue'
+require 'seeing_is_believing/line_formatter'
 require 'seeing_is_believing/has_exception'
 
 class SeeingIsBelieving
@@ -15,10 +16,10 @@ class SeeingIsBelieving
       define_method(args.first) { options.fetch *args }
     end
 
-    # going to have to rename line_length down below b/c it will conflict with upcoming options
     pull_from_options :filename, nil
     pull_from_options :start_line
     pull_from_options :end_line
+    pull_from_options :line_length,   Float::INFINITY
     pull_from_options :result_length, Float::INFINITY
 
 
@@ -42,11 +43,6 @@ class SeeingIsBelieving
       add_stderr
       add_remaining_lines
       return new_body
-    end
-
-    def truncate_result(string)
-      return string if string.size <= result_length
-      string[0, result_length].sub(/.{0,3}$/) { |last_chars| last_chars.gsub /./, '.' }
     end
 
     private
@@ -89,15 +85,15 @@ class SeeingIsBelieving
     end
 
     # max line length of the lines to output (exempting coments) + 2 spaces for padding
-    def line_length
-      @line_length ||= 2 + body.each_line
-                               .map(&:chomp)
-                               .select.with_index(1) { |line, index| start_line <= index && index <= end_line }
-                               .take_while { |line| not start_of_data_segment? line }
-                               .select { |line| not (line == "=begin") .. (line == "=end") }
-                               .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
-                               .map(&:length)
-                               .max
+    def max_source_line_length
+      @max_source_line_length ||= 2 + body.each_line
+                                          .map(&:chomp)
+                                          .select.with_index(1) { |line, index| start_line <= index && index <= end_line }
+                                          .take_while { |line| not start_of_data_segment? line }
+                                          .select { |line| not (line == "=begin") .. (line == "=end") }
+                                          .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
+                                          .map(&:length)
+                                          .max
     end
 
     def remove_previous_output_from(string)
@@ -109,24 +105,30 @@ class SeeingIsBelieving
     def add_stdout
       return unless file_result.has_stdout?
       new_body << "\n"
-      file_result.stdout.each_line { |line| new_body << "#{STDOUT_PREFIX} #{truncate_result line.chomp}\n" }
+      file_result.stdout.each_line do |line|
+        new_body << LineFormatter.new('', "#{STDOUT_PREFIX} ", line.chomp, options).call << "\n"
+      end
     end
 
     def add_stderr
       return unless file_result.has_stderr?
       new_body << "\n"
-      file_result.stderr.each_line { |line| new_body << "#{STDERR_PREFIX} #{truncate_result line.chomp}\n" }
+      file_result.stderr.each_line do |line|
+        new_body << LineFormatter.new('', "#{STDERR_PREFIX} ", line.chomp, options).call << "\n"
+      end
     end
 
     def format_line(line, line_results)
-      if line_results.has_exception?
-        result = sprintf "%s: %s", line_results.exception.class, line_results.exception.message
-        sprintf "%-#{line_length}s#{EXCEPTION_PREFIX} %s\n", line, truncate_result(result)
-      elsif line_results.any?
-        sprintf "%-#{line_length}s#{RESULT_PREFIX} %s\n", line, truncate_result(line_results.join ', ')
-      else
-        truncate_result(line) + "\n"
-      end
+      options = options().merge source_length: max_source_line_length
+      formatted_line = if line_results.has_exception?
+                         result = sprintf "%s: %s", line_results.exception.class, line_results.exception.message
+                         LineFormatter.new(line, "#{EXCEPTION_PREFIX} ", result, options).call
+                       elsif line_results.any?
+                         LineFormatter.new(line, "#{RESULT_PREFIX} ", line_results.join(', '), options).call
+                       else
+                         line
+                       end
+      formatted_line + "\n"
     end
 
   end
