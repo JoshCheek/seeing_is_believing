@@ -20,22 +20,12 @@ class SeeingIsBelieving
       @result ||= begin
         until args.empty?
           case (arg = args.shift)
-
-          when '-h', '--help'
-            options[:help] = self.class.help_screen
-
-          when '-l', '--start-line'
-            extract_positive_int_for :start_line, arg
-
-          when '-L', '--end-line'
-            extract_positive_int_for :end_line, arg
-
-          when '-d', '--result-length'
-            extract_positive_int_for :result_length, arg
-
-          when /^-/ # unknown flags
-            options[:errors] << "Unknown option: #{arg.inspect}"
-
+          when '-h', '--help'          then options[:help] = self.class.help_screen
+          when '-l', '--start-line'    then extract_positive_int_for :start_line,    arg
+          when '-L', '--end-line'      then extract_positive_int_for :end_line,      arg
+          when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
+          when '-D', '--result-length' then extract_positive_int_for :result_length, arg
+          when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
           else # filenames
             filenames << arg
             options[:filename] = arg
@@ -65,6 +55,7 @@ class SeeingIsBelieving
         filename:      nil,
         errors:        [],
         start_line:    1,
+        line_length:   Float::INFINITY,
         end_line:      Float::INFINITY,
         result_length: Float::INFINITY,
       }
@@ -76,7 +67,7 @@ class SeeingIsBelieving
       if int.to_s == string && 0 < int
         options[key] = int
       else
-        options[:errors] << "#{flag} expect a positive integer argument"
+        options[:errors] << "#{flag} expects a positive integer argument"
       end
     end
   end
@@ -91,7 +82,8 @@ Usage: #{$0} [options] [filename]
 
   -l, --start-line    # line number to begin showing results on
   -L, --end-line      # line number to stop showing results on
-  -d, --result-length # max length of the portion after the "# => "
+  -d, --line-length   # max length of the entire line (only truncates results, not source lines)
+  -D, --result-length # max length of the portion after the "# => "
   -h, --help          # this help screen
 HELP_SCREEN
   end

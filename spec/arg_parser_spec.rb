@@ -108,12 +108,25 @@ describe SeeingIsBelieving::ArgParser do
       parse([])[:result_length].should == Float::INFINITY
     end
 
-    it 'is set with -d and --result-length' do
-      parse(['-d',              '10'])[:result_length].should == 10
+    it 'is set with -D and --result-length' do
+      parse(['-D',              '10'])[:result_length].should == 10
       parse(['--result-length', '10'])[:result_length].should == 10
     end
 
-    it_behaves_like 'it requires a positive int argument', ['-d', '--result-length']
+    it_behaves_like 'it requires a positive int argument', ['-D', '--result-length']
+  end
+
+  describe ':line_length' do
+    it 'defaults to infinity' do
+      parse([])[:line_length].should == Float::INFINITY
+    end
+
+    it 'is set with -d and --line-length' do
+      parse(['-d',            '10'])[:line_length].should == 10
+      parse(['--line-length', '10'])[:line_length].should == 10
+    end
+
+    it_behaves_like 'it requires a positive int argument', ['-d', '--line-length']
   end
 
   describe ':help' do
