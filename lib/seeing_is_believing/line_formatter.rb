@@ -3,12 +3,15 @@ class SeeingIsBelieving
     attr_accessor :line, :separator, :result, :options
 
     def initialize(line, separator, result, options)
-     self.line, self.separator, self.result, self.options = line, separator, result, options
+     self.line      = line
+     self.separator = separator
+     self.result    = result
+     self.options   = options
     end
 
     def call
       return line unless sep_plus_result.start_with? separator
-      return line unless formatted_line.start_with? "#{line}#{separator}"
+      return line unless formatted_line.start_with? "#{line_with_padding}#{separator}"
       formatted_line
     end
 
@@ -27,12 +30,16 @@ class SeeingIsBelieving
     end
 
     def formatted_line
-      @formatted_line ||= truncate "#{line}#{sep_plus_result}", line_length
+      @formatted_line ||= truncate "#{line_with_padding}#{sep_plus_result}", line_length
+    end
+
+    def line_with_padding
+      "%-#{options[:source_length]}s" % line
     end
 
     def truncate(string, length)
       return string if string.size <= length
-      string[0, length].sub(/.{0,3}$/) { |last_chars| last_chars.gsub /./, '.' }
+      string.slice(0, length).sub(/.{0,3}$/) { |last_chars| last_chars.gsub /./, '.' }
     end
   end
 end
