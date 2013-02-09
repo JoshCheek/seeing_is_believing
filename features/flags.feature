@@ -55,6 +55,82 @@ Feature: Using flags
     4 + 4
     """
 
+  Scenario: --result-length sets the length of the portion after the # =>
+    Given the file "result_lengths.rb":
+    """
+    $stdout.puts "a"*100
+
+    $stderr.puts "a"*100
+
+                 "a"
+                 "aa"
+                 "aaa"
+                 "aaaa"
+
+    raise        "a"*100
+    """
+    When I run "seeing_is_believing --result-length 5 result_lengths.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    $stdout.puts "a"*100  # => nil
+
+    $stderr.puts "a"*100  # => nil
+
+                 "a"      # => "a"
+                 "aa"     # => "aa"
+                 "aaa"    # => "aaa"
+                 "aaaa"   # => "a...
+
+    raise        "a"*100  # ~> Ru...
+
+    # >> aa...
+
+    # !> aa...
+    """
+
+  # Scenario: --line-length sets the total length of a given line
+  #   Given the file "nine_digits.rb":
+  #   """
+  #   123456789
+  #   """
+  #   When I run "seeing_is_believing --result-length 5 nine_digits.rb"
+  #   Then stderr is empty
+  #   And the exit status is 0
+  #   And stdout is:
+  #   """
+  #   12345
+  #   """
+  #   When I run "seeing_is_believing --result-length 20 nine_digits.rb"
+  #   Then stderr is empty
+  #   And the exit status is 0
+  #   And stdout is:
+  #   """
+  #   123456789 # => 12345
+  #   """
+
+  # Scenario: constrained by shorter of --line-length and --result-length
+  #   Given the file "nine_digits.rb":
+  #   """
+  #   123456789
+  #   """
+  #   When I run "seeing_is_believing --result-length 20 --line-length 6 nine_digits.rb"
+  #   Then stderr is empty
+  #   And the exit status is 0
+  #   And stdout is:
+  #   """
+  #   123456789 # => 12345
+  #   """
+  #   When I run "seeing_is_believing --result-length 22 --line-length 6 nine_digits.rb"
+  #   Then stderr is empty
+  #   And the exit status is 0
+  #   And stdout is:
+  #   """
+  #   123456789 # => 123456
+  #   """
+
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

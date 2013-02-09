@@ -15,9 +15,11 @@ class SeeingIsBelieving
       define_method(args.first) { options.fetch *args }
     end
 
+    # going to have to rename line_length down below b/c it will conflict with upcoming options
     pull_from_options :filename, nil
     pull_from_options :start_line
     pull_from_options :end_line
+    pull_from_options :result_length, Float::INFINITY
 
 
     def initialize(body, stdin, options={})
@@ -40,6 +42,11 @@ class SeeingIsBelieving
       add_stderr
       add_remaining_lines
       return new_body
+    end
+
+    def truncate_result(string)
+      return string if string.size <= result_length
+      string[0, result_length].sub(/.{0,3}$/) { |last_chars| last_chars.gsub /./, '.' }
     end
 
     private
@@ -102,23 +109,25 @@ class SeeingIsBelieving
     def add_stdout
       return unless file_result.has_stdout?
       new_body << "\n"
-      file_result.stdout.each_line { |line| new_body << "#{STDOUT_PREFIX} #{line}" }
+      file_result.stdout.each_line { |line| new_body << "#{STDOUT_PREFIX} #{truncate_result line.chomp}\n" }
     end
 
     def add_stderr
       return unless file_result.has_stderr?
       new_body << "\n"
-      file_result.stderr.each_line { |line| new_body << "#{STDERR_PREFIX} #{line}" }
+      file_result.stderr.each_line { |line| new_body << "#{STDERR_PREFIX} #{truncate_result line.chomp}\n" }
     end
 
     def format_line(line, line_results)
       if line_results.has_exception?
-        sprintf "%-#{line_length}s#{EXCEPTION_PREFIX} %s: %s\n", line, line_results.exception.class, line_results.exception.message
+        result = sprintf "%s: %s", line_results.exception.class, line_results.exception.message
+        sprintf "%-#{line_length}s#{EXCEPTION_PREFIX} %s\n", line, truncate_result(result)
       elsif line_results.any?
-        sprintf "%-#{line_length}s#{RESULT_PREFIX} %s\n", line, line_results.join(', ')
+        sprintf "%-#{line_length}s#{RESULT_PREFIX} %s\n", line, truncate_result(line_results.join ', ')
       else
-        line + "\n"
+        truncate_result(line) + "\n"
       end
     end
+
   end
 end

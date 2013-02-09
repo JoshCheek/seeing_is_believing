@@ -41,11 +41,9 @@ class SeeingIsBelieving
           body  = File.read(filename)
           stdin = self.stdin
         end
-        PrintResultsNextToLines.new body,
-                                    stdin,
-                                    filename:   filename,
-                                    start_line: flags[:start_line],
-                                    end_line:   flags[:end_line]
+        # doesn't make sense that the printer is the one who knows about things like exceptions
+        # maybe we should evaluate independently and just pass the result in?
+        PrintResultsNextToLines.new body, stdin, flags
       end
     end
 
@@ -70,15 +68,15 @@ class SeeingIsBelieving
     end
 
     def file_is_on_stdin?
-      filename.nil?
+      flags[:filename].nil?
     end
 
     def file_dne?
-      !File.exist?(filename)
+      !File.exist?(flags[:filename])
     end
 
     def print_file_dne
-      stderr.puts "#{filename} does not exist!"
+      stderr.puts "#{flags[:filename]} does not exist!"
     end
 
     def print_program
@@ -87,7 +85,7 @@ class SeeingIsBelieving
 
     def syntax_error_notice
       return if file_is_on_stdin? # <-- should probably check stdin too
-      out, err, syntax_status = Open3.capture3 'ruby', '-c', filename
+      out, err, syntax_status = Open3.capture3 'ruby', '-c', flags[:filename]
       return err unless syntax_status.success?
     end
 
