@@ -14,6 +14,7 @@ class SeeingIsBelieving
   def initialize(string_or_stream, options={})
     @string   = string_or_stream
     @stream   = to_stream string_or_stream
+    @matrix_filename   = options[:matrix_filename]
     @filename = options[:filename]
     @stdin    = to_stream options.fetch(:stdin, '')
   end
@@ -30,7 +31,7 @@ class SeeingIsBelieving
 
   private
 
-  attr_reader :stream
+  attr_reader :stream, :matrix_filename
 
   def expression_list
     @expression_list ||= ExpressionList.new get_next_line:  lambda { next_line_queue.dequeue },
@@ -68,7 +69,7 @@ class SeeingIsBelieving
   def result_for(program, min_line_number, max_line_number)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin).call.tap do |result|
+      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin, matrix_filename: matrix_filename).call.tap do |result|
         result.track_line_number min_line_number
         result.track_line_number max_line_number
       end

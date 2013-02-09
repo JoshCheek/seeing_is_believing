@@ -68,11 +68,4 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect { evaluator.call }.to raise_error
     stderr.string.should include "It blew up"
   end
-
-  it "doesn't block waiting for io on stdin" do
-    reader, writer = IO.pipe
-    thread = Thread.new { invoke '1', input_stream: reader }
-    sleep 0.05
-    thread.should_not be_alive
-  end
 end
