@@ -5,6 +5,7 @@ class SeeingIsBelieving
     def track_line_number(line_number)
       @min_line_number = line_number if line_number < min_line_number
       @max_line_number = line_number if line_number > max_line_number
+      self
     end
 
     def min_line_number

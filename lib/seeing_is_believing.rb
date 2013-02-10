@@ -24,15 +24,20 @@ class SeeingIsBelieving
     @line_number     = 1
   end
 
-  # :( refactor me
+  # I'd lik to refactor this, but I was unsatisfied with the three different things I tried.
+  # In the end, I prefer keeping all manipulation of the line number here in the main function
+  # And I like that the higher-level construct of how the program gets built can be found here.
   def call
     @memoized_result ||= begin
-      # extract leading comments, leading =begin and magic comments can't be wrapped for exceptions without breaking
       leading_comments = ''
+
+      # extract leading comments (e.g. encoding) so they don't get wrapped in begin/rescue/end
       while next_line_queue.peek =~ /^\s*#/
         leading_comments << next_line_queue.dequeue << "\n"
         @line_number += 1
       end
+
+      # extract leading =begin/=end so they don't get wrapped in begin/rescue/end
       while next_line_queue.peek == '=begin'
         lines = next_line_queue.dequeue << "\n"
         @line_number += 1
@@ -43,19 +48,24 @@ class SeeingIsBelieving
         leading_comments << lines
       end
 
-      # extract program
-      program = ''
+      # extract program body
+      body = ''
       until next_line_queue.peek.nil? || data_segment?
         expression, expression_size = expression_list.call
-        program << expression
+        body << expression
         track_line_number @line_number
         @line_number += expression_size
       end
-      program = leading_comments + record_exceptions_in(program)
 
       # extract data segment
-      program << "\n" << the_rest_of_the_stream if data_segment?
-      result_for program, min_line_number, max_line_number
+      data_segment = ''
+      data_segment = "\n#{the_rest_of_the_stream}" if data_segment?
+
+      # build the program
+      program = leading_comments << record_exceptions_in(body) << data_segment
+
+      # return the result
+      result_for program, max_line_number
     end
   end
 
@@ -95,13 +105,11 @@ class SeeingIsBelieving
     "end"
   end
 
-  def result_for(program, min_line_number, max_line_number)
+  def result_for(program, max_line_number)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin, matrix_filename: matrix_filename).call.tap do |result|
-        result.track_line_number min_line_number
-        result.track_line_number max_line_number
-      end
+      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin, matrix_filename: matrix_filename)
+        .call.track_line_number(max_line_number)
     end
   end
 
