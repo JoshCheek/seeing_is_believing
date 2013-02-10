@@ -12,19 +12,35 @@ class SeeingIsBelieving
   BLANK_REGEX = /\A\s*\Z/
 
   def initialize(string_or_stream, options={})
-    @string   = string_or_stream
-    @stream   = to_stream string_or_stream
-    @matrix_filename   = options[:matrix_filename]
-    @filename = options[:filename]
-    @stdin    = to_stream options.fetch(:stdin, '')
+    @string          = string_or_stream
+    @stream          = to_stream string_or_stream
+    @matrix_filename = options[:matrix_filename]
+    @filename        = options[:filename]
+    @stdin           = to_stream options.fetch(:stdin, '')
+    @line_number     = 1
   end
 
   def call
     @memoized_result ||= begin
+      # extract leading comments (leading =begin and magic comments can't be wrapped for exceptions without breaking
+      leading_comments = ''
+      while next_line_queue.peek =~ /^\s*#/
+        leading_comments << next_line_queue.dequeue << "\n"
+        @line_number += 1
+      end
+
+      # extract program
       program = ''
-      program << expression_list.call until next_line_queue.peek.nil? || data_segment?
-      program = record_exceptions_in program
-      program << "\n" << the_rest_of_the_stream if data_segment?
+      until next_line_queue.peek.nil? || data_segment?
+        expression, expression_size = expression_list.call
+        program << expression
+        track_line_number @line_number
+        @line_number += expression_size
+      end
+      program = leading_comments + record_exceptions_in(program)
+
+      # extract data segment
+      program << "\n" << the_rest_of_the_stream if data_segment? # is this conditional necessary?
       result_for program, min_line_number, max_line_number
     end
   end
@@ -36,13 +52,12 @@ class SeeingIsBelieving
   def expression_list
     @expression_list ||= ExpressionList.new get_next_line:  lambda { next_line_queue.dequeue },
                                             peek_next_line: lambda { next_line_queue.peek },
-                                            on_complete:    lambda { |line, children, completions, line_number|
-                                              track_line_number line_number
+                                            on_complete:    lambda { |line, children, completions, offset|
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
                                               if do_not_record? expression
                                                 expression + "\n"
                                               else
-                                                record_yahself(expression, line_number) + "\n"
+                                                record_yahself(expression, @line_number+offset) + "\n"
                                               end
                                             }
   end
@@ -85,10 +100,7 @@ class SeeingIsBelieving
   end
 
   def next_line_queue
-    @next_line_queue ||= Queue.new do
-      line = stream.gets
-      line && line.chomp
-    end
+    @next_line_queue ||= Queue.new { (line = stream.gets) && line.chomp }
   end
 
   def the_rest_of_the_stream

@@ -16,31 +16,32 @@ describe SeeingIsBelieving::ExpressionList do
 
   example 'example: multiple children' do
     block_invocations = 0
-    result = call %w[a( b+ c x\\ + y )] do |line, children, completions, line_number|
-      case line_number
-      when 3
+    result, size = call %w[a( b+ c x\\ + y )] do |line, children, completions, offset|
+      case offset
+      when 2
         line.should == 'b+'
         children.should == []
         completions.should == ['c']
         block_invocations += 1
         'b+c'
-      when 6
+      when 5
         line.should == 'x\\'
         children.should == []
         completions.should == ['+', 'y']
         block_invocations += 10
         'x\\+y'
-      when 7
+      when 6
         line.should == 'a('
         children.should == ['b+c', 'x\\+y']
         completions.should == [')']
         block_invocations += 100
         'ALL DONE!'
       else
-        raise "line_number: #{line_number.inspect}"
+        raise "offset: #{offset.inspect}"
       end
     end
     result.should == 'ALL DONE!'
+    size.should == 7
     block_invocations.should == 111
   end
 
@@ -53,15 +54,15 @@ describe SeeingIsBelieving::ExpressionList do
                     '  end',
                     'end',
                   ]
-    result = call expressions do |line, children, completions, line_number|
-      case line_number
-      when 3
+    result, size = call expressions do |line, children, completions, offset|
+      case offset
+      when 2
         [line, children, completions].should == ['    n1 + n2', [], []]
         block_invocations += 1
-      when 4
+      when 3
         [line, children, completions].should == ['  [2].map do |n2|', ['    n1 + n2'], ['  end']]
         block_invocations += 10
-      when 5
+      when 4
         [line, children, completions].should == ['[1].map do |n1|',
                                                  ["  [2].map do |n2|\n    n1 + n2\n  end"],
                                                  ['end']]
@@ -77,6 +78,7 @@ describe SeeingIsBelieving::ExpressionList do
                       "    n1 + n2\n"\
                       "  end\n"\
                       "end"
+    size.should == 5
   end
 
 
@@ -87,12 +89,12 @@ describe SeeingIsBelieving::ExpressionList do
                         "n1 + n2",
                      "end end",
                   ]
-    result = call expressions do |line, children, completions, line_number|
-      case line_number
-      when 3
+    result, size = call expressions do |line, children, completions, offset|
+      case offset
+      when 2
         [line, children, completions].should == ["n1 + n2", [], []]
         block_invocations += 1
-      when 4
+      when 3
         # not really sure what this *should* be like, but if this is the result,
         # then it will work for the use cases I need it for
         [line, *children, *completions].should == ["[1].map do |n1|",
@@ -101,7 +103,7 @@ describe SeeingIsBelieving::ExpressionList do
                                                    'end end']
         block_invocations += 10
       else
-        raise "line_number: #{line_number.inspect}"
+        raise "offset: #{offset.inspect}"
       end
       [line, *children, *completions].join("\n")
     end
@@ -109,14 +111,15 @@ describe SeeingIsBelieving::ExpressionList do
     result.should == "[1].map do |n1|\n"\
                       "[2].map do |n2|\n"\
                         "n1 + n2\n"\
-                     "end end"\
+                     "end end"
+    size.should == 4
   end
 
   example 'example: multiline strings with valid code in them' do
     block_invocations = 0
-    call ["'", "1", "'"] do |*expressions, line_number|
+    call ["'", "1", "'"] do |*expressions, offset|
       expressions.join('').should == "'1'"
-      line_number.should == 3
+      offset.should == 2
       block_invocations += 1
     end
     block_invocations.should == 1
@@ -124,9 +127,9 @@ describe SeeingIsBelieving::ExpressionList do
 
   example 'example: multiline regexps with valid code in them' do
     block_invocations = 0
-    call ['/', '1', '/'] do |*expressions, line_number|
+    call ['/', '1', '/'] do |*expressions, offset|
       expressions.join('').should == "/1/"
-      line_number.should == 3
+      offset.should == 2
       block_invocations += 1
     end
     block_invocations.should == 1
@@ -134,9 +137,9 @@ describe SeeingIsBelieving::ExpressionList do
 
   example "example: =begin/=end comments" do
     block_invocations = 0
-    call ['=begin', '1', '=end'] do |*expressions, line_number|
+    call ['=begin', '1', '=end'] do |*expressions, offset|
       expressions.join('').should == "=begin1=end"
-      line_number.should == 3
+      offset.should == 2
       block_invocations += 1
     end
     block_invocations.should == 1
@@ -144,31 +147,32 @@ describe SeeingIsBelieving::ExpressionList do
 
   example "example: heredoc" do
     pending 'Not sure how to do this, for now just catch it at a higher level' do
-      result = call ['strings = [<<A, <<-B]', '1', 'A', '2', ' B'] do |*expressions, line_number|
-        line_number.should == 1
+      result, size = call ['strings = [<<A, <<-B]', '1', 'A', '2', ' B'] do |*expressions, offset|
+        offset.should == 1
         expressions.should == ['strings = [<<A, <<B]']
         'zomg!'
       end
       result.should == "zomg!\n1\nA\n2\n B"
+      size.should == 5
     end
   end
 
   example "example: method invocations on next line" do
     # example 1: consume the expression with lines after
-    list = list_for ['a', '.b', ' .c', 'irrelevant'] do |*expressions, line_number|
-      line_number.should == 3
+    list = list_for ['a', '.b', ' .c', 'irrelevant'] do |*expressions, offset|
+      offset.should == 2
       expressions.flatten.join('').should == 'a.b .c'
       'a.b.c'
     end
-    list.call.should == 'a.b.c'
+    list.call.should == ['a.b.c', 3]
 
     # example 2: consume the expression with no lines after
-    list = list_for ['a', '.b'] do |*expressions, line_number|
-      line_number.should == 2
+    list = list_for ['a', '.b'] do |*expressions, offset|
+      offset.should == 1
       expressions.flatten.join('').should == 'a.b'
       'result'
     end
-    list.call.should == 'result'
+    list.call.should == ['result', 2]
   end
 
   example "example: smoke test debug option" do

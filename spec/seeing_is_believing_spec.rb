@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'seeing_is_believing'
 require 'stringio'
 
@@ -230,5 +231,10 @@ describe SeeingIsBelieving do
   it 'can deal with methods that are invoked entirely on the next line' do
     values_for("1\n.even?").should == [[], ['false']]
     values_for("1\n.even?\n__END__").should == [[], ['false']]
+  end
+
+  it 'does not record leading comments', wip:true do
+    values_for("# -*- coding: utf-8 -*-\n'ç'").should == [[], ['"ç"']]
+    # values_for("=begin\n1\n=end\n1").should == [[], [], [], ['1']]
   end
 end

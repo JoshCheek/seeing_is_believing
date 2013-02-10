@@ -21,19 +21,19 @@ class SeeingIsBelieving
       self.get_next_line  = options.fetch :get_next_line
       self.peek_next_line = options.fetch :peek_next_line
       self.on_complete    = options.fetch :on_complete
-      @line_number        = 0
     end
 
     def call
+      @offset     = 0 # can we make this not an ivar?
       expressions = []
-      expression = nil
+      expression  = nil
       begin
         pending_expression = generate
         debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
         expressions << pending_expression
         expression = reduce expressions unless next_line_modifies_current?
       end until expressions.empty?
-      expression
+      return expression, @offset
     end
 
     private
@@ -41,7 +41,7 @@ class SeeingIsBelieving
     attr_accessor :debug_stream, :should_debug, :get_next_line, :peek_next_line, :on_complete, :expressions
 
     def generate
-      @line_number += 1
+      @offset += 1
       expression = get_next_line.call
       raise SyntaxError unless expression
       PendingExpression.new(expression, [])
@@ -75,7 +75,7 @@ class SeeingIsBelieving
         result = on_complete.call(expressions[i].expression,
                                   expressions[i].children,
                                   expressions[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
-                                  @line_number)
+                                  @offset-1)
         expressions.replace expressions[0, i]
         expressions[i-1].children << result unless expressions.empty?
         debug { "REDUCED: #{result.inspect}, LIST: #{inspected_expressions expressions}" }
