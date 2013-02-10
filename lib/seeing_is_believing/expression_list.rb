@@ -24,16 +24,15 @@ class SeeingIsBelieving
     end
 
     def call
-      @offset     = 0 # can we make this not an ivar?
-      expressions = []
-      expression  = nil
+      offset, expressions, expression = 0, [], nil
       begin
         pending_expression = generate
         debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
         expressions << pending_expression
-        expression = reduce expressions unless next_line_modifies_current?
+        expression = reduce expressions, offset unless next_line_modifies_current?
+        offset += 1
       end until expressions.empty?
-      return expression, @offset
+      return expression, offset
     end
 
     private
@@ -41,7 +40,6 @@ class SeeingIsBelieving
     attr_accessor :debug_stream, :should_debug, :get_next_line, :peek_next_line, :on_complete, :expressions
 
     def generate
-      @offset += 1
       expression = get_next_line.call
       raise SyntaxError unless expression
       PendingExpression.new(expression, [])
@@ -66,7 +64,7 @@ class SeeingIsBelieving
       @debug_stream.puts yield if debug?
     end
 
-    def reduce(expressions)
+    def reduce(expressions, offset)
       expressions.size.times do |i|
         expression = expressions[i..-1].map(&:expression) # uhm, should this expression we are checking for validity consider the children?
                                        .join("\n")        # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
@@ -75,7 +73,7 @@ class SeeingIsBelieving
         result = on_complete.call(expressions[i].expression,
                                   expressions[i].children,
                                   expressions[i+1..-1].map { |pe| [pe.expression, pe.children] }.flatten, # hmmm, not sure this is really correct, but it allows it to work for my use cases
-                                  @offset-1)
+                                  offset)
         expressions.replace expressions[0, i]
         expressions[i-1].children << result unless expressions.empty?
         debug { "REDUCED: #{result.inspect}, LIST: #{inspected_expressions expressions}" }
