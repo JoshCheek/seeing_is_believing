@@ -20,13 +20,23 @@ class SeeingIsBelieving
     @line_number     = 1
   end
 
+  # :( refactor me
   def call
     @memoized_result ||= begin
-      # extract leading comments (leading =begin and magic comments can't be wrapped for exceptions without breaking
+      # extract leading comments, leading =begin and magic comments can't be wrapped for exceptions without breaking
       leading_comments = ''
       while next_line_queue.peek =~ /^\s*#/
         leading_comments << next_line_queue.dequeue << "\n"
         @line_number += 1
+      end
+      while next_line_queue.peek == '=begin'
+        lines = next_line_queue.dequeue << "\n"
+        @line_number += 1
+        until SyntaxAnalyzer.begin_and_end_comments_are_complete? lines
+          lines << next_line_queue.dequeue << "\n"
+          @line_number += 1
+        end
+        leading_comments << lines
       end
 
       # extract program
@@ -40,7 +50,7 @@ class SeeingIsBelieving
       program = leading_comments + record_exceptions_in(program)
 
       # extract data segment
-      program << "\n" << the_rest_of_the_stream if data_segment? # is this conditional necessary?
+      program << "\n" << the_rest_of_the_stream if data_segment?
       result_for program, min_line_number, max_line_number
     end
   end

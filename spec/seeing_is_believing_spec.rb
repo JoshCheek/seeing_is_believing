@@ -233,8 +233,10 @@ describe SeeingIsBelieving do
     values_for("1\n.even?\n__END__").should == [[], ['false']]
   end
 
-  it 'does not record leading comments', wip:true do
-    values_for("# -*- coding: utf-8 -*-\n'ç'").should == [[], ['"ç"']]
-    # values_for("=begin\n1\n=end\n1").should == [[], [], [], ['1']]
+  it 'does not record leading comments' do
+    values_for("# -*- coding: utf-8 -*-\n'ç'\n__LINE__").should == [[], ['"ç"'], ['3']]
+    values_for("=begin\n1\n=end\n=begin\n=end\n__LINE__").should == [[], [], [],
+                                                                     [], [],
+                                                                     ['6']]
   end
 end
