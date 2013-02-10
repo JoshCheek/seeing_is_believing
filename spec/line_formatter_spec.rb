@@ -1,6 +1,6 @@
-require 'seeing_is_believing/line_formatter'
+require 'seeing_is_believing/binary/line_formatter'
 
-describe SeeingIsBelieving::LineFormatter do
+describe SeeingIsBelieving::Binary::LineFormatter do
   def result_for(line, separator, result, options={})
     described_class.new(line, separator, result, options).call
   end

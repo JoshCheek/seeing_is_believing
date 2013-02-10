@@ -1,6 +1,6 @@
 require 'seeing_is_believing'
-require 'seeing_is_believing/arg_parser'
-require 'seeing_is_believing/print_results_next_to_lines'
+require 'seeing_is_believing/binary/arg_parser'
+require 'seeing_is_believing/binary/print_results_next_to_lines'
 
 
 class SeeingIsBelieving
