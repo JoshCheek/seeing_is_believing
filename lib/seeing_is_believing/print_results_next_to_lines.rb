@@ -1,4 +1,3 @@
-require 'seeing_is_believing'
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/line_formatter'
 require 'seeing_is_believing/has_exception'
@@ -12,21 +11,29 @@ class SeeingIsBelieving
     EXCEPTION_PREFIX = '# ~>'
        RESULT_PREFIX = '# =>'
 
-    def self.pull_from_options(*args)
+    def self.remove_previous_output_from(string)
+      string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
+            .gsub(/\n?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,          '')
+            .gsub(/\n?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,          '')
+    end
+
+
+    def self.method_from_options(*args)
       define_method(args.first) { options.fetch *args }
     end
 
-    pull_from_options :filename, nil
-    pull_from_options :start_line
-    pull_from_options :end_line
-    pull_from_options :line_length,   Float::INFINITY
-    pull_from_options :result_length, Float::INFINITY
+    method_from_options :filename, nil
+    method_from_options :start_line
+    method_from_options :end_line
+    method_from_options :line_length,   Float::INFINITY
+    method_from_options :result_length, Float::INFINITY
 
 
-    def initialize(body, stdin, options={})
-      self.body    = remove_previous_output_from body
-      self.stdin   = stdin
-      self.options = options
+    def initialize(body, stdin, file_result, options={})
+      self.body        = body
+      self.stdin       = stdin
+      self.options     = options
+      self.file_result = file_result
     end
 
     def new_body
@@ -34,8 +41,6 @@ class SeeingIsBelieving
     end
 
     def call
-      evaluate_program
-      inherit_exception
       add_each_line_until_start_or_data_segment
       add_lines_with_results_until_end_or_data_segment
       add_lines_until_data_segment
@@ -48,14 +53,6 @@ class SeeingIsBelieving
     private
 
     attr_accessor :body, :file_result, :stdin, :options
-
-    def evaluate_program
-      self.file_result = SeeingIsBelieving.new(body, filename: filename, stdin: stdin).call
-    end
-
-    def inherit_exception
-      self.exception = file_result.exception
-    end
 
     def add_each_line_until_start_or_data_segment
       line_queue.until { |line, line_number| line_number == start_line || start_of_data_segment?(line) }
@@ -94,12 +91,6 @@ class SeeingIsBelieving
                                           .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
                                           .map(&:length)
                                           .max
-    end
-
-    def remove_previous_output_from(string)
-      string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
-            .gsub(/\n?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,          '')
-            .gsub(/\n?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,          '')
     end
 
     def add_stdout

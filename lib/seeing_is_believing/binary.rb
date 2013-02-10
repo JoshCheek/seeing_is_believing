@@ -1,5 +1,7 @@
+require 'seeing_is_believing'
 require 'seeing_is_believing/arg_parser'
 require 'seeing_is_believing/print_results_next_to_lines'
+
 
 class SeeingIsBelieving
   class Binary
@@ -17,7 +19,7 @@ class SeeingIsBelieving
                       elsif should_print_help?          then print_help         ; 0
                       elsif has_filename? && file_dne?  then print_file_dne     ; 1
                       elsif invalid_syntax?             then print_syntax_error ; 1
-                      else                                   print_program      ; (printer.has_exception? ? 1 : 0)
+                      else                                   print_program      ; (results.has_exception? ? 1 : 0)
                       end
     end
 
@@ -25,6 +27,7 @@ class SeeingIsBelieving
 
     private
 
+    # lets delete this pls
     def filename
       flags[:filename]
     end
@@ -41,11 +44,13 @@ class SeeingIsBelieving
           body  = File.read(filename)
           stdin = self.stdin
         end
-        # doesn't make sense that the printer is the one who knows about things like exceptions
-        # maybe we should evaluate independently and just pass the result in?
-        PrintResultsNextToLines.new body, stdin, flags
+        body = PrintResultsNextToLines.remove_previous_output_from body
+        @results = SeeingIsBelieving.new(body, filename: filename, stdin: stdin).call
+        PrintResultsNextToLines.new body, stdin, results, flags
       end
     end
+
+    attr_reader :results
 
     def flags
       @flags ||= ArgParser.parse argv
@@ -68,7 +73,7 @@ class SeeingIsBelieving
     end
 
     def file_is_on_stdin?
-      flags[:filename].nil?
+      filename.nil?
     end
 
     def file_dne?
@@ -96,5 +101,6 @@ class SeeingIsBelieving
     def print_syntax_error
       stderr.puts syntax_error_notice
     end
+
   end
 end
