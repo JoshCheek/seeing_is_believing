@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/JoshCheek/seeing_is_believing"
   s.summary     = %q{Records results of every line of code in your file}
   s.description = %q{Records the results of every line of code in your file (intended to be like xmpfilter), inspired by Bret Victor's JavaScript example in his talk "Inventing on Principle"}
+  s.license     = "WTFPL"
 
   s.rubyforge_project = "seeing_is_believing"
 
