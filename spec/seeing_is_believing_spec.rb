@@ -199,13 +199,10 @@ describe SeeingIsBelieving do
     result.stdout.should == filename
   end
 
-  # this can be refactored to use invoke
-  specify 'cwd is the directory of the file' do
+  specify 'cwd of the file is the cwd of the evaluating program' do
     filename = File.join proving_grounds_dir, 'mah_file.rb'
     FileUtils.rm_f filename
-    result   = invoke 'print File.expand_path __FILE__', filename: filename
-    result   = invoke 'print File.expand_path(Dir.pwd)', filename: filename
-    result.stdout.should == proving_grounds_dir
+    invoke('print File.expand_path(Dir.pwd)', filename: filename).stdout.should == Dir.pwd
   end
 
   it 'does not capture output from __END__ onward' do

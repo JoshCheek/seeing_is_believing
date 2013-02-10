@@ -24,7 +24,7 @@ class SeeingIsBelieving
 
     def initialize(program, filename, options={})
       self.program         = program
-      self.filename        = File.expand_path(filename)
+      self.filename        = filename
       self.error_stream    = options.fetch :error_stream, $stderr # hmm, not really liking the global here
       self.input_stream    = options.fetch :input_stream, StringIO.new('')
       self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
@@ -85,7 +85,6 @@ class SeeingIsBelieving
       Open3.popen3 'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
                            '-I', File.expand_path('../..', __FILE__), # add lib to the load path
                            '-r', matrix_filename,                     # hijack the environment so it can be recorded
-                           '-C', file_directory,                      # run in the file's directory (do I really want this?)
                            filename do |i, o, e, t|
         out_reader = Thread.new { o.read }
         err_reader = Thread.new { e.read }

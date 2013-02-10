@@ -140,7 +140,7 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is:
     """
-    __FILE__            # => "{{CommandLineHelpers.path_to 'some_dir/uses_macros.rb'}}"
+    __FILE__            # => "some_dir/uses_macros.rb"
     __LINE__            # => 2
     $stdout.puts "omg"  # => nil
     $stderr.puts "hi"   # => nil
