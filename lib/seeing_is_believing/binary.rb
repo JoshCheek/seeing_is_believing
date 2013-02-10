@@ -27,30 +27,24 @@ class SeeingIsBelieving
 
     private
 
-    # lets delete this pls
-    def filename
+    def has_filename?
       flags[:filename]
     end
 
-    alias has_filename? filename
-
-    # le sigh
-    def printer
-      @printer ||= begin
-        if file_is_on_stdin?
-          body  = stdin.read
-          stdin = ''
-        else
-          body  = File.read(filename)
-          stdin = self.stdin
-        end
-        body = PrintResultsNextToLines.remove_previous_output_from body
-        @results = SeeingIsBelieving.new(body, filename: filename, stdin: stdin).call
-        PrintResultsNextToLines.new body, stdin, results, flags
-      end
+    def body
+      @body ||= PrintResultsNextToLines.remove_previous_output_from \
+                  (file_is_on_stdin? ? stdin.read : File.read(flags[:filename]))
     end
 
-    attr_reader :results
+    def results
+      @results ||= SeeingIsBelieving.call body,
+                                          filename: flags[:filename],
+                                          stdin: (file_is_on_stdin? ? '' : stdin)
+    end
+
+    def printer
+      @printer ||= PrintResultsNextToLines.new body, results, flags
+    end
 
     def flags
       @flags ||= ArgParser.parse argv
@@ -73,7 +67,7 @@ class SeeingIsBelieving
     end
 
     def file_is_on_stdin?
-      filename.nil?
+      flags[:filename].nil?
     end
 
     def file_dne?
@@ -89,7 +83,7 @@ class SeeingIsBelieving
     end
 
     def syntax_error_notice
-      return if file_is_on_stdin? # <-- should probably check stdin too
+      return if file_is_on_stdin? # <-- BUG: should check stdin too
       out, err, syntax_status = Open3.capture3 'ruby', '-c', flags[:filename]
       return err unless syntax_status.success?
     end

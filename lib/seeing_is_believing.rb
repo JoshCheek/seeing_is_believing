@@ -11,6 +11,10 @@ class SeeingIsBelieving
   include TracksLineNumbersSeen
   BLANK_REGEX = /\A\s*\Z/
 
+  def self.call(*args)
+    new(*args).call
+  end
+
   def initialize(string_or_stream, options={})
     @string          = string_or_stream
     @stream          = to_stream string_or_stream

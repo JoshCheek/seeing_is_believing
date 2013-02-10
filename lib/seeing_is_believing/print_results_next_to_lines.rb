@@ -29,9 +29,8 @@ class SeeingIsBelieving
     method_from_options :result_length, Float::INFINITY
 
 
-    def initialize(body, stdin, file_result, options={})
+    def initialize(body, file_result, options={})
       self.body        = body
-      self.stdin       = stdin
       self.options     = options
       self.file_result = file_result
     end
@@ -52,7 +51,7 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :body, :file_result, :stdin, :options
+    attr_accessor :body, :file_result, :options
 
     def add_each_line_until_start_or_data_segment
       line_queue.until { |line, line_number| line_number == start_line || start_of_data_segment?(line) }
