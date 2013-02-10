@@ -9,18 +9,20 @@ Feature: Running the binary successfully
   Scenario: Some basic functionality
     Given the file "basic_functionality.rb":
     """
+    # iteration
     5.times do |i|
       i * 2
     end
 
+    # method and invocations
     def meth(n)
       n
     end
 
-    # some invocations
     meth "12"
     meth "34"
 
+    # block style comments
     =begin
     I don't ever actually write
       comments like this
@@ -36,26 +38,43 @@ Feature: Running the binary successfully
     is a doc
     HERE
 
+    # method invocation that occurs entirely on the next line
     [*1..10]
       .select(&:even?)
+
+    # mutliple levels of nesting
+    class User
+      def initialize(name)
+        @name = name
+      end
+
+      def name
+        @name
+      end
+    end
+
+    User.new("Josh").name
+    User.new("Rick").name
     """
     When I run "seeing_is_believing basic_functionality.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
+    # iteration
     5.times do |i|
-      i * 2             # => 0, 2, 4, 6, 8
-    end                 # => 5
+      i * 2                 # => 0, 2, 4, 6, 8
+    end                     # => 5
 
+    # method and invocations
     def meth(n)
-      n                 # => "12", "34"
-    end                 # => nil
+      n                     # => "12", "34"
+    end                     # => nil
 
-    # some invocations
-    meth "12"           # => "12"
-    meth "34"           # => "34"
+    meth "12"               # => "12"
+    meth "34"               # => "34"
 
+    # block style comments
     =begin
     I don't ever actually write
       comments like this
@@ -64,15 +83,30 @@ Feature: Running the binary successfully
     # multilinezzz
     "a
      b
-     c"                 # => "a\n b\n c"
+     c"                     # => "a\n b\n c"
 
     # don't record heredocs b/c they're just too fucking different
     <<HERE
     is a doc
     HERE
 
+    # method invocation that occurs entirely on the next line
     [*1..10]
-      .select(&:even?)  # => [2, 4, 6, 8, 10]
+      .select(&:even?)      # => [2, 4, 6, 8, 10]
+
+    # mutliple levels of nesting
+    class User
+      def initialize(name)
+        @name = name        # => "Josh", "Rick"
+      end                   # => nil
+
+      def name
+        @name               # => "Josh", "Rick"
+      end                   # => nil
+    end                     # => nil
+
+    User.new("Josh").name   # => "Josh"
+    User.new("Rick").name   # => "Rick"
     """
 
   Scenario: Passing previous output back into input
