@@ -129,6 +129,22 @@ describe SeeingIsBelieving::Binary::ArgParser do
     it_behaves_like 'it requires a positive int argument', ['-d', '--line-length']
   end
 
+  describe :require do
+    it 'defaults to an empty array' do
+      parse([])[:require].should be_empty
+    end
+
+    it '-r and --require sets each required file into the result array' do
+      parse(%w[-r f1 --require f2])[:require].should == %w[f1 f2]
+    end
+
+    it 'sets an error if not provided with a filename' do
+      parse(['--require', 'f']).should_not have_error /-r/
+      parse(['-r']).should have_error /-r\b/
+      parse(['--require']).should have_error /--require\b/
+    end
+  end
+
   describe ':help' do
     it 'defaults to nil' do
       parse([])[:help].should be_nil

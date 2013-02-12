@@ -21,6 +21,7 @@ class SeeingIsBelieving
     @matrix_filename = options[:matrix_filename]
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
+    @require         = options.fetch :require, []
     @line_number     = 1
   end
 
@@ -108,8 +109,13 @@ class SeeingIsBelieving
   def result_for(program, max_line_number)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.new(program, filename, input_stream: @stdin, matrix_filename: matrix_filename)
-        .call.track_line_number(max_line_number)
+      EvaluateByMovingFiles.new(program,
+                                filename,
+                                input_stream:    @stdin,
+                                matrix_filename: matrix_filename,
+                                require:         @require)
+                           .call
+                           .track_line_number(max_line_number)
     end
   end
 

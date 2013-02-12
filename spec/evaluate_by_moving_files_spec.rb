@@ -61,6 +61,15 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     evaluator.call
   end
 
+  it 'can require files' do
+    other_filename1 = File.join filedir, 'other1.rb'
+    other_filename2 = File.join filedir, 'other2.rb'
+    File.open(other_filename1, 'w') { |f| f.puts "puts 123" }
+    File.open(other_filename2, 'w') { |f| f.puts "puts 456" }
+    result = invoke '', require: [other_filename1, other_filename2]
+    result.stdout.should == "123\n456\n"
+  end
+
   it 'prints some error handling code to stderr if it fails' do
     stderr    = StringIO.new
     evaluator = described_class.new 'raise "omg"', filename, error_stream: stderr

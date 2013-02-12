@@ -2,6 +2,10 @@ Given 'the file "$filename":' do |filename, body|
   CommandLineHelpers.write_file filename, body
 end
 
+Given 'the file "$filename" "$body"' do |filename, body|
+  CommandLineHelpers.write_file filename, body
+end
+
 Given 'I have the stdin content "$content"' do |content|
   @stdin_data = content
 end

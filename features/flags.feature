@@ -125,6 +125,22 @@ Feature: Using flags
     When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
 
+  Scenario: --require
+    Given the file "print_1.rb" "puts 1"
+    Given the file "print_2.rb" "puts 2"
+    And the file "print_3.rb" "puts 3"
+    When I run "seeing_is_believing --require ./print_1 --require ./print_2 print_3.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    puts 3  # => nil
+
+    # >> 1
+    # >> 2
+    # >> 3
+    """
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

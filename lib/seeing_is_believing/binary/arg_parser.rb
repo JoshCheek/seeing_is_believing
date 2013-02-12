@@ -1,7 +1,6 @@
 # note:
 #   reserve -e for script in an argument
 #   reserve -I for setting load path
-#   reserve -r for requiring another file
 
 class SeeingIsBelieving
   class Binary
@@ -26,6 +25,7 @@ class SeeingIsBelieving
             when '-L', '--end-line'      then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
             when '-D', '--result-length' then extract_positive_int_for :result_length, arg
+            when '-r', '--require'       then next_arg("#{arg} expected a filename but did not see one") { |filename| options[:require] << filename }
             when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else # filenames
               filenames << arg
@@ -59,7 +59,13 @@ class SeeingIsBelieving
           line_length:   Float::INFINITY,
           end_line:      Float::INFINITY,
           result_length: Float::INFINITY,
+          require:       [],
         }
+      end
+
+      def next_arg(error_message, &success_block)
+        arg = args.shift
+        arg ? success_block.call(arg) : (options[:errors] << error_message)
       end
 
       def extract_positive_int_for(key, flag)
@@ -85,6 +91,7 @@ Usage: #{$0} [options] [filename]
   -L, --end-line      # line number to stop showing results on
   -d, --line-length   # max length of the entire line (only truncates results, not source lines)
   -D, --result-length # max length of the portion after the "# => "
+  -r, --require       # additional files to be required before running the program
   -h, --help          # this help screen
 HELP_SCREEN
     end
