@@ -83,21 +83,26 @@ class SeeingIsBelieving
     end
 
     def evaluate_file
-      Open3.popen3 'ruby', '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
-                           '-I', File.expand_path('../..', __FILE__), # add lib to the load path
-                           '-r', matrix_filename,                     # hijack the environment so it can be recorded
-                           *require_flags,                            # users can inject files to be required
-                           filename do |i, o, e, t|
-        out_reader = Thread.new { o.read }
-        err_reader = Thread.new { e.read }
+      Open3.popen3 *popen_args do |process_stdin, process_stdout, process_stderr, thread|
+        out_reader = Thread.new { process_stdout.read }
+        err_reader = Thread.new { process_stderr.read }
         Thread.new do
-          input_stream.each_char { |char| i.write char }
-          i.close
+          input_stream.each_char { |char| process_stdin.write char }
+          process_stdin.close
         end
         self.stdout     = out_reader.value
         self.stderr     = err_reader.value
-        self.exitstatus = t.value
+        self.exitstatus = thread.value
       end
+    end
+
+    def popen_args
+      ['ruby',
+         '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
+         '-I', File.expand_path('../..', __FILE__), # add lib to the load path
+         '-r', matrix_filename,                     # hijack the environment so it can be recorded
+         *require_flags,                            # users can inject files to be required
+         filename]
     end
 
     def fail
