@@ -30,10 +30,7 @@ Feature: Running the binary unsuccessfully
     'abc
     """
     When I run "seeing_is_believing invalid_syntax.rb"
-    Then stderr is:
-    """
-    invalid_syntax.rb:1: unterminated string meets end of file
-    """
+    Then stderr includes "1: unterminated string meets end of file"
     And the exit status is 1
     And stdout is empty
 

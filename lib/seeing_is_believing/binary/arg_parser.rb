@@ -1,5 +1,4 @@
 # note:
-#   reserve -e for script in an argument
 #   reserve -I for setting load path
 
 class SeeingIsBelieving
@@ -26,8 +25,9 @@ class SeeingIsBelieving
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
             when '-D', '--result-length' then extract_positive_int_for :result_length, arg
             when '-r', '--require'       then next_arg("#{arg} expected a filename but did not see one") { |filename| options[:require] << filename }
+            when '-e', '--program'       then next_arg("#{arg} expects a program as the following argument") { |program| options[:program] = program }
             when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
-            else # filenames
+            else
               filenames << arg
               options[:filename] = arg
             end
@@ -44,6 +44,8 @@ class SeeingIsBelieving
       def normalize_and_validate
         if 1 < filenames.size
           options[:errors] << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
+        elsif filenames.any? && options[:program]
+          options[:errors] << "You passed the program in an argument, but have also specified the filename #{filenames.first}"
         end
 
         if options[:end_line] < options[:start_line]
@@ -53,6 +55,7 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
+          program:       nil,
           filename:      nil,
           errors:        [],
           start_line:    1,
@@ -92,6 +95,7 @@ Usage: #{$0} [options] [filename]
   -d, --line-length   # max length of the entire line (only truncates results, not source lines)
   -D, --result-length # max length of the portion after the "# => "
   -r, --require       # additional files to be required before running the program
+  -e, --program       # Pass the program to execute as an argument
   -h, --help          # this help screen
 HELP_SCREEN
     end

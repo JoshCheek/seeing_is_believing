@@ -33,7 +33,7 @@ class SeeingIsBelieving
 
     def body
       @body ||= PrintResultsNextToLines.remove_previous_output_from \
-                  (file_is_on_stdin? ? stdin.read : File.read(flags[:filename]))
+        flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename])
     end
 
     def results
@@ -68,7 +68,7 @@ class SeeingIsBelieving
     end
 
     def file_is_on_stdin?
-      flags[:filename].nil?
+      flags[:filename].nil? && flags[:program].nil?
     end
 
     def file_dne?
@@ -84,8 +84,7 @@ class SeeingIsBelieving
     end
 
     def syntax_error_notice
-      return if file_is_on_stdin? # <-- BUG: should check stdin too
-      out, err, syntax_status = Open3.capture3 'ruby', '-c', flags[:filename]
+      out, err, syntax_status = Open3.capture3 'ruby', '-c', stdin_data: body
       return err unless syntax_status.success?
     end
 

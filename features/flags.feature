@@ -141,6 +141,15 @@ Feature: Using flags
     # >> 3
     """
 
+  Scenario: --program
+    When I run "seeing_is_believing --program '1'"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1  # => 1
+    """
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

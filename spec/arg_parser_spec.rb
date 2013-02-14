@@ -45,11 +45,12 @@ describe SeeingIsBelieving::Binary::ArgParser do
     parse(['-a']).should have_error 'Unknown option: "-a"'
   end
 
-  example 'example: all the args' do
-    options = parse(%w[filename -l 12 -L 20 -h])
+  example 'example: multiple args' do
+    options = parse(%w[filename -l 12 -L 20 -h -r torequire])
     options[:filename].should == 'filename'
     options[:start_line].should == 12
     options[:end_line].should == 20
+    options[:require].should == ['torequire']
     options[:help].should be_a_kind_of String
     options[:errors].should be_empty
   end
@@ -153,6 +154,29 @@ describe SeeingIsBelieving::Binary::ArgParser do
     it 'is set to the help screen with -h and --help and -help' do
       parse(['-h'])[:help].should == described_class.help_screen
       parse(['--help'])[:help].should == described_class.help_screen
+    end
+  end
+
+  describe ':program' do
+    it 'defaults to nil' do
+      parse([])[:program].should be_nil
+    end
+
+    it 'is set with -e or --program, and takes the next arg' do
+      parse(['-e', '1'])[:program].should == '1'
+      parse(['--program', '1'])[:program].should == '1'
+    end
+
+    it 'sets an error if not given a program' do
+      parse([]).should_not have_error /-e/
+      parse([]).should_not have_error /--program/
+      parse(['-e']).should have_error /-e/
+      parse(['--program']).should have_error /--program/
+    end
+
+    it 'sets an error if a filename is also give' do
+      # parse(['abc']).should_not have_error /abc/
+      parse(['-e', '1', 'abc']).should have_error /abc/
     end
   end
 end
