@@ -185,7 +185,7 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse([])[:load_path].should be_empty
     end
 
-    it '-I and --load-path sets each required file into the result array' do
+    specify '-I and --load-path sets each required file into the result array' do
       parse(%w[-I f1 --load-path f2])[:load_path].should == %w[f1 f2]
     end
 
@@ -193,6 +193,22 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(['--load-path', 'f']).should_not have_error /-I/
       parse(['-I']).should have_error /-I\b/
       parse(['--load-path']).should have_error /--load-path\b/
+    end
+  end
+
+  describe ':encoding' do
+    it 'defaults to nil' do
+      parse([])[:encoding].should be_nil
+    end
+
+    specify '-K and --encoding sets the encoding to the next argument' do
+      parse(%w[-K u])[:encoding].should == 'u'
+      parse(%w[--encoding u])[:encoding].should == 'u'
+    end
+
+    it 'sets an error if not provided with an encoding' do
+      parse(['-K']).should have_error /-K/
+      parse(['--encoding']).should have_error /--encoding/
     end
   end
 end
