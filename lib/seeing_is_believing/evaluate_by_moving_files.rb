@@ -101,7 +101,7 @@ class SeeingIsBelieving
     def popen_args
       ['ruby',
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
-         *(encoding ? ["-K#{encoding}"] : []),       # allow the encoding to be set
+         *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path
          '-r', matrix_filename,                     # hijack the environment so it can be recorded
          *load_path_flags,                          # users can inject dirs to be added to the load path

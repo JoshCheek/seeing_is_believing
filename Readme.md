@@ -48,14 +48,19 @@ believer = SeeingIsBelieving.new("%w[a b c].each do |i|
                                   end")
 
 result = believer.call
-result      # => #<SeeingIsBelieving::Result:0x007faeed1a5b78 @max_line_number=3, @min_line_number=1, @results={2=>['"A"', '"B"', '"C"'], 3=>['["a", "b", "c"]']}>
+result                # => #<SeeingIsBelieving::Result:0x007f832298e340 @max_line_number=3, @min_line_number=1, @results={2=>#<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=["\"A\"", "\"B\"", "\"C\""]>, 3=>#<SeeingIsBelieving::Result::Line:0x007f832298db98 @array=["[\"a\", \"b\", \"c\"]"]>}, @stdout="", @stderr="">
 
-result.to_a # => [ [1, []],
-            #      [2, ['"A"', '"B"', '"C"']],
-            #      [3, ['["a", "b", "c"]']]
-            #    ]
+result.to_a           # => [#<SeeingIsBelieving::Result::Line:0x007f832299adc0 @array=[]>,
+                      #     #<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=['"A"', '"B"', '"C"']>,
+                      #     #<SeeingIsBelieving::Result::Line:0x007f832298db98 @array=['["a", "b", "c"]']>]
 
-result[2]   # => ['"A"', '"B"', '"C"']
+result[2]             # => #<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=['"A"', '"B"', '"C"']>
+
+# this result object is a thin wrapper around its array
+result[2][0]          # => '"A"'
+result[2][1]          # => '"B"'
+result[2][2]          # => '"C"'
+result[2].join(", ")  # => '"A", "B", "C"'
 ```
 
 Install

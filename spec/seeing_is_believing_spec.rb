@@ -8,7 +8,7 @@ describe SeeingIsBelieving do
   end
 
   def values_for(input)
-    invoke(input).to_a.map(&:last)
+    invoke(input).to_a
   end
 
   def stream(string)
@@ -19,9 +19,8 @@ describe SeeingIsBelieving do
 
   it 'takes a string or stream and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "1+1\n'2'+'2'"
-    output = [[1, ["2"]], [2, ['"22"']]]
-    invoke(input).to_a.should == output
-    invoke(stream input).to_a.should == output
+    invoke(input)[1].should == ["2"]
+    invoke(stream input)[2].should == ['"22"']
   end
 
   it 'remembers context of previous lines' do
@@ -30,8 +29,8 @@ describe SeeingIsBelieving do
 
   it 'can be invoked multiple times, returning the same result' do
     believer = described_class.new("$xyz||=1\n$xyz+=1")
-    believer.call.to_a.should == [[1, ['1']], [2, ['2']]]
-    believer.call.to_a.should == [[1, ['1']], [2, ['2']]]
+    believer.call.to_a.should == [['1'], ['2']]
+    believer.call.to_a.should == [['1'], ['2']]
   end
 
   it 'is evaluated at the toplevel' do

@@ -9,7 +9,7 @@ class SeeingIsBelieving
       include HasException
 
       extend Forwardable
-      def_delegators :@array, :[], :<<, :any?, :join, :to_ary, :to_a
+      def_delegators :@array, :[], :<<, :any?, :join, :to_ary, :to_a, :empty?
 
       def initialize
         @array ||= []
@@ -27,6 +27,7 @@ class SeeingIsBelieving
 
     include HasException
     include TracksLineNumbersSeen
+    include Enumerable
 
     attr_accessor :stdout, :stderr
 
@@ -58,11 +59,8 @@ class SeeingIsBelieving
       results(line_number)
     end
 
-    # probably not really useful, just exists to satisfy the tests, which specified too simple of an interface
-    def to_a
-      (min_line_number..max_line_number).map do |line_number|
-        [line_number, [*self[line_number].to_ary, *Array(self[line_number].exception)]]
-      end
+    def each(&block)
+      (min_line_number..max_line_number).each { |line_number| block.call self[line_number] }
     end
 
     private
