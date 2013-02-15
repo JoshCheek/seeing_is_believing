@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'fileutils'
 
@@ -74,6 +76,10 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     File.open(File.join(filedir, 'other1.rb'), 'w') { |f| f.puts "puts 123" }
     result = invoke '', require: ['other1'], load_path: [filedir]
     result.stdout.should == "123\n"
+  end
+
+  it 'will set the encoding' do
+    invoke('print "ç"', encoding: 'u').stdout.should == "ç"
   end
 
   it 'prints some error handling code to stderr if it fails' do

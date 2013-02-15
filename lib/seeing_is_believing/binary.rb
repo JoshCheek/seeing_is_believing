@@ -41,6 +41,7 @@ class SeeingIsBelieving
                                           filename:  flags[:filename],
                                           require:   flags[:require],
                                           load_path: flags[:load_path],
+                                          encoding:  flags[:encoding],
                                           stdin:     (file_is_on_stdin? ? '' : stdin)
     end
 

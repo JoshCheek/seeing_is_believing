@@ -167,6 +167,15 @@ Feature: Using flags
     """
     And the exit status is 0
 
+  Scenario: --encoding
+    Given the file "utf-8.rb" "'ç'"
+    When I run "seeing_is_believing --encoding u utf-8.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    'ç'  # => "ç"
+    """
 
   Scenario: --help
     When I run "seeing_is_believing --help"

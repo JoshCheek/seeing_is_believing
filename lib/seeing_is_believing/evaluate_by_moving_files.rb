@@ -20,7 +20,7 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags
+    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -30,6 +30,7 @@ class SeeingIsBelieving
       self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
       self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
+      self.encoding        = options.fetch :encoding, nil
     end
 
     def call
@@ -100,6 +101,7 @@ class SeeingIsBelieving
     def popen_args
       ['ruby',
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
+         *(encoding ? ["-K#{encoding}"] : []),       # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path
          '-r', matrix_filename,                     # hijack the environment so it can be recorded
          *load_path_flags,                          # users can inject dirs to be added to the load path
