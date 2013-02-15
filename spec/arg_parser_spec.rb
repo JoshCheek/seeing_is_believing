@@ -179,4 +179,21 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(['-e', '1', 'abc']).should have_error /abc/
     end
   end
+
+  describe':load_path' do
+    it 'defaults to an empty array' do
+      parse([])[:load_path].should be_empty
+    end
+
+    it '-I and --load-path sets each required file into the result array' do
+      parse(%w[-I f1 --load-path f2])[:load_path].should == %w[f1 f2]
+    end
+
+    it 'sets an error if not provided with a dir' do
+      parse(['--load-path', 'f']).should_not have_error /-I/
+      parse(['-I']).should have_error /-I\b/
+      parse(['--load-path']).should have_error /--load-path\b/
+    end
+  end
 end
+

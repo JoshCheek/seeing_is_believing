@@ -70,6 +70,12 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     result.stdout.should == "123\n456\n"
   end
 
+  it 'can set the load path' do
+    File.open(File.join(filedir, 'other1.rb'), 'w') { |f| f.puts "puts 123" }
+    result = invoke '', require: ['other1'], load_path: [filedir]
+    result.stdout.should == "123\n"
+  end
+
   it 'prints some error handling code to stderr if it fails' do
     stderr    = StringIO.new
     evaluator = described_class.new 'raise "omg"', filename, error_stream: stderr

@@ -22,6 +22,7 @@ class SeeingIsBelieving
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
     @require         = options.fetch :require, []
+    @load_path       = options.fetch :load_path, []
     @line_number     = 1
   end
 
@@ -113,7 +114,8 @@ class SeeingIsBelieving
                                 filename,
                                 input_stream:    @stdin,
                                 matrix_filename: matrix_filename,
-                                require:         @require)
+                                require:         @require,
+                                load_path:       @load_path)
                            .call
                            .track_line_number(max_line_number)
     end

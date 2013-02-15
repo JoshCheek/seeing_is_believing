@@ -1,6 +1,3 @@
-# note:
-#   reserve -I for setting load path
-
 class SeeingIsBelieving
   class Binary
     class ArgParser
@@ -25,6 +22,7 @@ class SeeingIsBelieving
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
             when '-D', '--result-length' then extract_positive_int_for :result_length, arg
             when '-r', '--require'       then next_arg("#{arg} expected a filename but did not see one") { |filename| options[:require] << filename }
+            when '-I', '--load-path'     then next_arg("#{arg} expected a directory but did not see one") { |dir| options[:load_path] << dir }
             when '-e', '--program'       then next_arg("#{arg} expects a program as the following argument") { |program| options[:program] = program }
             when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else
@@ -63,6 +61,7 @@ class SeeingIsBelieving
           end_line:      Float::INFINITY,
           result_length: Float::INFINITY,
           require:       [],
+          load_path:     [],
         }
       end
 

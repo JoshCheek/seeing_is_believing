@@ -150,6 +150,24 @@ Feature: Using flags
     1  # => 1
     """
 
+  Scenario: --load-path
+    Given the file "print_1.rb" "puts 1"
+    And the file "some_dir/print_2.rb" "puts 2"
+    And the file "require_print_1.rb" "require 'print_1'"
+    When I run "seeing_is_believing require_print_1.rb"
+    Then the exit status is 1
+    When I run "seeing_is_believing --load-path . -I ./some_dir -r print_2  require_print_1.rb"
+    Then stderr is empty
+    And stdout is:
+    """
+    require 'print_1'  # => true
+
+    # >> 2
+    # >> 1
+    """
+    And the exit status is 0
+
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

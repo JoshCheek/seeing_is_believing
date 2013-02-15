@@ -20,7 +20,7 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags
+    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -29,6 +29,7 @@ class SeeingIsBelieving
       self.input_stream    = options.fetch :input_stream, StringIO.new('')
       self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
       self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
+      self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
     end
 
     def call
@@ -101,6 +102,7 @@ class SeeingIsBelieving
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path
          '-r', matrix_filename,                     # hijack the environment so it can be recorded
+         *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]
     end

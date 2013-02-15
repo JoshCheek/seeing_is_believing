@@ -38,9 +38,10 @@ class SeeingIsBelieving
 
     def results
       @results ||= SeeingIsBelieving.call body,
-                                          filename: flags[:filename],
-                                          require:  flags[:require],
-                                          stdin: (file_is_on_stdin? ? '' : stdin)
+                                          filename:  flags[:filename],
+                                          require:   flags[:require],
+                                          load_path: flags[:load_path],
+                                          stdin:     (file_is_on_stdin? ? '' : stdin)
     end
 
     def printer
