@@ -175,8 +175,8 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
 
     it 'sets an error if a filename is also give' do
-      # parse(['abc']).should_not have_error /abc/
-      parse(['-e', '1', 'abc']).should have_error /abc/
+      parse(['-e', '1']).should_not have_error /-e/
+      parse(['-e', '1', 'abc']).should have_error /"abc"/
     end
   end
 
@@ -212,6 +212,9 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
 
     it 'sets an error if not provided with an encoding' do
+      parse(['-Ku']).should_not have_error /-K/
+      parse(['-K u']).should_not have_error /-K/
+      parse(['--encoding', 'u']).should_not have_error /--encoding/
       parse(['-K']).should have_error /-K/
       parse(['--encoding']).should have_error /--encoding/
     end
@@ -228,8 +231,10 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
 
     it 'sets an error if not provided with a filename' do
-      parse(%w[-a]).should have_error /-a/
-      parse(%w[--as]).should have_error /--as/
+      parse(%w[-a  f]).should_not have_error /-a/
+      parse(%w[-as f]).should_not have_error /--as/
+      parse(%w[-a   ]).should have_error /-a/
+      parse(%w[--as ]).should have_error /--as/
     end
   end
 

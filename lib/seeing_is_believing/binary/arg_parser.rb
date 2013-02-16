@@ -47,7 +47,7 @@ class SeeingIsBelieving
         if 1 < filenames.size
           options[:errors] << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
         elsif filenames.any? && options[:program]
-          options[:errors] << "You passed the program in an argument, but have also specified the filename #{filenames.first}"
+          options[:errors] << "You passed the program in an argument, but have also specified the filename #{filenames.first.inspect}"
         end
 
         if options[:end_line] < options[:start_line]
