@@ -94,8 +94,10 @@ Usage: #{$0} [options] [filename]
   -L, --end-line      # line number to stop showing results on
   -d, --line-length   # max length of the entire line (only truncates results, not source lines)
   -D, --result-length # max length of the portion after the "# => "
+  -I, --load-path     # a dir that should be added to the $LOAD_PATH
   -r, --require       # additional files to be required before running the program
   -e, --program       # Pass the program to execute as an argument
+  -K, --encoding      # sets file encoding, equivalent to Ruby's -Kx (see `man ruby`)
   -h, --help          # this help screen
 HELP_SCREEN
     end
