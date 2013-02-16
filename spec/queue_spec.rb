@@ -53,7 +53,7 @@ describe SeeingIsBelieving::Queue do
   end
 
   describe 'conditional iteration' do
-    it 'will iterate while a condition is met' do
+    it 'can iterate while a condition is met' do
       queue = queue_for *1..5
       seen = []
       queue.while { |arg| arg < 4 }.each { |arg| seen << arg }
@@ -61,7 +61,7 @@ describe SeeingIsBelieving::Queue do
       queue.peek.should == 4
     end
 
-    it 'will iterate until a condition is met' do
+    it 'can iterate until a condition is met' do
       queue = queue_for *1..5
       seen = []
       queue.until { |arg| arg == 4 }.each { |arg| seen << arg }
