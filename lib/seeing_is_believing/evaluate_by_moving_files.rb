@@ -49,7 +49,7 @@ class SeeingIsBelieving
           end
         },
         ensure: -> {
-          restore_backup
+          set_back_to_initial_conditions
         }
     end
 
@@ -75,9 +75,12 @@ class SeeingIsBelieving
       @was_backed_up = true
     end
 
-    def restore_backup
-      return unless @was_backed_up
-      FileUtils.mv temp_filename, filename
+    def set_back_to_initial_conditions
+      if @was_backed_up
+        FileUtils.mv temp_filename, filename
+      else
+        FileUtils.rm filename
+      end
     end
 
     def write_program_to_file

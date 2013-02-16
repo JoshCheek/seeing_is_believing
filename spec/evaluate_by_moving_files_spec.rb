@@ -63,6 +63,24 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     evaluator.call
   end
 
+  it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
+    evaluator = described_class.new 'PROGRAM', filename, error_stream: StringIO.new
+    FileUtils.rm_rf filename
+    SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
+      # initial state
+      File.exist?(filename).should == false
+
+      # after code
+      options[:code].call rescue nil
+      File.read(filename).should == 'PROGRAM'
+
+      # after ensure
+      options[:ensure].call
+      File.exist?(filename).should == false
+    end
+    evaluator.call
+  end
+
   it 'can require files' do
     other_filename1 = File.join filedir, 'other1.rb'
     other_filename2 = File.join filedir, 'other2.rb'
