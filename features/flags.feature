@@ -197,7 +197,7 @@ Feature: Using flags
     Given the file "example.rb" "1+1"
     When I run 'seeing_is_believing --as example.rb -e "__FILE__"'
     Then stderr is empty
-    Then the exit status is 0
+    And the exit status is 0
     And stdout is '__FILE__  # => "example.rb"'
 
   Scenario: --clean
@@ -224,6 +224,12 @@ Feature: Using flags
     __END__
     1
     """
+
+  Scenario: --clean on an invalid file will clean
+    When I run 'seeing_is_believing --clean -e "1+  # => lkj"'
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is '1+'
 
   Scenario: --help
     When I run "seeing_is_believing --help"

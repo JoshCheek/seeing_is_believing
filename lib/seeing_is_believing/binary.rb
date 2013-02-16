@@ -18,8 +18,8 @@ class SeeingIsBelieving
       @exitstatus ||= if    flags_have_errors?          then print_errors          ; 1
                       elsif should_print_help?          then print_help            ; 0
                       elsif has_filename? && file_dne?  then print_file_dne        ; 1
-                      elsif invalid_syntax?             then print_syntax_error    ; 1
                       elsif should_clean?               then print_cleaned_program ; 0
+                      elsif invalid_syntax?             then print_syntax_error    ; 1
                       else                                   print_program         ; (results.has_exception? ? 1 : 0)
                       end
     end

@@ -99,6 +99,12 @@ It should look like this:
 
 ![textmate-integration][textmate-integration]
 
+I also recommend a second command for cleaning the output:
+
+```shell
+"${TM_RUBY}" -S seeing_is_believing -Ku --clean
+```
+
 Emacs Integration
 =================
 
