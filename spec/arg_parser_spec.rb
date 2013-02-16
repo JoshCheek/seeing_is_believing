@@ -41,8 +41,8 @@ describe SeeingIsBelieving::Binary::ArgParser do
   end
 
   specify 'unknown options set an error' do
-    parse(['--abc']).should have_error 'Unknown option: "--abc"'
-    parse(['-a']).should have_error 'Unknown option: "-a"'
+    parse(['--xyz']).should have_error 'Unknown option: "--xyz"'
+    parse(['-x']).should have_error 'Unknown option: "-x"'
   end
 
   example 'example: multiple args' do
@@ -214,6 +214,22 @@ describe SeeingIsBelieving::Binary::ArgParser do
     it 'sets an error if not provided with an encoding' do
       parse(['-K']).should have_error /-K/
       parse(['--encoding']).should have_error /--encoding/
+    end
+  end
+
+  describe ':as' do
+    it 'defaults to nil' do
+      parse([])[:as].should be_nil
+    end
+
+    it 'can be set with -a and --as' do
+      parse(%w[-a   abc])[:as].should == 'abc'
+      parse(%w[--as abc])[:as].should == 'abc'
+    end
+
+    it 'sets an error if not provided with a filename' do
+      parse(%w[-a]).should have_error /-a/
+      parse(%w[--as]).should have_error /--as/
     end
   end
 end

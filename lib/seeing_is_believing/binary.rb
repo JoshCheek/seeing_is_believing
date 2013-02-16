@@ -38,7 +38,7 @@ class SeeingIsBelieving
 
     def results
       @results ||= SeeingIsBelieving.call body,
-                                          filename:  flags[:filename],
+                                          filename:  (flags[:as] || flags[:filename]),
                                           require:   flags[:require],
                                           load_path: flags[:load_path],
                                           encoding:  flags[:encoding],

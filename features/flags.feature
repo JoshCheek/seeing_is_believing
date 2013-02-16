@@ -177,6 +177,29 @@ Feature: Using flags
     'ç'  # => "ç"
     """
 
+  Scenario: --as and stdin
+    Given the file "example.rb" "1+1"
+    Given I have the stdin content:
+    """
+    1+1
+    __FILE__
+    """
+    When I run "seeing_is_believing --as example.rb"
+    Then stderr is empty
+    Then the exit status is 0
+    And stdout is:
+    """
+    1+1       # => 2
+    __FILE__  # => "example.rb"
+    """
+
+  Scenario: --as and -e
+    Given the file "example.rb" "1+1"
+    When I run 'seeing_is_believing --as example.rb -e "__FILE__"'
+    Then stderr is empty
+    Then the exit status is 0
+    And stdout is '__FILE__  # => "example.rb"'
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

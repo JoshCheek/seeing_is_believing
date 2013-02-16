@@ -21,9 +21,10 @@ class SeeingIsBelieving
             when '-L', '--end-line'      then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
             when '-D', '--result-length' then extract_positive_int_for :result_length, arg
-            when '-r', '--require'       then next_arg("#{arg} expected a filename but did not see one")                  { |filename| options[:require]   << filename }
-            when '-I', '--load-path'     then next_arg("#{arg} expected a directory but did not see one")                 { |dir|      options[:load_path] << dir }
-            when '-e', '--program'       then next_arg("#{arg} expects a program as the following argument")              { |program|  options[:program]  = program }
+            when '-r', '--require'       then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]   << filename }
+            when '-I', '--load-path'     then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path] << dir }
+            when '-e', '--program'       then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]   = program }
+            when '-a', '--as'            then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]        = filename }
             when /\A-K(.+)/              then options[:encoding] = $1
             when '-K', '--encoding'      then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
             when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
@@ -91,15 +92,16 @@ Usage: #{$0} [options] [filename]
 
   If no filename is provided, the binary will read the program from standard input.
 
-  -l, --start-line    # line number to begin showing results on
-  -L, --end-line      # line number to stop showing results on
-  -d, --line-length   # max length of the entire line (only truncates results, not source lines)
-  -D, --result-length # max length of the portion after the "# => "
-  -I, --load-path     # a dir that should be added to the $LOAD_PATH
-  -r, --require       # additional files to be required before running the program
-  -e, --program       # Pass the program to execute as an argument
-  -K, --encoding      # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
-  -h, --help          # this help screen
+  -l, --start-line n      # line number to begin showing results on
+  -L, --end-line n        # line number to stop showing results on
+  -d, --line-length n     # max length of the entire line (only truncates results, not source lines)
+  -D, --result-length n   # max length of the portion after the "# => "
+  -I, --load-path dir     # a dir that should be added to the $LOAD_PATH
+  -r, --require file      # additional files to be required before running the program
+  -e, --program program   # Pass the program to execute as an argument
+  -K, --encoding encoding # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
+  -a, --as filename       # run the program as if it was the specified filename
+  -h, --help              # this help screen
 HELP_SCREEN
     end
   end
