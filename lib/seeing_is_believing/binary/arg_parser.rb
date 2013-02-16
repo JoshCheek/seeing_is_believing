@@ -24,6 +24,7 @@ class SeeingIsBelieving
             when '-r', '--require'       then next_arg("#{arg} expected a filename but did not see one")                  { |filename| options[:require]   << filename }
             when '-I', '--load-path'     then next_arg("#{arg} expected a directory but did not see one")                 { |dir|      options[:load_path] << dir }
             when '-e', '--program'       then next_arg("#{arg} expects a program as the following argument")              { |program|  options[:program]  = program }
+            when /\A-K(.+)/              then options[:encoding] = $1
             when '-K', '--encoding'      then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
             when /^-/                    then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else
@@ -97,7 +98,7 @@ Usage: #{$0} [options] [filename]
   -I, --load-path     # a dir that should be added to the $LOAD_PATH
   -r, --require       # additional files to be required before running the program
   -e, --program       # Pass the program to execute as an argument
-  -K, --encoding      # sets file encoding, equivalent to Ruby's -Kx (see `man ruby`)
+  -K, --encoding      # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -h, --help          # this help screen
 HELP_SCREEN
     end

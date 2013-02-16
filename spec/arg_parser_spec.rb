@@ -206,6 +206,11 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(%w[--encoding u])[:encoding].should == 'u'
     end
 
+    specify 'with -K, the argument can be placed immediately after it (e.g. -Ku) because Ruby allows this' do
+      parse(['-Ku'])[:encoding].should == 'u'
+      parse(['-Ku']).should_not have_error /-K/
+    end
+
     it 'sets an error if not provided with an encoding' do
       parse(['-K']).should have_error /-K/
       parse(['--encoding']).should have_error /--encoding/
