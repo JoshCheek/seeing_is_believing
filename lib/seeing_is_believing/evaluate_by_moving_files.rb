@@ -36,7 +36,7 @@ class SeeingIsBelieving
     def call
       @result ||= HardCoreEnsure.call \
         code: -> {
-          dont_overwrite_existing_tempfile!
+          we_will_not_overwrite_existing_tempfile!
           move_file_to_tempfile
           write_program_to_file
           begin
@@ -65,7 +65,7 @@ class SeeingIsBelieving
 
     attr_accessor :stdout, :stderr, :exitstatus
 
-    def dont_overwrite_existing_tempfile!
+    def we_will_not_overwrite_existing_tempfile!
       raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename
     end
 

@@ -19,7 +19,7 @@ class SeeingIsBelieving
         if Array === ary_or_line
           @array == ary_or_line
         else
-          @array == ary_or_line &&
+          ary_or_line == @array &&
             has_exception? == ary_or_line.has_exception?
         end
       end
