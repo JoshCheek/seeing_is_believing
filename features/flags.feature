@@ -200,6 +200,31 @@ Feature: Using flags
     Then the exit status is 0
     And stdout is '__FILE__  # => "example.rb"'
 
+  Scenario: --clean
+    Given the file "example.rb":
+    """
+    1 + 1  # => not 2
+    2 + 2  # ~> Exception, something
+
+
+    # >> some stdout output
+
+    # !> some stderr output
+    __END__
+    1
+    """
+    When I run "seeing_is_believing --clean example.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 + 1
+    2 + 2
+
+    __END__
+    1
+    """
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

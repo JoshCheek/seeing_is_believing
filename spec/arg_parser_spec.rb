@@ -232,5 +232,16 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(%w[--as]).should have_error /--as/
     end
   end
+
+  describe ':clean' do
+    it 'defaults to false' do
+      parse([])[:clean].should == false
+    end
+
+    it 'can be set with -c and --clean' do
+      parse(%w[-c])[:clean].should == true
+      parse(%w[--clean])[:clean].should == true
+    end
+  end
 end
 
