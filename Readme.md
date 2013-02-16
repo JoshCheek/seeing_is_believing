@@ -88,9 +88,11 @@ TextMate Integration
 Go to the bundle editor, create this new command in the Ruby bundle:
 
 ```shell
-"${TM_RUBY}" -r seeing_is_believing/binary -e '
-  SeeingIsBelieving::Binary.new(ARGV, $stdin, $stdout, $stderr).call
-'  $TM_FILEPATH 2>/dev/null
+if [ -z "$TM_FILEPATH" ]; then
+  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200
+else
+  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --as "$TM_FILEPATH"
+fi
 ```
 
 It should look like this:
