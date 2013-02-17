@@ -1,30 +1,9 @@
-require 'forwardable'
+require 'seeing_is_believing/line'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/tracks_line_numbers_seen'
 
 class SeeingIsBelieving
   class Result
-
-    class Line
-      include HasException
-
-      extend Forwardable
-      def_delegators :@array, :[], :<<, :any?, :join, :to_ary, :to_a, :empty?
-
-      def initialize
-        @array ||= []
-      end
-
-      def ==(ary_or_line)
-        if Array === ary_or_line
-          @array == ary_or_line
-        else
-          ary_or_line == @array &&
-            has_exception? == ary_or_line.has_exception?
-        end
-      end
-    end
-
     include HasException
     include TracksLineNumbersSeen
     include Enumerable
