@@ -16,7 +16,7 @@ describe SeeingIsBelieving::ExpressionList do
 
   example 'example: multiple children' do
     block_invocations = 0
-    result, size = call %w[a( b+ c x\\ + y )] do |line, children, completions, offset|
+    result, size = call %w[begin b+ c x\\ + y end] do |line, children, completions, offset|
       case offset
       when 2
         line.should == 'b+'
@@ -29,11 +29,11 @@ describe SeeingIsBelieving::ExpressionList do
         children.should == []
         completions.should == ['+', 'y']
         block_invocations += 10
-        'x\\+y'
+        "x+y"
       when 6
-        line.should == 'a('
-        children.should == ['b+c', 'x\\+y']
-        completions.should == [')']
+        line.should == 'begin'
+        children.should == ['b+c', 'x+y']
+        completions.should == ['end']
         block_invocations += 100
         'ALL DONE!'
       else

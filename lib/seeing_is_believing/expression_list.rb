@@ -66,7 +66,8 @@ class SeeingIsBelieving
 
     def reduce(expressions, offset)
       expressions.size.times do |i|
-        expression = expressions[i..-1].map(&:expression) # uhm, should this expression we are checking for validity consider the children?
+        expression = expressions[i..-1].map { |e| [e.expression, *e.children] }
+                                       .flatten
                                        .join("\n")        # must use newline otherwise can get expressions like `a\\+b` that should be `a\\\n+b`, former is invalid
         return if children_will_never_be_valid? expression
         next unless valid_ruby? expression
@@ -83,7 +84,7 @@ class SeeingIsBelieving
 
     def valid_ruby?(expression)
       valid = SyntaxAnalyzer.valid_ruby? expression
-      debug { "#{valid ? "\e[31mIS NOT VALID:" : "\e[32mIS VALID:"}: #{expression.inspect}\e[0m" }
+      debug { "#{valid ? "\e[32mIS VALID:" : "\e[31mIS NOT VALID:"}: #{expression.inspect}\e[0m" }
       valid
     end
 
