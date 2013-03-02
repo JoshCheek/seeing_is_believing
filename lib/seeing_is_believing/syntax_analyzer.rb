@@ -135,7 +135,7 @@ class SeeingIsBelieving
     # this is conspicuosuly inferior, but I can't figure out how to actually parse it
     # see: http://www.ruby-forum.com/topic/4409633
     def self.will_return?(code)
-      /(^|\s)return.*?\n?\z$/ =~ code
+      /(^|\s)return.*?\n?\z/ =~ code
     end
 
     # HERE DOCS
