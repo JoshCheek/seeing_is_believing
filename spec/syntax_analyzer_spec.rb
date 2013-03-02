@@ -52,20 +52,20 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
   end
 
   it 'knows if it contains an unclosed comment' do
-    unclosed_comment = lambda { |code| described_class.unclosed_comment? code }
-    unclosed_comment["=begin"].should be_true
-    unclosed_comment["=begin\n"].should be_true
-    unclosed_comment["=begin\n1"].should be_true
-    unclosed_comment["1\n=begin\n1\n"].should be_true
-    unclosed_comment["1\n=begin\n1\n =end"].should be_true
-    unclosed_comment["1\n=begin\n1\n=end"].should be_false
-    unclosed_comment[" =begin"].should be_false
+    is_unclosed_comment = lambda { |code| described_class.unclosed_comment? code }
+    is_unclosed_comment["=begin"].should be_true
+    is_unclosed_comment["=begin\n"].should be_true
+    is_unclosed_comment["=begin\n1"].should be_true
+    is_unclosed_comment["1\n=begin\n1\n"].should be_true
+    is_unclosed_comment["1\n=begin\n1\n =end"].should be_true
+    is_unclosed_comment["1\n=begin\n1\n=end"].should be_false
+    is_unclosed_comment[" =begin"].should be_false
   end
 
   # probably don't really need this many tests, but I'm unfamiliar with how thorough Ripper is
   # and already found areas where it doesn't behave correctly
   it 'knows if the code contains an unclosed string' do
-    unclosed_string = lambda { |code| described_class.unclosed_string? code }
+    is_unclosed_string = lambda { |code| described_class.unclosed_string? code }
     [%(a),
      %("a"),
      %("a \n"),
@@ -89,7 +89,7 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
      %(%<>),
      %(%..),
     ].each do |string|
-      unclosed_string[string].should be_false, "Expected #{string.inspect} to be closed"
+      is_unclosed_string[string].should be_false, "Expected #{string.inspect} to be closed"
     end
 
     [%(a "),
@@ -113,12 +113,12 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
      %("\#{"}"),
      %("\#{%(\#{%[\#{%[}]})}"),
     ].each do |string|
-      unclosed_string[string].should be_true, "Expected #{string.inspect} to be unclosed"
+      is_unclosed_string[string].should be_true, "Expected #{string.inspect} to be unclosed"
     end
   end
 
   it 'knows if the code contains an unclosed regexp' do
-    unclosed_regexp = lambda { |code| described_class.unclosed_regexp? code }
+    is_unclosed_regexp = lambda { |code| described_class.unclosed_regexp? code }
     [%(a),
      %(/a/),
      %(/a \n/),
@@ -130,8 +130,11 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
      %(%r{}),
      %(%r<>),
      %(%r..),
+     %(/\na\nb\n/x),
+     %(r..i),
+     %(/\na\nb\n/xmi),
     ].each do |code|
-      unclosed_regexp[code].should be_false, "Expected #{code.inspect} to be closed"
+      is_unclosed_regexp[code].should be_false, "Expected #{code.inspect} to be closed"
     end
 
     [%(a + /),
@@ -147,7 +150,7 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
      %(%r[\#{),
      %("\#{%r[}"),
     ].each do |code|
-      unclosed_regexp[code].should be_true, "Expected #{code.inspect} to be unclosed"
+      is_unclosed_regexp[code].should be_true, "Expected #{code.inspect} to be unclosed"
     end
   end
 

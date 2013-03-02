@@ -15,14 +15,16 @@ class SeeingIsBelieving
     # e.g. SyntaxAnalyzer.new('"a').parse
     def ends_match?(beginning, ending)
       return false unless beginning && ending
-      return beginning == ending if beginning.size == 1
+      return beginning == ending if beginning.size == 1 && ending.size == 1
       case beginning[-1]
       when '<' then '>' == ending
       when '(' then ')' == ending
       when '[' then ']' == ending
       when '{' then '}' == ending
+      when '/' then ending =~ /\A\// # example: /a/x
       else
-        beginning[-1] == ending
+        # example: %Q.a. %_a_ %r|a| ...
+        beginning.start_with?('%') && beginning.end_with?(ending)
       end
     end
 

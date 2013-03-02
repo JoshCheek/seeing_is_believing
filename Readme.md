@@ -131,6 +131,8 @@ Known Issues
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
 * Return statements are dealt with poorly, causing some situations where you could capture and display a value to not capture
+* inspection of multiline regexes displays on multiple lines -.-
+* errors come out really shitty if you're calling them from another program like TextMate, would be better to put a line in that shows where the error is.
 
 License
 =======
