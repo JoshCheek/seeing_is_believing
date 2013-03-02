@@ -30,8 +30,9 @@ Feature: Running the binary successfully
 
     # multilinezzz
     "a
-     b
-     c"
+     b"
+    /a
+     b/x
 
     # don't record heredocs b/c they're just too fucking different
     <<HERE
@@ -82,8 +83,9 @@ Feature: Running the binary successfully
 
     # multilinezzz
     "a
-     b
-     c"                     # => "a\n b\n c"
+     b"                     # => "a\n b"
+    /a
+     b/x                    # => /a\n b/x
 
     # don't record heredocs b/c they're just too fucking different
     <<HERE
