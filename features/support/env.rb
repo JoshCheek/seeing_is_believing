@@ -21,8 +21,9 @@ module CommandLineHelpers
   def execute(command, stdin_data=nil)
     stdin_data ||= ''
     in_proving_grounds do
-      bin_in_path = {'PATH' => "#{bin_dir}:#{ENV['PATH']}"}
-      Invocation.new *Open3.capture3(bin_in_path, command, stdin_data: stdin_data)
+      with_bin_in_path do
+        Invocation.new *Open3.capture3(command, stdin_data: stdin_data)
+      end
     end
   end
 
@@ -52,6 +53,16 @@ module CommandLineHelpers
 
   def path_to(filename)
     in_proving_grounds { File.join proving_grounds_dir, filename }
+  end
+
+  # workaround for Ruby 2.0 bug where passing the new path as the first arg wasn't working
+  # bug report submitted here: http://bugs.ruby-lang.org/issues/8004
+  def with_bin_in_path
+    original_path = ENV['PATH']
+    ENV['PATH'] = "#{bin_dir}:#{ENV['PATH']}"
+    yield
+  ensure
+    ENV['PATH'] = original_path
   end
 end
 
