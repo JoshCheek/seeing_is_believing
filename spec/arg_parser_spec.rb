@@ -248,5 +248,16 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(%w[--clean])[:clean].should == true
     end
   end
+
+  describe ':version' do
+    it 'defaults to false' do
+      parse([])[:version].should == false
+    end
+
+    it 'can be set with -v and --version' do
+      parse(%w[-v])[:version].should == true
+      parse(%w[--version])[:version].should == true
+    end
+  end
 end
 

@@ -231,6 +231,12 @@ Feature: Using flags
     And the exit status is 0
     And stdout is '1+'
 
+  Scenario: --version
+    When I run 'seeing_is_believing --version'
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is '{{SeeingIsBelieving::VERSION}}'
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty

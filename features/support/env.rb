@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'open3'
+require 'seeing_is_believing/version'
 
 
 module CommandLineHelpers

@@ -3,6 +3,7 @@ require 'tmpdir'
 
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
+require 'seeing_is_believing/version'
 require 'seeing_is_believing/expression_list'
 require 'seeing_is_believing/evaluate_by_moving_files'
 

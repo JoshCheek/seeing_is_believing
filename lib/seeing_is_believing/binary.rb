@@ -17,6 +17,7 @@ class SeeingIsBelieving
     def call
       @exitstatus ||= if    flags_have_errors?          then print_errors          ; 1
                       elsif should_print_help?          then print_help            ; 0
+                      elsif should_print_version?       then print_version         ; 0
                       elsif has_filename? && file_dne?  then print_file_dne        ; 1
                       elsif should_clean?               then print_cleaned_program ; 0
                       elsif invalid_syntax?             then print_syntax_error    ; 1
@@ -68,6 +69,14 @@ class SeeingIsBelieving
 
     def print_help
       stdout.puts flags[:help]
+    end
+
+    def should_print_version?
+      flags[:version]
+    end
+
+    def print_version
+      stdout.puts SeeingIsBelieving::VERSION
     end
 
     def file_is_on_stdin?

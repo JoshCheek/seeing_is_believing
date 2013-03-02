@@ -16,8 +16,9 @@ class SeeingIsBelieving
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h', '--help'          then options[:help] = self.class.help_screen
-            when '-c', '--clean'         then options[:clean] = true
+            when '-h', '--help'          then options[:help]    = self.class.help_screen
+            when '-v', '--version'       then options[:version] = true
+            when '-c', '--clean'         then options[:clean]   = true
             when '-l', '--start-line'    then extract_positive_int_for :start_line,    arg
             when '-L', '--end-line'      then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
@@ -57,6 +58,7 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
+          version:       false,
           clean:         false,
           program:       nil,
           filename:      nil,
@@ -104,6 +106,7 @@ Usage: #{$0} [options] [filename]
   -K, --encoding encoding # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a, --as filename       # run the program as if it was the specified filename
   -c, --clean             # remove annotations from previous runs of seeing_is_believing
+  -v, --version           # print the version (#{VERSION})
   -h, --help              # this help screen
 HELP_SCREEN
     end
