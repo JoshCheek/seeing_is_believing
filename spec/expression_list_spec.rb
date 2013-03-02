@@ -115,6 +115,27 @@ describe SeeingIsBelieving::ExpressionList do
     size.should == 4
   end
 
+  example 'example: completions who requires its children to be considered for the expression to be valid' do
+    block_invocations = 0
+    result, size = call ["if true &&", "true", "1", "end"] do |line, children, completions, offset|
+      case offset
+      when 1
+        [line, children, completions].should == ['true', [], []]
+        block_invocations += 1
+      when 2
+        [line, children, completions].should == ['1', [], []]
+        block_invocations += 10
+      when 3
+        [line, children, completions].should == ['if true &&', ['true', '1'], ['end']]
+        block_invocations += 100
+      end
+      [line, *children, *completions].join("\n")
+    end
+    block_invocations.should == 111
+    result.should == "if true &&\ntrue\n1\nend"
+    size.should == 4
+  end
+
   example 'example: multiline strings with valid code in them' do
     block_invocations = 0
     call ["'", "1", "'"] do |*expressions, offset|
