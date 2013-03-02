@@ -11,6 +11,7 @@ Also comes with a binary to show how it might be used.
 
 For whatever reason, I can't embed videos, but **here's a ~1 minute [video][video]** showing it off.
 
+Works in Ruby 1.9 and 2.0
 
 Use The Binary
 ==============
