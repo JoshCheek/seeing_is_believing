@@ -49,7 +49,7 @@ class SeeingIsBelieving
       # method invocations can be put on the next line, and begin with a dot.
       # I think that's the only case we need to worry about.
       # e.g: `3\n.times { |i| p i }`
-      peek_next_line.call && peek_next_line.call =~ /^\s*\./
+      peek_next_line.call && SyntaxAnalyzer.next_line_modifies_current?(peek_next_line.call)
     end
 
     def inspected_expressions(expressions)

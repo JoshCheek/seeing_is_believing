@@ -36,13 +36,13 @@ class SeeingIsBelieving
       leading_comments = ''
 
       # extract leading comments (e.g. encoding) so they don't get wrapped in begin/rescue/end
-      while next_line_queue.peek =~ /^\s*#/
+      while SyntaxAnalyzer.line_is_comment?(next_line_queue.peek)
         leading_comments << next_line_queue.dequeue << "\n"
         @line_number += 1
       end
 
       # extract leading =begin/=end so they don't get wrapped in begin/rescue/end
-      while next_line_queue.peek == '=begin'
+      while SyntaxAnalyzer.begins_multiline_comment?(next_line_queue.peek)
         lines = next_line_queue.dequeue << "\n"
         @line_number += 1
         until SyntaxAnalyzer.begin_and_end_comments_are_complete? lines
@@ -54,7 +54,7 @@ class SeeingIsBelieving
 
       # extract program body
       body = ''
-      until next_line_queue.peek.nil? || data_segment?
+      until next_line_queue.empty? || data_segment?
         expression, expression_size = expression_list.call
         body << expression
         track_line_number @line_number
@@ -129,7 +129,7 @@ class SeeingIsBelieving
   end
 
   def data_segment?
-    next_line_queue.peek == '__END__'
+    SyntaxAnalyzer.begins_data_segment?(next_line_queue.peek)
   end
 
   def next_line_queue

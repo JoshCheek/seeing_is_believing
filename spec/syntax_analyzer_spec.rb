@@ -62,6 +62,23 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_unclosed_comment[" =begin"].should be_false
   end
 
+  it 'knows if the line begins a multiline comment' do
+    described_class.begins_multiline_comment?('=begin').should be_true
+    described_class.begins_multiline_comment?('=begins').should be_false
+  end
+
+  it 'knows if the line ends a multiline comment' do
+    described_class.ends_multiline_comment?('=end').should be_true
+    described_class.ends_multiline_comment?('=ends').should be_false
+  end
+
+  it 'knows when the line is a comment' do
+    described_class.line_is_comment?('# abc').should be_true
+    described_class.line_is_comment?(' # abc').should be_true
+    described_class.line_is_comment?('a # abc').should be_false
+    described_class.line_is_comment?('abc').should be_false
+  end
+
   # probably don't really need this many tests, but I'm unfamiliar with how thorough Ripper is
   # and already found areas where it doesn't behave correctly
   it 'knows if the code contains an unclosed string' do
@@ -171,5 +188,18 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
       will_return["'return\nreturn\nreturn'"].should be_false
       will_return["return \\\n1"].should be_true
     end
+  end
+
+  it 'knows when a line opens the data segment' do
+    described_class.begins_data_segment?('__END__').should be_true
+    described_class.begins_data_segment?('__ENDS__').should be_false
+  end
+
+  it 'knows when the next line modifies the current line' do
+    described_class.next_line_modifies_current?('.meth').should be_true
+    described_class.next_line_modifies_current?(' .meth').should be_true
+
+    described_class.next_line_modifies_current?('meth').should be_false
+    described_class.next_line_modifies_current?(' meth').should be_false
   end
 end

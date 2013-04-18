@@ -78,16 +78,16 @@ class SeeingIsBelieving
       end
 
       def start_of_data_segment?(line)
-        line.chomp == '__END__'
+        SyntaxAnalyzer.begins_data_segment?(line.chomp)
       end
 
-      # max line length of the lines to output (exempting coments) + 2 spaces for padding
+      # max line length of the lines to output (exempting comments) + 2 spaces for padding
       def max_source_line_length
         @max_source_line_length ||= 2 + body.each_line
                                             .map(&:chomp)
                                             .select.with_index(1) { |line, index| start_line <= index && index <= end_line }
                                             .take_while { |line| not start_of_data_segment? line }
-                                            .select { |line| not (line == "=begin") .. (line == "=end") }
+                                            .select { |line| not SyntaxAnalyzer.begins_multiline_comment?(line) .. SyntaxAnalyzer.ends_multiline_comment?(line ) }
                                             .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
                                             .map(&:length)
                                             .max

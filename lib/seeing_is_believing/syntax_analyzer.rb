@@ -51,6 +51,14 @@ class SeeingIsBelieving
       parsed(code).valid_ruby? && begin_and_end_comments_are_complete?(code)
     end
 
+    def self.begins_multiline_comment?(line)
+      line == '=begin'
+    end
+
+    def self.ends_multiline_comment?(line)
+      line == '=end'
+    end
+
     def self.begin_and_end_comments_are_complete?(code)
       code.scan(/^=(?:begin|end)$/)
           .each_slice(2)
@@ -63,6 +71,16 @@ class SeeingIsBelieving
 
     def invalid_ruby?
       @has_error || unclosed_string? || unclosed_regexp?
+    end
+
+    # MISC
+
+    def self.begins_data_segment?(line)
+      line == '__END__'
+    end
+
+    def self.next_line_modifies_current?(line)
+      line =~ /^\s*\./
     end
 
     # STRINGS
@@ -114,6 +132,10 @@ class SeeingIsBelieving
     end
 
     # COMMENTS
+
+    def self.line_is_comment?(line)
+      line =~ /^\s*#/
+    end
 
     def self.ends_in_comment?(code)
       code =~ /^=end\Z/ || parsed(code.lines.to_a.last.to_s).has_comment?
