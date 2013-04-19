@@ -172,6 +172,10 @@ describe SeeingIsBelieving do
     # values_for("-> { return 1 }.call"        ).should == [['1']]
   end
 
+  it 'does not try to record the keyword next' do
+    values_for("(1..2).each do |i|\nnext if i == 1\ni\nend").should == [[], [], ['2'], ['1..2']]
+  end
+
   it 'does not affect its environment' do
     invoke 'def Object.abc() end'
     Object.should_not respond_to :abc
