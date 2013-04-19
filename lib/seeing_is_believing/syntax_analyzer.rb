@@ -162,6 +162,12 @@ class SeeingIsBelieving
       /(^|\s)return.*?\n?\z/ =~ code
     end
 
+    # NEXT
+
+    def self.has_next?(code)
+      /(^|\s)next.*?\n?\z/ =~ code
+    end
+
     # HERE DOCS
 
     def self.here_doc?(code)
