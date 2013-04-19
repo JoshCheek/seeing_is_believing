@@ -90,6 +90,7 @@ class SeeingIsBelieving
                                             .select { |line| not SyntaxAnalyzer.begins_multiline_comment?(line) .. SyntaxAnalyzer.ends_multiline_comment?(line ) }
                                             .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
                                             .map(&:length)
+                                            .concat([0])
                                             .max
       end
 
