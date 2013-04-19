@@ -171,24 +171,31 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     end
   end
 
-  # the commented out ones will require actual parsing to solve
-  it "knows if the code contains a return (can't capture a void value)" do
-    will_return = -> code { described_class.will_return? code }
-    will_return["return 1"].should be_true
-    will_return["return 1\n"].should be_true
-    will_return["return 1 if true"].should be_true
-    will_return["return 1 if false"].should be_true
-    will_return["o.return"].should be_false
-    will_return[":return"].should be_false
-    will_return["'return'"].should be_false
-    will_return["def a\nreturn 1\nend"].should be_false
-    will_return["-> {\nreturn 1\n}"].should be_false
-    will_return["Proc.new {\nreturn 1\n}"].should be_false
-    pending "this doesn't work because the return detecting code is an insufficient regexp" do
-      will_return["'return\nreturn\nreturn'"].should be_false
-      will_return["return \\\n1"].should be_true
+  shared_examples_for 'keyword evaluator' do |evaluator, keyword|
+    it "evalutes the keyword evaluator against the test strings" do
+      described_class.send(evaluator, "#{keyword} 1").should be_true
+      described_class.send(evaluator, "#{keyword} 1\n").should be_true
+      described_class.send(evaluator, "#{keyword} 1 if true").should be_true
+      described_class.send(evaluator, "#{keyword} 1 if false").should be_true
+      described_class.send(evaluator, "o.#{keyword}").should be_false
+      described_class.send(evaluator, ":#{keyword}").should be_false
+      described_class.send(evaluator, "'#{keyword}'").should be_false
+      described_class.send(evaluator, "def a\n#{keyword} 1\nend").should be_false
+      described_class.send(evaluator, "-> {\n#{keyword} 1\n}").should be_false
+      described_class.send(evaluator, "Proc.new {\n#{keyword} 1\n}").should be_false
+    end
+
+    it "doesn't work because the return and next keyword evaluators are insufficient regexps" do
+      pending "doesn't pass yet" do
+        described_class.send(evalutor, "'#{keyword}\n#{keyword}\n#{keyword}'").should be_false
+        described_class.send(evalutor, "#{keyword} \\\n1").should be_true
+      end
     end
   end
+
+  it_should_behave_like 'keyword evaluator', :will_return?, "return"
+
+  it_should_behave_like 'keyword evaluator', :has_next?, "next"
 
   it 'knows when a line opens the data segment' do
     described_class.begins_data_segment?('__END__').should be_true
