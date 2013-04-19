@@ -176,6 +176,19 @@ describe SeeingIsBelieving do
     values_for("(1..2).each do |i|\nnext if i == 1\ni\nend").should == [[], [], ['2'], ['1..2']]
   end
 
+  it 'does not try to record the keyword retry' do
+    values_for(<<-DOC).should == [[], ['0'], [], ['1', '2', '3', '4'], [], ['0...3'], ['nil'], ['0...3']]
+      def meth
+        n = 0
+        for i in 0...3
+          n += 1
+          redo if n == 2
+        end
+      end
+      meth
+    DOC
+  end
+
   it 'does not affect its environment' do
     invoke 'def Object.abc() end'
     Object.should_not respond_to :abc
