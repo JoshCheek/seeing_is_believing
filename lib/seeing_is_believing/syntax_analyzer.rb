@@ -158,14 +158,8 @@ class SeeingIsBelieving
 
     # this is conspicuosuly inferior, but I can't figure out how to actually parse it
     # see: http://www.ruby-forum.com/topic/4409633
-    def self.will_return?(code)
-      /(^|\s)return.*?\n?\z/ =~ code
-    end
-
-    # NEXT
-
-    def self.has_next?(code)
-      /(^|\s)next.*?\n?\z/ =~ code
+    def self.void_value_expression?(code)
+      /(^|\s)(?:return|next).*?\n?\z/ =~ code
     end
 
     # HERE DOCS

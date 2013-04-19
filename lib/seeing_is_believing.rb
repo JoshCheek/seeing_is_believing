@@ -141,10 +141,9 @@ class SeeingIsBelieving
   end
 
   def do_not_record?(code)
-    code =~ BLANK_REGEX                     ||
-      SyntaxAnalyzer.ends_in_comment?(code) ||
-      SyntaxAnalyzer.will_return?(code)     ||
-      SyntaxAnalyzer.here_doc?(code)        ||
-      SyntaxAnalyzer.has_next?(code)
+    code =~ BLANK_REGEX                           ||
+      SyntaxAnalyzer.ends_in_comment?(code)       ||
+      SyntaxAnalyzer.void_value_expression?(code) ||
+      SyntaxAnalyzer.here_doc?(code)
   end
 end

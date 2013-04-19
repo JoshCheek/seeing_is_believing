@@ -171,31 +171,30 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     end
   end
 
-  shared_examples_for 'keyword evaluator' do |evaluator, keyword|
-    it "evalutes the keyword evaluator against the test strings" do
-      described_class.send(evaluator, "#{keyword} 1").should be_true
-      described_class.send(evaluator, "#{keyword} 1\n").should be_true
-      described_class.send(evaluator, "#{keyword} 1 if true").should be_true
-      described_class.send(evaluator, "#{keyword} 1 if false").should be_true
-      described_class.send(evaluator, "o.#{keyword}").should be_false
-      described_class.send(evaluator, ":#{keyword}").should be_false
-      described_class.send(evaluator, "'#{keyword}'").should be_false
-      described_class.send(evaluator, "def a\n#{keyword} 1\nend").should be_false
-      described_class.send(evaluator, "-> {\n#{keyword} 1\n}").should be_false
-      described_class.send(evaluator, "Proc.new {\n#{keyword} 1\n}").should be_false
+  shared_examples_for 'void_value_expression?' do |keyword|
+    it "returns true when the expression ends in #{keyword}" do
+      described_class.void_value_expression?("#{keyword} 1").should be_true
+      described_class.void_value_expression?("#{keyword} 1\n").should be_true
+      described_class.void_value_expression?("#{keyword} 1 if true").should be_true
+      described_class.void_value_expression?("#{keyword} 1 if false").should be_true
+      described_class.void_value_expression?("o.#{keyword}").should be_false
+      described_class.void_value_expression?(":#{keyword}").should be_false
+      described_class.void_value_expression?("'#{keyword}'").should be_false
+      described_class.void_value_expression?("def a\n#{keyword} 1\nend").should be_false
+      described_class.void_value_expression?("-> {\n#{keyword} 1\n}").should be_false
+      described_class.void_value_expression?("Proc.new {\n#{keyword} 1\n}").should be_false
     end
 
     it "doesn't work because the return and next keyword evaluators are insufficient regexps" do
-      pending "doesn't pass yet" do
+      pending "doesn't pass yet (and prob never will >.<)" do
         described_class.send(evalutor, "'#{keyword}\n#{keyword}\n#{keyword}'").should be_false
         described_class.send(evalutor, "#{keyword} \\\n1").should be_true
       end
     end
   end
 
-  it_should_behave_like 'keyword evaluator', :will_return?, "return"
-
-  it_should_behave_like 'keyword evaluator', :has_next?, "next"
+  it_should_behave_like 'void_value_expression?', "return"
+  it_should_behave_like 'void_value_expression?', "next"
 
   it 'knows when a line opens the data segment' do
     described_class.begins_data_segment?('__END__').should be_true
