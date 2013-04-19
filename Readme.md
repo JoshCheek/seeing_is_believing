@@ -128,8 +128,6 @@ or current buffer contents with the output of running it through
 Known Issues
 ============
 
-* next, break, retry will kill it
-* a program that consists of nothing but a comment will kill it
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
 * Return statements are dealt with poorly, causing some situations where you could capture and display a value to not capture
