@@ -196,6 +196,8 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
   it_should_behave_like 'void_value_expression?', 'return'
   it_should_behave_like 'void_value_expression?', 'next'
   it_should_behave_like 'void_value_expression?', 'redo'
+  it_should_behave_like 'void_value_expression?', 'retry'
+  it_should_behave_like 'void_value_expression?', 'break'
 
   it 'knows when a line opens the data segment' do
     described_class.begins_data_segment?('__END__').should be_true
