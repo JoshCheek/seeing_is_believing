@@ -198,6 +198,15 @@ describe SeeingIsBelieving do
     DOC
   end
 
+  it 'does not try to record the keyword retry' do
+    values_for(<<-DOC).should == [[], ['0'], [], ['nil']]
+      (0..2).each do |n|
+        n
+        break
+      end
+    DOC
+  end
+
   it 'does not affect its environment' do
     invoke 'def Object.abc() end'
     Object.should_not respond_to :abc
