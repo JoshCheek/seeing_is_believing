@@ -23,6 +23,7 @@ class SeeingIsBelieving
             when '-L', '--end-line'      then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'   then extract_positive_int_for :line_length,   arg
             when '-D', '--result-length' then extract_positive_int_for :result_length, arg
+            when '-t', '--timeout'       then extract_non_negative_float_for :timeout, arg
             when '-r', '--require'       then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]   << filename }
             when '-I', '--load-path'     then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path] << dir }
             when '-e', '--program'       then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]   = program }
@@ -66,9 +67,10 @@ class SeeingIsBelieving
           line_length:   Float::INFINITY,
           end_line:      Float::INFINITY,
           result_length: Float::INFINITY,
+          timeout:       0, # timeout lib treats this as infinity
           errors:        [],
           require:       [],
-          load_path:     [],
+          load_path:     []
         }
       end
 
@@ -86,6 +88,15 @@ class SeeingIsBelieving
           options[:errors] << "#{flag} expects a positive integer argument"
         end
       end
+
+      def extract_non_negative_float_for(key, flag)
+        float = Float args.shift
+        raise if float < 0
+        options[key] = float
+      rescue
+        options[:errors] << "#{flag} expects a positive float or integer argument"
+      end
+
     end
 
     def ArgParser.help_screen
@@ -100,6 +111,7 @@ Usage: #{$0} [options] [filename]
   -L, --end-line n        # line number to stop showing results on
   -d, --line-length n     # max length of the entire line (only truncates results, not source lines)
   -D, --result-length n   # max length of the portion after the "# => "
+  -t, --timeout n         # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
   -I, --load-path dir     # a dir that should be added to the $LOAD_PATH
   -r, --require file      # additional files to be required before running the program
   -e, --program program   # Pass the program to execute as an argument

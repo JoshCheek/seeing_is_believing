@@ -242,3 +242,17 @@ Feature: Using flags
     Then stderr is empty
     And the exit status is 0
     And stdout includes "Usage"
+
+  Scenario: --timeout
+    Given the file "example.rb" "sleep 1"
+    When I run "seeing_is_believing --timeout 0.1 example.rb"
+    Then stdout is empty
+    And the exit status is 1
+    And stderr is "Timeout Error after 0.1 seconds!"
+
+  Scenario: --timeout
+    Given the file "example.rb" "1 + 1"
+    When I run "seeing_is_believing --timeout 1.0 example.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is "1 + 1  # => 2"

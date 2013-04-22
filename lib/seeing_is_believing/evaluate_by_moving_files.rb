@@ -20,7 +20,7 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding
+    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -31,6 +31,7 @@ class SeeingIsBelieving
       self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
+      self.timeout         = options[:timeout]
     end
 
     def call
@@ -44,13 +45,17 @@ class SeeingIsBelieving
             fail unless exitstatus.success?
             deserialize_result
           rescue Exception
-            record_error
+            notify_user_of_error if error_implies_bug_in_sib? $!
             raise $!
           end
         },
         ensure: -> {
           set_back_to_initial_conditions
         }
+    end
+
+    def error_implies_bug_in_sib?(error)
+      not error.kind_of? Timeout::Error
     end
 
     def file_directory
@@ -95,9 +100,16 @@ class SeeingIsBelieving
           input_stream.each_char { |char| process_stdin.write char }
           process_stdin.close
         end
-        self.stdout     = out_reader.value
-        self.stderr     = err_reader.value
-        self.exitstatus = thread.value
+        begin
+          Timeout::timeout timeout do
+            self.stdout     = out_reader.value
+            self.stderr     = err_reader.value
+            self.exitstatus = thread.value
+          end
+        rescue Timeout::Error
+          Process.kill "TERM", thread.pid
+          raise $!
+        end
       end
     end
 
@@ -120,7 +132,7 @@ class SeeingIsBelieving
       Marshal.load stdout
     end
 
-    def record_error
+    def notify_user_of_error
       error_stream.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
       error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
       error_stream.puts
