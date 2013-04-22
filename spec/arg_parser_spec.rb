@@ -40,6 +40,20 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
   end
 
+  shared_examples 'it requires a non-negative float or int' do |flags|
+    it 'expects a non-negative float or int argument' do
+      flags.each do |flag|
+        parse([flag,   '1']).should_not have_error /#{flag}/
+        parse([flag,   '0']).should_not have_error /#{flag}/
+        parse([flag,  '-1']).should     have_error /#{flag}/
+        parse([flag,'-1.0']).should     have_error /#{flag}/
+        parse([flag, '1.0']).should_not have_error /#{flag}/
+        parse([flag,   'a']).should     have_error /#{flag}/
+        parse([flag,   '' ]).should     have_error /#{flag}/
+        parse([flag       ]).should     have_error /#{flag}/
+      end
+    end
+  end
   specify 'unknown options set an error' do
     parse(['--xyz']).should have_error 'Unknown option: "--xyz"'
     parse(['-x']).should have_error 'Unknown option: "-x"'
@@ -258,6 +272,14 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(%w[-v])[:version].should == true
       parse(%w[--version])[:version].should == true
     end
+  end
+
+  describe ':timeout' do
+    it 'defaults to 0' do
+      parse([])[:timeout].should == 0
+    end
+
+    it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout']
   end
 end
 

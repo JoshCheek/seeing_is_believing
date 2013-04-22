@@ -1,5 +1,6 @@
 require 'stringio'
 require 'tmpdir'
+require 'timeout'
 
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
@@ -26,9 +27,10 @@ class SeeingIsBelieving
     @load_path       = options.fetch :load_path, []
     @encoding        = options.fetch :encoding, nil
     @line_number     = 1
+    @timeout         = options[:timeout]
   end
 
-  # I'd lik to refactor this, but I was unsatisfied with the three different things I tried.
+  # I'd like to refactor this, but I was unsatisfied with the three different things I tried.
   # In the end, I prefer keeping all manipulation of the line number here in the main function
   # And I like that the higher-level construct of how the program gets built can be found here.
   def call
@@ -118,7 +120,8 @@ class SeeingIsBelieving
                                 matrix_filename: matrix_filename,
                                 require:         @require,
                                 load_path:       @load_path,
-                                encoding:        @encoding)
+                                encoding:        @encoding,
+                                timeout:         @timeout)
                            .call
                            .track_line_number(max_line_number)
     end
