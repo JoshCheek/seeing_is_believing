@@ -1,3 +1,5 @@
+require 'seeing_is_believing/version'
+
 class SeeingIsBelieving
   class Binary
     class ArgParser
