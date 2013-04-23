@@ -279,4 +279,9 @@ describe SeeingIsBelieving do
                                                                      [], [],
                                                                      ['6']]
   end
+
+  it 'times out if the timeout limit is exceeded' do
+    expect { invoke "sleep 0.2", timeout: 0.1 }.to raise_error Timeout::Error
+  end
+
 end
