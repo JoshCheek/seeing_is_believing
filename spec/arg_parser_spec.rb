@@ -54,9 +54,11 @@ describe SeeingIsBelieving::Binary::ArgParser do
       end
     end
   end
+
   specify 'unknown options set an error' do
     parse(['--xyz']).should have_error 'Unknown option: "--xyz"'
     parse(['-x']).should have_error 'Unknown option: "-x"'
+    parse(['-x', 'b']).should have_error 'Unknown option: "-x"'
   end
 
   example 'example: multiple args' do
