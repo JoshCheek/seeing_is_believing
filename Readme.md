@@ -133,6 +133,7 @@ Known Issues
 * Return statements and other control-flow changing keywords (next/break/redo/retry) are dealt with poorly, causing some situations where you could capture and display a value to not capture
 * errors come out really shitty if you're calling them from another program like TextMate, would be better to put a line in that shows where the error is.
 * Add a time limit to auto-kill it if it gets stuck or something (e.g. stack overflow is painful to wait for)
+* Doesn't handle # ~> -:5: stack level too deep (SystemStackError) gracefully
 
 License
 =======

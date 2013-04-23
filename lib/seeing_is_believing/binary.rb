@@ -1,11 +1,12 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/arg_parser'
 require 'seeing_is_believing/binary/print_results_next_to_lines'
+require 'timeout'
 
 
 class SeeingIsBelieving
   class Binary
-    attr_accessor :argv, :stdin, :stdout, :stderr
+    attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error
 
     def initialize(argv, stdin, stdout, stderr)
       self.argv   = argv
@@ -21,6 +22,7 @@ class SeeingIsBelieving
                       elsif has_filename? && file_dne?  then print_file_dne        ; 1
                       elsif should_clean?               then print_cleaned_program ; 0
                       elsif invalid_syntax?             then print_syntax_error    ; 1
+                      elsif program_timedout?           then print_timeout_error   ; 1
                       else                                   print_program         ; (results.has_exception? ? 1 : 0)
                       end
     end
@@ -31,6 +33,15 @@ class SeeingIsBelieving
 
     def has_filename?
       flags[:filename]
+    end
+
+    def program_timedout?
+      results
+      timeout_error
+    end
+
+    def print_timeout_error
+      stderr.puts "Timeout Error after #{@flags[:timeout]} seconds!"
     end
 
     def cleaned_body
@@ -44,7 +55,10 @@ class SeeingIsBelieving
                                           require:   flags[:require],
                                           load_path: flags[:load_path],
                                           encoding:  flags[:encoding],
-                                          stdin:     (file_is_on_stdin? ? '' : stdin)
+                                          stdin:     (file_is_on_stdin? ? '' : stdin),
+                                          timeout:   flags[:timeout]
+    rescue Timeout::Error
+      self.timeout_error = true
     end
 
     def printer
