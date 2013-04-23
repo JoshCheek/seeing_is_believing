@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    seeing_is_believing (0.0.16)
+    seeing_is_believing (0.0.17)
 
 GEM
   remote: http://rubygems.org/
