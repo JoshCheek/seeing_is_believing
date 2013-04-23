@@ -130,7 +130,7 @@ class SeeingIsBelieving
     end
 
     def deserialize_result
-      result = YAML.load stdout
+      result = YAML.load stdout.force_encoding("utf-8")
       result.fix_exception_backtraces_after_yaml_serialization
       result
     end

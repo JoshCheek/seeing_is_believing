@@ -15,5 +15,5 @@ at_exit do
   $seeing_is_believing_current_result.stdout = fake_stdout.string
   $seeing_is_believing_current_result.stderr = fake_stderr.string
 
-  real_stdout.write YAML.dump $seeing_is_believing_current_result
+  real_stdout.write YAML.dump($seeing_is_believing_current_result).force_encoding("utf-8")
 end
