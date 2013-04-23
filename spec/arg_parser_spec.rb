@@ -283,5 +283,33 @@ describe SeeingIsBelieving::Binary::ArgParser do
 
     it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout']
   end
+
+  describe ':alignment_strategy' do
+    AlignAll   = SeeingIsBelieving::Binary::AlignAll
+    AlignLine  = SeeingIsBelieving::Binary::AlignLine
+    AlignChunk = SeeingIsBelieving::Binary::AlignChunk
+
+    # maybe change the default?
+    it 'defaults to AlignAll' do
+      parse([])[:alignment_strategy].should == AlignAll
+    end
+
+    specify '-s and --alignment-strategy sets the alignment strategy' do
+      parse(['-s',                   'chunk'])[:alignment_strategy].should == AlignChunk
+      parse(['--alignment-strategy', 'chunk'])[:alignment_strategy].should == AlignChunk
+    end
+
+    it 'accepts values: file, line, chunk' do
+      parse(['-s',  'file'])[:alignment_strategy].should == AlignAll
+      parse(['-s',  'line'])[:alignment_strategy].should == AlignLine
+      parse(['-s', 'chunk'])[:alignment_strategy].should == AlignChunk
+    end
+
+    it 'sets an error if not provided with a strategy, or if provided with an unknown strategy' do
+      parse(['-s', 'file']).should_not have_error /alignment-strategy/
+      parse(['-s',  'abc']).should     have_error /alignment-strategy/
+      parse(['-s'        ]).should     have_error /alignment-strategy/
+    end
+  end
 end
 

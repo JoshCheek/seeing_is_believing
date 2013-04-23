@@ -256,3 +256,100 @@ Feature: Using flags
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
+
+  Scenario: --alignment-strategy file
+    Given the file "file_alignments.rb":
+    """
+    # comment
+    1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1
+    1 + 1 + 1
+    """
+    When I run "seeing_is_believing --alignment-strategy file file_alignments.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    # comment
+    1          # => 1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1      # => 2
+    1 + 1 + 1  # => 3
+    """
+
+  Scenario: --alignment-strategy chunk
+    Given the file "chunk_alignments.rb":
+    """
+    # comment
+    1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1
+    1 + 1 + 1
+
+    1+1+1
+    1+1
+
+    1 + 1
+    # comment in the middle!
+    1 + 1 + 1 + 1
+    1 + 1
+    """
+    When I run "seeing_is_believing --alignment-strategy chunk chunk_alignments.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    # comment
+    1  # => 1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1      # => 2
+    1 + 1 + 1  # => 3
+
+    1+1+1  # => 3
+    1+1    # => 2
+
+    1 + 1          # => 2
+    # comment in the middle!
+    1 + 1 + 1 + 1  # => 4
+    1 + 1          # => 2
+    """
+
+  Scenario: --alignment-strategy line
+    Given the file "line_alignments.rb":
+    """
+    # comment
+    1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1
+    1 + 1 + 1
+    """
+    When I run "seeing_is_believing --alignment-strategy line line_alignments.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    # comment
+    1  # => 1
+
+    =begin
+    multiline comment
+    =end
+    1 + 1  # => 2
+    1 + 1 + 1  # => 3
+    """

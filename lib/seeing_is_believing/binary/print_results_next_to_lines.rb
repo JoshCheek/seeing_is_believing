@@ -2,6 +2,7 @@ require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/line_formatter'
 
+
 class SeeingIsBelieving
   class Binary
     class PrintResultsNextToLines
@@ -29,11 +30,11 @@ class SeeingIsBelieving
       method_from_options :line_length,   Float::INFINITY
       method_from_options :result_length, Float::INFINITY
 
-
       def initialize(body, file_result, options={})
-        self.body        = body
-        self.options     = options
-        self.file_result = file_result
+        self.body               = body
+        self.options            = options
+        self.file_result        = file_result
+        self.alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
       end
 
       def new_body
@@ -52,7 +53,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :body, :file_result, :options
+      attr_accessor :body, :file_result, :options, :alignment_strategy
 
       def add_each_line_until_start_or_data_segment
         line_queue.until { |line, line_number| line_number == start_line || start_of_data_segment?(line) }
@@ -61,7 +62,7 @@ class SeeingIsBelieving
 
       def add_lines_with_results_until_end_or_data_segment
         line_queue.until { |line, line_number| end_line < line_number || start_of_data_segment?(line) }
-                  .each  { |line, line_number| new_body << format_line(line.chomp, file_result[line_number]) }
+                  .each  { |line, line_number| new_body << format_line(line.chomp, line_number, file_result[line_number]) }
       end
 
       def add_lines_until_data_segment
@@ -81,19 +82,6 @@ class SeeingIsBelieving
         SyntaxAnalyzer.begins_data_segment?(line.chomp)
       end
 
-      # max line length of the lines to output (exempting comments) + 2 spaces for padding
-      def max_source_line_length
-        @max_source_line_length ||= 2 + body.each_line
-                                            .map(&:chomp)
-                                            .select.with_index(1) { |line, index| start_line <= index && index <= end_line }
-                                            .take_while { |line| not start_of_data_segment? line }
-                                            .select { |line| not SyntaxAnalyzer.begins_multiline_comment?(line) .. SyntaxAnalyzer.ends_multiline_comment?(line ) }
-                                            .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
-                                            .map(&:length)
-                                            .concat([0])
-                                            .max
-      end
-
       def add_stdout
         return unless file_result.has_stdout?
         new_body << "\n"
@@ -110,8 +98,8 @@ class SeeingIsBelieving
         end
       end
 
-      def format_line(line, line_results)
-        options = options().merge source_length: max_source_line_length
+      def format_line(line, line_number, line_results)
+        options = options().merge source_length: alignment_strategy.line_length_for(line_number)
         formatted_line = if line_results.has_exception?
                            result = sprintf "%s: %s", line_results.exception.class, line_results.exception.message
                            LineFormatter.new(line, "#{EXCEPTION_PREFIX} ", result, options).call
