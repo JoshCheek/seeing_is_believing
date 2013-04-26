@@ -106,7 +106,7 @@ class SeeingIsBelieving
     "begin;"\
       "#{code}\n"\
     "rescue Exception;"\
-      "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+:/][1..-2].to_i;"\
+      "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
       "$seeing_is_believing_current_result.record_exception line_number, $!;"\
     "end"
   end

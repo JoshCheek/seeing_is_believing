@@ -53,3 +53,18 @@ Feature: Running the binary unsuccessfully
     And the exit status is 1
     And stdout is empty
 
+  Scenario: Stack overflow
+    Given the file "stack_overflow.rb":
+    """
+    def m() m end
+    m
+    """
+    When I run "seeing_is_believing stack_overflow.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    def m() m end  # ~> SystemStackError: stack level too deep
+    m
+    """
+
