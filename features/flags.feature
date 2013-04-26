@@ -50,14 +50,14 @@ Feature: Using flags
     3 + 3
     """
     When I run "seeing_is_believing -s chunk --end-line 2 end_line.rb"
-    Then stderr is empty
+    Then stdout is:
     """
     1  # => 1
     2  # => 2
     3 + 3
     """
     When I run "seeing_is_believing -s line --end-line 2 end_line.rb"
-    Then stderr is empty
+    Then stdout is:
     """
     1  # => 1
     2  # => 2
@@ -83,7 +83,7 @@ Feature: Using flags
     4 + 4
     """
     When I run "seeing_is_believing -s chunk --start-line 2 --end-line 3 start_and_end_line.rb"
-    Then stderr is empty
+    Then stdout is:
     """
     1 + 1
     2  # => 2
@@ -91,7 +91,7 @@ Feature: Using flags
     4 + 4
     """
     When I run "seeing_is_believing -s line --start-line 2 --end-line 3 start_and_end_line.rb"
-    Then stderr is empty
+    Then stdout is:
     """
     1 + 1
     2  # => 2
