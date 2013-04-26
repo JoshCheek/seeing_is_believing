@@ -90,9 +90,9 @@ Go to the bundle editor, create this new command in the Ruby bundle:
 
 ```shell
 if [ -z "$TM_FILEPATH" ]; then
-  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200
+  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --alignment-strategy chunk --timeout 12
 else
-  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --as "$TM_FILEPATH"
+  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --as "$TM_FILEPATH" --alignment-strategy chunk --timeout 12
 fi
 ```
 
