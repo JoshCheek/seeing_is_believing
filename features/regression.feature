@@ -3,7 +3,6 @@ Feature:
   As the dev who wrote SeeingIsBelieving
   I want to have tests on those bugs that I found and could not have predicted
 
-  @wip
   Scenario: No method error just fucks everything
     Given the file "no_method_error.rb":
     """
