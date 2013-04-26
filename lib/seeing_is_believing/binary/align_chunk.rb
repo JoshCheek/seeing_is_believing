@@ -22,7 +22,9 @@ class SeeingIsBelieving
               .reject            { |line, index| SyntaxAnalyzer.ends_in_comment? line }
               .slice_before      { |line, index| line == '' }
               .map { |slice|
-                max_chunk_length = 2 + slice.map { |line, index| line.length }.max
+                max_chunk_length = 2 + slice.select { |line, index| start_line <= index && index <= end_line }
+                                            .map { |line, index| line.length }
+                                            .max
                 slice.map { |line, index| [index, max_chunk_length] }
               }
               .flatten(1)

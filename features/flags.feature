@@ -9,10 +9,24 @@ Feature: Using flags
     2
     3
     """
-    When I run "seeing_is_believing --start-line 2 start_line.rb"
+    When I run "seeing_is_believing -s file --start-line 2 start_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
+    """
+    1 + 1
+    2  # => 2
+    3  # => 3
+    """
+    When I run "seeing_is_believing -s chunk --start-line 2 start_line.rb"
+    Then stdout is:
+    """
+    1 + 1
+    2  # => 2
+    3  # => 3
+    """
+    When I run "seeing_is_believing -s line --start-line 2 start_line.rb"
+    Then stdout is:
     """
     1 + 1
     2  # => 2
@@ -26,7 +40,25 @@ Feature: Using flags
     2
     3 + 3
     """
-    When I run "seeing_is_believing --end-line 2 end_line.rb"
+    When I run "seeing_is_believing -s file --end-line 2 end_line.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1  # => 1
+    2  # => 2
+    3 + 3
+    """
+    When I run "seeing_is_believing -s chunk --end-line 2 end_line.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1  # => 1
+    2  # => 2
+    3 + 3
+    """
+    When I run "seeing_is_believing -s line --end-line 2 end_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -44,7 +76,27 @@ Feature: Using flags
     3
     4 + 4
     """
-    When I run "seeing_is_believing --start-line 2 --end-line 3 start_and_end_line.rb"
+    When I run "seeing_is_believing -s file --start-line 2 --end-line 3 start_and_end_line.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 + 1
+    2  # => 2
+    3  # => 3
+    4 + 4
+    """
+    When I run "seeing_is_believing -s chunk --start-line 2 --end-line 3 start_and_end_line.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 + 1
+    2  # => 2
+    3  # => 3
+    4 + 4
+    """
+    When I run "seeing_is_believing -s line --start-line 2 --end-line 3 start_and_end_line.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
