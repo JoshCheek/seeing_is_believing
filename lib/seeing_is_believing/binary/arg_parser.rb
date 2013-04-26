@@ -77,7 +77,7 @@ class SeeingIsBelieving
           errors:             [],
           require:            [],
           load_path:          [],
-          alignment_strategy: AlignFile,
+          alignment_strategy: AlignChunk,
         }
       end
 
@@ -135,8 +135,8 @@ Usage: seeing_is_believing [options] [filename]
   -d, --line-length n       # max length of the entire line (only truncates results, not source lines)
   -D, --result-length n     # max length of the portion after the "# => "
   -s, --alignment-strategy  # select the alignment strategy:
-                              file  (DEFAULT) =>  the entire file is at the same alignment
-                              chunk           =>  each chunk of code is at the same alignment
+                              chunk (DEFAULT) =>  each chunk of code is at the same alignment
+                              file            =>  the entire file is at the same alignment
                               line            =>  each line is at its own alignment
   -t, --timeout n           # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
   -I, --load-path dir       # a dir that should be added to the $LOAD_PATH

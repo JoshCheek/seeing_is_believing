@@ -51,8 +51,6 @@ Feature: Using flags
     """
     When I run "seeing_is_believing -s chunk --end-line 2 end_line.rb"
     Then stderr is empty
-    And the exit status is 0
-    And stdout is:
     """
     1  # => 1
     2  # => 2
@@ -60,8 +58,6 @@ Feature: Using flags
     """
     When I run "seeing_is_believing -s line --end-line 2 end_line.rb"
     Then stderr is empty
-    And the exit status is 0
-    And stdout is:
     """
     1  # => 1
     2  # => 2
@@ -88,8 +84,6 @@ Feature: Using flags
     """
     When I run "seeing_is_believing -s chunk --start-line 2 --end-line 3 start_and_end_line.rb"
     Then stderr is empty
-    And the exit status is 0
-    And stdout is:
     """
     1 + 1
     2  # => 2
@@ -98,8 +92,6 @@ Feature: Using flags
     """
     When I run "seeing_is_believing -s line --start-line 2 --end-line 3 start_and_end_line.rb"
     Then stderr is empty
-    And the exit status is 0
-    And stdout is:
     """
     1 + 1
     2  # => 2
@@ -120,7 +112,7 @@ Feature: Using flags
 
     raise        "a"*100
     """
-    When I run "seeing_is_believing --result-length 10 result_lengths.rb"
+    When I run "seeing_is_believing -s file --result-length 10 result_lengths.rb"
     Then stderr is empty
     And stdout is:
     """
@@ -150,7 +142,7 @@ Feature: Using flags
 
     raise        "a"*100
     """
-    When I run "seeing_is_believing --line-length 32 line_lengths.rb"
+    When I run "seeing_is_believing -s file --line-length 32 line_lengths.rb"
     Then stderr is empty
     And stdout is:
     """

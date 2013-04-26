@@ -290,8 +290,8 @@ describe SeeingIsBelieving::Binary::ArgParser do
     AlignChunk = SeeingIsBelieving::Binary::AlignChunk
 
     # maybe change the default?
-    it 'defaults to AlignFile' do
-      parse([])[:alignment_strategy].should == AlignFile
+    it 'defaults to AlignChunk' do
+      parse([])[:alignment_strategy].should == AlignChunk
     end
 
     specify '-s and --alignment-strategy sets the alignment strategy' do
