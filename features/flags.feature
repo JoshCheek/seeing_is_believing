@@ -291,7 +291,7 @@ Feature: Using flags
     Given the file "example.rb" "sleep 1"
     When I run "seeing_is_believing --timeout 0.1 example.rb"
     Then stdout is empty
-    And the exit status is 1
+    And the exit status is 2
     And stderr is "Timeout Error after 0.1 seconds!"
 
   Scenario: --timeout

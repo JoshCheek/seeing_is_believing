@@ -6,6 +6,10 @@ require 'timeout'
 
 class SeeingIsBelieving
   class Binary
+    SUCCESS_STATUS              = 0
+    DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
+    NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
+
     attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error
 
     def initialize(argv, stdin, stdout, stderr)
@@ -16,14 +20,16 @@ class SeeingIsBelieving
     end
 
     def call
-      @exitstatus ||= if    flags_have_errors?          then print_errors          ; 1
-                      elsif should_print_help?          then print_help            ; 0
-                      elsif should_print_version?       then print_version         ; 0
-                      elsif has_filename? && file_dne?  then print_file_dne        ; 1
-                      elsif should_clean?               then print_cleaned_program ; 0
-                      elsif invalid_syntax?             then print_syntax_error    ; 1
-                      elsif program_timedout?           then print_timeout_error   ; 1
-                      else                                   print_program         ; (results.has_exception? ? 1 : 0)
+      @exitstatus ||= if    flags_have_errors?          then print_errors          ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif should_print_help?          then print_help            ; SUCCESS_STATUS
+                      elsif should_print_version?       then print_version         ; SUCCESS_STATUS
+                      elsif has_filename? && file_dne?  then print_file_dne        ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif should_clean?               then print_cleaned_program ; SUCCESS_STATUS
+                      elsif invalid_syntax?             then print_syntax_error    ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif program_timedout?           then print_timeout_error   ; NONDISPLAYABLE_ERROR_STATUS
+                      else                                   print_program         ; (results.has_exception? ?
+                                                                                        DISPLAYABLE_ERROR_STATUS :
+                                                                                        SUCCESS_STATUS)
                       end
     end
 

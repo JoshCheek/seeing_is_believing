@@ -5,7 +5,6 @@ Feature: Running the binary unsuccessfully
 
   # show that it displalys next to the first place in the file
   # and should maybe print the stacktrace at the bottom
-  @wip
   Scenario: Raising exceptions
     Given the file "raises_exception.rb":
     """
@@ -46,26 +45,26 @@ Feature: Running the binary unsuccessfully
     """
     When I run "seeing_is_believing invalid_syntax.rb"
     Then stderr includes "1: unterminated string meets end of file"
-    And the exit status is 1
+    And the exit status is 2
     And stdout is empty
 
   Scenario: Passing a nonexistent file
     When I run "seeing_is_believing this_file_does_not_exist.rb"
     Then stderr is "this_file_does_not_exist.rb does not exist!"
-    And the exit status is 1
+    And the exit status is 2
     And stdout is empty
 
   Scenario: Passing unknown options
     Given the file "some_file" "1"
     When I run "seeing_is_believing --unknown-option"
     Then stderr is 'Unknown option: "--unknown-option"'
-    And the exit status is 1
+    And the exit status is 2
     And stdout is empty
 
   Scenario: Passing an unknown option with a value but forgetting the filename
     When I run "seeing_is_believing --unknown-option some-value"
     Then stderr is 'Unknown option: "--unknown-option"'
-    And the exit status is 1
+    And the exit status is 2
     And stdout is empty
 
   Scenario: Stack overflow
