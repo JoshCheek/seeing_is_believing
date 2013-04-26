@@ -124,9 +124,9 @@ class SeeingIsBelieving
 
     def ArgParser.help_screen
 <<HELP_SCREEN
-Usage: #{$0} [options] [filename]
+Usage: seeing_is_believing [options] [filename]
 
-  #{$0} is a program and library that will evaluate a Ruby file and capture/display the results.
+  seeing_is_believing is a program and library that will evaluate a Ruby file and capture/display the results.
 
   If no filename is provided, the binary will read the program from standard input.
 
