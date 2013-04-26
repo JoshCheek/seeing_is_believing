@@ -35,7 +35,7 @@ class SeeingIsBelieving
       end
 
       def line_with_padding
-        "%-#{options[:source_length]}s" % line
+        "%-#{options[:pad_to]}s" % line
       end
 
       def truncate(string, length)
