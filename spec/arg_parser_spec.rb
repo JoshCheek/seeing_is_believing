@@ -285,13 +285,13 @@ describe SeeingIsBelieving::Binary::ArgParser do
   end
 
   describe ':alignment_strategy' do
-    AlignAll   = SeeingIsBelieving::Binary::AlignAll
+    AlignFile  = SeeingIsBelieving::Binary::AlignFile
     AlignLine  = SeeingIsBelieving::Binary::AlignLine
     AlignChunk = SeeingIsBelieving::Binary::AlignChunk
 
     # maybe change the default?
-    it 'defaults to AlignAll' do
-      parse([])[:alignment_strategy].should == AlignAll
+    it 'defaults to AlignFile' do
+      parse([])[:alignment_strategy].should == AlignFile
     end
 
     specify '-s and --alignment-strategy sets the alignment strategy' do
@@ -300,7 +300,7 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
 
     it 'accepts values: file, line, chunk' do
-      parse(['-s',  'file'])[:alignment_strategy].should == AlignAll
+      parse(['-s',  'file'])[:alignment_strategy].should == AlignFile
       parse(['-s',  'line'])[:alignment_strategy].should == AlignLine
       parse(['-s', 'chunk'])[:alignment_strategy].should == AlignChunk
     end

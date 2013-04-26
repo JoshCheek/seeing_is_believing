@@ -1,5 +1,5 @@
 require 'seeing_is_believing/version'
-require 'seeing_is_believing/binary/align_all'
+require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
 
@@ -77,14 +77,14 @@ class SeeingIsBelieving
           errors:             [],
           require:            [],
           load_path:          [],
-          alignment_strategy: AlignAll,
+          alignment_strategy: AlignFile,
         }
       end
 
 
       def extract_alignment_strategy
         strategies = {
-          'file'  => AlignAll,
+          'file'  => AlignFile,
           'chunk' => AlignChunk,
           'line'  => AlignLine,
         }

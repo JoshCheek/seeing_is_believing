@@ -1,6 +1,6 @@
 class SeeingIsBelieving
   class Binary
-    class AlignAll
+    class AlignFile
       attr_accessor :body, :start_line, :end_line
 
       def initialize(body, start_line, end_line)
