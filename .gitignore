@@ -1,2 +1,3 @@
 proving_grounds/*
 *.gem
+Gemfile.lock
