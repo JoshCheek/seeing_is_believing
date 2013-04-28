@@ -85,7 +85,7 @@ class SeeingIsBelieving
                                             on_complete:    lambda { |line, children, completions, offset|
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")
                                               if do_not_record? expression
-                                                expression + "\n"
+                                                track_line_number_for(expression + "\n", @line_number+offset)
                                               else
                                                 record_yahself(expression, @line_number+offset) + "\n"
                                               end
@@ -99,6 +99,10 @@ class SeeingIsBelieving
 
   def record_yahself(line, line_number)
     "($seeing_is_believing_current_result.record_result(#{line_number}, (#{line})))"
+  end
+
+  def track_line_number_for(line, line_number)
+    "$seeing_is_believing_current_result.track_line_number(#{line_number});#{line}"
   end
 
   def record_exceptions_in(code)

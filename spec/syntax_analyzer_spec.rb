@@ -172,7 +172,9 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
   end
 
   shared_examples_for 'void_value_expression?' do |keyword|
-    it "returns true when the expression ends in #{keyword}" do
+    it "`#{keyword}` returns true when the expression ends in #{keyword}", t:true do
+      described_class.void_value_expression?("#{keyword}").should be_true
+      described_class.void_value_expression?("#{keyword}(1)").should be_true
       described_class.void_value_expression?("#{keyword} 1").should be_true
       described_class.void_value_expression?("#{keyword} 1\n").should be_true
       described_class.void_value_expression?("#{keyword} 1 if true").should be_true
@@ -183,6 +185,8 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
       described_class.void_value_expression?("def a\n#{keyword} 1\nend").should be_false
       described_class.void_value_expression?("-> {\n#{keyword} 1\n}").should be_false
       described_class.void_value_expression?("Proc.new {\n#{keyword} 1\n}").should be_false
+      described_class.void_value_expression?("#{keyword}_something").should be_false
+      described_class.void_value_expression?("def a\n#{keyword}\nend").should be_false
     end
 
     it "doesn't work because the return and next keyword evaluators are insufficient regexps" do

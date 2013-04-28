@@ -189,7 +189,7 @@ describe SeeingIsBelieving do
     DOC
   end
 
-  it 'does not try to record the keyword retry' do
+  it 'does not try to record the keyword retry', t2:true do
     values_for(<<-DOC).should == [[], [], [], ['nil']]
       def meth
       rescue
