@@ -133,7 +133,7 @@ class SeeingIsBelieving
     end
 
     def notify_user_of_error
-      error_stream.puts "It blew up. Not too surprising given that seeing_is_believing is pretty rough around the edges, but still this shouldn't happen."
+      error_stream.puts "It blew up because SeeingIsBelieving isn't good enough >.<"
       error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
       error_stream.puts
       error_stream.puts "Program: #{program.inspect}"
