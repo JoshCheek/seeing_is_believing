@@ -42,6 +42,7 @@ Feature: Running the binary successfully
     # method invocation that occurs entirely on the next line
     [*1..10]
       .select(&:even?)
+      .map { |n| n * 2 }
 
     # mutliple levels of nesting
     class User
@@ -93,8 +94,9 @@ Feature: Running the binary successfully
     HERE
 
     # method invocation that occurs entirely on the next line
-    [*1..10]
-      .select(&:even?)  # => [2, 4, 6, 8, 10]
+    [*1..10]              # => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      .select(&:even?)    # => [2, 4, 6, 8, 10]
+      .map { |n| n * 2 }  # => [4, 8, 12, 16, 20]
 
     # mutliple levels of nesting
     class User

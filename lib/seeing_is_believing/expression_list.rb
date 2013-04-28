@@ -29,7 +29,13 @@ class SeeingIsBelieving
         pending_expression = generate
         debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
         expressions << pending_expression
-        expression = reduce expressions, offset unless next_line_modifies_current?
+
+        expression = reduce expressions, offset
+
+        if next_line_modifies_current?
+          expressions << PendingExpression.new(expression.chomp, []) # chomp b/c on_complete callback prob adds newline, but we do to when joining
+        end
+
         offset += 1
       end until expressions.empty?
       return expression, offset

@@ -269,8 +269,8 @@ describe SeeingIsBelieving do
   end
 
   it 'can deal with methods that are invoked entirely on the next line' do
-    values_for("1\n.even?").should == [[], ['false']]
-    values_for("1\n.even?\n__END__").should == [[], ['false']]
+    values_for("1\n.even?").should == [['1'], ['false']]
+    values_for("1\n.even?\n__END__").should == [['1'], ['false']]
   end
 
   it 'does not record leading comments' do
@@ -282,6 +282,25 @@ describe SeeingIsBelieving do
 
   it 'times out if the timeout limit is exceeded' do
     expect { invoke "sleep 0.2", timeout: 0.1 }.to raise_error Timeout::Error
+  end
+
+  it 'can record the middle of a chain of calls', t:true do
+    values_for("[*1..5]
+                  .select(&:even?)
+                  .map { |n| n * 3 }").should == [['[1, 2, 3, 4, 5]'],
+                                                  ['[2, 4]'],
+                                                  ['[6, 12]']]
+    # values_for("[*1..5]
+    #               .select(&:even)
+    #               .map { |n| n * 2 }.
+    #               map  { |n| n / 2 }\
+    #               .map { |n| n * 3 }").should == [['[1, 2, 3, 4, 5]'],
+    #                                               ['[2, 4]'],
+    #                                               ['[4, 8]'],
+    #                                               ['[2, 4]'],
+    #                                               ['[6, 12]']]
+    # values_for("1 +\n2").should == [['1'], ['3']]
+    # values_for("1\\\n+ 2").should == [['1'], ['3']]
   end
 
 end

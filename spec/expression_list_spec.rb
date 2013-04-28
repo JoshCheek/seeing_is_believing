@@ -181,19 +181,38 @@ describe SeeingIsBelieving::ExpressionList do
   example "example: method invocations on next line" do
     # example 1: consume the expression with lines after
     list = list_for ['a', '.b', ' .c', 'irrelevant'] do |*expressions, offset|
-      offset.should == 2
-      expressions.flatten.join('').should == 'a.b .c'
-      'a.b.c'
+      flat_expressions = expressions.flatten.join('')
+      case offset
+      when 0
+        flat_expressions.should == 'a'
+        'A'
+      when 1
+        flat_expressions.should == 'A.b'
+        'A.B'
+      when 2
+        flat_expressions.should == 'A.B .c'
+        'A.B.C'
+      else
+        raise "O.o"
+      end
     end
-    list.call.should == ['a.b.c', 3]
+    list.call.should == ['A.B.C', 3]
 
     # example 2: consume the expression with no lines after
     list = list_for ['a', '.b'] do |*expressions, offset|
-      offset.should == 1
-      expressions.flatten.join('').should == 'a.b'
-      'result'
+      flat_expressions = expressions.flatten.join('')
+      case offset
+      when 0
+        flat_expressions.should == 'a'
+        'A'
+      when 1
+        flat_expressions.should == 'A.b'
+        'A.B'
+      else
+        raise "O.o"
+      end
     end
-    list.call.should == ['result', 2]
+    list.call.should == ['A.B', 2]
   end
 
   example "example: smoke test debug option" do
