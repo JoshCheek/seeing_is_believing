@@ -133,6 +133,13 @@ Known Issues
 * errors come out really shitty if you're calling them from another program like TextMate, would be better to put a line in that shows where the error is.
 * "1\\\n.even?" just fucks everything
 
+Todo
+====
+* Don't blow up on "a\\\n.b"
+* Record results with "a\n.b.\nc"
+* Record results with "a + \n b"
+* Refactor ExpressionList/SeeingIsBelieving to store lines in an array instead of as a string, so everyone doesn't magically need to know when to chomp
+
 License
 =======
 
