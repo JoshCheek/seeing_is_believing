@@ -83,6 +83,12 @@ Rubygems is allowing pushes again, but if it goes back down, you can install lik
     $ cd ..
     $ rm -rf "./seeing_is_believing"
 
+Sublime Text 2 Integration
+==========================
+
+See [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-text-2-seeing-is-believing).
+
+
 TextMate Integration
 ====================
 
@@ -138,6 +144,7 @@ Todo
 * Don't blow up on "a\\\n.b"
 * Record results with "a\n.b.\nc"
 * Record results with "a + \n b"
+* a\n.b(\n.c\n) will blow up, need to make sure that joining it with the next line is valid ruby
 * Refactor ExpressionList/SeeingIsBelieving to store lines in an array instead of as a string, so everyone doesn't magically need to know when to chomp
 
 License
