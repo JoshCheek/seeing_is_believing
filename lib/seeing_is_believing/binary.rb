@@ -10,7 +10,7 @@ class SeeingIsBelieving
     DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
 
-    attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error
+    attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error, :unexpected_exception
 
     def initialize(argv, stdin, stdout, stderr)
       self.argv   = argv
@@ -20,16 +20,17 @@ class SeeingIsBelieving
     end
 
     def call
-      @exitstatus ||= if    flags_have_errors?          then print_errors          ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif should_print_help?          then print_help            ; SUCCESS_STATUS
-                      elsif should_print_version?       then print_version         ; SUCCESS_STATUS
-                      elsif has_filename? && file_dne?  then print_file_dne        ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif should_clean?               then print_cleaned_program ; SUCCESS_STATUS
-                      elsif invalid_syntax?             then print_syntax_error    ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif program_timedout?           then print_timeout_error   ; NONDISPLAYABLE_ERROR_STATUS
-                      else                                   print_program         ; (results.has_exception? ?
-                                                                                        DISPLAYABLE_ERROR_STATUS :
-                                                                                        SUCCESS_STATUS)
+      @exitstatus ||= if    flags_have_errors?          then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif should_print_help?          then print_help             ; SUCCESS_STATUS
+                      elsif should_print_version?       then print_version          ; SUCCESS_STATUS
+                      elsif has_filename? && file_dne?  then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif should_clean?               then print_cleaned_program  ; SUCCESS_STATUS
+                      elsif invalid_syntax?             then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif program_timedout?           then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
+                      elsif something_blew_up?          then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+                      else                                   print_program          ; (results.has_exception? ?
+                                                                                         DISPLAYABLE_ERROR_STATUS :
+                                                                                         SUCCESS_STATUS)
                       end
     end
 
@@ -65,6 +66,16 @@ class SeeingIsBelieving
                                           timeout:   flags[:timeout]
     rescue Timeout::Error
       self.timeout_error = true
+    rescue Exception
+      self.unexpected_exception = $!
+    end
+
+    def something_blew_up?
+      !!unexpected_exception
+    end
+
+    def print_unexpected_error
+      stderr.puts unexpected_exception.class, unexpected_exception.message
     end
 
     def printer

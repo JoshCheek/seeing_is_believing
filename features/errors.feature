@@ -82,3 +82,9 @@ Feature: Running the binary unsuccessfully
     m
     """
 
+  Scenario: Total Fucking Failure
+    Given the file "sib_will_utterly_die.rb" "BEGIN {}"
+    When I run "seeing_is_believing sib_will_utterly_die.rb"
+    Then stderr is not empty
+    And the exit status is 2
+    And stdout is empty

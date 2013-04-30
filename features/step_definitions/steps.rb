@@ -7,5 +7,6 @@ When("I run '$command'")                     { |command|              @last_exec
 Then(/^(stderr|stdout) is:$/)                { |stream_name, output|  @last_executed.send(stream_name).chomp.should == eval_curlies(output) }
 Then(/^(stderr|stdout) is ["'](.*?)["']$/)   { |stream_name, output|  @last_executed.send(stream_name).chomp.should == eval_curlies(output) }
 Then(/^(stderr|stdout) is empty$/)           { |stream_name|          @last_executed.send(stream_name).should == '' }
+Then(/^(stderr|stdout) is not empty$/)       { |stream_name|          @last_executed.send(stream_name).chomp.should_not be_empty }
 Then(/^(stderr|stdout) includes "([^"]*)"$/) { |stream_name, content| @last_executed.send(stream_name).should include eval_curlies(content) }
 Then('the exit status is $status')           { |status|               @last_executed.exitstatus.to_s.should == status }
