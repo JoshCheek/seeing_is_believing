@@ -1,3 +1,3 @@
 class SeeingIsBelieving
-  VERSION = '0.0.22'
+  VERSION = '0.0.23'
 end
