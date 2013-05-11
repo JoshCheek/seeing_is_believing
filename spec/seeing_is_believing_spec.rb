@@ -269,8 +269,8 @@ describe SeeingIsBelieving do
   end
 
   it 'can deal with methods that are invoked entirely on the next line' do
-    values_for("1\n.even?").should == [['1'], ['false']]
-    values_for("1\n.even?\n__END__").should == [['1'], ['false']]
+    values_for("a = 1\n.even?\na").should == [[], ['false'], ['false']]
+    values_for("1\n.even?\n__END__").should == [[], ['false']]
   end
 
   it 'does not record leading comments' do
@@ -284,7 +284,7 @@ describe SeeingIsBelieving do
     expect { invoke "sleep 0.2", timeout: 0.1 }.to raise_error Timeout::Error
   end
 
-  it 'can record the middle of a chain of calls', t:true do
+  it 'can record the middle of a chain of calls', not_implemented: true  do
     values_for("[*1..5]
                   .select(&:even?)
                   .map { |n| n * 3 }").should == [['[1, 2, 3, 4, 5]'],

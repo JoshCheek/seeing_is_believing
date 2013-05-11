@@ -178,7 +178,8 @@ describe SeeingIsBelieving::ExpressionList do
     end
   end
 
-  example "example: method invocations on next line" do
+  example "example: method invocations on next line", not_implemented: true do
+    pending 'I need to *actually* parse the Ruby in order to be able to identify where to split the expressions :('
     # example 1: consume the expression with lines after
     list = list_for ['a', '.b', ' .c', 'irrelevant'] do |*expressions, offset|
       flat_expressions = expressions.flatten.join('')
@@ -213,6 +214,45 @@ describe SeeingIsBelieving::ExpressionList do
       end
     end
     list.call.should == ['A.B', 2]
+  end
+
+  example "example: method invocations on next line with the first line not being its own expression", not_implemented: true do
+    pending 'I need to *actually* parse the Ruby in order to be able to identify where to split the expressions :('
+    list = list_for ['x = a', '.b', ' .c', 'irrelevant'] do |*expressions, offset|
+      flat_expressions = expressions.flatten.join('')
+      case offset
+      when 0
+        flat_expressions.should == 'a'
+        'A'
+      when 1
+        flat_expressions.should == 'A.b'
+        'A.B'
+      when 2
+        flat_expressions.should == 'x = A.B .c'
+        'X=A.B.C'
+      else
+        raise "O.o"
+      end
+    end
+    list.call.should == ['X=A.B.C', 3]
+
+    list = list_for ['puts a', '.b', ' .c', 'irrelevant'] do |*expressions, offset|
+      flat_expressions = expressions.flatten.join('')
+      case offset
+      when 0
+        flat_expressions.should == 'a'
+        'A'
+      when 1
+        flat_expressions.should == 'A.b'
+        'A.B'
+      when 2
+        flat_expressions.should == 'puts A.B .c'
+        'PUTS A.B.C'
+      else
+        raise "O.o"
+      end
+    end
+    list.call.should == ['PUTS A.B.C', 3]
   end
 
   example "example: smoke test debug option" do
