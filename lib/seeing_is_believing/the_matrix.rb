@@ -1,6 +1,7 @@
 # WARNING: DO NOT REQUIRE THIS FILE, IT WILL FUCK YOU UP!!!!!!
 
 
+require 'yaml'
 require 'stringio'
 real_stdout = STDOUT
 real_stderr = STDERR
@@ -14,5 +15,5 @@ at_exit do
   $seeing_is_believing_current_result.stdout = fake_stdout.string
   $seeing_is_believing_current_result.stderr = fake_stderr.string
 
-  real_stdout.write Marshal.dump $seeing_is_believing_current_result
+  real_stdout.write YAML.dump $seeing_is_believing_current_result
 end
