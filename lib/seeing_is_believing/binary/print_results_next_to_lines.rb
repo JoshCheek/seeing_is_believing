@@ -101,7 +101,7 @@ class SeeingIsBelieving
       def format_line(line, line_number, line_results)
         options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
         formatted_line = if line_results.has_exception?
-                           result = sprintf "%s: %s", line_results.exception.class, line_results.exception.message
+                           result = sprintf "%s: %s", line_results.exception.class_name, line_results.exception.message
                            LineFormatter.new(line, "#{EXCEPTION_PREFIX} ", result, options).call
                          elsif line_results.any?
                            LineFormatter.new(line, "#{RESULT_PREFIX} ", line_results.join(', '), options).call

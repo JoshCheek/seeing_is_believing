@@ -29,9 +29,12 @@ class SeeingIsBelieving
     end
 
     def record_exception(line_number, exception)
-      self.exception = exception
+      recorded_exception = RecordedException.new exception.class.name,
+                                                 exception.message,
+                                                 exception.backtrace
+      self.exception = recorded_exception
       track_line_number line_number
-      results(line_number).exception = exception
+      results(line_number).exception = recorded_exception
     end
 
     def [](line_number)

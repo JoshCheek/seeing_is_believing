@@ -10,7 +10,7 @@ Feature:
     And the exit status is 0
     And stdout is "# single comment"
 
-  Scenario: No method error just fucks everything
+  Scenario: Name error just fucks everything
     Given the file "no_method_error.rb":
     """
     a
@@ -22,3 +22,17 @@ Feature:
     """
     a  # ~> NameError: undefined local variable or method `a' for main:Object
     """
+
+  Scenario:
+    Given the file "raising_custom_errors.rb":
+    """
+    MyError = Class.new StandardError
+    begin
+      raise "a"
+    rescue
+      raise MyError.new("c")
+    end
+    """
+    When I run "seeing_is_believing raising_custom_errors.rb"
+    Then stderr is empty
+    And the exit status is 1
