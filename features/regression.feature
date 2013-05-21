@@ -23,7 +23,7 @@ Feature:
     a  # ~> NameError: undefined local variable or method `a' for main:Object
     """
 
-  Scenario:
+  Scenario: Errors being raised in the evaluated code that don't exist in the evaluating code
     Given the file "raising_custom_errors.rb":
     """
     MyError = Class.new StandardError
