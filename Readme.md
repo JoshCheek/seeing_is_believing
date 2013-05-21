@@ -92,6 +92,12 @@ See [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-te
 TextMate Integration
 ====================
 
+Note: This assumes you've already set up Ruby to work with TextMate.
+If not, you'll need to start there. [Here](https://rvm.io/integration/textmate/)
+are instructions for RVM (I recommend the wrapper approach).
+[Here](http://uberfork.com/post/12280974742/integrate-rbenv-with-textmate)
+are instructions for rbenv.
+
 Go to the bundle editor, create this new command in the Ruby bundle:
 
 ```shell
