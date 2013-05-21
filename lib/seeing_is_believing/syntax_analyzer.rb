@@ -159,7 +159,13 @@ class SeeingIsBelieving
     # this is conspicuosuly inferior, but I can't figure out how to actually parse it
     # see: http://www.ruby-forum.com/topic/4409633
     def self.void_value_expression?(code)
-      /(^|\s)(?:return|next|redo|retry|break)([^\w\n]|\n?\z).*?\n?\z/ =~ code
+      return true if /(^|\s)(?:return|next|redo|retry|break)([^\w\n]|\n?\z).*?\n?\z/ =~ code
+
+      lines = code.split("\n")
+      if /^if/ =~ lines[0].strip
+        return /return/ =~ lines[0] if lines.length == 1 # err on the side of conservativity
+        void_value_expression?(lines[-2])
+      end
     end
 
     # HERE DOCS

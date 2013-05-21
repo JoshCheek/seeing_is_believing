@@ -171,7 +171,7 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     end
   end
 
-  shared_examples_for 'void_value_expression?' do |keyword|
+  shared_examples_for 'single line void_value_expression?' do |keyword|
     it "`#{keyword}` returns true when the expression ends in #{keyword}", t:true do
       described_class.void_value_expression?("#{keyword}").should be_true
       described_class.void_value_expression?("#{keyword}(1)").should be_true
@@ -197,11 +197,22 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     end
   end
 
-  it_should_behave_like 'void_value_expression?', 'return'
-  it_should_behave_like 'void_value_expression?', 'next'
-  it_should_behave_like 'void_value_expression?', 'redo'
-  it_should_behave_like 'void_value_expression?', 'retry'
-  it_should_behave_like 'void_value_expression?', 'break'
+  it_should_behave_like 'single line void_value_expression?', 'return'
+  it_should_behave_like 'single line void_value_expression?', 'next'
+  it_should_behave_like 'single line void_value_expression?', 'redo'
+  it_should_behave_like 'single line void_value_expression?', 'retry'
+  it_should_behave_like 'single line void_value_expression?', 'break'
+
+  it 'knows when an if statement evaluates to a void value expression' do
+    described_class.void_value_expression?("if true\nreturn 1\nend").should be_true
+    described_class.void_value_expression?("if true\n  return 1\nend").should be_true
+    described_class.void_value_expression?("if true\n 1+1\n  return 1\nend").should be_true
+    described_class.void_value_expression?("if true\n return 1\n 1+1\n end").should be_false
+    described_class.void_value_expression?("123 && if true\n  return 1\nend").should be_false
+    described_class.void_value_expression?("def m\n if true\n  return 1\nend\n end").should be_false
+    described_class.void_value_expression?("if true; return 1; end").should be_true
+    described_class.void_value_expression?("if true; 1; end").should be_false
+  end
 
   it 'knows when a line opens the data segment' do
     described_class.begins_data_segment?('__END__').should be_true

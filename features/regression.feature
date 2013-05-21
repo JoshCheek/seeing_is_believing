@@ -36,3 +36,27 @@ Feature:
     When I run "seeing_is_believing raising_custom_errors.rb"
     Then stderr is empty
     And the exit status is 1
+
+  Scenario: statements that inherit void value expressions
+    Given the file "statements_that_inherit_void_value_expressions.rb":
+    """
+    def m
+      if true
+        return 1
+      end
+    end
+    m
+    """
+    When I run "seeing_is_believing statements_that_inherit_void_value_expressions.rb"
+    Then stderr is empty
+    And the exit status is 0
+    Then stdout is:
+    """
+    def m
+      if true
+        return 1
+      end
+    end           # => nil
+    m             # => 1
+    """
+
