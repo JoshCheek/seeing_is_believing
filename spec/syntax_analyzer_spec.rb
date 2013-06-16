@@ -171,48 +171,175 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     end
   end
 
-  shared_examples_for 'single line void_value_expression?' do |keyword|
-    it "`#{keyword}` returns true when the expression ends in #{keyword}", t:true do
+  shared_examples_for 'single line void_value_expression?' do |keyword, options={}|
+    specify "`#{keyword}` returns true when the expression ends in #{keyword} without an argument" do
       described_class.void_value_expression?("#{keyword}").should be_true
-      described_class.void_value_expression?("#{keyword}(1)").should be_true
-      described_class.void_value_expression?("#{keyword} 1").should be_true
-      described_class.void_value_expression?("#{keyword} 1\n").should be_true
-      described_class.void_value_expression?("#{keyword} 1 if true").should be_true
-      described_class.void_value_expression?("#{keyword} 1 if false").should be_true
+      described_class.void_value_expression?("#{keyword} if true").should be_true
       described_class.void_value_expression?("o.#{keyword}").should be_false
       described_class.void_value_expression?(":#{keyword}").should be_false
+      described_class.void_value_expression?(":'#{keyword}'").should be_false
       described_class.void_value_expression?("'#{keyword}'").should be_false
-      described_class.void_value_expression?("def a\n#{keyword} 1\nend").should be_false
-      described_class.void_value_expression?("-> {\n#{keyword} 1\n}").should be_false
-      described_class.void_value_expression?("Proc.new {\n#{keyword} 1\n}").should be_false
-      described_class.void_value_expression?("#{keyword}_something").should be_false
       described_class.void_value_expression?("def a\n#{keyword}\nend").should be_false
+      described_class.void_value_expression?("-> {\n#{keyword}\n}").should be_false
+      described_class.void_value_expression?("Proc.new {\n#{keyword}\n}").should be_false
+      described_class.void_value_expression?("#{keyword}_something").should be_false
+      described_class.void_value_expression?("'#{keyword}\n#{keyword}\n#{keyword}'").should be_false
+
+      unless options[:no_args]
+        described_class.void_value_expression?("#{keyword}(1)").should be_true
+        described_class.void_value_expression?("#{keyword} 1").should be_true
+        described_class.void_value_expression?("#{keyword} 1\n").should be_true
+        described_class.void_value_expression?("#{keyword} 1 if true").should be_true
+        described_class.void_value_expression?("#{keyword} 1 if false").should be_true
+        described_class.void_value_expression?("def a\n#{keyword} 1\nend").should be_false
+        described_class.void_value_expression?("-> {\n#{keyword} 1\n}").should be_false
+        described_class.void_value_expression?("Proc.new {\n#{keyword} 1\n}").should be_false
+        described_class.void_value_expression?("#{keyword} \\\n1").should be_true
+      end
     end
 
-    it "doesn't work because the return and next keyword evaluators are insufficient regexps" do
-      pending "doesn't pass yet (and prob never will >.<)" do
-        described_class.send(evalutor, "'#{keyword}\n#{keyword}\n#{keyword}'").should be_false
-        described_class.send(evalutor, "#{keyword} \\\n1").should be_true
+    it "knows when an if statement ends in `#{keyword}`" do
+      # if
+      described_class.void_value_expression?("if true\n#{keyword}\nend").should be_true
+      described_class.void_value_expression?("if true\n  #{keyword}\nend").should be_true
+      described_class.void_value_expression?("if true\n 1+1\n  #{keyword}\nend").should be_true
+      described_class.void_value_expression?("if true\n #{keyword}\n 1+1\n end").should be_false
+      described_class.void_value_expression?("123 && if true\n  #{keyword}\nend").should be_false
+      described_class.void_value_expression?("def m\n if true\n  #{keyword}\nend\n end").should be_false
+      described_class.void_value_expression?("if true; #{keyword}; end").should be_true
+      described_class.void_value_expression?("if true; 1; end").should be_false
+
+      # if .. elsif
+      described_class.void_value_expression?("if true\n #{keyword}\n elsif true\n 1\n end").should be_true
+      described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("if true\n #{keyword}\n 2\n elsif true\n 1\n end").should be_false
+      described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n 2\n end").should be_false
+
+      # if .. else
+      described_class.void_value_expression?("if true\n #{keyword}\n else 1\n end").should be_true
+      described_class.void_value_expression?("if true\n 1\n else\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("if true\n #{keyword}\n 2\n else 1\n end").should be_false
+      described_class.void_value_expression?("if true\n 1\n else\n #{keyword}\n 2\n end").should be_false
+
+      # if .. elsif .. else .. end
+      described_class.void_value_expression?("if true\n #{keyword}\nelsif true\n 1 else 1\n end").should be_true
+      described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n else\n 1\n end").should be_true
+      described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n elsif true\n #{keyword}\n else\n 1\n end").should be_true
+      described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n else\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("if true\n #{keyword}\n 2\nelsif true\n 1 else 1\n end").should be_false
+      described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n 2\n else\n 1\n end").should be_false
+      described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n elsif true\n #{keyword}\n 2\n else\n 1\n end").should be_false
+      described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n else\n #{keyword}\n 2\n end").should be_false
+
+      unless options[:no_args]
+        # if
+        described_class.void_value_expression?("if true\n#{keyword} 1\nend").should be_true
+        described_class.void_value_expression?("if true\n  #{keyword} 1\nend").should be_true
+        described_class.void_value_expression?("if true\n 1+1\n  #{keyword} 1\nend").should be_true
+        described_class.void_value_expression?("if true\n #{keyword} 1\n 1+1\n end").should be_false
+        described_class.void_value_expression?("123 && if true\n  #{keyword} 1\nend").should be_false
+        described_class.void_value_expression?("def m\n if true\n  #{keyword} 1\nend\n end").should be_false
+        described_class.void_value_expression?("if true; #{keyword} 1; end").should be_true
+        described_class.void_value_expression?("if true; 1; end").should be_false
+
+        # if .. elsif
+        described_class.void_value_expression?("if true\n #{keyword} 1\n elsif true\n 1\n end").should be_true
+        described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n end").should be_true
+        described_class.void_value_expression?("if true\n #{keyword} 1\n 2\n elsif true\n 1\n end").should be_false
+        described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n 2\n end").should be_false
+
+        # if .. else
+        described_class.void_value_expression?("if true\n #{keyword} 1\n else 1\n end").should be_true
+        described_class.void_value_expression?("if true\n 1\n else\n #{keyword}\n end").should be_true
+        described_class.void_value_expression?("if true\n #{keyword} 1\n 2\n else 1\n end").should be_false
+        described_class.void_value_expression?("if true\n 1\n else\n #{keyword}\n 2\n end").should be_false
+
+        # if .. elsif .. else .. end
+        described_class.void_value_expression?("if true\n #{keyword} 1\nelsif true\n 1 else 1\n end").should be_true
+        described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n else\n 1\n end").should be_true
+        described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n elsif true\n #{keyword}\n else\n 1\n end").should be_true
+        described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n else\n #{keyword}\n end").should be_true
+        described_class.void_value_expression?("if true\n #{keyword} 1\n 2\nelsif true\n 1 else 1\n end").should be_false
+        described_class.void_value_expression?("if true\n 1\n elsif true\n #{keyword}\n 2\n else\n 1\n end").should be_false
+        described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n elsif true\n #{keyword}\n 2\n else\n 1\n end").should be_false
+        described_class.void_value_expression?("if true\n 1\n elsif true\n 1\n else\n #{keyword}\n 2\n end").should be_false
       end
+    end
+
+    it "knows when a begin statement ends in `#{keyword}`" do
+      described_class.void_value_expression?("begin\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("begin\n #{keyword}\n 1\n end").should be_false
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n 1\n end").should be_false
+
+      unless options[:no_args]
+        described_class.void_value_expression?("begin\n #{keyword} '123' \n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} 456\n end").should be_true
+        described_class.void_value_expression?("begin\n #{keyword} :'789'\n 1\n end").should be_false
+        described_class.void_value_expression?("begin\n 1\n #{keyword} /101112/\n 1\n end").should be_false
+      end
+
+      # I don't know that the rest of these hold across all versions of Ruby since they make no fucking sense
+      # so even though some of them can technically be non-vve,
+      # I'm still going to call any one of them a vve
+      #
+      # e.g. (tested on 2.0)
+      #   this is allowed
+      #     -> { a = begin;  return
+      #              rescue; return
+      #              ensure; return
+      #              end }
+      #   this is not
+      #     -> { a = begin; return
+      #              end }
+
+      # with rescue...
+      described_class.void_value_expression?("begin\n #{keyword}\n rescue\n #{keyword} end").should be_true
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n rescue RuntimeError => e\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n rescue RuntimeError\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n rescue\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n rescue\n end").should be_false
+      described_class.void_value_expression?("begin\n 1\n rescue\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n rescue\n #{keyword}\n 1\n end").should be_false
+
+      unless options[:no_args]
+        described_class.void_value_expression?("begin\n #{keyword}\n rescue\n #{keyword} 1 end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} 1\n rescue RuntimeError => e\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} 1\n rescue RuntimeError\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} :abc\n rescue\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n rescue\n #{keyword} 'abc'\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n rescue\n #{keyword} :abc\n 1\n end").should be_false
+      end
+
+      # with ensure
+      described_class.void_value_expression?("begin\n #{keyword}\n ensure\n #{keyword} end").should be_true
+      described_class.void_value_expression?("begin\n 1\n #{keyword}\n ensure\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n ensure\n end").should be_false
+      described_class.void_value_expression?("begin\n 1\n ensure\n #{keyword}\n end").should be_true
+      described_class.void_value_expression?("begin\n 1\n ensure\n #{keyword}\n 1\n end").should be_false
+
+      unless options[:no_args]
+        described_class.void_value_expression?("begin\n #{keyword}\n ensure\n #{keyword} 1 end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} 1\n ensure\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n #{keyword} :abc\n ensure\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n ensure\n #{keyword} 'abc'\n end").should be_true
+        described_class.void_value_expression?("begin\n 1\n ensure\n #{keyword} :abc\n 1\n end").should be_false
+      end
+
+      # with ensure and rescue
+      described_class.void_value_expression?("begin\n 1\n          rescue\n 2\n          ensure\n 3\n          end").should be_false
+      described_class.void_value_expression?("begin\n #{keyword}\n rescue\n 2\n          ensure\n 3\n          end").should be_true
+      described_class.void_value_expression?("begin\n 1\n          rescue\n #{keyword}\n ensure\n 3\n          end").should be_true
+      described_class.void_value_expression?("begin\n 1\n          rescue\n 2\n          ensure\n #{keyword}\n end").should be_true
     end
   end
 
   it_should_behave_like 'single line void_value_expression?', 'return'
   it_should_behave_like 'single line void_value_expression?', 'next'
-  it_should_behave_like 'single line void_value_expression?', 'redo'
-  it_should_behave_like 'single line void_value_expression?', 'retry'
   it_should_behave_like 'single line void_value_expression?', 'break'
 
-  it 'knows when an if statement evaluates to a void value expression' do
-    described_class.void_value_expression?("if true\nreturn 1\nend").should be_true
-    described_class.void_value_expression?("if true\n  return 1\nend").should be_true
-    described_class.void_value_expression?("if true\n 1+1\n  return 1\nend").should be_true
-    described_class.void_value_expression?("if true\n return 1\n 1+1\n end").should be_false
-    described_class.void_value_expression?("123 && if true\n  return 1\nend").should be_false
-    described_class.void_value_expression?("def m\n if true\n  return 1\nend\n end").should be_false
-    described_class.void_value_expression?("if true; return 1; end").should be_true
-    described_class.void_value_expression?("if true; 1; end").should be_false
-  end
+  it_should_behave_like 'single line void_value_expression?', 'redo',  no_args: true
+  it_should_behave_like 'single line void_value_expression?', 'retry', no_args: true
 
   it 'knows when a line opens the data segment' do
     described_class.begins_data_segment?('__END__').should be_true

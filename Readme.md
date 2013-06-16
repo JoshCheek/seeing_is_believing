@@ -142,10 +142,12 @@ Known Issues
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
+* Conflicts with libs that have `at_exit` blocks (e.g. minitest/autorun)
 
 Todo
 ====
 
+* Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
 * Refactor ExpressionList/SeeingIsBelieving to store lines in an array instead of as a string, so everyone doesn't magically need to know when to chomp
 * Make friends who actually know how to parse Ruby syntax (omg, teach me Ripper, pls, it will make this lib so much better, you have no idea O.o)
 

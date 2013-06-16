@@ -1,4 +1,5 @@
 require 'ripper'
+require 'parser/current'
 
 class SeeingIsBelieving
   class SyntaxAnalyzer < Ripper::SexpBuilder
@@ -156,15 +157,21 @@ class SeeingIsBelieving
 
     # RETURNS
 
-    # this is conspicuosuly inferior, but I can't figure out how to actually parse it
-    # see: http://www.ruby-forum.com/topic/4409633
-    def self.void_value_expression?(code)
-      return true if /(^|\s)(?:return|next|redo|retry|break)([^\w\n]|\n?\z).*?\n?\z/ =~ code
+    def self.void_value_expression?(code_or_ast)
+      ast = code_or_ast
+      ast = Parser::CurrentRuby.parse(code_or_ast) if code_or_ast.kind_of? String
 
-      lines = code.split("\n")
-      if /^if/ =~ lines[0].strip
-        return /return/ =~ lines[0] if lines.length == 1 # err on the side of conservativity
-        void_value_expression?(lines[-2])
+      case ast && ast.type
+      when :begin, :resbody
+        void_value_expression?(ast.children[-1])
+      when :rescue, :ensure
+        ast.children.any? { |child| void_value_expression? child }
+      when :if
+        void_value_expression?(ast.children[1]) || void_value_expression?(ast.children[2])
+      when :return, :next, :redo, :retry, :break
+        true
+      else
+        false
       end
     end
 
