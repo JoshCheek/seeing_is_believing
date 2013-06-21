@@ -223,7 +223,7 @@ Feature: Using flags
 
   Scenario: --as and stdin
     Given the file "example.rb" "1+1"
-    Given I have the stdin content:
+    Given the stdin content:
     """
     1+1
     __FILE__

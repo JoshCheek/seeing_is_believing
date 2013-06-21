@@ -4,7 +4,7 @@ Feature:
   I want to have tests on those bugs that I found and could not have predicted
 
   Scenario: A program containing a single comment
-    Given I have the stdin content "# single comment"
+    Given the stdin content "# single comment"
     When I run "seeing_is_believing"
     Then stderr is empty
     And the exit status is 0

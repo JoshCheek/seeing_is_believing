@@ -235,7 +235,7 @@ Feature: Running the binary successfully
     """
 
   Scenario: Reading from stdin
-    Given I have the stdin content "hi!"
+    Given the stdin content "hi!"
     And the file "reads_from_stdin.rb":
     """
     puts "You said: #{gets}"
@@ -251,7 +251,7 @@ Feature: Running the binary successfully
     """
 
   Scenario: Passing the file on stdin
-    Given I have the stdin content "1 + 1"
+    Given the stdin content "1 + 1"
     When I run "seeing_is_believing"
     Then stderr is empty
     And the exit status is 0
