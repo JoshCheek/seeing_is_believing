@@ -311,5 +311,16 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(['-s'        ]).should     have_error /alignment-strategy/
     end
   end
+
+  describe ':inherit_exit_status' do
+    it 'defaults to false' do
+      parse([])[:inherit_exit_status].should be_false
+    end
+
+    it 'can be set with --inherit-exit-status or -i' do
+      parse(['--inherit-exit-status'])[:inherit_exit_status].should be_true
+      parse(['-i'])[:inherit_exit_status].should be_true
+    end
+  end
 end
 

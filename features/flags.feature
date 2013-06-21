@@ -397,3 +397,25 @@ Feature: Using flags
     1 + 1  # => 2
     1 + 1 + 1  # => 3
     """
+
+  Scenario: --inherit-exit-status
+    Given the file "exit_status.rb" "exit 123"
+    When I run "seeing_is_believing exit_status.rb"
+    Then the exit status is 1
+    When I run "seeing_is_believing --inherit-exit-status exit_status.rb"
+    Then the exit status is 123
+
+  # Show that Ruby exceptions exit with 1, and --inherit-exit-status does as well
+  Scenario: --inherit-exit-status
+    Given the file "exception_exit_status.rb" "raise Exception"
+    When I run "ruby exception_exit_status.rb"
+    Then the exit status is 1
+    When I run "seeing_is_believing --inherit-exit-status exception_exit_status.rb"
+    Then the exit status is 1
+
+  Scenario: --inherit-exit-status in an at_exit block
+    Given the file "exit_status_in_at_exit_block.rb" "at_exit { exit 10 }"
+    When I run "seeing_is_believing exit_status_in_at_exit_block.rb"
+    Then the exit status is 0
+    When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
+    Then the exit status is 10

@@ -284,6 +284,12 @@ describe SeeingIsBelieving do
     expect { invoke "sleep 0.2", timeout: 0.1 }.to raise_error Timeout::Error
   end
 
+  it 'records the exit status' do
+    invoke('raise "omg"').exitstatus.should == 1
+    invoke('exit 123').exitstatus.should == 123
+    invoke('at_exit { exit 121 }').exitstatus.should == 121
+  end
+
   it 'can record the middle of a chain of calls', not_implemented: true  do
     values_for("[*1..5]
                   .select(&:even?)

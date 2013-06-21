@@ -21,22 +21,23 @@ class SeeingIsBelieving
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h', '--help'               then options[:help]    = self.class.help_screen
-            when '-v', '--version'            then options[:version] = true
-            when '-c', '--clean'              then options[:clean]   = true
-            when '-l', '--start-line'         then extract_positive_int_for :start_line,    arg
-            when '-L', '--end-line'           then extract_positive_int_for :end_line,      arg
-            when '-d', '--line-length'        then extract_positive_int_for :line_length,   arg
-            when '-D', '--result-length'      then extract_positive_int_for :result_length, arg
-            when '-t', '--timeout'            then extract_non_negative_float_for :timeout, arg
-            when '-r', '--require'            then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]            << filename }
-            when '-I', '--load-path'          then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path]          << dir }
-            when '-e', '--program'            then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]            = program }
-            when '-a', '--as'                 then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]                 = filename }
-            when '-s', '--alignment-strategy' then extract_alignment_strategy
-            when /\A-K(.+)/                   then options[:encoding] = $1
-            when '-K', '--encoding'           then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
-            when /^-/                         then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when '-h', '--help'                then options[:help]                = self.class.help_screen
+            when '-v', '--version'             then options[:version]             = true
+            when '-c', '--clean'               then options[:clean]               = true
+            when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
+            when '-l', '--start-line'          then extract_positive_int_for :start_line,    arg
+            when '-L', '--end-line'            then extract_positive_int_for :end_line,      arg
+            when '-d', '--line-length'         then extract_positive_int_for :line_length,   arg
+            when '-D', '--result-length'       then extract_positive_int_for :result_length, arg
+            when '-t', '--timeout'             then extract_non_negative_float_for :timeout, arg
+            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]            << filename }
+            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path]          << dir }
+            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]            = program }
+            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]                 = filename }
+            when '-s', '--alignment-strategy'  then extract_alignment_strategy
+            when /\A-K(.+)/                    then options[:encoding] = $1
+            when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
+            when /^-/                          then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else
               filenames << arg
               options[:filename] = arg
@@ -145,6 +146,7 @@ Usage: seeing_is_believing [options] [filename]
   -K, --encoding encoding   # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a, --as filename         # run the program as if it was the specified filename
   -c, --clean               # remove annotations from previous runs of seeing_is_believing
+  -i, --inherit-exit-status # exit with the exit status of the program being eval
   -v, --version             # print the version (#{VERSION})
   -h, --help                # this help screen
 HELP_SCREEN

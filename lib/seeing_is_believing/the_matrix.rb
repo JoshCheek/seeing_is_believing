@@ -15,5 +15,10 @@ at_exit do
   $seeing_is_believing_current_result.stdout = fake_stdout.string
   $seeing_is_believing_current_result.stderr = fake_stderr.string
 
+  $seeing_is_believing_current_result.exitstatus ||= 0
+  $seeing_is_believing_current_result.exitstatus   = 1         if $!
+  $seeing_is_believing_current_result.exitstatus   = $!.status if $!.kind_of? SystemExit
+  $seeing_is_believing_current_result.bug_in_sib   = $! && ! $!.kind_of?(SystemExit)
+
   real_stdout.write YAML.dump $seeing_is_believing_current_result
 end

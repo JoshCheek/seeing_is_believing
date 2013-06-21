@@ -8,7 +8,9 @@ class SeeingIsBelieving
     include TracksLineNumbersSeen
     include Enumerable
 
-    attr_accessor :stdout, :stderr
+    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib
+
+    alias bug_in_sib? bug_in_sib
 
     def has_stdout?
       stdout && !stdout.empty?

@@ -13,6 +13,7 @@
 
 require 'yaml'
 require 'open3'
+require 'timeout'
 require 'stringio'
 require 'fileutils'
 require 'seeing_is_believing/error'
@@ -43,8 +44,7 @@ class SeeingIsBelieving
           write_program_to_file
           begin
             evaluate_file
-            fail unless exitstatus.success?
-            deserialize_result
+            deserialize_result.tap { |result| fail if result.bug_in_sib? }
           # Okay, really, I should wrap this in another exception and raise it on up,
           # but for now, I'm feeling a little lazy and am not going to do it
           rescue Exception
@@ -55,10 +55,6 @@ class SeeingIsBelieving
         ensure: -> {
           set_back_to_initial_conditions
         }
-    end
-
-    def error_implies_bug_in_sib?(error)
-      not error.kind_of? Timeout::Error
     end
 
     def file_directory
@@ -72,6 +68,10 @@ class SeeingIsBelieving
     private
 
     attr_accessor :stdout, :stderr, :exitstatus
+
+    def error_implies_bug_in_sib?(error)
+      not error.kind_of? Timeout::Error
+    end
 
     def we_will_not_overwrite_existing_tempfile!
       raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename

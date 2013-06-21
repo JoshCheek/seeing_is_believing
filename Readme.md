@@ -142,7 +142,6 @@ Known Issues
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
-* Conflicts with libs that have `at_exit` blocks (e.g. minitest/autorun)
 
 Todo
 ====

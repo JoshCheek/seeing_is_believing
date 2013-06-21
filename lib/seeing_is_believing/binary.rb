@@ -28,15 +28,24 @@ class SeeingIsBelieving
                       elsif invalid_syntax?             then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
                       elsif program_timedout?           then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
                       elsif something_blew_up?          then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-                      else                                   print_program          ; (results.has_exception? ?
-                                                                                         DISPLAYABLE_ERROR_STATUS :
-                                                                                         SUCCESS_STATUS)
+                      else                                   print_program          ; program_exit_status
                       end
     end
 
+    # uhm, this is dumb
     alias exitstatus call
 
     private
+
+    def program_exit_status
+      if flags[:inherit_exit_status]
+        results.exitstatus
+      elsif results.has_exception?
+        DISPLAYABLE_ERROR_STATUS
+      else
+        SUCCESS_STATUS
+      end
+    end
 
     def has_filename?
       flags[:filename]

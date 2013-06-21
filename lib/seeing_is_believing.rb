@@ -108,6 +108,8 @@ class SeeingIsBelieving
     "rescue Exception;"\
       "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
       "$seeing_is_believing_current_result.record_exception line_number, $!;"\
+      "$seeing_is_believing_current_result.exitstatus = 1;"\
+      "$seeing_is_believing_current_result.exitstatus = $!.status if $!.kind_of? SystemExit;"\
     "end"
   end
 
