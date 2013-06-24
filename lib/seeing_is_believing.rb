@@ -6,6 +6,7 @@ require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/expression_list'
+require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
 
 # might not work on windows b/c of assumptions about line ends
@@ -83,7 +84,9 @@ class SeeingIsBelieving
     @expression_list ||= ExpressionList.new get_next_line:  lambda { next_line_queue.dequeue },
                                             peek_next_line: lambda { next_line_queue.peek },
                                             on_complete:    lambda { |line, children, completions, offset|
-                                              expression = [line, *children, *completions].map(&:chomp).join("\n")
+                                              expression = RemoveInlineComments.call \
+                                                [line, *children, *completions].map(&:chomp).join("\n")
+
                                               if do_not_record? expression
                                                 expression + "\n"
                                               else

@@ -107,12 +107,6 @@ describe SeeingIsBelieving do
     # values_for("<<-HEREDOC\n1\nHEREDOC").should == [[], [], ['"\n1\n"']]
   end
 
-  it 'does not record expressions that end in a comment' do
-    values_for("1
-                2 # on internal expression
-                3 # at end of program").should == [['1'], [], []]
-  end
-
   it "does not record expressions that are here docs (only really b/c it's not smart enough)" do
     values_for("<<A\n1\nA").should be_all &:empty?
     values_for(" <<A\n1\nA").should be_all &:empty?
@@ -189,7 +183,7 @@ describe SeeingIsBelieving do
     DOC
   end
 
-  it 'does not try to record the keyword retry', t2:true do
+  it 'does not try to record the keyword retry' do
     values_for(<<-DOC).should == [[], [], [], ['nil']]
       def meth
       rescue
@@ -288,6 +282,12 @@ describe SeeingIsBelieving do
     invoke('raise "omg"').exitstatus.should == 1
     invoke('exit 123').exitstatus.should == 123
     invoke('at_exit { exit 121 }').exitstatus.should == 121
+  end
+
+  it 'records lines that have comments on them' do
+    values_for('1+1 # comment uno
+                #comment dos
+                3#comment tres').should == [['2'], [], ['3']]
   end
 
   it 'can record the middle of a chain of calls', not_implemented: true  do
