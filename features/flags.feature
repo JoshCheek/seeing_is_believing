@@ -419,3 +419,25 @@ Feature: Using flags
     Then the exit status is 0
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
+
+  # after making this use the parser instead of regexes, add a test showing that the line `"1 # =>"` does not get updated
+  Scenario: --xmpfilter-style
+    Given the file "magic_comments.rb":
+    """
+    1+1# =>
+    2+2    # => 10
+    "a
+     b" # =>
+    1
+    """
+    When I run "seeing_is_believing --xmpfilter-style magic_comments.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1+1# => 2
+    2+2    # => 4
+    "a
+     b" # => "a\n b"
+    1
+    """

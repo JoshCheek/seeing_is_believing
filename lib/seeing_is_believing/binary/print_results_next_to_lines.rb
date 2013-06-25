@@ -2,6 +2,17 @@ require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/line_formatter'
 
+# I think there is a bug where with xmpfilter_style set,
+# the exceptions won't be shown. But it's not totally clear
+# how to show them with this option set, anyway.
+# probably do what xmpfilter does and print them at the bottom
+# of the file (probably do this regardless of whether xmpfilter_style
+# is set)
+#
+# Would also be nice to support
+#     1 + 1
+#     # => 2
+# style updates like xmpfilter does
 
 class SeeingIsBelieving
   class Binary
@@ -27,14 +38,17 @@ class SeeingIsBelieving
       method_from_options :filename, nil
       method_from_options :start_line
       method_from_options :end_line
-      method_from_options :line_length,   Float::INFINITY
-      method_from_options :result_length, Float::INFINITY
+      method_from_options :line_length,    Float::INFINITY
+      method_from_options :result_length,  Float::INFINITY
+      method_from_options :xmpfilter_style
 
       def initialize(body, file_result, options={})
-        self.body               = body
+        cleaned_body            = self.class.remove_previous_output_from body
+        # if options[:xmpfilter_style]
         self.options            = options
+        self.body               = (xmpfilter_style ? body : cleaned_body)
         self.file_result        = file_result
-        self.alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
+        self.alignment_strategy = options[:alignment_strategy].new cleaned_body, start_line, end_line
       end
 
       def new_body
@@ -42,9 +56,9 @@ class SeeingIsBelieving
       end
 
       def call
-        add_each_line_until_start_or_data_segment
-        add_lines_with_results_until_end_or_data_segment
-        add_lines_until_data_segment
+        # can we put the call to chomp into the line_queue initialization code?
+        line_queue.until { |line, line_number| SyntaxAnalyzer.begins_data_segment?(line.chomp) }
+                  .each  { |line, line_number| add_line line, line_number }
         add_stdout
         add_stderr
         add_remaining_lines
@@ -55,31 +69,31 @@ class SeeingIsBelieving
 
       attr_accessor :body, :file_result, :options, :alignment_strategy
 
-      def add_each_line_until_start_or_data_segment
-        line_queue.until { |line, line_number| line_number == start_line || start_of_data_segment?(line) }
-                  .each  { |line, line_number| new_body << line }
-      end
-
-      def add_lines_with_results_until_end_or_data_segment
-        line_queue.until { |line, line_number| end_line < line_number || start_of_data_segment?(line) }
-                  .each  { |line, line_number| new_body << format_line(line.chomp, line_number, file_result[line_number]) }
-      end
-
-      def add_lines_until_data_segment
-        line_queue.until { |line, line_number| start_of_data_segment?(line) }
-                  .each  { |line, line_number| new_body << line }
-      end
-
-      def add_remaining_lines
-        line_queue.each { |line, line_number| new_body << line }
-      end
-
       def line_queue
         @line_queue ||= Queue.new &body.each_line.with_index(1).to_a.method(:shift)
       end
 
-      def start_of_data_segment?(line)
-        SyntaxAnalyzer.begins_data_segment?(line.chomp)
+      def add_line(line, line_number)
+        # puts "ADDING LINE: #{line.inspect}"
+        should_record = should_record? line, line_number
+        if should_record && xmpfilter_style
+          new_body << xmpfilter_update(line, file_result[line_number])
+        elsif should_record
+          new_body << format_line(line.chomp, line_number, file_result[line_number])
+        else
+          new_body << line
+        end
+      end
+
+      def should_record?(line, line_number)
+        (start_line <= line_number) &&
+          (line_number <= end_line) &&
+          (!xmpfilter_style || line =~ /# =>/) # technically you could fuck this up with a line like "# =>", should later delegate to syntax analyzer
+      end
+
+      # again, this is too naive, should actually parse the comments and update them
+      def xmpfilter_update(line, line_results)
+        line.gsub /# =>.*?$/, "# => #{line_results.join ', '}"
       end
 
       def add_stdout
@@ -96,6 +110,10 @@ class SeeingIsBelieving
         file_result.stderr.each_line do |line|
           new_body << LineFormatter.new('', "#{STDERR_PREFIX} ", line.chomp, options).call << "\n"
         end
+      end
+
+      def add_remaining_lines
+        line_queue.each { |line, line_number| new_body << line }
       end
 
       def format_line(line, line_number, line_results)

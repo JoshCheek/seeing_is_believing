@@ -57,8 +57,8 @@ describe SeeingIsBelieving::Binary::ArgParser do
 
   specify 'unknown options set an error' do
     parse(['--xyz']).should have_error 'Unknown option: "--xyz"'
-    parse(['-x']).should have_error 'Unknown option: "-x"'
-    parse(['-x', 'b']).should have_error 'Unknown option: "-x"'
+    parse(['-y']).should have_error 'Unknown option: "-y"'
+    parse(['-y', 'b']).should have_error 'Unknown option: "-y"'
   end
 
   example 'example: multiple args' do
@@ -320,6 +320,17 @@ describe SeeingIsBelieving::Binary::ArgParser do
     it 'can be set with --inherit-exit-status or -i' do
       parse(['--inherit-exit-status'])[:inherit_exit_status].should be_true
       parse(['-i'])[:inherit_exit_status].should be_true
+    end
+  end
+
+  describe ':xmpfilter_style' do
+    it 'defaults to false' do
+      parse([])[:xmpfilter_style].should be_false
+    end
+
+    it 'can be set with --xmpfilter-style or -x' do
+      parse(['--xmpfilter-style'])[:xmpfilter_style].should be_true
+      parse(['-x'])[:xmpfilter_style].should be_true
     end
   end
 end

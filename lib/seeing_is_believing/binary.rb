@@ -20,16 +20,17 @@ class SeeingIsBelieving
     end
 
     def call
-      @exitstatus ||= if    flags_have_errors?          then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif should_print_help?          then print_help             ; SUCCESS_STATUS
-                      elsif should_print_version?       then print_version          ; SUCCESS_STATUS
-                      elsif has_filename? && file_dne?  then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif should_clean?               then print_cleaned_program  ; SUCCESS_STATUS
-                      elsif invalid_syntax?             then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif program_timedout?           then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
-                      elsif something_blew_up?          then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-                      else                                   print_program          ; program_exit_status
-                      end
+      @exitstatus ||=
+        if    flags_have_errors?          then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_print_help?          then print_help             ; SUCCESS_STATUS
+        elsif should_print_version?       then print_version          ; SUCCESS_STATUS
+        elsif has_filename? && file_dne?  then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_clean?               then print_cleaned_program  ; SUCCESS_STATUS
+        elsif invalid_syntax?             then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+        elsif program_timedout?           then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
+        elsif something_blew_up?          then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+        else                                   print_program          ; program_exit_status
+        end
     end
 
     # uhm, this is dumb
@@ -51,6 +52,8 @@ class SeeingIsBelieving
       flags[:filename]
     end
 
+    # could we make this more obvious? I'd like to to be clear from #call
+    # that this is when the program gets evaluated
     def program_timedout?
       results
       timeout_error
@@ -60,13 +63,12 @@ class SeeingIsBelieving
       stderr.puts "Timeout Error after #{@flags[:timeout]} seconds!"
     end
 
-    def cleaned_body
-      @body ||= PrintResultsNextToLines.remove_previous_output_from \
-        flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename])
+    def body
+      @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
     end
 
     def results
-      @results ||= SeeingIsBelieving.call cleaned_body,
+      @results ||= SeeingIsBelieving.call body,
                                           filename:  (flags[:as] || flags[:filename]),
                                           require:   flags[:require],
                                           load_path: flags[:load_path],
@@ -88,7 +90,7 @@ class SeeingIsBelieving
     end
 
     def printer
-      @printer ||= PrintResultsNextToLines.new cleaned_body, results, flags
+      @printer ||= PrintResultsNextToLines.new body, results, flags
     end
 
     def flags
@@ -136,7 +138,7 @@ class SeeingIsBelieving
     end
 
     def syntax_error_notice
-      out, err, syntax_status = Open3.capture3 'ruby', '-c', stdin_data: cleaned_body
+      out, err, syntax_status = Open3.capture3 'ruby', '-c', stdin_data: body
       return err unless syntax_status.success?
     end
 
@@ -153,7 +155,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print cleaned_body
+      stdout.print PrintResultsNextToLines.remove_previous_output_from body
     end
   end
 end

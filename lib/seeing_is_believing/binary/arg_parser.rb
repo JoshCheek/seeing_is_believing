@@ -24,6 +24,7 @@ class SeeingIsBelieving
             when '-h', '--help'                then options[:help]                = self.class.help_screen
             when '-v', '--version'             then options[:version]             = true
             when '-c', '--clean'               then options[:clean]               = true
+            when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
             when '-l', '--start-line'          then extract_positive_int_for :start_line,    arg
             when '-L', '--end-line'            then extract_positive_int_for :end_line,      arg
@@ -66,19 +67,21 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
-          version:            false,
-          clean:              false,
-          program:            nil,
-          filename:           nil,
-          start_line:         1,
-          line_length:        Float::INFINITY,
-          end_line:           Float::INFINITY,
-          result_length:      Float::INFINITY,
-          timeout:            0, # timeout lib treats this as infinity
-          errors:             [],
-          require:            [],
-          load_path:          [],
-          alignment_strategy: AlignChunk,
+          version:             false,
+          clean:               false,
+          xmpfilter_style:     false,
+          inherit_exit_status: false,
+          program:             nil,
+          filename:            nil,
+          start_line:          1,
+          line_length:         Float::INFINITY,
+          end_line:            Float::INFINITY,
+          result_length:       Float::INFINITY,
+          timeout:             0, # timeout lib treats this as infinity
+          errors:              [],
+          require:             [],
+          load_path:           [],
+          alignment_strategy:  AlignChunk,
         }
       end
 
