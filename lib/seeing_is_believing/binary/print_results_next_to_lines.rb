@@ -74,7 +74,6 @@ class SeeingIsBelieving
       end
 
       def add_line(line, line_number)
-        # puts "ADDING LINE: #{line.inspect}"
         should_record = should_record? line, line_number
         if should_record && xmpfilter_style
           new_body << xmpfilter_update(line, file_result[line_number])
@@ -88,7 +87,8 @@ class SeeingIsBelieving
       def should_record?(line, line_number)
         (start_line <= line_number) &&
           (line_number <= end_line) &&
-          (!xmpfilter_style || line =~ /# =>/) # technically you could fuck this up with a line like "# =>", should later delegate to syntax analyzer
+          (xmpfilter_style ? line =~ /# =>/ : # technically you could fuck this up with a line like "# =>", should later delegate to syntax analyzer
+                             !SyntaxAnalyzer.ends_in_comment?(line))
       end
 
       # again, this is too naive, should actually parse the comments and update them

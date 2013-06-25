@@ -60,3 +60,16 @@ Feature:
     m             # => 1
     """
 
+  Scenario: comments aren't updated with values
+    Given the file "comments_arent_updated_with_values.rb":
+    """
+    1 # some comment
+    2 # some other comment
+    """
+    When I run "seeing_is_believing comments_arent_updated_with_values.rb"
+    Then stdout is:
+    """
+    1 # some comment
+    2 # some other comment
+    """
+
