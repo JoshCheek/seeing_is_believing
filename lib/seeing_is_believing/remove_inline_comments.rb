@@ -9,7 +9,7 @@ class SeeingIsBelieving
     end
 
     def remove_inline_comments(code)
-      buffer        = Parser::Source::Buffer.new "code with comments"
+      buffer        = Parser::Source::Buffer.new "strip_comments"
       buffer.source = code
       parser        = Parser::CurrentRuby.new
       rewriter      = Parser::Source::Rewriter.new(buffer)
