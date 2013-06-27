@@ -142,12 +142,38 @@ Known Issues
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
+* Fucks up when parsing some comments. This is fixed in Parser, but not yet released. Once it is released, un @not-implemented that cuke, and update the gemspec
 
 Todo
 ====
 
+* With --xmpfilter-style set, support "1\n# => 1" style comments
+* Make a Lines class which is a collection of lines, responsible for managing the trailing newlines in Binary::PrintResultsNextToLines and SeeingIsBelieving/ExpressionList
+* Add examples of invocations to the help screen
+* Add xmpfilter option to sublime text
 * Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
-* Refactor ExpressionList/SeeingIsBelieving to store lines in an array instead of as a string, so everyone doesn't magically need to know when to chomp
+* print exceptions at the end of the file, too
+
+**BUG EXAMPLE**
+
+When modifying near the stdout/stderr section, it can get confused when cleaning files and leave it in a nonsense state
+
+```ruby
+# >> stdout
+
+# !> stderr
+__END__
+```
+
+**BUG EXAMPLE**
+
+Magic comments entered by hand may not have a leading space and thus won't be updated by SIB
+
+```ruby
+1# => 2
+```
+
+
 
 License
 =======
