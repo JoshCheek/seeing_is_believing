@@ -134,24 +134,25 @@ Usage: seeing_is_believing [options] [filename]
 
   If no filename is provided, the binary will read the program from standard input.
 
-  -l, --start-line n        # line number to begin showing results on
-  -L, --end-line n          # line number to stop showing results on
-  -d, --line-length n       # max length of the entire line (only truncates results, not source lines)
-  -D, --result-length n     # max length of the portion after the "# => "
-  -s, --alignment-strategy  # select the alignment strategy:
-                              chunk (DEFAULT) =>  each chunk of code is at the same alignment
-                              file            =>  the entire file is at the same alignment
-                              line            =>  each line is at its own alignment
-  -t, --timeout n           # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
-  -I, --load-path dir       # a dir that should be added to the $LOAD_PATH
-  -r, --require file        # additional files to be required before running the program
-  -e, --program program     # Pass the program to execute as an argument
-  -K, --encoding encoding   # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
-  -a, --as filename         # run the program as if it was the specified filename
-  -c, --clean               # remove annotations from previous runs of seeing_is_believing
-  -i, --inherit-exit-status # exit with the exit status of the program being eval
-  -v, --version             # print the version (#{VERSION})
-  -h, --help                # this help screen
+  -l, --start-line n            # line number to begin showing results on
+  -L, --end-line n              # line number to stop showing results on
+  -d, --line-length n           # max length of the entire line (only truncates results, not source lines)
+  -D, --result-length n         # max length of the portion after the "# => "
+  -s, --alignment-strategy name # select the alignment strategy:
+                                  chunk (DEFAULT) =>  each chunk of code is at the same alignment
+                                  file            =>  the entire file is at the same alignment
+                                  line            =>  each line is at its own alignment
+  -t, --timeout n               # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
+  -I, --load-path dir           # a dir that should be added to the $LOAD_PATH
+  -r, --require file            # additional files to be required before running the program
+  -e, --program program         # Pass the program to execute as an argument
+  -K, --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
+  -a, --as filename             # run the program as if it was the specified filename
+  -c, --clean                   # remove annotations from previous runs of seeing_is_believing
+  -x, --xmpfilter-style         # annotate marked lines instead of every line
+  -i, --inherit-exit-status     # exit with the exit status of the program being eval
+  -v, --version                 # print the version (#{VERSION})
+  -h, --help                    # this help screen
 HELP_SCREEN
     end
   end
