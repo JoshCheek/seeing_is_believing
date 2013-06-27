@@ -33,9 +33,6 @@ class SeeingIsBelieving
         end
     end
 
-    # uhm, this is dumb
-    alias exitstatus call
-
     private
 
     def program_exit_status
