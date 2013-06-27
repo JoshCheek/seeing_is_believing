@@ -144,6 +144,7 @@ class SeeingIsBelieving
     @next_line_queue ||= Queue.new { (line = stream.gets) && line.chomp }
   end
 
+  # eh? -.^ (can't we pull the rest of this out of the queue instead of breaking encapsulation?)
   def the_rest_of_the_stream
     next_line_queue.dequeue << "\n" << stream.read
   end
