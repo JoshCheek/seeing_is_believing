@@ -429,6 +429,10 @@ Feature: Using flags
     "a
      b" # =>
     1
+    "omg"
+    # =>
+    "omg2"
+    # => "not omg2"
     """
     When I run "seeing_is_believing --xmpfilter-style magic_comments.rb"
     Then stderr is empty
@@ -440,4 +444,8 @@ Feature: Using flags
     "a
      b" # => "a\n b"
     1
+    "omg"
+    # => "omg"
+    "omg2"
+    # => "omg2"
     """

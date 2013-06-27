@@ -44,7 +44,6 @@ class SeeingIsBelieving
 
       def initialize(body, file_result, options={})
         cleaned_body            = self.class.remove_previous_output_from body
-        # if options[:xmpfilter_style]
         self.options            = options
         self.body               = (xmpfilter_style ? body : cleaned_body)
         self.file_result        = file_result
@@ -73,9 +72,14 @@ class SeeingIsBelieving
         @line_queue ||= Queue.new &body.each_line.with_index(1).to_a.method(:shift)
       end
 
+      # if we want to pull this into a strategy
+      # we need to make available:
+      #   file_result, start_line, end_line, alignment_strategy, line_length, result_length
       def add_line(line, line_number)
         should_record = should_record? line, line_number
-        if should_record && xmpfilter_style
+        if should_record && xmpfilter_style && line.strip =~ /^# =>/
+          new_body << xmpfilter_update(line, file_result[line_number - 1])
+        elsif should_record && xmpfilter_style
           new_body << xmpfilter_update(line, file_result[line_number])
         elsif should_record
           new_body << format_line(line.chomp, line_number, file_result[line_number])

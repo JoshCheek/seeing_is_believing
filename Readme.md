@@ -147,12 +147,13 @@ Known Issues
 Todo
 ====
 
-* With --xmpfilter-style set, support "1\n# => 1" style comments
 * Make a Lines class which is a collection of lines, responsible for managing the trailing newlines in Binary::PrintResultsNextToLines and SeeingIsBelieving/ExpressionList
 * Add examples of invocations to the help screen
 * Add xmpfilter option to sublime text
 * Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
 * print exceptions at the end of the file, too
+* Uhm.... check out --xmpfilter-style cuke, first line (says it results in 2, but doesn't when I run it by hand)
+* Shouldn't it always do "1\n# => 1", regardless of whether --xmpfilter-style is set?
 
 **BUG EXAMPLE**
 
