@@ -20,20 +20,25 @@ class SeeingIsBelieving
     end
 
     def call
-      @exitstatus ||=
-        if    flags_have_errors?          then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_print_help?          then print_help             ; SUCCESS_STATUS
-        elsif should_print_version?       then print_version          ; SUCCESS_STATUS
-        elsif has_filename? && file_dne?  then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_clean?               then print_cleaned_program  ; SUCCESS_STATUS
-        elsif invalid_syntax?             then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
-        elsif program_timedout?           then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
-        elsif something_blew_up?          then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-        else                                   print_program          ; program_exit_status
+      @exitstatus ||= begin
+        parse_flags
+        
+        if    flags_have_errors?                    then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_print_help?                    then print_help             ; SUCCESS_STATUS
+        elsif should_print_version?                 then print_version          ; SUCCESS_STATUS
+        elsif has_filename? && file_dne?            then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_clean?                         then print_cleaned_program  ; SUCCESS_STATUS
+        elsif invalid_syntax?                       then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+        elsif (evaluate_program; program_timedout?) then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
+        elsif something_blew_up?                    then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+        else                                             print_program          ; program_exit_status
         end
+      end
     end
 
     private
+
+    attr_accessor :flags, :results
 
     def program_exit_status
       if flags[:inherit_exit_status]
@@ -44,15 +49,32 @@ class SeeingIsBelieving
         SUCCESS_STATUS
       end
     end
+    
+    def parse_flags
+      self.flags = ArgParser.parse argv
+    end
 
     def has_filename?
       flags[:filename]
     end
 
+    def evaluate_program
+      self.results = SeeingIsBelieving.call body,
+                                            filename:  (flags[:as] || flags[:filename]),
+                                            require:   flags[:require],
+                                            load_path: flags[:load_path],
+                                            encoding:  flags[:encoding],
+                                            stdin:     (file_is_on_stdin? ? '' : stdin),
+                                            timeout:   flags[:timeout]
+    rescue Timeout::Error
+      self.timeout_error = true
+    rescue Exception
+      self.unexpected_exception = $!
+    end
+
     # could we make this more obvious? I'd like to to be clear from #call
     # that this is when the program gets evaluated
     def program_timedout?
-      results
       timeout_error
     end
 
@@ -62,20 +84,6 @@ class SeeingIsBelieving
 
     def body
       @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
-    end
-
-    def results
-      @results ||= SeeingIsBelieving.call body,
-                                          filename:  (flags[:as] || flags[:filename]),
-                                          require:   flags[:require],
-                                          load_path: flags[:load_path],
-                                          encoding:  flags[:encoding],
-                                          stdin:     (file_is_on_stdin? ? '' : stdin),
-                                          timeout:   flags[:timeout]
-    rescue Timeout::Error
-      self.timeout_error = true
-    rescue Exception
-      self.unexpected_exception = $!
     end
 
     def something_blew_up?
@@ -88,10 +96,6 @@ class SeeingIsBelieving
 
     def printer
       @printer ||= PrintResultsNextToLines.new body, results, flags
-    end
-
-    def flags
-      @flags ||= ArgParser.parse argv
     end
 
     def flags_have_errors?
