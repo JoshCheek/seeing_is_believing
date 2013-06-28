@@ -75,7 +75,6 @@ Feature:
 
   # NOTE: Don't change the body of this file, it's nondeterministic
   # I have no idea why this particular string fucks Parser up, but other similar ones don't
-  @not-implemented
   Scenario: Parser correctly identify comments
     Given the file "parser_bug.rb" "Class # whatever"
     When I run "seeing_is_believing parser_bug.rb"
