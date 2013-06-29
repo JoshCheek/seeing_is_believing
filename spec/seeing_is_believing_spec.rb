@@ -116,6 +116,27 @@ describe SeeingIsBelieving do
     values_for("def meth\n<<-A\n1\nA\nend").should == [[], [], [], [], ['nil']]
   end
 
+  it 'does not insert code into the middle of heredocs', t:true do
+    invoked = invoke(<<-HEREDOC.gsub(/^      /, ''))
+      puts <<DOC1
+      doc1
+      DOC1
+      puts <<-DOC2
+      doc2
+      DOC2
+      puts <<-DOC3
+      doc3
+        DOC3
+      puts <<DOC4, <<-DOC5
+      doc4
+      DOC4
+      doc5
+      DOC5
+    HEREDOC
+
+    invoked.stdout.should == "doc1\ndoc2\ndoc3\ndoc4\ndoc5\n"
+  end
+
   it 'has no output for empty lines' do
     values_for('').should == [[]]
     values_for('  ').should == [[]]

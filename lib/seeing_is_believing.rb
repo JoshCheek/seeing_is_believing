@@ -38,6 +38,7 @@ class SeeingIsBelieving
     @memoized_result ||= begin
       leading_comments = ''
 
+
       # extract leading comments (e.g. encoding) so they don't get wrapped in begin/rescue/end
       while SyntaxAnalyzer.line_is_comment?(next_line_queue.peek)
         leading_comments << next_line_queue.dequeue << "\n"

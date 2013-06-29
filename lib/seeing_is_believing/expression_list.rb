@@ -26,9 +26,8 @@ class SeeingIsBelieving
     def call
       offset, expressions, expression = 0, [], nil
       begin
-        pending_expression = generate
+        pending_expression = generate(expressions)
         debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
-        expressions << pending_expression
 
         expression = reduce expressions, offset unless next_line_modifies_current?
 
@@ -41,10 +40,15 @@ class SeeingIsBelieving
 
     attr_accessor :debug_stream, :should_debug, :get_next_line, :peek_next_line, :on_complete, :expressions
 
-    def generate
+    def generate(expressions)
       expression = get_next_line.call
       raise SyntaxError unless expression
-      PendingExpression.new(expression, [])
+      if expressions.last && SyntaxAnalyzer.unfinished_here_doc?(expressions.last.expression)
+        expressions.last.expression << "\n" << expression # more stupid \n -.-
+      else
+        expressions << PendingExpression.new(expression, [])
+      end
+      expressions.last
     end
 
     def next_line_modifies_current?

@@ -35,6 +35,18 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_here_doc["a<<b\nb"].should be_false
   end
 
+  it 'knows if the expression is an unfinished heredoc' do
+    is_unfinished_heredoc = lambda { |code| described_class.unfinished_here_doc? code }
+    is_unfinished_heredoc["<<A"].should be_true
+    is_unfinished_heredoc["puts <<A, <<B\na\nA"].should be_true
+    is_unfinished_heredoc["<<-A\n"].should be_true
+
+    is_unfinished_heredoc["puts <<A\na\nA"].should be_false
+    is_unfinished_heredoc["puts <<-A\na\nA"].should be_false
+    is_unfinished_heredoc["puts <<-A\na\n A"].should be_false
+    is_unfinished_heredoc["puts <<A, <<B\na\nA\nB"].should be_false
+  end
+
   it 'knows if the last line is a comment' do
     is_comment = lambda { |code| described_class.ends_in_comment? code }
 

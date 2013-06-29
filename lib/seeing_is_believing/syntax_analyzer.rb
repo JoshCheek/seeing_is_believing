@@ -182,6 +182,11 @@ class SeeingIsBelieving
       instance.has_heredoc? && code.scan("\n").size.next <= instance.here_doc_last_line_number
     end
 
+    def self.unfinished_here_doc?(code)
+      instance = parsed code
+      instance.heredocs.any? { |heredoc| heredoc.size == 1 }
+    end
+
     def heredocs
       @heredocs ||= []
     end
