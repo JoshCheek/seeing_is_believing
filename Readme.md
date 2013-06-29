@@ -142,7 +142,6 @@ Known Issues
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
 * Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
-* Fucks up when parsing some comments. This is fixed in Parser, but not yet released. Once it is released, un @not-implemented that cuke, and update the gemspec
 
 Todo
 ====
@@ -150,19 +149,9 @@ Todo
 * Make a Lines class which is a collection of lines, responsible for managing the trailing newlines in Binary::PrintResultsNextToLines and SeeingIsBelieving/ExpressionList
 * Add examples of invocations to the help screen
 * Add xmpfilter option to sublime text
+* Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
 * Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
 * print exceptions at the end of the file, too
-* Uhm.... check out --xmpfilter-style cuke, first line (says it results in 2, but doesn't when I run it by hand)
-* Shouldn't it always do "1\n# => 1", regardless of whether --xmpfilter-style is set?
-
-
-**BUG EXAMPLE**
-
-Magic comments entered by hand may not have a leading space and thus won't be updated by SIB
-
-```ruby
-1# => 2
-```
 
 
 
