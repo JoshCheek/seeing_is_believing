@@ -26,8 +26,8 @@ class SeeingIsBelieving
 
       def self.remove_previous_output_from(string)
         string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
-              .gsub(/\n?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,          '')
-              .gsub(/\n?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,          '')
+              .gsub(/(^\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,       '')
+              .gsub(/(^\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,       '')
       end
 
 
@@ -42,11 +42,18 @@ class SeeingIsBelieving
       method_from_options :result_length,  Float::INFINITY
       method_from_options :xmpfilter_style
 
-      def initialize(body, file_result, options={})
+      attr_accessor :file_result
+      def initialize(body, options={})
         cleaned_body            = self.class.remove_previous_output_from body
         self.options            = options
         self.body               = (xmpfilter_style ? body : cleaned_body)
-        self.file_result        = file_result
+        self.file_result        = SeeingIsBelieving.call body(),
+                                                         filename:  (options[:as] || options[:filename]),
+                                                         require:   options[:require],
+                                                         load_path: options[:load_path],
+                                                         encoding:  options[:encoding],
+                                                         stdin:     options[:stdin],
+                                                         timeout:   options[:timeout]
         self.alignment_strategy = options[:alignment_strategy].new cleaned_body, start_line, end_line
       end
 
@@ -55,18 +62,20 @@ class SeeingIsBelieving
       end
 
       def call
-        # can we put the call to chomp into the line_queue initialization code?
-        line_queue.until { |line, line_number| SyntaxAnalyzer.begins_data_segment?(line.chomp) }
-                  .each  { |line, line_number| add_line line, line_number }
-        add_stdout
-        add_stderr
-        add_remaining_lines
-        return new_body
+        @printed_program ||= begin
+          # can we put the call to chomp into the line_queue initialization code?
+          line_queue.until { |line, line_number| SyntaxAnalyzer.begins_data_segment?(line.chomp) }
+                    .each  { |line, line_number| add_line line, line_number }
+          add_stdout
+          add_stderr
+          add_remaining_lines
+          new_body
+        end
       end
 
       private
 
-      attr_accessor :body, :file_result, :options, :alignment_strategy
+      attr_accessor :body, :options, :alignment_strategy
 
       def line_queue
         @line_queue ||= Queue.new &body.each_line.with_index(1).to_a.method(:shift)

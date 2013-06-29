@@ -22,7 +22,7 @@ class SeeingIsBelieving
     def call
       @exitstatus ||= begin
         parse_flags
-        
+
         if    flags_have_errors?                    then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
         elsif should_print_help?                    then print_help             ; SUCCESS_STATUS
         elsif should_print_version?                 then print_version          ; SUCCESS_STATUS
@@ -38,7 +38,7 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :flags, :results
+    attr_accessor :flags, :interpolated_program
 
     def program_exit_status
       if flags[:inherit_exit_status]
@@ -49,7 +49,7 @@ class SeeingIsBelieving
         SUCCESS_STATUS
       end
     end
-    
+
     def parse_flags
       self.flags = ArgParser.parse argv
     end
@@ -59,13 +59,7 @@ class SeeingIsBelieving
     end
 
     def evaluate_program
-      self.results = SeeingIsBelieving.call body,
-                                            filename:  (flags[:as] || flags[:filename]),
-                                            require:   flags[:require],
-                                            load_path: flags[:load_path],
-                                            encoding:  flags[:encoding],
-                                            stdin:     (file_is_on_stdin? ? '' : stdin),
-                                            timeout:   flags[:timeout]
+      self.interpolated_program = printer.call
     rescue Timeout::Error
       self.timeout_error = true
     rescue Exception
@@ -95,7 +89,11 @@ class SeeingIsBelieving
     end
 
     def printer
-      @printer ||= PrintResultsNextToLines.new body, results, flags
+      @printer ||= PrintResultsNextToLines.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+    end
+
+    def results
+      printer.file_result
     end
 
     def flags_have_errors?
@@ -135,7 +133,7 @@ class SeeingIsBelieving
     end
 
     def print_program
-      stdout.puts printer.call
+      stdout.puts interpolated_program
     end
 
     def syntax_error_notice

@@ -155,16 +155,6 @@ Todo
 * Uhm.... check out --xmpfilter-style cuke, first line (says it results in 2, but doesn't when I run it by hand)
 * Shouldn't it always do "1\n# => 1", regardless of whether --xmpfilter-style is set?
 
-**BUG EXAMPLE**
-
-When modifying near the stdout/stderr section, it can get confused when cleaning files and leave it in a nonsense state
-
-```ruby
-# >> stdout
-
-# !> stderr
-__END__
-```
 
 **BUG EXAMPLE**
 
