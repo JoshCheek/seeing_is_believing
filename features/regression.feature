@@ -113,3 +113,24 @@ Feature:
     1  # => 1
     # Transfer-Encoding: chunked
     """
+
+  Scenario: The file contains content that looks like previous output, should not be removed
+    Given the file "not_actually_previous_output.rb":
+    """
+    "1 # => 1"
+    "2 # ~> SomeError: some message"
+
+    "# >> some stdout"
+
+    "# !> some stderr"
+    """
+    When I run "seeing_is_believing not_actually_previous_output.rb"
+    Then stdout is:
+    """
+    "1 # => 1"                        # => "1 # => 1"
+    "2 # ~> SomeError: some message"  # => "2 # ~> SomeError: some message"
+
+    "# >> some stdout"  # => "# >> some stdout"
+
+    "# !> some stderr"  # => "# !> some stderr"
+    """

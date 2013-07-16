@@ -1,6 +1,7 @@
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/line_formatter'
+require 'seeing_is_believing/binary/remove_previous_annotations'
 
 # I think there is a bug where with xmpfilter_style set,
 # the exceptions won't be shown. But it's not totally clear
@@ -19,17 +20,10 @@ class SeeingIsBelieving
     class PrintResultsNextToLines
       include HasException
 
+         RESULT_PREFIX = '# =>'
+      EXCEPTION_PREFIX = '# ~>'
          STDOUT_PREFIX = '# >>'
          STDERR_PREFIX = '# !>'
-      EXCEPTION_PREFIX = '# ~>'
-         RESULT_PREFIX = '# =>'
-
-      def self.remove_previous_output_from(string)
-        string.gsub(/\s+(#{EXCEPTION_PREFIX}|#{RESULT_PREFIX}).*?$/, '')
-              .gsub(/(^\n)?(^#{STDOUT_PREFIX}[^\n]*\r?\n?)+/m,       '')
-              .gsub(/(^\n)?(^#{STDERR_PREFIX}[^\n]*\r?\n?)+/m,       '')
-      end
-
 
       def self.method_from_options(*args)
         define_method(args.first) { options.fetch *args }
@@ -44,7 +38,7 @@ class SeeingIsBelieving
 
       attr_accessor :file_result
       def initialize(body, options={})
-        cleaned_body            = self.class.remove_previous_output_from body
+        cleaned_body            = RemovePreviousAnnotations.call body
         self.options            = options
         self.body               = (xmpfilter_style ? body : cleaned_body)
         self.file_result        = SeeingIsBelieving.call body(),

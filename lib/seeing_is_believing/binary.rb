@@ -1,5 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/arg_parser'
+require 'seeing_is_believing/binary/remove_previous_annotations'
 require 'seeing_is_believing/binary/print_results_next_to_lines'
 require 'timeout'
 
@@ -154,7 +155,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print PrintResultsNextToLines.remove_previous_output_from body
+      stdout.print RemovePreviousAnnotations.call body
     end
   end
 end
