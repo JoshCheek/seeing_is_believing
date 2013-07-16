@@ -17,7 +17,7 @@ require 'seeing_is_believing/binary/remove_previous_annotations'
 
 class SeeingIsBelieving
   class Binary
-    class PrintResultsNextToLines
+    class AddAnnotations
       include HasException
 
          RESULT_PREFIX = '# =>'

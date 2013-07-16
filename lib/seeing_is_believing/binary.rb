@@ -1,7 +1,7 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/arg_parser'
+require 'seeing_is_believing/binary/add_annotations'
 require 'seeing_is_believing/binary/remove_previous_annotations'
-require 'seeing_is_believing/binary/print_results_next_to_lines'
 require 'timeout'
 
 
@@ -90,7 +90,7 @@ class SeeingIsBelieving
     end
 
     def printer
-      @printer ||= PrintResultsNextToLines.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+      @printer ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
     end
 
     def results
