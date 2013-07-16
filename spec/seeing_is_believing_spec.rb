@@ -11,16 +11,12 @@ describe SeeingIsBelieving do
     invoke(input).to_a
   end
 
-  def stream(string)
-    StringIO.new string
-  end
-
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
 
-  it 'takes a string or stream and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
+  it 'takes a string or and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "1+1\n'2'+'2'"
     invoke(input)[1].should == ["2"]
-    invoke(stream input)[2].should == ['"22"']
+    invoke(input)[2].should == ['"22"']
   end
 
   it 'remembers context of previous lines' do
@@ -116,7 +112,7 @@ describe SeeingIsBelieving do
     values_for("def meth\n<<-A\n1\nA\nend").should == [[], [], [], [], ['nil']]
   end
 
-  it 'does not insert code into the middle of heredocs', t:true do
+  it 'does not insert code into the middle of heredocs' do
     invoked = invoke(<<-HEREDOC.gsub(/^      /, ''))
       puts <<DOC1
       doc1
@@ -309,6 +305,11 @@ describe SeeingIsBelieving do
     values_for('1+1 # comment uno
                 #comment dos
                 3#comment tres').should == [['2'], [], ['3']]
+  end
+
+  it "doesn't fuck up when there are lines with magic comments in the middle of the app" do
+    values_for('1+1
+                # encoding: wtf').should == [['2'], []]
   end
 
   it 'can record the middle of a chain of calls', not_implemented: true  do

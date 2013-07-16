@@ -18,9 +18,8 @@ class SeeingIsBelieving
     new(*args).call
   end
 
-  def initialize(string_or_stream, options={})
-    @string          = string_or_stream
-    @stream          = to_stream string_or_stream
+  def initialize(string, options={})
+    @stream          = to_stream RemoveInlineComments.call(string) { |comment| comment.location.begin_pos != 0 }
     @matrix_filename = options[:matrix_filename]
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
@@ -85,8 +84,7 @@ class SeeingIsBelieving
     @expression_list ||= ExpressionList.new get_next_line:  lambda { next_line_queue.dequeue },
                                             peek_next_line: lambda { next_line_queue.peek },
                                             on_complete:    lambda { |line, children, completions, offset|
-                                              expression = RemoveInlineComments.call \
-                                                [line, *children, *completions].map(&:chomp).join("\n")
+                                              expression = [line, *children, *completions].map(&:chomp).join("\n")
 
                                               if do_not_record? expression
                                                 expression + "\n"

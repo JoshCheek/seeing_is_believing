@@ -139,7 +139,8 @@ class SeeingIsBelieving
     end
 
     def self.ends_in_comment?(code)
-      code =~ /^=end\Z/ || parsed(code.lines.to_a.last.to_s).has_comment?
+      # must do the newline hack or it totally fucks up on comments like "# Transfer-Encoding: chunked"
+      code =~ /^=end\Z/ || parsed("\n#{code.lines.to_a.last.to_s}").has_comment?
     end
 
     def self.unclosed_comment?(code)

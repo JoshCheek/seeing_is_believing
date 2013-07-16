@@ -100,3 +100,16 @@ Feature:
     2  # => 2
     __END__
     """
+
+  Scenario: Unintentional magic comment on not-first line
+    Given the file "wtf.rb":
+    """
+    1
+    # Transfer-Encoding: chunked
+    """
+    When I run "seeing_is_believing wtf.rb"
+    Then stdout is:
+    """
+    1  # => 1
+    # Transfer-Encoding: chunked
+    """

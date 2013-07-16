@@ -55,6 +55,7 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_comment['a # whatev'].should be_true
     is_comment["a \n b # whatev"].should be_true
     is_comment["=begin\n1\n=end"].should be_true
+    is_comment["# Transfer-Encoding: chunked"].should be_true
 
     # false
     is_comment['a'].should be_false
