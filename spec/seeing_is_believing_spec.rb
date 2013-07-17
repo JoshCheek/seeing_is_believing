@@ -312,6 +312,15 @@ describe SeeingIsBelieving do
                 # encoding: wtf').should == [['2'], []]
   end
 
+  it "doesn't remove multiple leading comments" do
+    values_for("#!/usr/bin/env ruby\n"\
+               "# encoding: utf-8\n"\
+               "'ç'").should == [[], [], ['"ç"']]
+    values_for("#!/usr/bin/env ruby\n"\
+               "1 # encoding: utf-8\n"\
+               "2").should == [[], ['1'], ['2']]
+  end
+
   it 'can record the middle of a chain of calls', not_implemented: true  do
     values_for("[*1..5]
                   .select(&:even?)

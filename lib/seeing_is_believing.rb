@@ -19,7 +19,7 @@ class SeeingIsBelieving
   end
 
   def initialize(string, options={})
-    @stream          = to_stream RemoveInlineComments.call(string) { |comment| comment.location.begin_pos != 0 }
+    @stream          = to_stream RemoveInlineComments::NonLeading.call(string)
     @matrix_filename = options[:matrix_filename]
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
