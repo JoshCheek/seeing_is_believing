@@ -1,3 +1,4 @@
+require 'stringio'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
@@ -22,10 +23,11 @@ class SeeingIsBelieving
           until args.empty?
             case (arg = args.shift)
             when '-h', '--help'                then options[:help]                = self.class.help_screen
-            when '-v', '--version'             then options[:version]             = true
             when '-c', '--clean'               then options[:clean]               = true
+            when '-v', '--version'             then options[:version]             = true
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
+            when '-g', '--debug'               then options[:debug_stream]        = StringIO.new
             when '-l', '--start-line'          then extract_positive_int_for :start_line,    arg
             when '-L', '--end-line'            then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'         then extract_positive_int_for :line_length,   arg
@@ -67,6 +69,7 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
+          debug_stream:        nil,
           version:             false,
           clean:               false,
           xmpfilter_style:     false,
@@ -149,6 +152,7 @@ Usage: seeing_is_believing [options] [filename]
   -K, --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a, --as filename             # run the program as if it was the specified filename
   -c, --clean                   # remove annotations from previous runs of seeing_is_believing
+  -g, --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
   -x, --xmpfilter-style         # annotate marked lines instead of every line
   -i, --inherit-exit-status     # exit with the exit status of the program being eval
   -v, --version                 # print the version (#{VERSION})

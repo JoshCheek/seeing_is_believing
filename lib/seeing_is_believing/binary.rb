@@ -86,7 +86,7 @@ class SeeingIsBelieving
     end
 
     def print_unexpected_error
-      stderr.puts unexpected_exception.class, unexpected_exception.message
+      stderr.puts unexpected_exception.class, unexpected_exception.message, "", unexpected_exception.backtrace
     end
 
     def printer

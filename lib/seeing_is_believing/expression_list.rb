@@ -21,6 +21,7 @@ class SeeingIsBelieving
       self.get_next_line  = options.fetch :get_next_line
       self.peek_next_line = options.fetch :peek_next_line
       self.on_complete    = options.fetch :on_complete
+      debug { "\e[37;44mEXPRESSION EVALUATION:\e[0m" }
     end
 
     def call

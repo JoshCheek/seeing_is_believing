@@ -18,8 +18,9 @@ class SeeingIsBelieving
     new(*args).call
   end
 
-  def initialize(string, options={})
-    @stream          = to_stream RemoveInlineComments::NonLeading.call(string)
+  def initialize(program, options={})
+    program_string   = RemoveInlineComments::NonLeading.call program
+    @stream          = to_stream program_string
     @matrix_filename = options[:matrix_filename]
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
@@ -28,6 +29,13 @@ class SeeingIsBelieving
     @encoding        = options.fetch :encoding, nil
     @line_number     = 1
     @timeout         = options[:timeout]
+    @debug_stream    = options[:debug_stream]
+
+    if debug_stream
+      debug_stream.puts "\e[37;44mSOURCE WITHOUT COMMENTS:\e[0m"
+      debug_stream.puts program_string
+      debug_stream.puts
+    end
   end
 
   # I'd like to refactor this, but I was unsatisfied with the three different things I tried.
@@ -71,6 +79,9 @@ class SeeingIsBelieving
       # build the program
       program = leading_comments << record_exceptions_in(body) << data_segment
 
+      # debugging
+      debug_stream.puts("\n\e[37;44mTRANSLATED PROGRAM:\e[0m\n#{program}\n\n") if debug_stream
+
       # return the result
       result_for program, max_line_number
     end
@@ -78,10 +89,12 @@ class SeeingIsBelieving
 
   private
 
-  attr_reader :stream, :matrix_filename
+  attr_reader :stream, :matrix_filename, :debug_stream
 
   def expression_list
-    @expression_list ||= ExpressionList.new get_next_line:  lambda { next_line_queue.dequeue },
+    @expression_list ||= ExpressionList.new debug:          debug_stream,
+                                            debug_stream:   debug_stream,
+                                            get_next_line:  lambda { next_line_queue.dequeue },
                                             peek_next_line: lambda { next_line_queue.peek },
                                             on_complete:    lambda { |line, children, completions, offset|
                                               expression = [line, *children, *completions].map(&:chomp).join("\n")

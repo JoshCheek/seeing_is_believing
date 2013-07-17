@@ -1,3 +1,4 @@
+require 'stringio'
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/line_formatter'
@@ -35,6 +36,7 @@ class SeeingIsBelieving
       method_from_options :line_length,    Float::INFINITY
       method_from_options :result_length,  Float::INFINITY
       method_from_options :xmpfilter_style
+      method_from_options :debug_stream
 
       attr_accessor :file_result
       def initialize(body, options={})
@@ -42,13 +44,15 @@ class SeeingIsBelieving
         self.options            = options
         self.body               = (xmpfilter_style ? body : cleaned_body)
         self.file_result        = SeeingIsBelieving.call body(),
-                                                         filename:  (options[:as] || options[:filename]),
-                                                         require:   options[:require],
-                                                         load_path: options[:load_path],
-                                                         encoding:  options[:encoding],
-                                                         stdin:     options[:stdin],
-                                                         timeout:   options[:timeout]
+                                                         filename:     (options[:as] || options[:filename]),
+                                                         require:      options[:require],
+                                                         load_path:    options[:load_path],
+                                                         encoding:     options[:encoding],
+                                                         stdin:        options[:stdin],
+                                                         timeout:      options[:timeout],
+                                                         debug_stream: debug_stream
         self.alignment_strategy = options[:alignment_strategy].new cleaned_body, start_line, end_line
+        new_body << debug_stream.string << "\e[37;44mRESULT:\e[0m\n" if debug_stream
       end
 
       def new_body

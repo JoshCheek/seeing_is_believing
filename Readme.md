@@ -151,7 +151,6 @@ Todo
 * Add xmpfilter option to sublime text
 * Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
 * Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
-* Add --debug flag
 
 
 License

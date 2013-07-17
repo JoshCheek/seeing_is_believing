@@ -333,5 +333,16 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(['-x'])[:xmpfilter_style].should be_true
     end
   end
+
+  describe ':debug' do
+    it 'defaults to false' do
+      parse([])[:debug_stream].should be_false
+    end
+
+    it 'can be set to a StringIO with --debug or -g' do
+      parse(['--debug'])[:debug_stream].should be_a_kind_of StringIO
+      parse(['-g'])[:debug_stream].should be_a_kind_of StringIO
+    end
+  end
 end
 

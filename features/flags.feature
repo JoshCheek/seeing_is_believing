@@ -451,7 +451,6 @@ Feature: Using flags
     Then the exit status is 10
 
 
-  # after making this use the parser instead of regexes, add a test showing that the line `"1 # =>"` does not get updated
   Scenario: --xmpfilter-style
     Given the file "magic_comments.rb":
     """
@@ -479,4 +478,37 @@ Feature: Using flags
     # => "omg"
     "omg2"
     # => "omg2"
+    """
+
+  Scenario: --debug
+    Given the file "simple_program.rb":
+    """
+    # encoding: utf-8
+    1# 123
+    2
+    """
+    When I run "seeing_is_believing --debug simple_program.rb"
+    Then stderr is empty
+    And the exit status is 0
+    # source without comments
+    And stdout includes "SOURCE WITHOUT COMMENTS:"
+    And stdout includes:
+    """
+    # encoding: utf-8
+    1
+    2
+    """
+    # expression evaluation
+    And stdout includes "EXPRESSION EVALUATION:"
+    And stdout includes "GENERATED"
+    # translated program
+    And stdout includes "TRANSLATED PROGRAM:"
+    And stdout includes "$seeing_is_believing_current_result"
+    # result
+    And stdout includes "RESULT:"
+    And stdout includes:
+    """
+    # encoding: utf-8
+    1# 123
+    2  # => 2
     """
