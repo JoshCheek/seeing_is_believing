@@ -62,6 +62,7 @@ class SeeingIsBelieving
                     .each  { |line, line_number| add_line line, line_number }
           add_stdout
           add_stderr
+          add_exception
           add_remaining_lines
           new_body
         end
@@ -119,6 +120,20 @@ class SeeingIsBelieving
         end
       end
 
+      def add_exception
+        return unless file_result.has_exception?
+        exception = file_result.exception
+        new_body << "\n"
+        new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", exception.class_name, options).call << "\n"
+        exception.message.each_line do |line|
+          new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", line.chomp, options).call << "\n"
+        end
+        new_body << "#{EXCEPTION_PREFIX}\n"
+        exception.backtrace.each do |line|
+          new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", line.chomp, options).call << "\n"
+        end
+      end
+
       def add_remaining_lines
         line_queue.each { |line, line_number| new_body << line }
       end
@@ -126,7 +141,7 @@ class SeeingIsBelieving
       def format_line(line, line_number, line_results)
         options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
         formatted_line = if line_results.has_exception?
-                           result = sprintf "%s: %s", line_results.exception.class_name, line_results.exception.message
+                           result = sprintf "%s: %s", line_results.exception.class_name, line_results.exception.message.gsub("\n", '\n')
                            LineFormatter.new(line, "#{EXCEPTION_PREFIX} ", result, options).call
                          elsif line_results.any?
                            LineFormatter.new(line, "#{RESULT_PREFIX} ", line_results.join(', '), options).call

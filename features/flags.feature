@@ -2,6 +2,7 @@ Feature: Using flags
 
   Sometimes you want more control over what comes out, for that we give you flags.
 
+
   Scenario: --start-line
     Given the file "start_line.rb":
     """
@@ -33,6 +34,7 @@ Feature: Using flags
     3  # => 3
     """
 
+
   Scenario: --end-line
     Given the file "end_line.rb":
     """
@@ -63,6 +65,7 @@ Feature: Using flags
     2  # => 2
     3 + 3
     """
+
 
   Scenario: --start-line and --end-line
     Given the file "start_and_end_line.rb":
@@ -99,6 +102,7 @@ Feature: Using flags
     4 + 4
     """
 
+
   Scenario: --result-length sets the length of the portion including and after the # =>
     Given the file "result_lengths.rb":
     """
@@ -129,7 +133,13 @@ Feature: Using flags
     # >> aa...
 
     # !> aa...
+
+    # ~> Ru...
+    # ~> aa...
+    # ~>
+    # ~> re...
     """
+
 
   Scenario: --line-length sets the total length of a given line
     Given the file "line_lengths.rb":
@@ -157,6 +167,11 @@ Feature: Using flags
     # >> aaaaaaaaaaaaaaaaaaaaaaaa...
 
     # !> aaaaaaaaaaaaaaaaaaaaaaaa...
+
+    # ~> RuntimeError
+    # ~> aaaaaaaaaaaaaaaaaaaaaaaa...
+    # ~>
+    # ~> line_lengths.rb:7:in `<m...
     """
     Given the file "line_lengths2.rb":
     """
@@ -168,6 +183,7 @@ Feature: Using flags
     Then stdout is "12345  # => ..."
     When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
+
 
   Scenario: --require
     Given the file "print_1.rb" "puts 1"
@@ -185,6 +201,7 @@ Feature: Using flags
     # >> 3
     """
 
+
   Scenario: --program
     When I run "seeing_is_believing --program '1'"
     Then stderr is empty
@@ -193,6 +210,7 @@ Feature: Using flags
     """
     1  # => 1
     """
+
 
   Scenario: --load-path
     Given the file "print_1.rb" "puts 1"
@@ -211,6 +229,7 @@ Feature: Using flags
     """
     And the exit status is 0
 
+
   Scenario: --encoding
     Given the file "utf-8.rb" "'ç'"
     When I run "seeing_is_believing --encoding u utf-8.rb"
@@ -220,6 +239,7 @@ Feature: Using flags
     """
     'ç'  # => "ç"
     """
+
 
   Scenario: --as and stdin
     Given the file "example.rb" "1+1"
@@ -237,12 +257,14 @@ Feature: Using flags
     __FILE__  # => "example.rb"
     """
 
+
   Scenario: --as and -e
     Given the file "example.rb" "1+1"
     When I run 'seeing_is_believing --as example.rb -e "__FILE__"'
     Then stderr is empty
     And the exit status is 0
     And stdout is '__FILE__  # => "example.rb"'
+
 
   Scenario: --clean
     Given the file "example.rb":
@@ -269,11 +291,13 @@ Feature: Using flags
     1
     """
 
+
   Scenario: --clean on an invalid file will clean
     When I run 'seeing_is_believing --clean -e "1+  # => lkj"'
     Then stderr is empty
     And the exit status is 0
     And stdout is '1+'
+
 
   Scenario: --version
     When I run 'seeing_is_believing --version'
@@ -281,11 +305,13 @@ Feature: Using flags
     And the exit status is 0
     And stdout is '{{SeeingIsBelieving::VERSION}}'
 
+
   Scenario: --help
     When I run "seeing_is_believing --help"
     Then stderr is empty
     And the exit status is 0
     And stdout includes "Usage"
+
 
   Scenario: --timeout
     Given the file "example.rb" "sleep 1"
@@ -294,12 +320,14 @@ Feature: Using flags
     And the exit status is 2
     And stderr is "Timeout Error after 0.1 seconds!"
 
+
   Scenario: --timeout
     Given the file "example.rb" "1 + 1"
     When I run "seeing_is_believing --timeout 1.0 example.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
+
 
   Scenario: --alignment-strategy file
     Given the file "file_alignments.rb":
@@ -405,6 +433,7 @@ Feature: Using flags
     When I run "seeing_is_believing --inherit-exit-status exit_status.rb"
     Then the exit status is 123
 
+
   # Show that Ruby exceptions exit with 1, and --inherit-exit-status does as well
   Scenario: --inherit-exit-status
     Given the file "exception_exit_status.rb" "raise Exception"
@@ -413,12 +442,14 @@ Feature: Using flags
     When I run "seeing_is_believing --inherit-exit-status exception_exit_status.rb"
     Then the exit status is 1
 
+
   Scenario: --inherit-exit-status in an at_exit block
     Given the file "exit_status_in_at_exit_block.rb" "at_exit { exit 10 }"
     When I run "seeing_is_believing exit_status_in_at_exit_block.rb"
     Then the exit status is 0
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
+
 
   # after making this use the parser instead of regexes, add a test showing that the line `"1 # =>"` does not get updated
   Scenario: --xmpfilter-style

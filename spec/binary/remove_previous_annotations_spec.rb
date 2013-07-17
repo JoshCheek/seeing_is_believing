@@ -80,6 +80,50 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   # !> 3
   CODE
 
+  example { call(<<-CODE).should == "1\n" }
+  1
+
+
+    # !> 2
+  # !> 2
+   # !> 2
+  CODE
+
+
+  example { call(<<-CODE).should == "1" }
+  1
+  # ~>2
+  CODE
+
+  example { call(<<-CODE).should == "1" }
+  1
+
+  # ~> 2
+  CODE
+
+  example { call(<<-CODE).should == "1" }
+  1
+
+  # ~> 2
+  # ~> 3
+  CODE
+
+  example { call(<<-CODE).should == "1\n" }
+  1
+
+
+    # ~> 2
+  # ~> 2
+   # ~> 2
+  CODE
+
+  example { call(<<-CODE).should == "1\n" }
+  1 # ~> error
+
+
+    # ~> error again
+  CODE
+
   example { call(<<-CODE).should == "1" }
   1
 
@@ -88,6 +132,25 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
 
   # !> 3
   # !> 4
+
+  # ~> 5
+  # ~> 6
+  CODE
+
+  example { call(<<-CODE).should == "1" }
+  1
+
+  # >> 1
+
+  # >> 2
+
+  # !> 3
+
+  # !> 4
+
+  # ~> 5
+
+  # ~> 6
   CODE
 
   example { call(<<-CODE).should == "1" }
@@ -97,6 +160,8 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   # >> 2
   # !> 3
   # !> 4
+  # ~> 5
+  # ~> 6
   CODE
 
   example { call(<<-CODE).should == "1\n3" }
@@ -106,5 +171,17 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   3
   # !> 4
   # !> 5
+  CODE
+
+  example { call(<<-CODE).should == "1\n3\n6" }
+  1
+  # >> 1
+  # >> 2
+  3
+  # !> 4
+  # !> 5
+  6
+  # ~> 7
+  # ~> 8
   CODE
 end

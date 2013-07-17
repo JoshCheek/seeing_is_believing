@@ -123,6 +123,11 @@ Feature: Running the binary successfully
     # >> some stdout output
 
     # !> some stderr output
+
+    # ~> Exception
+    # ~> message
+    # ~>
+    # ~> backtrace
     __END__
     """
     When I run "seeing_is_believing previous_output.rb"

@@ -23,6 +23,11 @@ Feature:
     And stdout is:
     """
     a  # ~> NameError: undefined local variable or method `a' for main:Object
+
+    # ~> NameError
+    # ~> undefined local variable or method `a' for main:Object
+    # ~>
+    # ~> no_method_error.rb:1:in `<main>'
     """
 
 

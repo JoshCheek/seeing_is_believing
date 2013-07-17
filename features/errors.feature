@@ -8,7 +8,7 @@ Feature: Running the binary unsuccessfully
   Scenario: Raising exceptions
     Given the file "raises_exception.rb":
     """
-    raise "ZOMG!"
+    raise "ZOMG\n!!!!"
     """
     And the file "requires_exception_raising_code.rb":
     """
@@ -32,10 +32,20 @@ Feature: Running the binary unsuccessfully
     end                # => nil
 
     def second_defined
-      require_relative 'raises_exception'  # ~> RuntimeError: ZOMG!
+      require_relative 'raises_exception'  # ~> RuntimeError: ZOMG\n!!!!
     end                                    # => nil
 
     first_defined
+
+    # ~> RuntimeError
+    # ~> ZOMG
+    # ~> !!!!
+    # ~>
+    # ~> {{Haiti.config.proving_grounds_dir}}/raises_exception.rb:1:in `<top (required)>'
+    # ~> requires_exception_raising_code.rb:6:in `require_relative'
+    # ~> requires_exception_raising_code.rb:6:in `second_defined'
+    # ~> requires_exception_raising_code.rb:2:in `first_defined'
+    # ~> requires_exception_raising_code.rb:9:in `<main>'
     """
 
   Scenario: Syntactically invalid file
@@ -76,7 +86,7 @@ Feature: Running the binary unsuccessfully
     When I run "seeing_is_believing stack_overflow.rb"
     Then stderr is empty
     And the exit status is 1
-    And stdout is:
+    And stdout includes:
     """
     def m() m end  # ~> SystemStackError: stack level too deep
     m
