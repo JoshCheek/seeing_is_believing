@@ -15,6 +15,7 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   example { call("1  #=> 1").should == "1" }
   example { call("1   #=> 1").should == "1" }
   example { call("1  #=>  1").should == "1" }
+  example { call("\n1 # => 1").should == "\n1" }
 
   example { call("1#~>1").should == "1" }
   example { call("1 #~>1").should == "1" }
@@ -22,6 +23,7 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   example { call("1  #~> 1").should == "1" }
   example { call("1   #~> 1").should == "1" }
   example { call("1  #~>  1").should == "1" }
+  example { call("\n1 # ~> 1").should == "\n1" }
 
   example { call("# >> 1").should == "" }
   example { call("# !> 1").should == "" }
@@ -184,4 +186,13 @@ describe SeeingIsBelieving::Binary::RemovePreviousAnnotations do
   # ~> 7
   # ~> 8
   CODE
+
+  example { call(<<-CODE).should == "1\n\nputs \"omg\"" }
+  1  # => 1
+
+  puts "omg"  # ~> RuntimeError: omg
+
+  # ~> RuntimeError
+  CODE
+
 end

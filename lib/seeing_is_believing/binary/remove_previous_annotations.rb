@@ -33,34 +33,22 @@ class SeeingIsBelieving
 
       def remove_whitespace_preceeding_comments
         lambda do |buffer, rewriter|
-          comments[:result].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter }
-          comments[:exception].each { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter }
-          comments[:stdout].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter }
-          comments[:stderr].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter }
-
-          remove_preceeding_newline buffer, rewriter, comments[:stdout]
-          remove_preceeding_newline buffer, rewriter, comments[:stderr]
-          remove_preceeding_newline buffer, rewriter, comments[:exception]
-        end
-      end
-
-      # for each set of consecutive comments, if they are preceeded by a newline, it will be removed
-      def remove_preceeding_newline(buffer, rewriter, comments)
-        adjacent_comments(comments, buffer).each do |adjacent_comments|
-          end_pos       = adjacent_comments.first.location.begin_pos
-          end_pos -= 1 while 0 <= end_pos && code[end_pos] != "\n"
-          begin_pos     = end_pos - 1
-          next if begin_pos < 0 || code[begin_pos] != "\n"
-          rewriter.remove Parser::Source::Range.new(buffer, begin_pos, end_pos)
+          comments[:result].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, false }
+          comments[:exception].each { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
+          comments[:stdout].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
+          comments[:stderr].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
         end
       end
 
       # any whitespace before the index (on the same line) will be removed
-      def remove_whitespace_before(index, buffer, rewriter)
+      # if the preceeding whitespace is at the beginning of the line, the newline will be removed
+      # if there is a newline before all of that, and remove_preceeding_newline is true, it will be removed as well
+      def remove_whitespace_before(index, buffer, rewriter, remove_preceeding_newline)
         end_pos   = index
         begin_pos = end_pos - 1
         begin_pos -= 1 while code[begin_pos] =~ /\s/ && code[begin_pos] != "\n"
         begin_pos -= 1 if code[begin_pos] == "\n"
+        begin_pos -= 1 if code[begin_pos] == "\n" && remove_preceeding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
       end
