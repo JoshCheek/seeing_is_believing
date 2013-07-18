@@ -334,14 +334,14 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
   end
 
-  describe ':debug' do
-    it 'defaults to false' do
-      parse([])[:debug_stream].should be_false
+  describe ':debugger' do
+    it 'defaults to a debugger that is disabled' do
+      parse([])[:debugger].should_not be_enabled
     end
 
-    it 'can be set to a StringIO with --debug or -g' do
-      parse(['--debug'])[:debug_stream].should be_a_kind_of StringIO
-      parse(['-g'])[:debug_stream].should be_a_kind_of StringIO
+    it 'can be enabled with --debug or -g' do
+      parse(['--debug'])[:debugger].should be_enabled
+      parse(['-g'])[:debugger].should be_enabled
     end
   end
 end
