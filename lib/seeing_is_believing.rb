@@ -5,6 +5,7 @@ require 'timeout'
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
+require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/expression_list'
 require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
@@ -29,13 +30,9 @@ class SeeingIsBelieving
     @encoding        = options.fetch :encoding, nil
     @line_number     = 1
     @timeout         = options[:timeout]
-    @debug_stream    = options[:debug_stream]
+    @debugger        = options.fetch :debugger, Debugger.new(enabled: false)
 
-    if debug_stream
-      debug_stream.puts "\e[37;44mSOURCE WITHOUT COMMENTS:\e[0m"
-      debug_stream.puts program_string
-      debug_stream.puts
-    end
+    debugger.context("SOURCE WITHOUT COMMENTS") { program_string }
   end
 
   # I'd like to refactor this, but I was unsatisfied with the three different things I tried.
@@ -78,9 +75,7 @@ class SeeingIsBelieving
 
       # build the program
       program = leading_comments << record_exceptions_in(body) << data_segment
-
-      # debugging
-      debug_stream.puts("\n\e[37;44mTRANSLATED PROGRAM:\e[0m\n#{program}\n\n") if debug_stream
+      debugger.context("TRANSLATED PROGRAM") { program }
 
       # return the result
       result_for program, max_line_number
@@ -89,11 +84,10 @@ class SeeingIsBelieving
 
   private
 
-  attr_reader :stream, :matrix_filename, :debug_stream
+  attr_reader :stream, :matrix_filename, :debugger
 
   def expression_list
-    @expression_list ||= ExpressionList.new debug:          debug_stream,
-                                            debug_stream:   debug_stream,
+    @expression_list ||= ExpressionList.new debugger:       debugger,
                                             get_next_line:  lambda { next_line_queue.dequeue },
                                             peek_next_line: lambda { next_line_queue.peek },
                                             on_complete:    lambda { |line, children, completions, offset|

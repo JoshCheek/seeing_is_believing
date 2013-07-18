@@ -256,10 +256,10 @@ describe SeeingIsBelieving::ExpressionList do
   end
 
   example "example: smoke test debug option" do
-    stream = StringIO.new
-    call(%w[a+ b], debug: true, debug_stream: stream) { |*expressions, _| expressions.join("\n") }
-    stream.string.should include "GENERATED"
-    stream.string.should include "REDUCED"
+    debugger = SeeingIsBelieving::Debugger.new
+    call(%w[a+ b], debugger: debugger) { |*expressions, _| expressions.join("\n") }
+    debugger.to_s.should include "GENERATED"
+    debugger.to_s.should include "REDUCED"
   end
 
   # in reality, the problem may just lie with our lib

@@ -340,28 +340,28 @@ describe SeeingIsBelieving do
     # values_for("1\\\n+ 2").should == [['1'], ['3']]
   end
 
-  context 'when given a debug_stream' do
-    let(:debug_stream) { StringIO.new }
+  context 'when given a debugger' do
+    let(:debugger) { SeeingIsBelieving::Debugger.new enabled: true }
 
     def call
-      invoke "1", debug_stream: debug_stream
+      invoke "1", debugger: debugger
     end
 
     it 'prints the program without comments' do
       call
-      debug_stream.string.should include "SOURCE WITHOUT COMMENTS:"
-      debug_stream.string.should include "\n1\n"
+      debugger.to_s.should include "SOURCE WITHOUT COMMENTS:"
+      debugger.to_s.should include "\n1\n"
     end
 
     it 'prints the pre-evaluated program' do
       call
-      debug_stream.string.should include "TRANSLATED PROGRAM:"
-      debug_stream.string.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
+      debugger.to_s.should include "TRANSLATED PROGRAM:"
+      debugger.to_s.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
     it 'has the ExpressionList print its debug options into the output' do
       call
-      debug_stream.string.should include "EXPRESSION EVALUATION:"
+      debugger.to_s.should include "EXPRESSION EVALUATION:"
     end
   end
 

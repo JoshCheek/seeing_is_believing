@@ -1,8 +1,8 @@
 require 'open3'
+require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/syntax_analyzer'
 
-# A lot of colouring going on in this file, maybe should extract a debugging object to contain it
-
+# can we get better debugging support so that we don't need to drop ANSI escape sequences in the middle of strings?
 class SeeingIsBelieving
   class ExpressionList
     PendingExpression = Struct.new :expression, :children do
@@ -16,19 +16,20 @@ class SeeingIsBelieving
     end
 
     def initialize(options)
-      self.debug_stream   = options.fetch :debug_stream, $stdout
-      self.should_debug   = options.fetch :debug, false
+      self.debugger       = options.fetch :debugger, Debugger.new(enabled: false)
       self.get_next_line  = options.fetch :get_next_line
       self.peek_next_line = options.fetch :peek_next_line
       self.on_complete    = options.fetch :on_complete
-      debug { "\e[37;44mEXPRESSION EVALUATION:\e[0m" }
     end
 
     def call
       offset, expressions, expression = 0, [], nil
       begin
         pending_expression = generate(expressions)
-        debug { "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}" }
+
+        debugger.context debugger_context do
+          "GENERATED: #{pending_expression.expression.inspect}, ADDING IT TO #{inspected_expressions expressions}"
+        end
 
         expression = reduce expressions, offset unless next_line_modifies_current?
 
@@ -39,7 +40,11 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :debug_stream, :should_debug, :get_next_line, :peek_next_line, :on_complete, :expressions
+    attr_accessor :debugger, :get_next_line, :peek_next_line, :on_complete, :expressions
+
+    def debugger_context
+      "EXPRESSION EVALUATION"
+    end
 
     def generate(expressions)
       expression = get_next_line.call
@@ -60,15 +65,7 @@ class SeeingIsBelieving
     end
 
     def inspected_expressions(expressions)
-      "[#{expressions.map { |pe| pe.inspect debug? }.join(', ')}]"
-    end
-
-    def debug?
-      @should_debug
-    end
-
-    def debug
-      @debug_stream.puts yield if debug?
+      "[#{expressions.map { |pe| pe.inspect debugger.enabled? }.join(', ')}]"
     end
 
     def reduce(expressions, offset)
@@ -84,14 +81,14 @@ class SeeingIsBelieving
                                   offset)
         expressions.replace expressions[0, i]
         expressions[i-1].children << result unless expressions.empty?
-        debug { "REDUCED: #{result.inspect}, LIST: #{inspected_expressions expressions}" }
+        debugger.context(debugger_context) { "REDUCED: #{result.inspect}, LIST: #{inspected_expressions expressions}" }
         return result
       end
     end
 
     def valid_ruby?(expression)
       valid = SyntaxAnalyzer.valid_ruby? expression
-      debug { "#{valid ? "\e[32mIS VALID:" : "\e[31mIS NOT VALID:"}: #{expression.inspect}\e[0m" }
+      debugger.context(debugger_context) { "#{valid ? "\e[32mIS VALID:" : "\e[31mIS NOT VALID:"}: #{expression.inspect}\e[0m" }
       valid
     end
 

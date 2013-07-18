@@ -1,5 +1,6 @@
 require 'stringio'
 require 'seeing_is_believing/version'
+require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
@@ -27,7 +28,7 @@ class SeeingIsBelieving
             when '-v', '--version'             then options[:version]             = true
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
-            when '-g', '--debug'               then options[:debug_stream]        = StringIO.new
+            when '-g', '--debug'               then options[:debugger]            = Debugger.new(enabled: true, colour: true)
             when '-l', '--start-line'          then extract_positive_int_for :start_line,    arg
             when '-L', '--end-line'            then extract_positive_int_for :end_line,      arg
             when '-d', '--line-length'         then extract_positive_int_for :line_length,   arg
@@ -69,7 +70,7 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
-          debug_stream:        nil,
+          debugger:            Debugger.new(enabled: false, colour: true),
           version:             false,
           clean:               false,
           xmpfilter_style:     false,

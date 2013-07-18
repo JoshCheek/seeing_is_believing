@@ -36,7 +36,7 @@ class SeeingIsBelieving
       method_from_options :line_length,    Float::INFINITY
       method_from_options :result_length,  Float::INFINITY
       method_from_options :xmpfilter_style
-      method_from_options :debug_stream
+      method_from_options :debugger
 
       attr_accessor :file_result
       def initialize(body, options={})
@@ -50,9 +50,8 @@ class SeeingIsBelieving
                                                          encoding:     options[:encoding],
                                                          stdin:        options[:stdin],
                                                          timeout:      options[:timeout],
-                                                         debug_stream: debug_stream
+                                                         debugger:     debugger
         self.alignment_strategy = options[:alignment_strategy].new cleaned_body, start_line, end_line
-        new_body << debug_stream.string << "\e[37;44mRESULT:\e[0m\n" if debug_stream
       end
 
       def new_body
@@ -68,7 +67,11 @@ class SeeingIsBelieving
           add_stderr
           add_exception
           add_remaining_lines
-          new_body
+          if debugger.enabled?
+            debugger.context("RESULT") { new_body }.to_s
+          else
+            new_body
+          end
         end
       end
 
