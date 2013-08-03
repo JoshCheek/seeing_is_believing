@@ -163,3 +163,17 @@ Feature:
     # encoding: utf-8
     'ç'  # => "ç"
     """
+
+  @not-implemented
+  Scenario: Some strings look like comments
+    Given the file "strings_that_look_like_comments.rb":
+    """
+    "1
+     #{2}"
+    """
+    When I run "seeing_is_believing strings_that_look_like_comments.rb"
+    Then stdout is:
+    """
+    "1
+     #{2}"  # => "1\n 2"
+    """

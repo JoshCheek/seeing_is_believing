@@ -62,6 +62,9 @@ describe SeeingIsBelieving::SyntaxAnalyzer do
     is_comment["a # whatev \n b"].should be_false
     is_comment[""].should be_false
     is_comment["=begin\n=end\n\n =end"].should be_false
+    pending "Fix comments to not be shit" do
+      is_comment[%'"\n\#{1}"'].should be_false
+    end
   end
 
   it 'knows if it contains an unclosed comment' do
