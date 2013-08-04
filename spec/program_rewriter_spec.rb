@@ -53,7 +53,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
 
     # TODO: More of these probably
-    it 'wraps operators calls' do
+    it 'wraps operators calls', t:true do
       wrap("1+1").should == "<1+1>"
       wrap("a.b+1").should == "<a.b+1>"
       wrap("!1").should == "<!1>"
@@ -63,17 +63,72 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps method invocations that span multiple lines' do
       wrap("a\n.b\n.c").should == "<<<a>\n.b>\n.c>"
     end
+
+    it 'wraps args in method arguments when the method spans multiple lines' do
+      wrap("a 1,\n2").should == "<a <1>,\n2>"
+    end
   end
 
   describe 'constant access' do
     it 'wraps simple constant access' do
-      wrap('A').should == '<A>'
+      wrap("A").should == "<A>"
     end
 
     it 'wraps namespaced constant access' do
-      wrap('::A').should == '<::A>'
-      wrap('A::B').should == '<A::B>'
+      wrap("::A").should == "<::A>"
+      wrap("A::B").should == "<A::B>"
     end
+  end
+
+  describe 'string literals (except heredocs)' do
+    it 'records single and double quoted strings' do
+      wrap("'a'").should == "<'a'>"
+      wrap('"a"').should == '<"a">'
+    end
+
+    it 'records strings with %, %Q, and %q' do
+      wrap("%'a'").should == "<%'a'>"
+      wrap("%q'a'").should == "<%q'a'>"
+      wrap("%Q'a'").should == "<%Q'a'>"
+    end
+
+    it 'records strings that span mulitple lines' do
+      wrap("'a\nb'").should == "<'a\nb'>"
+      wrap(%'"a\nb"').should == %'<"a\nb">'
+    end
+
+    # eventually it would be nice if it recorded the interpolated portion,
+    # when the end of the line was not back inside the string
+    it 'records strings with interpolation, but not the interpolated portion' do
+      wrap('"a#{1}"').should == '<"a#{1}">'
+      wrap(%'"a\n\#{1}\nb"').should == %'<"a\n\#{1}\nb">'
+      wrap(%'"a\n\#{1\n}b"').should == %'<"a\n\#{1\n}b">'
+    end
+
+    it 'records methods tacked onto the end of heredocs' do
+      wrap("<<A.size\nA").should == "<<<A.size>\nA"
+      wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
+      wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
+      wrap("<<A.size()\nA").should == "<<<A.size()>\nA"
+    end
+  end
+
+  describe 'heredocs' do
+    it 'records heredocs on their first line' do
+      wrap("<<A\nA").should == "<<<A>\nA"
+      wrap("<<-A\nA").should == "<<<-A>\nA"
+    end
+
+    it "records methods that wrap heredocs, even whent hey don't have parentheses" do
+      wrap("a(<<HERE)\nHERE").should == "<a(<<HERE)>\nHERE"
+      wrap("a <<HERE\nHERE").should == "<a <<HERE>\nHERE"
+      wrap("a 1, <<HERE\nHERE").should == "<a 1, <<HERE>\nHERE"
+      wrap("a.b 1, 2, <<HERE1, <<-HERE2 \nHERE1\n HERE2").should ==
+          "<a.b 1, 2, <<HERE1, <<-HERE2> \nHERE1\n HERE2"
+      wrap("a.b 1,\n2,\n<<HERE\nHERE").should == "<a.b <1>,\n<2>,\n<<HERE>\nHERE"
+    end
+
+    it "records assignments whose value is a heredoc"
   end
 
   describe 'begin/rescue/end blocks' do
