@@ -10,6 +10,7 @@ require 'seeing_is_believing/program_rewriter'
 # super
 # private/public/protected
 # parentheses
+# begin/end with no body
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -120,6 +121,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
 
     it 'wraps macros' do
+      # should this actually replace __FILE__ and __LINE__ so as to avoid fucking up values with the rewrite?
       # there is also __dir__, but it's only 2.0
       wrap("__FILE__").should == "<__FILE__>"
       wrap("__LINE__").should == "<__LINE__>"
@@ -336,6 +338,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'records heredocs on their first line' do
       wrap("<<A\nA").should == "<<<A>\nA"
       wrap("<<-A\nA").should == "<<<-A>\nA"
+      wrap("1\n<<A\nA").should == "<<1>\n<<A>\nA"
     end
 
     it "records methods that wrap heredocs, even whent hey don't have parentheses" do
@@ -369,7 +372,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("begin\nrescue Exception\n$!\nend").should == "<begin\nrescue Exception\n<$!>\nend>"
     end
     it 'wraps inline rescues' do
-      pending "can't figure out how to differentiate these" do
+      pending "can't figure out how to identify these as different from begin/rescue/end" do
         wrap("1 rescue nil").should == "<1 rescue nil>"
       end
     end
@@ -382,6 +385,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("begin\n1\nrescue\n2\nelse\n3\nend").should == "<begin\n<1>\nrescue\n<2>\nelse\n<3>\nend>"
       wrap("begin\n1\nrescue\n2\nend").should == "<begin\n<1>\nrescue\n<2>\nend>"
       wrap("begin\n1\nend").should == "<begin\n<1>\nend>"
+      wrap("begin\nend").should == "<begin\nend>"
       wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
     end
   end

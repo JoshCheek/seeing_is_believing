@@ -171,6 +171,14 @@ class SeeingIsBelieving
         add_to_result range, buffer, result
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+      when :begin
+        last_child = heredoc_hack ast.children.last
+        range = Parser::Source::Range.new buffer,
+                                          ast.location.expression.begin_pos,
+                                          last_child.location.expression.end_pos
+        add_to_result range, buffer, result
+
+        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :dstr
         ast = heredoc_hack ast
         add_to_result ast, buffer, result
