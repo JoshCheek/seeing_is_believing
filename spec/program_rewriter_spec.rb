@@ -1,5 +1,8 @@
 require 'seeing_is_believing/program_rewriter'
 
+
+# a,b=*
+# a,b=1,\n2
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
     described_class.call code,
@@ -53,7 +56,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
 
     # TODO: More of these probably
-    it 'wraps operators calls', t:true do
+    it 'wraps operators calls' do
       wrap("1+1").should == "<1+1>"
       wrap("a.b+1").should == "<a.b+1>"
       wrap("!1").should == "<!1>"
@@ -66,6 +69,35 @@ describe SeeingIsBelieving::ProgramReWriter do
 
     it 'wraps args in method arguments when the method spans multiple lines' do
       wrap("a 1,\n2").should == "<a <1>,\n2>"
+    end
+  end
+
+  describe 'assignment' do
+    it 'wraps entire simple assignment' do
+      wrap("a=1").should == "<a=1>"
+    end
+
+    it 'wraps multiple assignments' do
+      wrap("a,b=1,2").should == "<a,b=1,2>"
+    end
+
+    it 'wraps multiple assignment on each line' do
+      wrap("a,b=1,\n2").should == "<a,b=<1>,\n2>"
+    end
+
+    it 'wraps multiple assignment with splats', t:true do
+      wrap("a,* =1,2,3").should == "<a,* =1,2,3>"
+    end
+
+    it 'wraps the array equivalent', t:true do
+      wrap("a,* =[1,2,3]").should == "<a,* =[1,2,3]>"
+      wrap("a,* = [ 1,2,3 ] ").should == "<a,* = [ 1,2,3 ]> "
+    end
+
+    it 'wraps repeated assignments' do
+      wrap("a=b=1").should == "<a=b=1>"
+      wrap("a=b=\n1").should == "<a=b=\n1>"
+      wrap("a=\nb=\n1").should == "<a=\nb=\n1>"
     end
   end
 
@@ -128,7 +160,12 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a.b 1,\n2,\n<<HERE\nHERE").should == "<a.b <1>,\n<2>,\n<<HERE>\nHERE"
     end
 
-    it "records assignments whose value is a heredoc"
+    it "records assignments whose value is a heredoc" do
+      wrap("a=<<A\nA").should == "<a=<<A>\nA"
+      wrap("a,b=<<A,<<B\nA\nB").should == "<a,b=<<A,<<B>\nA\nB"
+      wrap("a,b=1,<<B\nB").should == "<a,b=1,<<B>\nB"
+      wrap("a,b=<<A,1\nA").should == "<a,b=<<A,1>\nA"
+    end
   end
 
   describe 'begin/rescue/end blocks' do
@@ -148,10 +185,6 @@ describe SeeingIsBelieving::ProgramReWriter do
   describe 'module definitions' do
     it 'wraps the entire definition' do
       wrap("module A\nend").should == "<module A\nend>"
-    end
-
-    it 'wraps the superclass' do
-      wrap("module A < B\nend").should == "<module A < <B>\nend>"
     end
   end
 

@@ -69,6 +69,46 @@ class SeeingIsBelieving
         ast.children.drop(1).each do |child|
           line_nums_to_node_and_col child, buffer, result
         end
+      when :masgn
+        # we must look at RHS because [1,<<A] and 1,<<A are both allowed
+        #
+        # in the first case, we must take the end_pos of the array, or we'll insert the after_each in the wrong location
+        #
+        # in the second, there is an implicit Array wrapped around it, with the wrong end_pos,
+        # so we must take the end_pos of the last arg
+        array = ast.children.last
+        if array.location.expression.source.start_with? '['
+          add_to_result ast, buffer, result
+          line_nums_to_node_and_col array, buffer, result
+        else
+          begin_pos = ast.location.expression.begin_pos
+          end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
+          range     = Parser::Source::Range.new buffer, begin_pos, end_pos
+          add_to_result range, buffer, result
+          ast.children.last.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        end
+      when :lvasgn
+        # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
+        # we must hack around this
+
+        # can have one or two children:
+        #   in a=1 (has children :a, and 1)
+        #   in a,b=1,2 it comes out like:
+        #     (masgn
+        #       (mlhs
+        #         (lvasgn :a) <-- one child
+        #         (lvasgn :b))
+        #       (array
+        #         (int 1)
+        #         (int 2)))
+        if ast.children.size == 2
+          begin_pos = ast.location.expression.begin_pos
+          end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
+          range     = Parser::Source::Range.new buffer, begin_pos, end_pos
+          add_to_result range, buffer, result
+
+          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        end
       when :send
         # because the target and the last child can be heredocs
         # and the method may or may not have parens,
@@ -111,9 +151,7 @@ class SeeingIsBelieving
         range = Parser::Source::Range.new buffer, begin_pos, end_pos
         add_to_result range, buffer, result
 
-        ast.children
-           .map  { |node| heredoc_hack node }
-           .each { |child| line_nums_to_node_and_col child, buffer, result }
+        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :dstr
         ast = heredoc_hack ast
         add_to_result ast, buffer, result
