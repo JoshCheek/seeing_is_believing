@@ -61,6 +61,12 @@ class SeeingIsBelieving
       when :args
       when :rescue, :ensure
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+      when :if
+        keyword = ast.location.keyword.source
+        if keyword == 'if' || keyword == 'unless'
+          add_to_result ast, buffer, result
+        end
+        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :resbody
         exception_type, variable_name, body = ast.children
         line_nums_to_node_and_col body, buffer, result

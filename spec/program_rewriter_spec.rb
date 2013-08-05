@@ -2,6 +2,7 @@ require 'seeing_is_believing/program_rewriter'
 
 # classes can have a rescue (and presumably else) in their defn
 # modules can have a rescue (and presumably else) in their defn
+# until/while
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -215,9 +216,34 @@ describe SeeingIsBelieving::ProgramReWriter do
   end
 
   describe 'conditionals' do
-    it 'wraps if/elsif/else/end, the whole thing and their bodies' do
-      pending
+    it 'wraps if/elsif/else/end, the whole thing, their conditionals, and their bodies' do
+      wrap("if 1\n2\nelsif 2\n3\nelsif 4\n5\nend").should == "<if <1>\n<2>\nelsif <2>\n<3>\nelsif <4>\n<5>\nend>" # multiple elsif
+      wrap("if 1\n2\nelsif 2\n3\nelse\n4\nend").should == "<if <1>\n<2>\nelsif <2>\n<3>\nelse\n<4>\nend>"         # elisf and else
+      wrap("if 1\n2\nelsif 3\n4\nend").should == "<if <1>\n<2>\nelsif <3>\n<4>\nend>"                             # elsif only
+      wrap("if 1\n2\nelse\n2\nend").should == "<if <1>\n<2>\nelse\n<2>\nend>"                                     # else only
+      wrap("if 1\n2\nend").should == "<if <1>\n<2>\nend>"                                                         # if only
+
+      # same as above, but with then
+      wrap("if 1 then\n2\nelsif 2 then\n3\nelsif 4 then\n5\nend").should == "<if <1> then\n<2>\nelsif <2> then\n<3>\nelsif <4> then\n<5>\nend>"
+      wrap("if 1 then\n2\nelsif 2 then\n3\nelse\n4\nend").should == "<if <1> then\n<2>\nelsif <2> then\n<3>\nelse\n<4>\nend>"
+      wrap("if 1 then\n2\nelsif 3 then\n4\nend").should == "<if <1> then\n<2>\nelsif <3> then\n<4>\nend>"
+      wrap("if 1 then\n2\nelse\n2\nend").should == "<if <1> then\n<2>\nelse\n<2>\nend>"
+      wrap("if 1 then\n2\nend").should == "<if <1> then\n<2>\nend>"
+
+      # inline
+      wrap("1 if 2").should == "<1 if 2>"
     end
+
+    it 'wraps "unless" statements', t:true do
+      wrap("unless 1\n2\nelse\n3\nend").should == "<unless <1>\n<2>\nelse\n<3>\nend>"
+      wrap("unless 1\n2\nend").should == "<unless <1>\n<2>\nend>"
+      wrap("unless 1 then\n2\nelse\n3\nend").should == "<unless <1> then\n<2>\nelse\n<3>\nend>"
+      wrap("unless 1 then\n2\nend").should == "<unless <1> then\n<2>\nend>"
+      wrap("1 unless 2").should == "<1 unless 2>"
+    end
+
+    it 'wraps case statements, and the value they are initialized with, but not the conditionals'
+    it 'wraps case statements that do not have a case value'
   end
 
   describe 'constant access' do
