@@ -1,6 +1,18 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
+# for ... in
+# case can have "then"
+# exceptions => e with no Exception, Exception with no => e
+# return, break, redo, retry, next
+# void value expressions
+# raise
+# begin
+# method definition
+# yield
+# super
+# private/public/protected
+# parentheses
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -230,6 +242,11 @@ describe SeeingIsBelieving::ProgramReWriter do
 
       # inline
       wrap("1 if 2").should == "<1 if 2>"
+    end
+
+    it 'wraps ternaries' do
+      wrap("1 ? 2 : 3").should == "<1 ? 2 : 3>"
+      wrap("1\\\n?\\\n2\\\n:\\\n3").should == "<<1>\\\n?\\\n<2>\\\n:\\\n3>"
     end
 
     it 'wraps "unless" statements' do

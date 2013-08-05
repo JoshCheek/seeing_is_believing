@@ -62,11 +62,16 @@ class SeeingIsBelieving
       when :rescue, :ensure
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :if
-        keyword = ast.location.keyword.source
-        if keyword == 'if' || keyword == 'unless'
+        if ast.location.kind_of? Parser::Source::Map::Ternary
           add_to_result ast, buffer, result
+          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        else
+          keyword = ast.location.keyword.source
+          if keyword == 'if' || keyword == 'unless'
+            add_to_result ast, buffer, result
+          end
+          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
         end
-        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :when
         line_nums_to_node_and_col ast.children.last, buffer, result
       when :resbody
