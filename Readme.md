@@ -151,6 +151,9 @@ Todo
 * Add xmpfilter option to sublime text
 * Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
 * Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
+* How about if begin/rescue/end was able to record the result on the rescue section
+* Check how begin/rescue/end with multiple rescue blocks works
+* What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 
 
 License
