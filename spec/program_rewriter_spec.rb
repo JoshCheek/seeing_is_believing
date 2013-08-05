@@ -1,7 +1,5 @@
 require 'seeing_is_believing/program_rewriter'
 
-# classes can have a rescue (and presumably else) in their defn
-# modules can have a rescue (and presumably else) in their defn
 # until/while
 
 describe SeeingIsBelieving::ProgramReWriter do
@@ -351,11 +349,18 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps the superclass' do
       wrap("class A < B\nend").should == "<class A < <B>\nend>"
     end
+
+    it 'wraps the rescue portion' do
+      wrap("class A < B\n1\nrescue\n2\nend").should == "<class A < <B>\n<1>\nrescue\n<2>\nend>"
+    end
   end
 
   describe 'module definitions' do
     it 'wraps the entire definition and body' do
       wrap("module A\n1\nend").should == "<module A\n<1>\nend>"
+    end
+    it 'wraps the rescue portion' do
+      wrap("module A\n1\nrescue\n2\nend").should == "<module A\n<1>\nrescue\n<2>\nend>"
     end
   end
 end
