@@ -1,13 +1,39 @@
 require 'seeing_is_believing/program_rewriter'
 
+# classes can have a rescue (and presumably else) in their defn
+# modules can have a rescue (and presumably else) in their defn
 
-# a,b=*
-# a,b=1,\n2
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
     described_class.call code,
       before_each: -> * { '<' },
       after_each:  -> * { '>' }
+  end
+
+  it 'wraps the entire body, ignoring leading comments and the data segment' do
+    described_class.call("#comment\nA\n__END__\n1",
+                         before_all: "[",
+                         after_all:  "]",
+                         before_each: -> * { '<' },
+                         after_each:  -> * { '>' }
+                        )
+                   .should == "#comment\n[<A>]\n__END__\n1"
+  end
+
+  it 'passes the current line number to the before_each and after_each wrappers' do
+    pre_line_num = post_line_num = nil
+    described_class.call("\na",
+                         before_each: -> _pre_line_num  { pre_line_num  = _pre_line_num;  '<' },
+                         after_each:  -> _post_line_num { post_line_num = _post_line_num; '>' }
+                        )
+    pre_line_num.should == 2
+    post_line_num.should == 2
+  end
+
+  it 'ignores comments' do
+    wrap("1 #abc\n#def").should == "<1> #abc\n#def"
+    wrap("1\n=begin\n2\n=end").should == "<1>\n=begin\n2\n=end"
+    wrap("=begin\n1\n=end\n2").should == "=begin\n1\n=end\n<2>"
   end
 
   describe 'basic expressions' do
@@ -29,6 +55,75 @@ describe SeeingIsBelieving::ProgramReWriter do
 
     it 'wraps multiple expressions on the same line' do
       wrap("a;b").should == "<a;b>"
+    end
+
+    # many of these taken from http://en.wikibooks.org/wiki/Ruby_Programming/Syntax/Literals
+    it 'wraps simple literals' do
+      # should maybe also do %i[] and %I[] for symbols,
+      # but that's only Ruby 2.0, so I'm ignoring it for now
+      # (I expect it to handle them just fine)
+      %w|123
+         -123
+         1_123
+         -543
+         123_456_789_123_456_789
+         123.45
+         1.2e-3
+         0xaabb
+         0377
+         -0b1010
+         0b001_001
+
+         ?a
+         ?\C-a
+         ?\M-a
+         ?\M-\C-a
+
+         1..2
+         1...2
+
+         (true==true)..(1==2)
+
+         true
+         false
+         nil
+         self
+
+         [1,2,3]
+         [1,*a,*[2,3,4]]
+         %w(1)
+         %W(2)
+
+         %x[ls]
+
+         /abc/
+         %r(abc)
+         %r.abc.
+
+         :abc
+         :"abc"
+         :'abc'
+
+         {1=>2}
+         {a:1}
+      |.each do |literal|
+        wrap(literal).should == "<#{literal}>"
+      end
+    end
+
+    it 'wraps macros' do
+      # there is also __dir__, but it's only 2.0
+      wrap("__FILE__").should == "<__FILE__>"
+      wrap("__LINE__").should == "<__LINE__>"
+    end
+  end
+
+  describe 'variable lookups' do
+    it 'wraps them' do
+      wrap('a').should == "<a>"
+      wrap("$a").should == "<$a>"
+      wrap("@a").should == "<@a>"
+      wrap("@@a").should == "<@@a>"
     end
   end
 
@@ -55,12 +150,18 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("1.mod 2").should == "<1.mod 2>"
     end
 
-    # TODO: More of these probably
     it 'wraps operators calls' do
       wrap("1+1").should == "<1+1>"
       wrap("a.b+1").should == "<a.b+1>"
+      wrap("a.b - 1").should == "<a.b - 1>"
+      wrap("a.b -1").should == "<a.b -1>"
       wrap("!1").should == "<!1>"
       wrap("~1").should == "<~1>"
+    end
+
+    it 'wraps methods that end in bangs and questions' do
+      wrap("a.b!").should == "<a.b!>"
+      wrap("a.b?").should == "<a.b?>"
     end
 
     it 'wraps method invocations that span multiple lines' do
@@ -98,6 +199,24 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a=b=1").should == "<a=b=1>"
       wrap("a=b=\n1").should == "<a=b=\n1>"
       wrap("a=\nb=\n1").should == "<a=\nb=\n1>"
+    end
+
+    it 'wraps operator assignment' do
+      wrap("a += 1").should == "<a += 1>"
+      wrap("a *= 1").should == "<a *= 1>"
+      wrap("a -= 1").should == "<a -= 1>"
+      wrap("a /= 1").should == "<a /= 1>"
+      wrap("a **= 1").should == "<a **= 1>"
+      wrap("a |= 1").should == "<a |= 1>"
+      wrap("a &= 1").should == "<a &= 1>"
+      wrap("a ||= 1").should == "<a ||= 1>"
+      wrap("a &&= 1").should == "<a &&= 1>"
+    end
+  end
+
+  describe 'conditionals' do
+    it 'wraps if/elsif/else/end, the whole thing and their bodies' do
+      pending
     end
   end
 
@@ -137,11 +256,13 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap(%'"a\n\#{1\n}b"').should == %'<"a\n\#{1\n}b">'
     end
 
-    it 'records methods tacked onto the end of heredocs' do
-      wrap("<<A.size\nA").should == "<<<A.size>\nA"
-      wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
-      wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
-      wrap("<<A.size()\nA").should == "<<<A.size()>\nA"
+    it 'records %, %q, %Q' do
+      wrap('%(A)').should == '<%(A)>'
+      wrap('%.A.').should == '<%.A.>'
+      wrap('%q(A)').should == '<%q(A)>'
+      wrap('%q.A.').should == '<%q.A.>'
+      wrap('%Q(A)').should == '<%Q(A)>'
+      wrap('%Q.A.').should == '<%Q.A.>'
     end
   end
 
@@ -166,6 +287,13 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a,b=1,<<B\nB").should == "<a,b=1,<<B>\nB"
       wrap("a,b=<<A,1\nA").should == "<a,b=<<A,1>\nA"
     end
+
+    it 'records methods tacked onto the end of heredocs' do
+      wrap("<<A.size\nA").should == "<<<A.size>\nA"
+      wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
+      wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
+      wrap("<<A.size()\nA").should == "<<<A.size()>\nA"
+    end
   end
 
   describe 'begin/rescue/else/ensure/end blocks' do
@@ -186,8 +314,8 @@ describe SeeingIsBelieving::ProgramReWriter do
   end
 
   describe 'class definitions' do
-    it 'wraps the entire definition' do
-      wrap("class A\nend").should == "<class A\nend>"
+    it 'wraps the entire definition and body' do
+      wrap("class A\n1\nend").should == "<class A\n<1>\nend>"
     end
 
     it 'wraps the superclass' do
@@ -196,29 +324,8 @@ describe SeeingIsBelieving::ProgramReWriter do
   end
 
   describe 'module definitions' do
-    it 'wraps the entire definition' do
-      wrap("module A\nend").should == "<module A\nend>"
+    it 'wraps the entire definition and body' do
+      wrap("module A\n1\nend").should == "<module A\n<1>\nend>"
     end
   end
-
-  it 'wraps the entire body, ignoring leading comments and the data segment' do
-    described_class.call("#comment\nA\n__END__\n1",
-                         before_all: "[",
-                         after_all:  "]",
-                         before_each: -> * { '<' },
-                         after_each:  -> * { '>' }
-                        )
-                   .should == "#comment\n[<A>]\n__END__\n1"
-  end
-
-  it 'passes the current line number to the before_each and after_each wrappers' do
-    pre_line_num = post_line_num = nil
-    described_class.call("\na",
-                         before_each: -> _pre_line_num  { pre_line_num  = _pre_line_num;  '<' },
-                         after_each:  -> _post_line_num { post_line_num = _post_line_num; '>' }
-                        )
-    pre_line_num.should == 2
-    post_line_num.should == 2
-  end
-
 end
