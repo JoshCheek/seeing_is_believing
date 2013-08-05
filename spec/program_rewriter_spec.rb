@@ -85,11 +85,11 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a,b=1,\n2").should == "<a,b=<1>,\n2>"
     end
 
-    it 'wraps multiple assignment with splats', t:true do
+    it 'wraps multiple assignment with splats' do
       wrap("a,* =1,2,3").should == "<a,* =1,2,3>"
     end
 
-    it 'wraps the array equivalent', t:true do
+    it 'wraps the array equivalent' do
       wrap("a,* =[1,2,3]").should == "<a,* =[1,2,3]>"
       wrap("a,* = [ 1,2,3 ] ").should == "<a,* = [ 1,2,3 ]> "
     end
@@ -168,8 +168,21 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
   end
 
-  describe 'begin/rescue/end blocks' do
-    it 'wraps begin/rescue/end blocks'
+  describe 'begin/rescue/else/ensure/end blocks' do
+    it 'wraps begin/rescue/else/ensure/end blocks' do
+      wrap("begin\nrescue\nelse\nensure\nend").should == "<begin\nrescue\nelse\nensure\nend>"
+    end
+    it 'wraps the bodies' do
+      wrap("begin\n1\nrescue\n2\nelse\n3\nensure\n4\nend").should ==
+        "<begin\n<1>\nrescue\n<2>\nelse\n<3>\nensure\n<4>\nend>"
+    end
+    it 'wraps bodies with various pieces missing' do
+      wrap("begin\n1\nrescue\n2\nelse\n3\nensure\n4\nend").should == "<begin\n<1>\nrescue\n<2>\nelse\n<3>\nensure\n<4>\nend>"
+      wrap("begin\n1\nrescue\n2\nelse\n3\nend").should == "<begin\n<1>\nrescue\n<2>\nelse\n<3>\nend>"
+      wrap("begin\n1\nrescue\n2\nend").should == "<begin\n<1>\nrescue\n<2>\nend>"
+      wrap("begin\n1\nend").should == "<begin\n<1>\nend>"
+      wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
+    end
   end
 
   describe 'class definitions' do

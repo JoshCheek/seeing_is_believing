@@ -59,6 +59,11 @@ class SeeingIsBelieving
 
       case ast.type
       when :args
+      when :rescue, :ensure
+        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+      when :resbody
+        exception_type, variable_name, body = ast.children
+        line_nums_to_node_and_col body, buffer, result
       when :class, :module
         add_to_result ast, buffer, result
         ast.children.drop(1).each do |child|
@@ -97,6 +102,7 @@ class SeeingIsBelieving
         #     (masgn
         #       (mlhs
         #         (lvasgn :a) <-- one child
+        #
         #         (lvasgn :b))
         #       (array
         #         (int 1)
