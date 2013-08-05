@@ -1,8 +1,6 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
-# case can have "then"
-# exceptions => e with no Exception, Exception with no => e
 # return, break, redo, retry, next
 # void value expressions
 # raise
@@ -261,6 +259,11 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("case 1\nwhen 2\nend").should == "<case <1>\nwhen 2\nend>"
       wrap("case\nwhen 2\nend").should == "<case\nwhen 2\nend>"
       wrap("case\nwhen 2, 3\n4\n5\nend").should == "<case\nwhen 2, 3\n<<4>\n5>\nend>"
+
+      wrap("case 1\nwhen 2 then\n3\nwhen 4, 5 then\nelse\n6\nend").should == "<case <1>\nwhen 2 then\n<3>\nwhen 4, 5 then\nelse\n<6>\nend>"
+      wrap("case 1\nwhen 2 then\nend").should == "<case <1>\nwhen 2 then\nend>"
+      wrap("case\nwhen 2 then\nend").should == "<case\nwhen 2 then\nend>"
+      wrap("case\nwhen 2, 3 then\n4\n5\nend").should == "<case\nwhen 2, 3 then\n<<4>\n5>\nend>"
     end
   end
 
@@ -362,6 +365,13 @@ describe SeeingIsBelieving::ProgramReWriter do
   describe 'begin/rescue/else/ensure/end blocks' do
     it 'wraps begin/rescue/else/ensure/end blocks' do
       wrap("begin\nrescue\nelse\nensure\nend").should == "<begin\nrescue\nelse\nensure\nend>"
+      wrap("begin\nrescue e\ne\nend").should == "<begin\nrescue e\n<e>\nend>"
+      wrap("begin\nrescue Exception\n$!\nend").should == "<begin\nrescue Exception\n<$!>\nend>"
+    end
+    it 'wraps inline rescues' do
+      pending "can't figure out how to differentiate these" do
+        wrap("1 rescue nil").should == "<1 rescue nil>"
+      end
     end
     it 'wraps the bodies' do
       wrap("begin\n1\nrescue\n2\nelse\n3\nensure\n4\nend").should ==
