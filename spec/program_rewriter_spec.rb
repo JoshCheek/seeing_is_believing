@@ -1,6 +1,6 @@
 require 'seeing_is_believing/program_rewriter'
 
-# until/while
+# find giant list of keywords, make sure they're all accounted for
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -245,6 +245,17 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("case 1\nwhen 2\nend").should == "<case <1>\nwhen 2\nend>"
       wrap("case\nwhen 2\nend").should == "<case\nwhen 2\nend>"
       wrap("case\nwhen 2, 3\n4\n5\nend").should == "<case\nwhen 2, 3\n<<4>\n5>\nend>"
+    end
+  end
+
+  describe 'loops' do
+    it 'wraps the until condition and body' do
+      wrap("until 1\n2\nend").should == "<until <1>\n<2>\nend>"
+      wrap("1 until 2").should == "<1 until 2>"
+    end
+    it 'wraps the while condition and body' do
+      wrap("while 1\n2\nend").should == "<while <1>\n<2>\nend>"
+      wrap("1 while 2").should == "<1 while 2>"
     end
   end
 
