@@ -1,7 +1,6 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
-# for ... in
 # case can have "then"
 # exceptions => e with no Exception, Exception with no => e
 # return, break, redo, retry, next
@@ -273,6 +272,14 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps the while condition and body' do
       wrap("while 1\n2\nend").should == "<while <1>\n<2>\nend>"
       wrap("1 while 2").should == "<1 while 2>"
+    end
+    it 'wraps for/in loops collections and bodies' do
+      wrap("for a in range;1;end").should == "<for a in range;1;end>"
+      wrap("for a in range\n1\nend").should == "<for a in <range>\n<1>\nend>"
+      wrap("for a,b in whatev\n1\nend").should == "<for a,b in <whatev>\n<1>\nend>"
+      # this one just isn't worth it for now, too edge and I'm fucking tired
+      # wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend").should ==
+      #   "<for char in <<<HERE.each_char>\nabc\nHERE\n<puts char>\nend>"
     end
   end
 
