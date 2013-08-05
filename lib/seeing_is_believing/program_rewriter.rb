@@ -58,8 +58,9 @@ class SeeingIsBelieving
       return result unless ast.kind_of? ::AST::Node
 
       case ast.type
-      when :args
-      when :rescue, :ensure, :def, :return
+      when :args, :redo, :retry
+        # no op
+      when :rescue, :ensure, :def, :return, :break, :next
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
@@ -172,11 +173,15 @@ class SeeingIsBelieving
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :begin
-        last_child = heredoc_hack ast.children.last
-        range = Parser::Source::Range.new buffer,
-                                          ast.location.expression.begin_pos,
-                                          last_child.location.expression.end_pos
-        add_to_result range, buffer, result
+        last_child = ast.children.last
+        if heredoc? last_child
+          range = Parser::Source::Range.new buffer,
+                                            ast.location.expression.begin_pos,
+                                            heredoc_hack(last_child).location.expression.end_pos
+          add_to_result range, buffer, result
+        else
+          add_to_result ast, buffer, result
+        end
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :dstr

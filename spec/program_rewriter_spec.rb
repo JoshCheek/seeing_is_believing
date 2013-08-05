@@ -1,11 +1,7 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
-# break, redo, retry, next
 # void value expressions
-# raise
-# private/public/protected
-# parentheses
 # nvm on recording classes/modules/method defs
 
 describe SeeingIsBelieving::ProgramReWriter do
@@ -51,7 +47,10 @@ describe SeeingIsBelieving::ProgramReWriter do
       # because multiple expressions get implicit begin/end blocks around them
       # and the begin/end block ends on the same line as the second expression
       # this is fine, though, as it will evaluate to the same value
+
       wrap("A\nB").should == "<<A>\nB>"
+      wrap("(1\n2)").should == "<(<1>\n2)>"
+      wrap("begin\n1\n2\nend").should == "<begin\n<1>\n<2>\nend>"
     end
 
     it 'wraps nested expressions' do
@@ -282,6 +281,15 @@ describe SeeingIsBelieving::ProgramReWriter do
       # wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend").should ==
       #   "<for char in <<<HERE.each_char>\nabc\nHERE\n<puts char>\nend>"
     end
+    it 'does not wrap redo' do
+      wrap("loop do\nredo\nend").should == "<loop do\nredo\nend>"
+    end
+    it 'wraps the value of break' do
+      wrap("loop do\nbreak 1\nend").should == "<loop do\nbreak <1>\nend>"
+    end
+    it 'wraps the value of next' do
+      wrap("loop do\nnext 10\nend").should == "<loop do\nnext <10>\nend>"
+    end
   end
 
   describe 'constant access' do
@@ -361,6 +369,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
   end
 
+  # raises can be safely ignored, they're just method invocations
   describe 'begin/rescue/else/ensure/end blocks' do
     it 'wraps begin/rescue/else/ensure/end blocks' do
       wrap("begin\nrescue\nelse\nensure\nend").should == "<begin\nrescue\nelse\nensure\nend>"
@@ -384,8 +393,14 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("begin\nend").should == "<begin\nend>"
       wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
     end
+    it 'does not record retry' do
+      wrap("begin\nrescue\nretry\nend").should == "<begin\nrescue\nretry\nend>"
+    end
   end
 
+  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally recorded
+  # by e.g. a begin/end
+  # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'class definitions' do
     it 'wraps the entire definition and body' do
       wrap("class A\n1\nend").should == "<class A\n<1>\nend>"
@@ -400,6 +415,9 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
   end
 
+  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally recorded
+  # by e.g. a begin/end
+  # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'module definitions' do
     it 'wraps the entire definition and body' do
       wrap("module A\n1\nend").should == "<module A\n<1>\nend>"
