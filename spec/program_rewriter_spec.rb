@@ -1,16 +1,12 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
-# return, break, redo, retry, next
+# break, redo, retry, next
 # void value expressions
 # raise
-# begin
-# method definition
-# yield
-# super
 # private/public/protected
 # parentheses
-# begin/end with no body
+# nvm on recording classes/modules/method defs
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -411,5 +407,42 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps the rescue portion' do
       wrap("module A\n1\nrescue\n2\nend").should == "<module A\n<1>\nrescue\n<2>\nend>"
     end
+  end
+
+  describe 'method definitions' do
+    it 'does not wrap the definition or arguments' do
+      wrap("def a(b,c=1,*d,&e)\nend").should == "def a(b,c=1,*d,&e)\nend"
+    end
+
+    it 'wraps the body' do
+      wrap("def a\n1\nend").should == "def a\n<1>\nend"
+      wrap("def a()\n1\nend").should == "def a()\n<1>\nend"
+    end
+
+    it 'wraps calls to yield' do
+      wrap("def a\nyield\nend").should == "def a\n<yield>\nend"
+    end
+
+    it 'wraps calls to super' do
+      wrap("def a\nsuper\nend").should == "def a\n<super>\nend"
+    end
+
+    it 'wraps the bodies of returns' do
+      wrap("def a\nreturn 1\nend").should == "def a\nreturn <1>\nend"
+    end
+
+    it 'wraps the rescue and ensure portion' do
+      wrap("def a\n1\nrescue\n2\nend").should == "def a\n<1>\nrescue\n<2>\nend"
+      wrap("def a\n1\nrescue\n2\nensure\n3\nend").should == "def a\n<1>\nrescue\n<2>\nensure\n<3>\nend"
+      wrap("def a\n1\nensure\n2\nend").should == "def a\n<1>\nensure\n<2>\nend"
+    end
+  end
+
+  describe 'void value expressions' do
+    # if/elsif/else inheriting
+    # inline return, as well
+    # begin/rescue/else/ensure/end
+    # return, next, break
+    # redo, retry <-- no args
   end
 end

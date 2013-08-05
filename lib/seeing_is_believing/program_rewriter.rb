@@ -59,7 +59,7 @@ class SeeingIsBelieving
 
       case ast.type
       when :args
-      when :rescue, :ensure
+      when :rescue, :ensure, :def, :return
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
