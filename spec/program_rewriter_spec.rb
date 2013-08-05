@@ -234,7 +234,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("1 if 2").should == "<1 if 2>"
     end
 
-    it 'wraps "unless" statements', t:true do
+    it 'wraps "unless" statements' do
       wrap("unless 1\n2\nelse\n3\nend").should == "<unless <1>\n<2>\nelse\n<3>\nend>"
       wrap("unless 1\n2\nend").should == "<unless <1>\n<2>\nend>"
       wrap("unless 1 then\n2\nelse\n3\nend").should == "<unless <1> then\n<2>\nelse\n<3>\nend>"
@@ -242,8 +242,12 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("1 unless 2").should == "<1 unless 2>"
     end
 
-    it 'wraps case statements, and the value they are initialized with, but not the conditionals'
-    it 'wraps case statements that do not have a case value'
+    it 'wraps case statements, and the value they are initialized with, but not the conditionals' do
+      wrap("case 1\nwhen 2\n3\nwhen 4, 5\nelse\n6\nend").should == "<case <1>\nwhen 2\n<3>\nwhen 4, 5\nelse\n<6>\nend>"
+      wrap("case 1\nwhen 2\nend").should == "<case <1>\nwhen 2\nend>"
+      wrap("case\nwhen 2\nend").should == "<case\nwhen 2\nend>"
+      wrap("case\nwhen 2, 3\n4\n5\nend").should == "<case\nwhen 2, 3\n<<4>\n5>\nend>"
+    end
   end
 
   describe 'constant access' do

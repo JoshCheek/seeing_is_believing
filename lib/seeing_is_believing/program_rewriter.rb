@@ -67,6 +67,8 @@ class SeeingIsBelieving
           add_to_result ast, buffer, result
         end
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+      when :when
+        line_nums_to_node_and_col ast.children.last, buffer, result
       when :resbody
         exception_type, variable_name, body = ast.children
         line_nums_to_node_and_col body, buffer, result
