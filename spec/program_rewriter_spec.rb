@@ -2,6 +2,7 @@ require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
 # nvm on recording classes/modules/method defs (begin/end that contain them)
+# apparently `a\n.b\n.c` isn't actually recording the way I want (see basic_example in cukes)
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -30,7 +31,13 @@ describe SeeingIsBelieving::ProgramReWriter do
     post_line_num.should == 2
   end
 
+  it 'does nothing for an empty program' do
+    wrap("").should == ""
+    wrap("\n").should == "\n"
+  end
+
   it 'ignores comments' do
+    wrap("# comment").should == "# comment"
     wrap("1 #abc\n#def").should == "<1> #abc\n#def"
     wrap("1\n=begin\n2\n=end").should == "<1>\n=begin\n2\n=end"
     wrap("=begin\n1\n=end\n2").should == "=begin\n1\n=end\n<2>"

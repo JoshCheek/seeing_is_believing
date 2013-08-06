@@ -25,14 +25,16 @@ class SeeingIsBelieving
         ln2nac = line_nums_to_node_and_col root, buffer
         # p ln2nac
 
-        rewriter.send :insert_before, root.location.expression, before_all
+        if root # file may be empty
+          rewriter.send :insert_before, root.location.expression, before_all
 
-        ln2nac.each do |line_num, (range, last_col)|
-          rewriter.send :insert_before, range, before_each.call(line_num)
-          rewriter.send :insert_after,  range, after_each.call(line_num)
+          ln2nac.each do |line_num, (range, last_col)|
+            rewriter.send :insert_before, range, before_each.call(line_num)
+            rewriter.send :insert_after,  range, after_each.call(line_num)
+          end
+
+          rewriter.send :insert_after,  root.location.expression, after_all
         end
-
-        rewriter.send :insert_after,  root.location.expression, after_all
 
         rewriter.process
       end
