@@ -18,6 +18,8 @@ class SeeingIsBelieving
       buffer.source    = program
       self.root        = Parser::CurrentRuby.new.parse buffer
       self.rewriter    = Parser::Source::Rewriter.new buffer
+    rescue Parser::SyntaxError => e
+      raise ::SyntaxError, e.message
     end
 
     def call

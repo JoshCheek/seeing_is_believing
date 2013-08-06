@@ -11,6 +11,10 @@ describe SeeingIsBelieving::ProgramReWriter do
       after_each:  -> * { '>' }
   end
 
+  it 'raises a SyntaxError if the program is invalid' do
+    expect { wrap '+' }.to raise_error SyntaxError
+  end
+
   it 'wraps the entire body, ignoring leading comments and the data segment' do
     described_class.call("#comment\nA\n__END__\n1",
                          before_all: "[",
