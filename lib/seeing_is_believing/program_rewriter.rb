@@ -52,7 +52,6 @@ class SeeingIsBelieving
     def call
       @result ||= begin
         ln2nac = line_nums_to_node_and_col root, buffer
-        # p ln2nac
 
         if root # file may be empty
           rewriter.send :insert_before, root.location.expression, before_all
@@ -73,16 +72,8 @@ class SeeingIsBelieving
       range = range_or_ast
       range = range_or_ast.location.expression if range.kind_of? ::AST::Node
       line, col = buffer.decompose_position range.end_pos
-      result[line] = if result[line]
-                       _, prev_col = result[line]
-                       if prev_col < col
-                         [range, col]
-                       else
-                         result[line]
-                       end
-                     else
-                       [range, col]
-                     end
+      _, prev_col = result[line]
+      result[line] = (!result[line] || prev_col < col ? [range, col] : result[line] )
     end
 
     def line_nums_to_node_and_col(ast, buffer, result={})
