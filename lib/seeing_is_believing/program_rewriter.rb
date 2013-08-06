@@ -94,13 +94,13 @@ class SeeingIsBelieving
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
           add_to_wrappings ast unless ast.children.any? { |child| void_value? child }
-          ast.children.each { |child| find_wrappings child }
+          add_children ast
         else
           keyword = ast.location.keyword.source
           if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
             add_to_wrappings ast
           end
-          ast.children.each { |child| find_wrappings child }
+          add_children ast
         end
       when :when
         find_wrappings ast.children.last
@@ -155,7 +155,7 @@ class SeeingIsBelieving
           end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
-          ast.children.last.children.each { |child| find_wrappings child }
+          add_children ast.children.last
         end
       when :lvasgn
         # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
@@ -178,7 +178,7 @@ class SeeingIsBelieving
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
 
-          ast.children.each { |child| find_wrappings child }
+          add_children ast
         end
       when :send
         # because the target and the last child can be heredocs
@@ -222,7 +222,7 @@ class SeeingIsBelieving
         range = Parser::Source::Range.new buffer, begin_pos, end_pos
         add_to_wrappings range
 
-        ast.children.each { |child| find_wrappings child }
+        add_children ast
       when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
         last_child = ast.children.last
         if heredoc? last_child
@@ -234,15 +234,13 @@ class SeeingIsBelieving
           add_to_wrappings ast unless void_value? ast.children.last
         end
 
-        ast.children.each { |child| find_wrappings child }
+        add_children ast
       when :str, :dstr
         ast = heredoc_hack ast
         add_to_wrappings ast
       else
         add_to_wrappings ast
-        ast.children.each do |child|
-          find_wrappings child
-        end
+        add_children ast
       end
     rescue
       puts ast.type
