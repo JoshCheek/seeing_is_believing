@@ -184,10 +184,8 @@ class SeeingIsBelieving
         end
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
-      when :dstr
+      when :str, :dstr
         ast = heredoc_hack ast
-        add_to_result ast, buffer, result
-      when :str
         add_to_result ast, buffer, result
       else
         add_to_result ast, buffer, result
@@ -211,8 +209,15 @@ class SeeingIsBelieving
     end
 
     def heredoc?(ast)
-      return false unless ast.kind_of?(Parser::AST::Node) && ast.type == :dstr
-      ast.location.begin.source =~ /^\<\<-?/
+      # some strings are fucking weird.
+      # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
+      # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection, so it has no #begin
+      ast.kind_of?(Parser::AST::Node)           &&
+        (ast.type == :dstr || ast.type == :str) &&
+        (location  = ast.location)              &&
+        (location.respond_to?(:begin))          &&
+        (the_begin = location.begin)            &&
+        (the_begin.source =~ /^\<\<-?/)
     end
 
     def void_value?(ast)

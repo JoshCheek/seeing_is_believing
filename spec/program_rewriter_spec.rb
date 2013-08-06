@@ -188,7 +188,9 @@ describe SeeingIsBelieving::ProgramReWriter do
          {1=>2}
          {a:1}
       |.each do |literal|
-        wrap(literal).should == "<#{literal}>"
+        actual   = wrap(literal)
+        expected = "<#{literal}>"
+        actual.should eq(expected), "expected #{literal.inspect} to equal #{expected.inspect}, got #{actual.inspect}"
       end
     end
 
@@ -434,7 +436,9 @@ describe SeeingIsBelieving::ProgramReWriter do
   describe 'heredocs' do
     it 'records heredocs on their first line' do
       wrap("<<A\nA").should == "<<<A>\nA"
+      wrap("<<A\n123\nA").should == "<<<A>\n123\nA"
       wrap("<<-A\nA").should == "<<<-A>\nA"
+      wrap("<<-A\n123\nA").should == "<<<-A>\n123\nA"
       wrap("1\n<<A\nA").should == "<<1>\n<<A>\nA"
     end
 
