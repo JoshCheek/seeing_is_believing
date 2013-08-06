@@ -33,7 +33,7 @@ class SeeingIsBelieving
       new(program, wrappings).call
     end
 
-    attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :result
+    attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
 
     def initialize(program, wrappings)
       self.program     = program
@@ -45,19 +45,19 @@ class SeeingIsBelieving
       buffer.source    = program
       self.root        = Parser::CurrentRuby.new.parse buffer
       self.rewriter    = Parser::Source::Rewriter.new buffer
-      self.result      = {}
+      self.wrappings   = {}
     rescue Parser::SyntaxError => e
       raise ::SyntaxError, e.message
     end
 
     def call
       @called ||= begin
-        find_wrappings root
+        find_wrappings
 
         if root # file may be empty
           rewriter.send :insert_before, root.location.expression, before_all
 
-          result.each do |line_num, (range, last_col)|
+          wrappings.each do |line_num, (range, last_col)|
             rewriter.send :insert_before, range, before_each.call(line_num)
             rewriter.send :insert_after,  range, after_each.call(line_num)
           end
@@ -69,20 +69,20 @@ class SeeingIsBelieving
       end
     end
 
-    def add_to_result(range_or_ast)
+    def add_to_wrappings(range_or_ast)
       range = range_or_ast
       range = range_or_ast.location.expression if range.kind_of? ::AST::Node
       line, col = buffer.decompose_position range.end_pos
-      _, prev_col = result[line]
-      result[line] = (!result[line] || prev_col < col ? [range, col] : result[line] )
+      _, prev_col = wrappings[line]
+      wrappings[line] = (!wrappings[line] || prev_col < col ? [range, col] : wrappings[line] )
     end
 
     def add_children(ast)
       ast.children.each { |child| find_wrappings child }
     end
 
-    def find_wrappings(ast)
-      return result unless ast.kind_of? ::AST::Node
+    def find_wrappings(ast=root)
+      return wrappings unless ast.kind_of? ::AST::Node
 
       case ast.type
       when :args, :redo, :retry
@@ -91,12 +91,12 @@ class SeeingIsBelieving
         add_children ast
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
-          add_to_result ast unless ast.children.any? { |child| void_value? child }
+          add_to_wrappings ast unless ast.children.any? { |child| void_value? child }
           ast.children.each { |child| find_wrappings child }
         else
           keyword = ast.location.keyword.source
           if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
-            add_to_result ast
+            add_to_wrappings ast
           end
           ast.children.each { |child| find_wrappings child }
         end
@@ -106,12 +106,12 @@ class SeeingIsBelieving
         exception_type, variable_name, body = ast.children
         find_wrappings body
       when :class, :module
-        add_to_result ast
+        add_to_wrappings ast
         ast.children.drop(1).each do |child|
           find_wrappings child
         end
       when :block
-        add_to_result ast
+        add_to_wrappings ast
 
         # a {} comes in as
         #   (block
@@ -146,13 +146,13 @@ class SeeingIsBelieving
         # so we must take the end_pos of the last arg
         array = ast.children.last
         if array.location.expression.source.start_with? '['
-          add_to_result ast
+          add_to_wrappings ast
           find_wrappings array
         else
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
-          add_to_result range
+          add_to_wrappings range
           ast.children.last.children.each { |child| find_wrappings child }
         end
       when :lvasgn
@@ -174,7 +174,7 @@ class SeeingIsBelieving
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
-          add_to_result range
+          add_to_wrappings range
 
           ast.children.each { |child| find_wrappings child }
         end
@@ -218,7 +218,7 @@ class SeeingIsBelieving
 
         begin_pos = ast.location.expression.begin_pos
         range = Parser::Source::Range.new buffer, begin_pos, end_pos
-        add_to_result range
+        add_to_wrappings range
 
         ast.children.each { |child| find_wrappings child }
       when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
@@ -227,17 +227,17 @@ class SeeingIsBelieving
           range = Parser::Source::Range.new buffer,
                                             ast.location.expression.begin_pos,
                                             heredoc_hack(last_child).location.expression.end_pos
-          add_to_result range unless void_value? ast.children.last
+          add_to_wrappings range unless void_value? ast.children.last
         else
-          add_to_result ast unless void_value? ast.children.last
+          add_to_wrappings ast unless void_value? ast.children.last
         end
 
         ast.children.each { |child| find_wrappings child }
       when :str, :dstr
         ast = heredoc_hack ast
-        add_to_result ast
+        add_to_wrappings ast
       else
-        add_to_result ast
+        add_to_wrappings ast
         ast.children.each do |child|
           find_wrappings child
         end
