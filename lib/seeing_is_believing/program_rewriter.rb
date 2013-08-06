@@ -33,8 +33,6 @@ class SeeingIsBelieving
       new(program, wrappings).call
     end
 
-    attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
-
     def initialize(program, wrappings)
       self.program     = program
       self.before_all  = wrappings.fetch :before_all,  ''.freeze
@@ -68,6 +66,10 @@ class SeeingIsBelieving
         rewriter.process
       end
     end
+
+    private
+
+    attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
 
     def add_to_wrappings(range_or_ast)
       range = range_or_ast
