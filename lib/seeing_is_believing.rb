@@ -9,6 +9,7 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/expression_list'
 require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
+require 'seeing_is_believing/program_rewriter'
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
@@ -20,8 +21,8 @@ class SeeingIsBelieving
   end
 
   def initialize(program, options={})
-    program_string   = RemoveInlineComments::NonLeading.call program
-    @stream          = to_stream program_string
+    @_program         = program
+    @stream          = to_stream program
     @matrix_filename = options[:matrix_filename]
     @filename        = options[:filename]
     @stdin           = to_stream options.fetch(:stdin, '')
@@ -31,56 +32,68 @@ class SeeingIsBelieving
     @line_number     = 1
     @timeout         = options[:timeout]
     @debugger        = options.fetch :debugger, Debugger.new(enabled: false)
-
-    debugger.context("SOURCE WITHOUT COMMENTS") { program_string }
   end
 
-  # I'd like to refactor this, but I was unsatisfied with the three different things I tried.
-  # In the end, I prefer keeping all manipulation of the line number here in the main function
-  # And I like that the higher-level construct of how the program gets built can be found here.
   def call
     @memoized_result ||= begin
-      leading_comments = ''
-
-
-      # extract leading comments (e.g. encoding) so they don't get wrapped in begin/rescue/end
-      while SyntaxAnalyzer.line_is_comment?(next_line_queue.peek)
-        leading_comments << next_line_queue.dequeue << "\n"
-        @line_number += 1
-      end
-
-      # extract leading =begin/=end so they don't get wrapped in begin/rescue/end
-      while SyntaxAnalyzer.begins_multiline_comment?(next_line_queue.peek)
-        lines = next_line_queue.dequeue << "\n"
-        @line_number += 1
-        until SyntaxAnalyzer.begin_and_end_comments_are_complete? lines
-          lines << next_line_queue.dequeue << "\n"
-          @line_number += 1
-        end
-        leading_comments << lines
-      end
-
-      # extract program body
-      body = ''
-      until next_line_queue.empty? || data_segment?
-        expression, expression_size = expression_list.call
-        body << expression
-        track_line_number @line_number
-        @line_number += expression_size
-      end
-
-      # extract data segment
-      data_segment = ''
-      data_segment = "\n#{the_rest_of_the_stream}" if data_segment?
-
-      # build the program
-      program = leading_comments << record_exceptions_in(body) << data_segment
-      debugger.context("TRANSLATED PROGRAM") { program }
-
-      # return the result
-      result_for program, max_line_number
+      # must use newline after code, or comments will comment out rescue section
+      wrapped = ProgramReWriter.call "#@_program\n",
+                                     before_all:  "begin;",
+                                     after_all:   "\n"\
+                                                  "rescue Exception;"\
+                                                    "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
+                                                    "$seeing_is_believing_current_result.record_exception line_number, $!;"\
+                                                    "$seeing_is_believing_current_result.exitstatus = 1;"\
+                                                    "$seeing_is_believing_current_result.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                                  "end",
+                                     before_each: -> line_number { "($seeing_is_believing_current_result.record_result(#{line_number}, (" },
+                                     after_each:  -> line_number { ")))" }
+      debugger.context("TRANSLATED PROGRAM") { wrapped }
+      result_for wrapped, 100
     end
   end
+
+
+#       leading_comments = ''
+
+
+#       # extract leading comments (e.g. encoding) so they don't get wrapped in begin/rescue/end
+#       while SyntaxAnalyzer.line_is_comment?(next_line_queue.peek)
+#         leading_comments << next_line_queue.dequeue << "\n"
+#         @line_number += 1
+#       end
+
+#       # extract leading =begin/=end so they don't get wrapped in begin/rescue/end
+#       while SyntaxAnalyzer.begins_multiline_comment?(next_line_queue.peek)
+#         lines = next_line_queue.dequeue << "\n"
+#         @line_number += 1
+#         until SyntaxAnalyzer.begin_and_end_comments_are_complete? lines
+#           lines << next_line_queue.dequeue << "\n"
+#           @line_number += 1
+#         end
+#         leading_comments << lines
+#       end
+
+#       # extract program body
+#       body = ''
+#       until next_line_queue.empty? || data_segment?
+#         expression, expression_size = expression_list.call
+#         body << expression
+#         track_line_number @line_number
+#         @line_number += expression_size
+#       end
+
+#       # extract data segment
+#       data_segment = ''
+#       data_segment = "\n#{the_rest_of_the_stream}" if data_segment?
+
+#       # build the program
+#       program = leading_comments << record_exceptions_in(body) << data_segment
+
+#       # return the result
+#       result_for program, max_line_number
+#     end
+#   end
 
   private
 

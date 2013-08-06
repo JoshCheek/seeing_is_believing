@@ -62,10 +62,10 @@ Feature:
     Then stdout is:
     """
     def m
-      if true
-        return 1
+      if true     # => true
+        return 1  # => 1
       end
-    end           # => nil
+    end
     m             # => 1
     """
 

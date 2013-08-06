@@ -71,7 +71,7 @@ Feature: Running the binary successfully
     # method and invocations
     def meth(n)
       n          # => "12", "34"
-    end          # => nil
+    end
 
     meth "12"  # => "12"
     meth "34"  # => "34"
@@ -89,7 +89,7 @@ Feature: Running the binary successfully
      b/x  # => /a\n b/x
 
     # don't record heredocs b/c they're just too fucking different
-    <<HERE
+    <<HERE    # => "is a doc\n"
     is a doc
     HERE
 
@@ -102,7 +102,7 @@ Feature: Running the binary successfully
     class User
       def initialize(name)
         @name = name        # => "Josh", "Rick"
-      end                   # => nil
+      end
 
       def name
         @name   # => "Josh", "Rick"
@@ -187,7 +187,7 @@ Feature: Running the binary successfully
     __LINE__            # => 2
     $stdout.puts "omg"  # => nil
     $stderr.puts "hi"   # => nil
-    DATA.read           # => "1\n2"
+    DATA.read           # => "1\n2\n"
     __LINE__            # => 6
 
     # >> omg
