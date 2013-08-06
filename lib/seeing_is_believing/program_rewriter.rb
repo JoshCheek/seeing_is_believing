@@ -64,11 +64,11 @@ class SeeingIsBelieving
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
-          add_to_result ast, buffer, result
+          add_to_result ast, buffer, result unless ast.children.any? { |child| void_value? child }
           ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
         else
           keyword = ast.location.keyword.source
-          if keyword == 'if' || keyword == 'unless'
+          if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
             add_to_result ast, buffer, result
           end
           ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
@@ -172,15 +172,15 @@ class SeeingIsBelieving
         add_to_result range, buffer, result
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
-      when :begin
+      when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
         last_child = ast.children.last
         if heredoc? last_child
           range = Parser::Source::Range.new buffer,
                                             ast.location.expression.begin_pos,
                                             heredoc_hack(last_child).location.expression.end_pos
-          add_to_result range, buffer, result
+          add_to_result range, buffer, result unless void_value? ast.children.last
         else
-          add_to_result ast, buffer, result
+          add_to_result ast, buffer, result unless void_value? ast.children.last
         end
 
         ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
@@ -213,6 +213,21 @@ class SeeingIsBelieving
     def heredoc?(ast)
       return false unless ast.kind_of?(Parser::AST::Node) && ast.type == :dstr
       ast.location.begin.source =~ /^\<\<-?/
+    end
+
+    def void_value?(ast)
+      case ast && ast.type
+      when :begin, :kwbegin, :resbody # begin and kwbegin should be the same thing, but it changed in parser 1.4.1 to 2.0.0, so just adding them both for safety
+        void_value?(ast.children[-1])
+      when :rescue, :ensure
+        ast.children.any? { |child| void_value? child }
+      when :if
+        void_value?(ast.children[1]) || void_value?(ast.children[2])
+      when :return, :next, :redo, :retry, :break
+        true
+      else
+        false
+      end
     end
   end
 end

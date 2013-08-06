@@ -1,8 +1,7 @@
 require 'seeing_is_believing/program_rewriter'
 
 # find giant list of keywords, make sure they're all accounted for
-# void value expressions
-# nvm on recording classes/modules/method defs
+# nvm on recording classes/modules/method defs (begin/end that contain them)
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -37,6 +36,79 @@ describe SeeingIsBelieving::ProgramReWriter do
     wrap("=begin\n1\n=end\n2").should == "=begin\n1\n=end\n<2>"
   end
 
+  describe 'void value expressions' do
+    def void_value?(ast)
+      klass = described_class.new '', {}
+      klass.__send__(:void_value?, ast)
+    end
+
+    def ast_for(code)
+      Parser::CurrentRuby.parse code
+    end
+
+    it 'knows a `return`, `next`, `redo`, `retry`, and `break` are void values' do
+      void_value?(ast_for("def a; return; end").children.last).should be_true
+      void_value?(ast_for("loop { next  }").children.last).should be_true
+      void_value?(ast_for("loop { redo  }").children.last).should be_true
+      void_value?(ast_for("loop { break }").children.last).should be_true
+
+      the_retry = ast_for("begin; rescue; retry; end").children.first.children[1].children.last
+      the_retry.type.should == :retry
+      void_value?(the_retry).should be_true
+    end
+    it 'knows an `if` is a void value if either side is a void value' do
+      the_if = ast_for("def a; if 1; return 2; else; 3; end; end").children.last
+      the_if.type.should == :if
+      void_value?(the_if).should be_true
+
+      the_if = ast_for("def a; if 1; 2; else; return 3; end; end").children.last
+      the_if.type.should == :if
+      void_value?(the_if).should be_true
+
+      the_if = ast_for("def a; if 1; 2; else; 3; end; end").children.last
+      the_if.type.should == :if
+      void_value?(the_if).should be_false
+    end
+    it 'knows a begin is a void value if its last element is a void value' do
+      the_begin = ast_for("loop { begin; break; end }").children.last
+      [:begin, :kwbegin].should include the_begin.type
+      void_value?(the_begin).should be_true
+
+      the_begin = ast_for("loop { begin; 1; end }").children.last
+      [:begin, :kwbegin].should include the_begin.type
+      void_value?(the_begin).should be_false
+    end
+    it 'knows a rescue is a void value if its last child or its else is a void value' do
+      the_rescue = ast_for("begin; rescue; retry; end").children.first
+      the_rescue.type.should == :rescue
+      void_value?(the_rescue).should be_true
+
+      the_rescue = ast_for("begin; rescue; 1; else; retry; end").children.first
+      the_rescue.type.should == :rescue
+      void_value?(the_rescue).should be_true
+
+      the_rescue = ast_for("begin; rescue; 1; else; 2; end").children.first
+      the_rescue.type.should == :rescue
+      void_value?(the_rescue).should be_false
+    end
+    it 'knows an ensure is a void value if its body or ensure portion are void values' do
+      the_ensure = ast_for("loop { begin; break; ensure; 1; end }").children.last.children.last
+      the_ensure.type.should == :ensure
+      void_value?(the_ensure).should be_true
+
+      the_ensure = ast_for("loop { begin; 1; ensure; break; end }").children.last.children.last
+      the_ensure.type.should == :ensure
+      void_value?(the_ensure).should be_true
+
+      the_ensure = ast_for("loop { begin; 1; ensure; 2; end }").children.last.children.last
+      the_ensure.type.should == :ensure
+      void_value?(the_ensure).should be_false
+    end
+    it 'knows other things are not void values' do
+      void_value?(ast_for "123").should be_false
+    end
+  end
+
   describe 'basic expressions' do
     it 'wraps an expression' do
       wrap("A").should == "<A>"
@@ -51,6 +123,11 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("A\nB").should == "<<A>\nB>"
       wrap("(1\n2)").should == "<(<1>\n2)>"
       wrap("begin\n1\n2\nend").should == "<begin\n<1>\n<2>\nend>"
+    end
+
+    it 'does not wrap multiple expressions when they constitute a void value' do
+      wrap("def a\n1\nreturn 2\nend").should == "def a\n<1>\nreturn <2>\nend"
+      wrap("def a\nreturn 1\n2\nend").should == "def a\n<return <1>\n2>\nend"
     end
 
     it 'wraps nested expressions' do
@@ -262,6 +339,22 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("case\nwhen 2 then\nend").should == "<case\nwhen 2 then\nend>"
       wrap("case\nwhen 2, 3 then\n4\n5\nend").should == "<case\nwhen 2, 3 then\n<<4>\n5>\nend>"
     end
+
+    it 'does not record if the last value in any portion is a void value expression' do
+      wrap("def a\nif true\nreturn 1\nend\nend").should == "def a\nif <true>\nreturn <1>\nend\nend"
+      wrap("def a\nif true\n1\nelse\nreturn 2\nend\nend").should == "def a\nif <true>\n<1>\nelse\nreturn <2>\nend\nend"
+      wrap("def a\nif true\n1\nelsif true\n2\nelse\nreturn 3\nend\nend").should == "def a\nif <true>\n<1>\nelsif <true>\n<2>\nelse\nreturn <3>\nend\nend"
+      wrap("def a\nif true\nif true\nreturn 1\nend\nend\nend").should == "def a\nif <true>\nif <true>\nreturn <1>\nend\nend\nend"
+      wrap("def a\nunless true\nreturn 1\nend\nend").should == "def a\nunless <true>\nreturn <1>\nend\nend"
+      wrap("def a\nunless true\n1\nelse\nreturn 2\nend\nend").should == "def a\nunless <true>\n<1>\nelse\nreturn <2>\nend\nend"
+      wrap("def a\ntrue ?\n(return 1) :\n2\nend").should == "def a\n<true> ?\n(return <1>) :\n<2>\nend"
+      wrap("def a\ntrue ?\n1 :\n(return 2)\nend").should == "def a\n<true> ?\n<1> :\n(return <2>)\nend"
+    end
+
+    # not sure if I actually want this, or if it's just easier b/c it falls out of the current implementation
+    it 'wraps the conditional from an inline if, when it cannot wrap the entire if' do
+      wrap("def a\nreturn if 1\nend").should == "def a\nreturn if <1>\nend"
+    end
   end
 
   describe 'loops' do
@@ -394,7 +487,10 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
     end
     it 'does not record retry' do
-      wrap("begin\nrescue\nretry\nend").should == "<begin\nrescue\nretry\nend>"
+      # in this case, it could record the retry
+      # but I don't know how to tell the difference between this and
+      # "loop { begin; retry; end }" so w/e
+      wrap("begin\nrescue\nretry\nend").should == "begin\nrescue\nretry\nend"
     end
   end
 
@@ -454,13 +550,5 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("def a\n1\nrescue\n2\nensure\n3\nend").should == "def a\n<1>\nrescue\n<2>\nensure\n<3>\nend"
       wrap("def a\n1\nensure\n2\nend").should == "def a\n<1>\nensure\n<2>\nend"
     end
-  end
-
-  describe 'void value expressions' do
-    # if/elsif/else inheriting
-    # inline return, as well
-    # begin/rescue/else/ensure/end
-    # return, next, break
-    # redo, retry <-- no args
   end
 end
