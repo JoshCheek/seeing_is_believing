@@ -79,8 +79,9 @@ class SeeingIsBelieving
       wrappings[line] = (!wrappings[line] || prev_col < col ? [range, col] : wrappings[line] )
     end
 
-    def add_children(ast)
-      ast.children.each { |child| find_wrappings child }
+    def add_children(ast, omit_first = false)
+      (omit_first ? ast.children.drop(1) : ast.children)
+        .each { |child| find_wrappings child }
     end
 
     def find_wrappings(ast=root)
@@ -109,9 +110,7 @@ class SeeingIsBelieving
         find_wrappings body
       when :class, :module
         add_to_wrappings ast
-        ast.children.drop(1).each do |child|
-          find_wrappings child
-        end
+        add_children ast, true
       when :block
         add_to_wrappings ast
 
@@ -132,13 +131,8 @@ class SeeingIsBelieving
         # I can't think of anything other than a :send that could be the first child
         # but I'll check for it anyway.
         the_send = ast.children[0]
-        if the_send.type == :send
-          find_wrappings the_send.children.first
-        end
-
-        ast.children.drop(1).each do |child|
-          find_wrappings child
-        end
+        find_wrappings the_send.children.first if the_send.type == :send
+        add_children ast, true
       when :masgn
         # we must look at RHS because [1,<<A] and 1,<<A are both allowed
         #
@@ -177,7 +171,6 @@ class SeeingIsBelieving
           end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
-
           add_children ast
         end
       when :send
@@ -219,9 +212,8 @@ class SeeingIsBelieving
         end
 
         begin_pos = ast.location.expression.begin_pos
-        range = Parser::Source::Range.new buffer, begin_pos, end_pos
+        range     = Parser::Source::Range.new(buffer, begin_pos, end_pos)
         add_to_wrappings range
-
         add_children ast
       when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
         last_child = ast.children.last
@@ -236,13 +228,13 @@ class SeeingIsBelieving
 
         add_children ast
       when :str, :dstr
-        ast = heredoc_hack ast
-        add_to_wrappings ast
+        add_to_wrappings heredoc_hack ast
       else
         add_to_wrappings ast
         add_children ast
       end
     rescue
+      # TODO: delete this rescue block once things get stabler
       puts ast.type
       puts $!
       require "pry"
@@ -256,6 +248,8 @@ class SeeingIsBelieving
                             location: Parser::Source::Map.new(ast.location.begin)
     end
 
+    # this is the scardest fucking method I think I've ever written.
+    # *anything* can go wrong!
     def heredoc?(ast)
       # some strings are fucking weird.
       # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
