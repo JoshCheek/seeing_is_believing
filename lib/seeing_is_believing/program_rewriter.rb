@@ -52,7 +52,7 @@ class SeeingIsBelieving
 
     def call
       @called ||= begin
-        line_nums_to_node_and_col root
+        find_wrappings root
 
         if root # file may be empty
           rewriter.send :insert_before, root.location.expression, before_all
@@ -78,10 +78,10 @@ class SeeingIsBelieving
     end
 
     def add_children(ast)
-      ast.children.each { |child| line_nums_to_node_and_col child }
+      ast.children.each { |child| find_wrappings child }
     end
 
-    def line_nums_to_node_and_col(ast)
+    def find_wrappings(ast)
       return result unless ast.kind_of? ::AST::Node
 
       case ast.type
@@ -92,23 +92,23 @@ class SeeingIsBelieving
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
           add_to_result ast unless ast.children.any? { |child| void_value? child }
-          ast.children.each { |child| line_nums_to_node_and_col child }
+          ast.children.each { |child| find_wrappings child }
         else
           keyword = ast.location.keyword.source
           if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
             add_to_result ast
           end
-          ast.children.each { |child| line_nums_to_node_and_col child }
+          ast.children.each { |child| find_wrappings child }
         end
       when :when
-        line_nums_to_node_and_col ast.children.last
+        find_wrappings ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children
-        line_nums_to_node_and_col body
+        find_wrappings body
       when :class, :module
         add_to_result ast
         ast.children.drop(1).each do |child|
-          line_nums_to_node_and_col child
+          find_wrappings child
         end
       when :block
         add_to_result ast
@@ -131,11 +131,11 @@ class SeeingIsBelieving
         # but I'll check for it anyway.
         the_send = ast.children[0]
         if the_send.type == :send
-          line_nums_to_node_and_col the_send.children.first
+          find_wrappings the_send.children.first
         end
 
         ast.children.drop(1).each do |child|
-          line_nums_to_node_and_col child
+          find_wrappings child
         end
       when :masgn
         # we must look at RHS because [1,<<A] and 1,<<A are both allowed
@@ -147,13 +147,13 @@ class SeeingIsBelieving
         array = ast.children.last
         if array.location.expression.source.start_with? '['
           add_to_result ast
-          line_nums_to_node_and_col array
+          find_wrappings array
         else
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_result range
-          ast.children.last.children.each { |child| line_nums_to_node_and_col child }
+          ast.children.last.children.each { |child| find_wrappings child }
         end
       when :lvasgn
         # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
@@ -176,7 +176,7 @@ class SeeingIsBelieving
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_result range
 
-          ast.children.each { |child| line_nums_to_node_and_col child }
+          ast.children.each { |child| find_wrappings child }
         end
       when :send
         # because the target and the last child can be heredocs
@@ -220,7 +220,7 @@ class SeeingIsBelieving
         range = Parser::Source::Range.new buffer, begin_pos, end_pos
         add_to_result range
 
-        ast.children.each { |child| line_nums_to_node_and_col child }
+        ast.children.each { |child| find_wrappings child }
       when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
         last_child = ast.children.last
         if heredoc? last_child
@@ -232,14 +232,14 @@ class SeeingIsBelieving
           add_to_result ast unless void_value? ast.children.last
         end
 
-        ast.children.each { |child| line_nums_to_node_and_col child }
+        ast.children.each { |child| find_wrappings child }
       when :str, :dstr
         ast = heredoc_hack ast
         add_to_result ast
       else
         add_to_result ast
         ast.children.each do |child|
-          line_nums_to_node_and_col child
+          find_wrappings child
         end
       end
     rescue
