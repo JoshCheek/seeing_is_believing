@@ -51,7 +51,7 @@ class SeeingIsBelieving
 
     def call
       @result ||= begin
-        ln2nac = line_nums_to_node_and_col root, buffer
+        ln2nac = line_nums_to_node_and_col root
 
         if root # file may be empty
           rewriter.send :insert_before, root.location.expression, before_all
@@ -68,7 +68,7 @@ class SeeingIsBelieving
       end
     end
 
-    def add_to_result(range_or_ast, buffer, result)
+    def add_to_result(range_or_ast, result)
       range = range_or_ast
       range = range_or_ast.location.expression if range.kind_of? ::AST::Node
       line, col = buffer.decompose_position range.end_pos
@@ -76,37 +76,37 @@ class SeeingIsBelieving
       result[line] = (!result[line] || prev_col < col ? [range, col] : result[line] )
     end
 
-    def line_nums_to_node_and_col(ast, buffer, result={})
+    def line_nums_to_node_and_col(ast, result={})
       return result unless ast.kind_of? ::AST::Node
 
       case ast.type
       when :args, :redo, :retry
         # no op
       when :rescue, :ensure, :def, :return, :break, :next
-        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        ast.children.each { |child| line_nums_to_node_and_col child, result }
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
-          add_to_result ast, buffer, result unless ast.children.any? { |child| void_value? child }
-          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+          add_to_result ast, result unless ast.children.any? { |child| void_value? child }
+          ast.children.each { |child| line_nums_to_node_and_col child, result }
         else
           keyword = ast.location.keyword.source
           if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
-            add_to_result ast, buffer, result
+            add_to_result ast, result
           end
-          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+          ast.children.each { |child| line_nums_to_node_and_col child, result }
         end
       when :when
-        line_nums_to_node_and_col ast.children.last, buffer, result
+        line_nums_to_node_and_col ast.children.last, result
       when :resbody
         exception_type, variable_name, body = ast.children
-        line_nums_to_node_and_col body, buffer, result
+        line_nums_to_node_and_col body, result
       when :class, :module
-        add_to_result ast, buffer, result
+        add_to_result ast, result
         ast.children.drop(1).each do |child|
-          line_nums_to_node_and_col child, buffer, result
+          line_nums_to_node_and_col child, result
         end
       when :block
-        add_to_result ast, buffer, result
+        add_to_result ast, result
 
         # a {} comes in as
         #   (block
@@ -126,11 +126,11 @@ class SeeingIsBelieving
         # but I'll check for it anyway.
         the_send = ast.children[0]
         if the_send.type == :send
-          line_nums_to_node_and_col the_send.children.first, buffer, result
+          line_nums_to_node_and_col the_send.children.first, result
         end
 
         ast.children.drop(1).each do |child|
-          line_nums_to_node_and_col child, buffer, result
+          line_nums_to_node_and_col child, result
         end
       when :masgn
         # we must look at RHS because [1,<<A] and 1,<<A are both allowed
@@ -141,14 +141,14 @@ class SeeingIsBelieving
         # so we must take the end_pos of the last arg
         array = ast.children.last
         if array.location.expression.source.start_with? '['
-          add_to_result ast, buffer, result
-          line_nums_to_node_and_col array, buffer, result
+          add_to_result ast, result
+          line_nums_to_node_and_col array, result
         else
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
-          add_to_result range, buffer, result
-          ast.children.last.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+          add_to_result range, result
+          ast.children.last.children.each { |child| line_nums_to_node_and_col child, result }
         end
       when :lvasgn
         # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
@@ -169,9 +169,9 @@ class SeeingIsBelieving
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
-          add_to_result range, buffer, result
+          add_to_result range, result
 
-          ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+          ast.children.each { |child| line_nums_to_node_and_col child, result }
         end
       when :send
         # because the target and the last child can be heredocs
@@ -213,28 +213,28 @@ class SeeingIsBelieving
 
         begin_pos = ast.location.expression.begin_pos
         range = Parser::Source::Range.new buffer, begin_pos, end_pos
-        add_to_result range, buffer, result
+        add_to_result range, result
 
-        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        ast.children.each { |child| line_nums_to_node_and_col child, result }
       when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
         last_child = ast.children.last
         if heredoc? last_child
           range = Parser::Source::Range.new buffer,
                                             ast.location.expression.begin_pos,
                                             heredoc_hack(last_child).location.expression.end_pos
-          add_to_result range, buffer, result unless void_value? ast.children.last
+          add_to_result range, result unless void_value? ast.children.last
         else
-          add_to_result ast, buffer, result unless void_value? ast.children.last
+          add_to_result ast, result unless void_value? ast.children.last
         end
 
-        ast.children.each { |child| line_nums_to_node_and_col child, buffer, result }
+        ast.children.each { |child| line_nums_to_node_and_col child, result }
       when :str, :dstr
         ast = heredoc_hack ast
-        add_to_result ast, buffer, result
+        add_to_result ast, result
       else
-        add_to_result ast, buffer, result
+        add_to_result ast, result
         ast.children.each do |child|
-          line_nums_to_node_and_col child, buffer, result
+          line_nums_to_node_and_col child, result
         end
       end
       result
