@@ -53,14 +53,14 @@ class SeeingIsBelieving
         find_wrappings
 
         if root # file may be empty
-          rewriter.send :insert_before, root.location.expression, before_all
+          rewriter.insert_before root.location.expression, before_all
 
           wrappings.each do |line_num, (range, last_col)|
-            rewriter.send :insert_before, range, before_each.call(line_num)
-            rewriter.send :insert_after,  range, after_each.call(line_num)
+            rewriter.insert_before range, before_each.call(line_num)
+            rewriter.insert_after  range, after_each.call(line_num)
           end
 
-          rewriter.send :insert_after,  root.location.expression, after_all
+          rewriter.insert_after root.location.expression, after_all
         end
 
         rewriter.process

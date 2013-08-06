@@ -4,6 +4,15 @@ require 'seeing_is_believing/program_rewriter'
 # nvm on recording classes/modules/method defs (begin/end that contain them)
 # apparently `a\n.b\n.c` isn't actually recording the way I want (see basic_example in cukes)
 
+# go through this, there's several examples we haven't covered here
+# https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
+#
+# *1..6 is considered its own thing and will get passed like that to record
+# probably this will show it:
+#   puts(
+#    *1..6
+#   )
+
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
     described_class.call code,
