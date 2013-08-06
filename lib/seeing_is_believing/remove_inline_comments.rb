@@ -36,7 +36,7 @@ class SeeingIsBelieving
       ast, comments         = parser.parse_with_comments(buffer)
       comments.select { |comment| comment.type == :inline }
               .select { |comment| selector.call comment }
-              .each   { |comment| rewriter.remove comment.location }
+              .each   { |comment| rewriter.remove comment.location.expression }
       additional_rewrites.call buffer, rewriter
       rewriter.process
     rescue Parser::SyntaxError => e

@@ -33,10 +33,10 @@ class SeeingIsBelieving
 
       def remove_whitespace_preceeding_comments
         lambda do |buffer, rewriter|
-          comments[:result].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, false }
-          comments[:exception].each { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
-          comments[:stdout].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
-          comments[:stderr].each    { |comment| remove_whitespace_before comment.location.begin_pos, buffer, rewriter, true  }
+          comments[:result].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, false }
+          comments[:exception].each { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
+          comments[:stdout].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
+          comments[:stderr].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
         end
       end
 
