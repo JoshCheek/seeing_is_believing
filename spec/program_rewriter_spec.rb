@@ -261,6 +261,11 @@ describe SeeingIsBelieving::ProgramReWriter do
 
     it 'wraps method invocations that span multiple lines' do
       wrap("a\n.b\n.c").should == "<<<a>\n.b>\n.c>"
+      wrap("a\n.b{\n}").should == "<<a>\n.b{\n}>"
+      wrap("a\n.b{}").should == "<<a>\n.b{}>"
+      wrap("[*1..5]\n.map { |n| n * 2 }\n.take(2).\nsize").should ==
+        "<<<<[*1..5]>\n.map { |n| n * 2 }>\n.take(2)>.\nsize>"
+      wrap("a = b\n.c\na").should == "<<a = <b>\n.c>\na>"
     end
 
     it 'wraps args in method arguments when the method spans multiple lines' do
@@ -451,6 +456,11 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("<<-A\nA").should == "<<<-A>\nA"
       wrap("<<-A\n123\nA").should == "<<<-A>\n123\nA"
       wrap("1\n<<A\nA").should == "<<1>\n<<A>\nA"
+      wrap("<<A + <<B\n1\nA\n2\nB").should == "<<<A + <<B>\n1\nA\n2\nB"
+      wrap("<<A\n1\nA\n<<B\n2\nB").should == "<<<<A>\n1\nA\n<<B>\n2\nB"
+      pending 'turtles all the way down :(' do
+        wrap("puts <<A\nA\nputs <<B\nB").should == "<<puts <<A>\nA\nputs <<B>\nB"
+      end
     end
 
     it "records methods that wrap heredocs, even whent hey don't have parentheses" do

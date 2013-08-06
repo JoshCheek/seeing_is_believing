@@ -89,6 +89,28 @@ class SeeingIsBelieving
         end
       when :block
         add_to_result ast, buffer, result
+
+        # a {} comes in as
+        #   (block
+        #     (send nil :a)
+        #     (args) nil)
+        #
+        # a.b {} comes in as
+        #   (block
+        #     (send
+        #       (send nil :a) :b)
+        #     (args) nil)
+        #
+        # we don't want to wrap the send itself, otherwise could come in as <a>{}
+        # but we do want ot wrap its first child so that we can get <<a>\n.b{}>
+        #
+        # I can't think of anything other than a :send that could be the first child
+        # but I'll check for it anyway.
+        the_send = ast.children[0]
+        if the_send.type == :send
+          line_nums_to_node_and_col the_send.children.first, buffer, result
+        end
+
         ast.children.drop(1).each do |child|
           line_nums_to_node_and_col child, buffer, result
         end
