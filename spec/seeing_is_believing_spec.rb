@@ -14,12 +14,12 @@ describe SeeingIsBelieving do
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
 
   it 'takes a string or and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
-    input  = "1+1\n'2'+'2'"
-    invoke(input)[1].should == ["2"]
+    input  = "10+10\n'2'+'2'"
+    invoke(input)[1].should == ["20"]
     invoke(input)[2].should == ['"22"']
   end
 
-  it 'remembers context of previous lines' do
+  it 'remembers context of previous lines', t:true do
     values_for("a=12\na*2").should == [['12'], ['24']]
   end
 
@@ -41,15 +41,8 @@ describe SeeingIsBelieving do
     values_for("(1..2).each do |i|\ni\nend").should == [[], ['1', '2'], ['1..2']]
   end
 
+  # now that we're using Parser, there's very very few of these
   it 'evalutes to an empty array for lines that it cannot understand' do
-    vs = values_for('if true &&
-                          if true &&
-                                    true
-                            1
-                          end
-                  2
-                end').should == [[], [], ['true'], ['1'], ['1'], ['2'], ['2']]
-
     values_for("[3].map do |n|\n n*2\n end").should == [[], ['6'], ['[6]']]
 
     values_for("[1].map do |n1|
@@ -58,61 +51,18 @@ describe SeeingIsBelieving do
                   end
                 end").should == [[], [], ['3'], ['[3]'], ['[[3]]']]
 
-    values_for("[1].map do |n1|
-                  [2].map do |n2| n1 + n2
-                  end
-                end").should == [[], [], ['[3]'], ['[[3]]']]
-
-    values_for("[1].map do |n1|
-                  [2].map do |n2|
-                    n1 + n2 end
-                end").should == [[], [], ['[3]'], ['[[3]]']]
-
-    values_for("[1].map do |n1|
-                  [2].map do |n2|
-                    n1 + n2 end end").should == [[], [], ['[[3]]']]
-
-    values_for("[1].map do |n1|
-                  [2].map do |n2| n1 + n2 end end").should == [[], ['[[3]]']]
-
-    values_for("[1].map do |n1| [2].map do |n2| n1 + n2 end end").should == [['[[3]]']]
-
-    values_for("[1].map do |n1|
-                  [2].map do |n2|
-                    n1 + n2
-                end end").should == [[], [], ['3'], ['[[3]]']]
-
-    values_for("[1].map do |n1| [2].map do |n2|
-                  n1 + n2
-                end end").should == [[], ['3'], ['[[3]]']]
-
-    values_for("[1].map do |n1| [2].map do |n2|
-                  n1 + n2 end end").should == [[], ['[[3]]']]
-
-    values_for("[1].map do |n1| [2].map do |n2|
-                  n1 + n2 end
-                end").should == [[], [], ['[[3]]']]
-
-    values_for("1 +
-                    2").should == [[], ['3']]
-
     values_for("'\n1\n'").should == [[], [], ['"\n1\n"']]
 
-    # fails b/c parens should go around line 1, not around entire expression -.^
-    # values_for("<<HEREDOC\n1\nHEREDOC").should == [[], [], ['"\n1\n"']]
-    # values_for("<<-HEREDOC\n1\nHEREDOC").should == [[], [], ['"\n1\n"']]
+    values_for("<<HEREDOC\n\n1\nHEREDOC").should ==  [[%Q'"\\n1\\n"']] # newlines escaped b/c lib inspects them
+    values_for("<<-HEREDOC\n\n1\nHEREDOC").should == [[%Q'"\\n1\\n"']]
   end
 
-  it "does not record expressions that are here docs (only really b/c it's not smart enough)" do
-    values_for("<<A\n1\nA").should be_all &:empty?
-    values_for(" <<A\n1\nA").should be_all &:empty?
-    values_for("<<-A\n1\n A").should be_all &:empty?
-    values_for(" <<-A\n1\n A").should be_all &:empty?
-    values_for("s=<<-A\n1\n A").should be_all &:empty?
-    values_for("def meth\n<<-A\n1\nA\nend").should == [[], [], [], [], ['nil']]
+  it "records heredocs" do
+    values_for("<<A\n1\nA").should == [[%'"1\\n"']]
+    values_for("<<-A\n1\nA").should == [[%'"1\\n"']]
   end
 
-  it 'does not insert code into the middle of heredocs' do
+  it 'does not insert code into the middle of heredocs', t:true do
     invoked = invoke(<<-HEREDOC.gsub(/^      /, ''))
       puts <<DOC1
       doc1

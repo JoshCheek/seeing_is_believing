@@ -6,10 +6,10 @@ require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/expression_list'
 require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/program_rewriter'
+require 'seeing_is_believing/syntax_analyzer' # can we get rid of this?
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
@@ -49,7 +49,7 @@ class SeeingIsBelieving
                                      before_each: -> line_number { "($seeing_is_believing_current_result.record_result(#{line_number}, (" },
                                      after_each:  -> line_number { ")))" }
       debugger.context("TRANSLATED PROGRAM") { wrapped }
-      result_for wrapped, 100
+      result_for wrapped
     end
   end
 
@@ -135,7 +135,7 @@ class SeeingIsBelieving
     "end"
   end
 
-  def result_for(program, max_line_number)
+  def result_for(program)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
       EvaluateByMovingFiles.new(program,
@@ -147,7 +147,6 @@ class SeeingIsBelieving
                                 encoding:        @encoding,
                                 timeout:         @timeout)
                            .call
-                           .track_line_number(max_line_number)
     end
   end
 
