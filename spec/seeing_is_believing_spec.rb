@@ -60,7 +60,6 @@ describe SeeingIsBelieving do
   end
 
   it 'does not insert code into the middle of heredocs' do
-    pending 'come back to this after getting everything working' do
     invoked = invoke(<<-HEREDOC.gsub(/^      /, ''))
       puts <<DOC1
       doc1
@@ -79,7 +78,6 @@ describe SeeingIsBelieving do
     HEREDOC
 
     invoked.stdout.should == "doc1\ndoc2\ndoc3\ndoc4\ndoc5\n"
-    end
   end
 
   it 'has no output for empty lines' do

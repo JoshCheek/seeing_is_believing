@@ -224,8 +224,6 @@ class SeeingIsBelieving
                                             ast.location.expression.begin_pos,
                                             heredoc_hack(last_child).location.expression.end_pos
           add_to_wrappings range unless void_value? ast.children.last
-        else
-          add_to_wrappings ast unless void_value? ast.children.last
         end
 
         add_children ast
@@ -266,7 +264,7 @@ class SeeingIsBelieving
 
     def void_value?(ast)
       case ast && ast.type
-      when :begin, :kwbegin, :resbody # begin and kwbegin should be the same thing, but it changed in parser 1.4.1 to 2.0.0, so just adding them both for safety
+      when :begin, :kwbegin, :resbody
         void_value?(ast.children[-1])
       when :rescue, :ensure
         ast.children.any? { |child| void_value? child }

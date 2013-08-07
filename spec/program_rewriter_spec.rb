@@ -129,19 +129,15 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
 
     it 'wraps multiple expressions' do
-      # so why not (A)\n(A)?
-      # because multiple expressions get implicit begin/end blocks around them
-      # and the begin/end block ends on the same line as the second expression
-      # this is fine, though, as it will evaluate to the same value
-
-      wrap("A\nB").should == "<<A>\nB>"
-      wrap("(1\n2)").should == "<(<1>\n2)>"
+      wrap("A\nB").should == "<A>\n<B>"
+      wrap("(1\n2)").should == "(<1>\n<2>)"
+      # wrap("(1\n2\n)").should == "<(<1>\n<2>\n)>" # just not worth the effort of identifying it, really
       wrap("begin\n1\n2\nend").should == "<begin\n<1>\n<2>\nend>"
     end
 
     it 'does not wrap multiple expressions when they constitute a void value' do
       wrap("def a\n1\nreturn 2\nend").should == "def a\n<1>\nreturn <2>\nend"
-      wrap("def a\nreturn 1\n2\nend").should == "def a\n<return <1>\n2>\nend"
+      wrap("def a\nreturn 1\n2\nend").should == "def a\nreturn <1>\n<2>\nend"
     end
 
     it 'wraps nested expressions' do
@@ -149,7 +145,7 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
 
     it 'wraps multiple expressions on the same line' do
-      wrap("a;b").should == "<a;b>"
+      wrap("a;b").should == "a;<b>"
     end
 
     # many of these taken from http://en.wikibooks.org/wiki/Ruby_Programming/Syntax/Literals
@@ -280,7 +276,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a\n.b{}").should == "<<a>\n.b{}>"
       wrap("[*1..5]\n.map { |n| n * 2 }\n.take(2).\nsize").should ==
         "<<<<[*1..5]>\n.map { |n| n * 2 }>\n.take(2)>.\nsize>"
-      wrap("a = b\n.c\na").should == "<<a = <b>\n.c>\na>"
+      wrap("a = b\n.c\na").should == "<a = <b>\n.c>\n<a>"
     end
 
     it 'wraps args in method arguments when the method spans multiple lines' do
@@ -393,12 +389,12 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("case 1\nwhen 2\n3\nwhen 4, 5\nelse\n6\nend").should == "<case <1>\nwhen 2\n<3>\nwhen 4, 5\nelse\n<6>\nend>"
       wrap("case 1\nwhen 2\nend").should == "<case <1>\nwhen 2\nend>"
       wrap("case\nwhen 2\nend").should == "<case\nwhen 2\nend>"
-      wrap("case\nwhen 2, 3\n4\n5\nend").should == "<case\nwhen 2, 3\n<<4>\n5>\nend>"
+      wrap("case\nwhen 2, 3\n4\n5\nend").should == "<case\nwhen 2, 3\n<4>\n<5>\nend>"
 
       wrap("case 1\nwhen 2 then\n3\nwhen 4, 5 then\nelse\n6\nend").should == "<case <1>\nwhen 2 then\n<3>\nwhen 4, 5 then\nelse\n<6>\nend>"
       wrap("case 1\nwhen 2 then\nend").should == "<case <1>\nwhen 2 then\nend>"
       wrap("case\nwhen 2 then\nend").should == "<case\nwhen 2 then\nend>"
-      wrap("case\nwhen 2, 3 then\n4\n5\nend").should == "<case\nwhen 2, 3 then\n<<4>\n5>\nend>"
+      wrap("case\nwhen 2, 3 then\n4\n5\nend").should == "<case\nwhen 2, 3 then\n<4>\n<5>\nend>"
     end
 
     it 'does not record if the last value in any portion is a void value expression' do
