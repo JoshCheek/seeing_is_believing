@@ -26,7 +26,7 @@ class SeeingIsBelieving
 
     def record_result(line_number, value)
       track_line_number line_number
-      results(line_number) << value.inspect
+      results_for(line_number) << value.inspect
       value
     end
 
@@ -36,22 +36,32 @@ class SeeingIsBelieving
                                                  exception.backtrace
       self.exception = recorded_exception
       track_line_number line_number
-      results(line_number).exception = recorded_exception
+      results_for(line_number).exception = recorded_exception
     end
 
     def [](line_number)
-      results(line_number)
+      results_for(line_number)
     end
 
     def each(&block)
       (min_line_number..max_line_number).each { |line_number| block.call self[line_number] }
     end
 
+    def inspect
+      results
+      "#<SIB::Result #{
+        instance_variables.map { |name| "#{name}=#{instance_variable_get(name).inspect}" }.join("\n  ")
+      }>"
+    end
+
     private
 
-    def results(line_number)
+    def results_for(line_number)
+      results[line_number] ||= Line.new
+    end
+
+    def results
       @results ||= Hash.new
-      @results[line_number] ||= Line.new
     end
   end
 end

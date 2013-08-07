@@ -35,6 +35,7 @@ class SeeingIsBelieving
   def call
     @memoized_result ||= begin
       # must use newline after code, or comments will comment out rescue section
+      # FIXME: IS THIS STILL TRUE?
       wrapped = ProgramReWriter.call "#@program\n",
                                      before_all:  "begin;",
                                      after_all:   "\n"\
@@ -47,7 +48,9 @@ class SeeingIsBelieving
                                      before_each: -> line_number { "($seeing_is_believing_current_result.record_result(#{line_number}, (" },
                                      after_each:  -> line_number { ")))" }
       debugger.context("TRANSLATED PROGRAM") { wrapped }
-      result_for wrapped
+      result = result_for wrapped
+      debugger.context("RESULT") { result.inspect }
+      result
     end
   end
 

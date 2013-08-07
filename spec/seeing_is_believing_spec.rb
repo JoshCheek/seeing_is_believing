@@ -308,6 +308,12 @@ describe SeeingIsBelieving do
       debugger.to_s.should include "TRANSLATED PROGRAM:"
       debugger.to_s.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
     end
+
+    it 'prints the result', t:true do
+      call
+      debugger.to_s.should include "RESULT:"
+      debugger.to_s.should include '1=>#<SIB:Line["1"] no exception>'
+    end
     # should ProgramRewriter have some debug options?
   end
 
