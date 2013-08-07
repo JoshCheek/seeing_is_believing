@@ -105,14 +105,11 @@ class SeeingIsBelieving
           end
           add_children ast
         end
-      when :when, :pair, :defs
+      when :when, :pair, :defs, :class, :module, :sclass
         find_wrappings ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children
         find_wrappings body
-      when :class, :module, :sclass
-        add_to_wrappings ast
-        add_children ast, true
       when :block
         add_to_wrappings ast
 

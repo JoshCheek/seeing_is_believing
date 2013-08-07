@@ -106,8 +106,8 @@ Feature: Running the binary successfully
 
       def name
         @name   # => "Josh", "Rick"
-      end       # => nil
-    end         # => nil
+      end
+    end
 
     User.new("Josh").name  # => "Josh"
     User.new("Rick").name  # => "Rick"

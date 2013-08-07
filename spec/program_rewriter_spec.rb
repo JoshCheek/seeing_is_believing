@@ -4,9 +4,6 @@ require 'seeing_is_believing/program_rewriter'
 # but for now, leave it b/c it's convenient to be able to make it blow up
 # Probably replace this with some macro like __INVALID_SYNTAX__ that blows it up :)
 
-# nvm on recording classes/modules/method defs (begin/end that contain them)
-
-
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
     described_class.call code,
@@ -619,20 +616,20 @@ describe SeeingIsBelieving::ProgramReWriter do
   # by e.g. a begin/end
   # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'class definitions' do
-    it 'wraps the entire definition and body' do
-      wrap("class A\n1\nend").should == "<class A\n<1>\nend>"
+    it 'does not wrap the class definition, does wrap the body' do
+      wrap("class A\n1\nend").should == "class A\n<1>\nend"
     end
 
-    it 'wraps the superclass' do
-      wrap("class A < B\nend").should == "<class A < <B>\nend>"
+    it 'does not wrap the superclass definition' do
+      wrap("class A < B\nend").should == "class A < B\nend"
     end
 
-    it 'wraps the rescue portion' do
-      wrap("class A < B\n1\nrescue\n2\nend").should == "<class A < <B>\n<1>\nrescue\n<2>\nend>"
+    it 'wraps the rescue body' do
+      wrap("class A < B\n1\nrescue\n2\nend").should == "class A < B\n<1>\nrescue\n<2>\nend"
     end
 
-    it 'wraps the singleton class' do
-      wrap("class << self\n end").should == "<class << self\n end>"
+    it 'does not wrap the singleton class' do
+      wrap("class << self\n end").should == "class << self\n end"
     end
   end
 
@@ -640,11 +637,11 @@ describe SeeingIsBelieving::ProgramReWriter do
   # by e.g. a begin/end
   # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'module definitions' do
-    it 'wraps the entire definition and body' do
-      wrap("module A\n1\nend").should == "<module A\n<1>\nend>"
+    it 'does not wrap the definition, does wrap the body' do
+      wrap("module A\n1\nend").should == "module A\n<1>\nend"
     end
     it 'wraps the rescue portion' do
-      wrap("module A\n1\nrescue\n2\nend").should == "<module A\n<1>\nrescue\n<2>\nend>"
+      wrap("module A\n1\nrescue\n2\nend").should == "module A\n<1>\nrescue\n<2>\nend"
     end
   end
 
