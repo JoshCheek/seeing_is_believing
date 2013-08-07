@@ -141,20 +141,37 @@ Known Issues
 ============
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
-* Heredocs aren't recorded. It might actually be possible if the ExpressionList were to get smarter
 
 Todo
 ====
 
-* Make a Lines class which is a collection of lines, responsible for managing the trailing newlines in Binary::PrintResultsNextToLines and SeeingIsBelieving/ExpressionList
 * Add examples of invocations to the help screen
 * Add xmpfilter option to sublime text
 * Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
-* Move as much of the SyntaxAnalyzer as possible over to Parser and ditch Ripper altogether
+* Remove the SyntaxAnalyzer altogether!
 * How about if begin/rescue/end was able to record the result on the rescue section
 * Check how begin/rescue/end with multiple rescue blocks works
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 * Be able to clean an invalid file (used to be able to do this, but parser can't identify comments in an invalid file the way that I'm currently using it, cuke is still there, marked as @not-implemented)
+* Add a flag to allow you to just get the results so that it can be easily used without a Ruby runtime
+
+Up Next
+=======
+
+rename ProgramRewriter -> WrapExpressions
+find that fucking regex bug
+add the inspected result --debug output
+Fix high-level shit:
+  remove all previous output except if -x flag is set, then leave `# =>`
+  `gsub(/\s*$/, '')`
+  run it through sib
+  if -x flag is set
+    for each comment
+      if it is `# =>`, update it
+  else
+    printable_list = get a list of each line that is an actual end and has no comments with sib (can ignore heredocs b/c they will have no value)
+                     this list is like line_number => [col_number, character_number] (e.g. where to insert on that line)
+    for each line, add it at that character location, adjusting from the col_number to pad it correctly
 
 
 License
