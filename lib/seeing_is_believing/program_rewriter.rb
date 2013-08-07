@@ -88,7 +88,7 @@ class SeeingIsBelieving
       return wrappings unless ast.kind_of? ::AST::Node
 
       case ast.type
-      when :args, :redo, :retry
+      when :args, :redo, :retry, :alias, :undef
         # no op
       when :rescue, :ensure, :def, :return, :break, :next
         add_children ast

@@ -1,8 +1,10 @@
 require 'seeing_is_believing/program_rewriter'
 
-# find giant list of keywords, make sure they're all accounted for
+# eventually make this not record BEGIN and END
+# but for now, leave it b/c it's convenient to be able to make it blow up
+# Probably replace this with some macro like __INVALID_SYNTAX__ that blows it up :)
+
 # nvm on recording classes/modules/method defs (begin/end that contain them)
-# apparently `a\n.b\n.c` isn't actually recording the way I want (see basic_example in cukes)
 
 # go through this, there's several examples we haven't covered here
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
@@ -219,6 +221,12 @@ describe SeeingIsBelieving::ProgramReWriter do
       # there is also __dir__, but it's only 2.0
       wrap("__FILE__").should == "<__FILE__>"
       wrap("__LINE__").should == "<__LINE__>"
+      wrap("defined? a").should == "<defined? a>"
+    end
+
+    it 'does not wrap alias, undef' do
+      wrap("alias tos to_s").should == "alias tos to_s"
+      wrap("undef tos").should == "undef tos"
     end
   end
 
@@ -381,6 +389,14 @@ describe SeeingIsBelieving::ProgramReWriter do
     # not sure if I actually want this, or if it's just easier b/c it falls out of the current implementation
     it 'wraps the conditional from an inline if, when it cannot wrap the entire if' do
       wrap("def a\nreturn if 1\nend").should == "def a\nreturn if <1>\nend"
+    end
+
+    it 'does not wrap &&, and, ||, or, not' do
+      wrap("1\\\n&& 2").should == "<<1>\\\n&& 2>"
+      wrap("1\\\nand 2").should == "<<1>\\\nand 2>"
+      wrap("1\\\n|| 2").should == "<<1>\\\n|| 2>"
+      wrap("1\\\nor 2").should == "<<1>\\\nor 2>"
+      wrap("not\\\n1").should == "<not\\\n1>"
     end
   end
 
