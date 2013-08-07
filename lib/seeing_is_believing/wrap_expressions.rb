@@ -30,7 +30,7 @@ end
 # comprehensive list of syntaxes that can come up
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 class SeeingIsBelieving
-  class ProgramReWriter
+  class WrapExpressions
     def self.call(program, wrappings)
       new(program, wrappings).call
     end

@@ -1,10 +1,10 @@
-require 'seeing_is_believing/program_rewriter'
+require 'seeing_is_believing/wrap_expressions'
 
 # eventually make this not record BEGIN and END
 # but for now, leave it b/c it's convenient to be able to make it blow up
 # Probably replace this with some macro like __INVALID_SYNTAX__ that blows it up :)
 
-describe SeeingIsBelieving::ProgramReWriter do
+describe SeeingIsBelieving::WrapExpressions do
   def wrap(code)
     described_class.call code,
       before_each: -> * { '<' },
