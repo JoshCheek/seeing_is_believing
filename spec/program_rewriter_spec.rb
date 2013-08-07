@@ -204,8 +204,9 @@ describe SeeingIsBelieving::ProgramReWriter do
          %r.abc.
 
          :abc
-         :"abc"
          :'abc'
+         :"abc"
+         :"a\#{1}"
 
          {1=>2}
          {a:1}
@@ -227,6 +228,11 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'does not wrap alias, undef' do
       wrap("alias tos to_s").should == "alias tos to_s"
       wrap("undef tos").should == "undef tos"
+    end
+
+    it 'wraps syscalls, but not code interpolated into them' do
+      wrap("`a\nb`").should == "<`a\nb`>"
+      wrap("`a\n\#{1\n2\n3}b`").should == "<`a\n\#{1\n2\n3}b`>"
     end
   end
 
@@ -436,6 +442,38 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps namespaced constant access' do
       wrap("::A").should == "<::A>"
       wrap("A::B").should == "<A::B>"
+    end
+  end
+
+  describe 'array literals' do
+    it 'records the array and each element that is on its own line' do
+      wrap("[1]").should == "<[1]>"
+      wrap("[1,\n2,\n]").should == "<[<1>,\n<2>,\n]>"
+      wrap("[1, 2,\n]").should == "<[1, <2>,\n]>"
+    end
+  end
+
+  describe 'regex literals' do
+    it 'wraps regexes' do
+      wrap("/a/").should == "</a/>"
+    end
+
+    it 'wraps regexes with %r' do
+      wrap("%r(a)").should == "<%r(a)>"
+      wrap("%r'a'").should == "<%r'a'>"
+    end
+
+    it 'records regexes that span mulitple lines' do
+      wrap("/a\nb/").should == "</a\nb/>"
+      wrap("/a\nb/i").should == "</a\nb/i>"
+    end
+
+    # eventually it would be nice if it recorded the interpolated portion,
+    # when the end of the line was not back inside the regexp
+    it 'records regexes with interpolation, but not the interpolated portion' do
+      wrap("/a\#{1}/").should == "</a\#{1}/>"
+      wrap("/a\n\#{1}\nb/").should == "</a\n\#{1}\nb/>"
+      wrap("/a\n\#{1\n}b/").should == "</a\n\#{1\n}b/>"
     end
   end
 

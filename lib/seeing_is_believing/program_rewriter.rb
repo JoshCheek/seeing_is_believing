@@ -227,7 +227,7 @@ class SeeingIsBelieving
         end
 
         add_children ast
-      when :str, :dstr
+      when :str, :dstr, :xstr, :regexp
         add_to_wrappings heredoc_hack ast
       else
         add_to_wrappings ast
