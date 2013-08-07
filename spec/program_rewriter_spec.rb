@@ -8,12 +8,6 @@ require 'seeing_is_believing/program_rewriter'
 
 # go through this, there's several examples we haven't covered here
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
-#
-# *1..6 is considered its own thing and will get passed like that to record
-# probably this will show it:
-#   puts(
-#    *1..6
-#   )
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -294,6 +288,11 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps args in method arguments when the method spans multiple lines' do
       wrap("a 1,\n2").should == "<a <1>,\n2>"
     end
+
+    it 'does not wrap splat args' do
+      wrap("a(\n*a\n)").should == "<a(\n*a\n)>"
+      wrap("a(\n*1..2\n)").should == "<a(\n*1..2\n)>"
+    end
   end
 
   describe 'assignment' do
@@ -445,11 +444,23 @@ describe SeeingIsBelieving::ProgramReWriter do
     end
   end
 
+  describe 'hash literals' do
+    it 'wraps the whole hash and values that are on their own lines' do
+      wrap("{}").should == "<{}>"
+      wrap("{\n1 => 2}").should == "<{\n1 => 2}>"
+      wrap("{\n1 => 2,\n:abc => 3,\ndef: 4\n}").should == "<{\n1 => <2>,\n:abc => <3>,\ndef: <4>\n}>"
+    end
+  end
+
   describe 'array literals' do
     it 'records the array and each element that is on its own line' do
       wrap("[1]").should == "<[1]>"
       wrap("[1,\n2,\n]").should == "<[<1>,\n<2>,\n]>"
       wrap("[1, 2,\n]").should == "<[1, <2>,\n]>"
+    end
+
+    it 'does not record splat elements' do
+      wrap("[1,\n*2..3,\n4\n]").should == "<[<1>,\n*2..3,\n<4>\n]>"
     end
   end
 
