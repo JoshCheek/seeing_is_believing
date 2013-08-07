@@ -89,9 +89,9 @@ class SeeingIsBelieving
       def add_line(line, line_number)
         should_record = should_record? line, line_number
         if should_record && xmpfilter_style && line.strip =~ /^# =>/
-          new_body << xmpfilter_update(line, file_result[line_number - 1])
+          new_body << xmpfilter_update(line, file_result[line_number - 1]) # There is probably a bug in this since it doesn't go through the LineFormatter it can probably be to long
         elsif should_record && xmpfilter_style
-          new_body << xmpfilter_update(line, file_result[line_number])
+          new_body << xmpfilter_update(line, file_result[line_number]) # There is probably a bug in this since it doesn't go through the LineFormatter it can probably be to long
         elsif should_record
           new_body << format_line(line.chomp, line_number, file_result[line_number])
         else
@@ -108,7 +108,7 @@ class SeeingIsBelieving
 
       # again, this is too naive, should actually parse the comments and update them
       def xmpfilter_update(line, line_results)
-        line.gsub /# =>.*?$/, "# => #{line_results.join ', '}"
+        line.gsub /# =>.*?$/, "# => #{line_results.join(', ').gsub("\n", '\n')}"
       end
 
       def add_stdout

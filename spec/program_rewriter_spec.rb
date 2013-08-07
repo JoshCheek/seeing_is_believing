@@ -11,6 +11,11 @@ describe SeeingIsBelieving::ProgramReWriter do
       after_each:  -> * { '>' }
   end
 
+  # when we get to 2.0 syntax:
+  # example 'ah' do
+  # wrap '-> { }.()'
+  # end
+
   it 'raises a SyntaxError if the program is invalid' do
     expect { wrap '+' }.to raise_error SyntaxError
   end

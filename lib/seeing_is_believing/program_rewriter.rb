@@ -195,7 +195,10 @@ class SeeingIsBelieving
           end_pos = ast.location.expression.end_pos
 
         # there is no last arg, but there are parens, find the closing paren
-        # we can't trust the expression range because the target could be a heredoc
+        # we can't trust the expression range because the *target* could be a heredoc
+        # FIXME: This blows up on 2.0 with ->{}.() because it has no selector, so in this case
+        #        we would want to use the expression, but I'm ignoring that for now, because
+        #        we would have to check the target to see whether to use the selector or the expression
         elsif buffer.source[ast.location.selector.end_pos] == '('
           closing_paren_index = ast.location.selector.end_pos + 1
           closing_paren_index += 1 until buffer.source[closing_paren_index] == ')'

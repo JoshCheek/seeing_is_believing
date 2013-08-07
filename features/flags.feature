@@ -459,6 +459,8 @@ Feature: Using flags
     2+2    # => 10
     "a
      b" # =>
+    /a
+     b/ # =>
     1
     "omg"
     # =>
@@ -474,6 +476,8 @@ Feature: Using flags
     2+2    # => 4
     "a
      b" # => "a\n b"
+    /a
+     b/ # => /a\n b/
     1
     "omg"
     # => "omg"
