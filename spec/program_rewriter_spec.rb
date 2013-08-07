@@ -615,7 +615,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       # in this case, it could record the retry
       # but I don't know how to tell the difference between this and
       # "loop { begin; retry; end }" so w/e
-      wrap("begin\nrescue\nretry\nend").should == "begin\nrescue\nretry\nend"
+      wrap("begin\nrescue\nretry\nend").should == "<begin\nrescue\nretry\nend>"
     end
   end
 

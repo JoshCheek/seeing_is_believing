@@ -217,7 +217,7 @@ class SeeingIsBelieving
         range     = Parser::Source::Range.new(buffer, begin_pos, end_pos)
         add_to_wrappings range
         add_children ast
-      when :begin, :kwbegin # I can't tell which is going to occur, there's probably something I'm missing here
+      when :begin
         last_child = ast.children.last
         if heredoc? last_child
           range = Parser::Source::Range.new buffer,
