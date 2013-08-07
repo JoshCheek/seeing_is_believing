@@ -27,6 +27,8 @@ module Parser
 end
 
 
+# comprehensive list of syntaxes that can come up
+# https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 class SeeingIsBelieving
   class ProgramReWriter
     def self.call(program, wrappings)
@@ -88,7 +90,7 @@ class SeeingIsBelieving
       return wrappings unless ast.kind_of? ::AST::Node
 
       case ast.type
-      when :args, :redo, :retry, :alias, :undef, :splat
+      when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line
         # no op
       when :rescue, :ensure, :def, :return, :break, :next
         add_children ast
@@ -103,12 +105,12 @@ class SeeingIsBelieving
           end
           add_children ast
         end
-      when :when, :pair
+      when :when, :pair, :defs
         find_wrappings ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children
         find_wrappings body
-      when :class, :module
+      when :class, :module, :sclass
         add_to_wrappings ast
         add_children ast, true
       when :block

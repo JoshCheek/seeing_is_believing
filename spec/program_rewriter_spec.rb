@@ -6,8 +6,6 @@ require 'seeing_is_believing/program_rewriter'
 
 # nvm on recording classes/modules/method defs (begin/end that contain them)
 
-# go through this, there's several examples we haven't covered here
-# https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 
 describe SeeingIsBelieving::ProgramReWriter do
   def wrap(code)
@@ -298,10 +296,22 @@ describe SeeingIsBelieving::ProgramReWriter do
   describe 'assignment' do
     it 'wraps entire simple assignment' do
       wrap("a=1").should == "<a=1>"
+      wrap("a.b=1").should == "<a.b=1>"
+      wrap("A=1").should == "<A=1>"
+      wrap("A::B=1").should == "<A::B=1>"
+      wrap("@a=1").should == "<@a=1>"
+      wrap("@@a=1").should == "<@@a=1>"
+      wrap("$a=1").should == "<$a=1>"
     end
 
     it 'wraps multiple assignments' do
       wrap("a,b=1,2").should == "<a,b=1,2>"
+      wrap("a,b.c=1,2").should == "<a,b.c=1,2>"
+      wrap("a,B=1,2").should == "<a,B=1,2>"
+      wrap("a,B::C=1,2").should == "<a,B::C=1,2>"
+      wrap("a,@b=1,2").should == "<a,@b=1,2>"
+      wrap("a,@@b=1,2").should == "<a,@@b=1,2>"
+      wrap("a,$b=1,2").should == "<a,$b=1,2>"
     end
 
     it 'wraps multiple assignment on each line' do
@@ -333,6 +343,13 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("a &= 1").should == "<a &= 1>"
       wrap("a ||= 1").should == "<a ||= 1>"
       wrap("a &&= 1").should == "<a &&= 1>"
+      wrap("a[1] = 2").should == "<a[1] = 2>"
+      wrap("a[1] ||= 2").should == "<a[1] ||= 2>"
+    end
+
+    it 'wraps arguments in the assignment' do
+      wrap("a[1\n]=2").should == "<a[<1>\n]=2>"
+      wrap("a[1,\n2\n]=3").should == "<a[<1>,\n<2>\n]=3>"
     end
   end
 
@@ -353,6 +370,10 @@ describe SeeingIsBelieving::ProgramReWriter do
 
       # inline
       wrap("1 if 2").should == "<1 if 2>"
+    end
+
+    it 'ignores conditionals that are implicit regexes' do
+      wrap("if /a/\n1\nend").should == "<if /a/\n<1>\nend>"
     end
 
     it 'wraps ternaries' do
@@ -402,6 +423,7 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("1\\\n|| 2").should == "<<1>\\\n|| 2>"
       wrap("1\\\nor 2").should == "<<1>\\\nor 2>"
       wrap("not\\\n1").should == "<not\\\n1>"
+      wrap("!\\\n1").should == "<!\\\n1>"
     end
   end
 
@@ -409,14 +431,17 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps the until condition and body' do
       wrap("until 1\n2\nend").should == "<until <1>\n<2>\nend>"
       wrap("1 until 2").should == "<1 until 2>"
+      wrap("begin\n1\nend until true").should == "<begin\n<1>\nend until true>"
     end
     it 'wraps the while condition and body' do
       wrap("while 1\n2\nend").should == "<while <1>\n<2>\nend>"
       wrap("1 while 2").should == "<1 while 2>"
+      wrap("begin\n1\nend while true").should == "<begin\n<1>\nend while true>"
     end
     it 'wraps for/in loops collections and bodies' do
       wrap("for a in range;1;end").should == "<for a in range;1;end>"
       wrap("for a in range\n1\nend").should == "<for a in <range>\n<1>\nend>"
+      wrap("for a in range do\n1\nend").should == "<for a in <range> do\n<1>\nend>"
       wrap("for a,b in whatev\n1\nend").should == "<for a,b in <whatev>\n<1>\nend>"
       # this one just isn't worth it for now, too edge and I'm fucking tired
       # wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend").should ==
@@ -467,6 +492,7 @@ describe SeeingIsBelieving::ProgramReWriter do
   describe 'regex literals' do
     it 'wraps regexes' do
       wrap("/a/").should == "</a/>"
+      wrap("/(?<a>x)/").should == "</(?<a>x)/>"
     end
 
     it 'wraps regexes with %r' do
@@ -608,6 +634,10 @@ describe SeeingIsBelieving::ProgramReWriter do
     it 'wraps the rescue portion' do
       wrap("class A < B\n1\nrescue\n2\nend").should == "<class A < <B>\n<1>\nrescue\n<2>\nend>"
     end
+
+    it 'wraps the singleton class' do
+      wrap("class << self\n end").should == "<class << self\n end>"
+    end
   end
 
   # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally recorded
@@ -632,12 +662,18 @@ describe SeeingIsBelieving::ProgramReWriter do
       wrap("def a()\n1\nend").should == "def a()\n<1>\nend"
     end
 
+    it 'does not try to record singleton method definitions' do
+      wrap("def a.b\n1\nend").should == "def a.b\n<1>\nend"
+      wrap("def a.b()\n1\nend").should == "def a.b()\n<1>\nend"
+    end
+
     it 'wraps calls to yield' do
       wrap("def a\nyield\nend").should == "def a\n<yield>\nend"
     end
 
     it 'wraps calls to super' do
       wrap("def a\nsuper\nend").should == "def a\n<super>\nend"
+      wrap("def a\nsuper 1\nend").should == "def a\n<super 1>\nend"
     end
 
     it 'wraps the bodies of returns' do
