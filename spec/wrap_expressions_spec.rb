@@ -1,6 +1,6 @@
 require 'seeing_is_believing/wrap_expressions'
 
-# eventually make this not record BEGIN and END
+# eventually make this not wrap BEGIN and END
 # but for now, leave it b/c it's convenient to be able to make it blow up
 # Probably replace this with some macro like __INVALID_SYNTAX__ that blows it up :)
 
@@ -399,7 +399,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("case\nwhen 2, 3 then\n4\n5\nend").should == "<case\nwhen 2, 3 then\n<4>\n<5>\nend>"
     end
 
-    it 'does not record if the last value in any portion is a void value expression' do
+    it 'does not wrap if the last value in any portion is a void value expression' do
       wrap("def a\nif true\nreturn 1\nend\nend").should == "def a\nif <true>\nreturn <1>\nend\nend"
       wrap("def a\nif true\n1\nelse\nreturn 2\nend\nend").should == "def a\nif <true>\n<1>\nelse\nreturn <2>\nend\nend"
       wrap("def a\nif true\n1\nelsif true\n2\nelse\nreturn 3\nend\nend").should == "def a\nif <true>\n<1>\nelsif <true>\n<2>\nelse\nreturn <3>\nend\nend"
@@ -476,13 +476,13 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'array literals' do
-    it 'records the array and each element that is on its own line' do
+    it 'wraps the array and each element that is on its own line' do
       wrap("[1]").should == "<[1]>"
       wrap("[1,\n2,\n]").should == "<[<1>,\n<2>,\n]>"
       wrap("[1, 2,\n]").should == "<[1, <2>,\n]>"
     end
 
-    it 'does not record splat elements' do
+    it 'does not wrap splat elements' do
       wrap("[1,\n*2..3,\n4\n]").should == "<[<1>,\n*2..3,\n<4>\n]>"
     end
   end
@@ -498,14 +498,14 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("%r'a'").should == "<%r'a'>"
     end
 
-    it 'records regexes that span mulitple lines' do
+    it 'wraps regexes that span mulitple lines' do
       wrap("/a\nb/").should == "</a\nb/>"
       wrap("/a\nb/i").should == "</a\nb/i>"
     end
 
-    # eventually it would be nice if it recorded the interpolated portion,
+    # eventually it would be nice if it wraped the interpolated portion,
     # when the end of the line was not back inside the regexp
-    it 'records regexes with interpolation, but not the interpolated portion' do
+    it 'wraps regexes with interpolation, but not the interpolated portion' do
       wrap("/a\#{1}/").should == "</a\#{1}/>"
       wrap("/a\n\#{1}\nb/").should == "</a\n\#{1}\nb/>"
       wrap("/a\n\#{1\n}b/").should == "</a\n\#{1\n}b/>"
@@ -513,31 +513,31 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'string literals (except heredocs)' do
-    it 'records single and double quoted strings' do
+    it 'wraps single and double quoted strings' do
       wrap("'a'").should == "<'a'>"
       wrap('"a"').should == '<"a">'
     end
 
-    it 'records strings with %, %Q, and %q' do
+    it 'wraps strings with %, %Q, and %q' do
       wrap("%'a'").should == "<%'a'>"
       wrap("%q'a'").should == "<%q'a'>"
       wrap("%Q'a'").should == "<%Q'a'>"
     end
 
-    it 'records strings that span mulitple lines' do
+    it 'wraps strings that span mulitple lines' do
       wrap("'a\nb'").should == "<'a\nb'>"
       wrap(%'"a\nb"').should == %'<"a\nb">'
     end
 
-    # eventually it would be nice if it recorded the interpolated portion,
+    # eventually it would be nice if it wraped the interpolated portion,
     # when the end of the line was not back inside the string
-    it 'records strings with interpolation, but not the interpolated portion' do
+    it 'wraps strings with interpolation, but not the interpolated portion' do
       wrap('"a#{1}"').should == '<"a#{1}">'
       wrap(%'"a\n\#{1}\nb"').should == %'<"a\n\#{1}\nb">'
       wrap(%'"a\n\#{1\n}b"').should == %'<"a\n\#{1\n}b">'
     end
 
-    it 'records %, %q, %Q' do
+    it 'wraps %, %q, %Q' do
       wrap('%(A)').should == '<%(A)>'
       wrap('%.A.').should == '<%.A.>'
       wrap('%q(A)').should == '<%q(A)>'
@@ -548,7 +548,7 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'heredocs' do
-    it 'records heredocs on their first line' do
+    it 'wraps heredocs on their first line' do
       wrap("<<A\nA").should == "<<<A>\nA"
       wrap("<<A\n123\nA").should == "<<<A>\n123\nA"
       wrap("<<-A\nA").should == "<<<-A>\nA"
@@ -561,7 +561,7 @@ describe SeeingIsBelieving::WrapExpressions do
       end
     end
 
-    it "records methods that wrap heredocs, even whent hey don't have parentheses" do
+    it "wraps methods that wrap heredocs, even whent hey don't have parentheses" do
       wrap("a(<<HERE)\nHERE").should == "<a(<<HERE)>\nHERE"
       wrap("a <<HERE\nHERE").should == "<a <<HERE>\nHERE"
       wrap("a 1, <<HERE\nHERE").should == "<a 1, <<HERE>\nHERE"
@@ -570,14 +570,14 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a.b 1,\n2,\n<<HERE\nHERE").should == "<a.b <1>,\n<2>,\n<<HERE>\nHERE"
     end
 
-    it "records assignments whose value is a heredoc" do
+    it "wraps assignments whose value is a heredoc" do
       wrap("a=<<A\nA").should == "<a=<<A>\nA"
       wrap("a,b=<<A,<<B\nA\nB").should == "<a,b=<<A,<<B>\nA\nB"
       wrap("a,b=1,<<B\nB").should == "<a,b=1,<<B>\nB"
       wrap("a,b=<<A,1\nA").should == "<a,b=<<A,1>\nA"
     end
 
-    it 'records methods tacked onto the end of heredocs' do
+    it 'wraps methods tacked onto the end of heredocs' do
       wrap("<<A.size\nA").should == "<<<A.size>\nA"
       wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
       wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
@@ -609,15 +609,15 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("begin\nend").should == "<begin\nend>"
       wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
     end
-    it 'does not record retry' do
-      # in this case, it could record the retry
+    it 'does not wrap retry' do
+      # in this case, it could wrap the retry
       # but I don't know how to tell the difference between this and
       # "loop { begin; retry; end }" so w/e
       wrap("begin\nrescue\nretry\nend").should == "<begin\nrescue\nretry\nend>"
     end
   end
 
-  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally recorded
+  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally wraped
   # by e.g. a begin/end
   # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'class definitions' do
@@ -638,7 +638,7 @@ describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
-  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally recorded
+  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally wraped
   # by e.g. a begin/end
   # ignoring public/private/protected for now, b/c they're just methods, not keywords
   describe 'module definitions' do
@@ -660,7 +660,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("def a()\n1\nend").should == "def a()\n<1>\nend"
     end
 
-    it 'does not try to record singleton method definitions' do
+    it 'does not try to wrap singleton method definitions' do
       wrap("def a.b\n1\nend").should == "def a.b\n<1>\nend"
       wrap("def a.b()\n1\nend").should == "def a.b()\n<1>\nend"
     end
