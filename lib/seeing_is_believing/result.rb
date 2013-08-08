@@ -5,7 +5,6 @@ require 'seeing_is_believing/tracks_line_numbers_seen'
 class SeeingIsBelieving
   class Result
     include HasException
-    include TracksLineNumbersSeen
     include Enumerable
 
     attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib
@@ -20,12 +19,7 @@ class SeeingIsBelieving
       stderr && !stderr.empty?
     end
 
-    def initialize
-      @min_line_number = @max_line_number = 1
-    end
-
     def record_result(line_number, value)
-      track_line_number line_number
       results_for(line_number) << value.inspect
       value
     end
@@ -35,7 +29,6 @@ class SeeingIsBelieving
                                                  exception.message,
                                                  exception.backtrace
       self.exception = recorded_exception
-      track_line_number line_number
       results_for(line_number).exception = recorded_exception
     end
 
@@ -44,7 +37,8 @@ class SeeingIsBelieving
     end
 
     def each(&block)
-      (min_line_number..max_line_number).each { |line_number| block.call self[line_number] }
+      max = results.keys.max || 1
+      (1..max).each { |line_number| block.call self[line_number] }
     end
 
     def inspect
