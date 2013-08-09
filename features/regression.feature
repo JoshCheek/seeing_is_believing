@@ -177,3 +177,33 @@ Feature:
     "1
      #{2}"  # => "1\n 2"
     """
+
+  @not-implemented
+  Scenario: Kori's bug (Issue #11)
+    Given the file "koris_bug.rb":
+    """
+    class CreditCard
+
+    end
+
+    describe CreditCard do
+
+    end
+    """
+    When I run "seeing_is_believing koris_bug.rb"
+    Then stdout is:
+    """
+    class CreditCard
+
+    end
+
+    describe CreditCard do  # ~> NoMethodError: undefined method `describe' for main:Object
+
+    end
+
+    # ~> NoMethodError
+    # # ~> undefined method `describe' for main:Object
+    # # ~>
+    # # ~> {{Haiti.config.proving_grounds_dir}}/koris_bug.rb:5:in `<main>'
+    """
+
