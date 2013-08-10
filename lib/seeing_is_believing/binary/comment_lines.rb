@@ -21,37 +21,6 @@ class SeeingIsBelieving
         self.code, self.commenter = code, commenter
       end
 
-      # can't comment when there is already a comment
-      def remove_lines_ending_in_comments(comments, lines_and_indexes)
-        comments.each do |comment|
-          if comment.type == :inline
-            lines_and_indexes.delete comment.location.line
-          else
-            begin_pos = comment.location.expression.begin_pos
-            end_pos   = comment.location.expression.end_pos
-            range     = begin_pos...end_pos
-            lines_and_indexes.select { |line_number, index_of_newline| range.include? index_of_newline }
-                             .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
-          end
-        end
-      end
-
-      # can't have a comment between the escape and the newline
-      def remove_lines_whose_newline_is_escaped(lines_and_indexes)
-        # TODO: will this -1 be a problem if there are empty lines at the top of the file?
-        lines_and_indexes.select { |line_number, index_of_newline| code[index_of_newline-1] == '\\' }
-                         .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
-      end
-
-      # can't add a comment if inside a string/regex/etc
-      def remove_lines_inside_of_strings_and_things(ast, lines_and_indexes)
-        invalid_boundaries = ranges_of_atomic_expressions ast, []
-        invalid_boundaries.each do |invalid_boundary|
-          lines_and_indexes.select { |line_number, index_of_newline| invalid_boundary.include? index_of_newline }
-                           .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
-        end
-      end
-
       def call
         @call ||= begin
           buffer, parser, root, comments, rewriter = parse(code)
@@ -64,32 +33,9 @@ class SeeingIsBelieving
         end
       end
 
-      def add_comments(rewriter, buffer, code, lines_and_indexes, &commenter)
-        lines_and_indexes.each do |line_number, index_of_newline|
-          first_index  = last_index = index_of_newline
-          first_index -= 1 while first_index > 0 && code[first_index-1] != "\n"
-          comment_text = commenter.call code[first_index...last_index], line_number
-          range        = Parser::Source::Range.new(buffer, first_index, last_index)
-          rewriter.insert_after range, comment_text
-        end
-      end
-
       private
 
       attr_accessor :code, :commenter
-
-      def ranges_of_atomic_expressions(ast, found_ranges)
-        return found_ranges unless ast.kind_of? ::AST::Node
-        case ast.type
-        when :dstr, :str, :xstr, :regexp
-          begin_pos = ast.location.expression.begin.begin_pos
-          end_pos   = ast.location.expression.end.end_pos
-          found_ranges << (begin_pos...end_pos)
-        else
-          ast.children.each { |child| ranges_of_atomic_expressions child, found_ranges }
-        end
-        found_ranges
-      end
 
       def parse(code)
         buffer = Parser::Source::Buffer.new("strip_comments").tap { |b| b.source = code }
@@ -107,16 +53,74 @@ class SeeingIsBelieving
                                   line, col = buffer.decompose_position index
                                   hash[line] = index
                                 end
-        # account for the fact that the last line wouldn't have been found above if it doesn't end in a newline
-        if code[code.size-1] != "\n"
+        if code[code.size-1] != "\n" # account for the fact that the last line wouldn't have been found above if it doesn't end in a newline
           line, col = buffer.decompose_position code.size
           lines_and_indexes[line] = code.size
         end
-
         lines_and_indexes
       end
 
+      def remove_lines_whose_newline_is_escaped(lines_and_indexes)
+        # TODO: will this -1 be a problem if there are empty lines at the top of the file?
+        lines_and_indexes.select { |line_number, index_of_newline| code[index_of_newline-1] == '\\' }
+                         .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+      end
 
+      def remove_lines_ending_in_comments(comments, lines_and_indexes)
+        comments.each do |comment|
+          if comment.type == :inline
+            lines_and_indexes.delete comment.location.line
+          else
+            begin_pos = comment.location.expression.begin_pos
+            end_pos   = comment.location.expression.end_pos
+            range     = begin_pos...end_pos
+            lines_and_indexes.select { |line_number, index_of_newline| range.include? index_of_newline }
+                             .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+          end
+        end
+      end
+
+      def remove_lines_inside_of_strings_and_things(ast, lines_and_indexes)
+        invalid_boundaries = ranges_of_atomic_expressions ast, []
+        invalid_boundaries.each do |invalid_boundary|
+          lines_and_indexes.select { |line_number, index_of_newline| invalid_boundary.include? index_of_newline }
+                           .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+        end
+      end
+
+      def ranges_of_atomic_expressions(ast, found_ranges)
+        return found_ranges unless ast.kind_of? ::AST::Node
+        if no_comment_zone? ast
+          begin_pos = ast.location.expression.begin.begin_pos
+          end_pos   = ast.location.expression.end.end_pos
+          found_ranges << (begin_pos...end_pos)
+        else
+          ast.children.each { |child| ranges_of_atomic_expressions child, found_ranges }
+        end
+        found_ranges
+      end
+
+      def no_comment_zone?(ast)
+        case ast.type
+        when :dstr, :str, :xstr, :regexp
+          true
+        when :array
+          the_begin = ast.location.begin
+          the_begin && the_begin.source =~ /\A%/
+        else
+          false
+        end
+      end
+
+      def add_comments(rewriter, buffer, code, lines_and_indexes, &commenter)
+        lines_and_indexes.each do |line_number, index_of_newline|
+          first_index  = last_index = index_of_newline
+          first_index -= 1 while first_index > 0 && code[first_index-1] != "\n"
+          comment_text = commenter.call code[first_index...last_index], line_number
+          range        = Parser::Source::Range.new(buffer, first_index, last_index)
+          rewriter.insert_after range, comment_text
+        end
+      end
     end
   end
 end

@@ -9,11 +9,98 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
     described_class.call code, &block
   end
 
-  example 'simple example' do
-    call("1 +\\\n2") { |line, line_number| "--#{line_number}--" }.should == "1 +\\\n2--2--"
+  it "doesn't comment lines whose newline is escaped" do
+    call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }.should == "1 +\\\n2--2--"
   end
 
-  example 'medium complex example' do
+  it "doesn't comment lines inside of strings" do
+    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    "a\#{1+1
+    }"
+    "a
+     b"
+    'a
+     b'
+    %Q{
+      }
+    %q{
+      }
+    %.
+     .
+    INPUT
+    "a\#{1+1
+    }"--2--
+    "a
+     b"--4--
+    'a
+     b'--6--
+    %Q{
+      }--8--
+    %q{
+      }--10--
+    %.
+     .--12--
+    OUTPUT
+  end
+
+  it "doesn't comment lines inside of regexes" do
+    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    /a\#{1+1
+    }/
+    /a
+     b/ix
+    %r.
+      .
+    INPUT
+    /a\#{1+1
+    }/--2--
+    /a
+     b/ix--4--
+    %r.
+      .--6--
+    OUTPUT
+  end
+
+  it "doesn't comment lines inside of backticks/%x" do
+    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    `a\#{1+1
+    }`
+    %x[\#{1+1
+    }]
+    `
+     b
+     c`
+    %x.
+       b
+       c.
+    INPUT
+    `a\#{1+1
+    }`--2--
+    %x[\#{1+1
+    }]--4--
+    `
+     b
+     c`--7--
+    %x.
+       b
+       c.--10--
+    OUTPUT
+  end
+
+  it "doesn't comment lines inside of string arrays" do
+    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    %w[
+      a
+      ]
+    INPUT
+    %w[
+      a
+      ]--3--
+    OUTPUT
+  end
+
+
+  it 'yields the line and line number to the commenter block' do
     lines = []
     result = call("1 +\n"\
                   "    2\n"\
@@ -45,9 +132,8 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
                      " \#{5+6} 7'--9--\n"
   end
 
-  # lets get a list of places we can't add comments
 
-  example 'comprehensive example' do
+  example 'big comprehensive example' do
 input=<<INPUT
 # comment
 1 # comment after line
