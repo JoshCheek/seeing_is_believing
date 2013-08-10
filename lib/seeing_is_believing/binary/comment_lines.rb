@@ -23,7 +23,7 @@ class SeeingIsBelieving
 
       def call
         @call ||= begin
-          buffer, parser, root, comments, rewriter = parse(code)
+          buffer, root, comments, rewriter = parse(code)
           lines_and_indexes = line_nums_to_last_index_on_line(buffer, code)
           remove_lines_whose_newline_is_escaped(lines_and_indexes)
           remove_lines_ending_in_comments(comments, lines_and_indexes)
@@ -38,11 +38,11 @@ class SeeingIsBelieving
       attr_accessor :code, :commenter
 
       def parse(code)
-        buffer = Parser::Source::Buffer.new("strip_comments").tap { |b| b.source = code }
-        parser = Parser::CurrentRuby.new
-        rewriter = Parser::Source::Rewriter.new(buffer)
+        buffer         = Parser::Source::Buffer.new("strip_comments").tap { |b| b.source = code }
+        parser         = Parser::CurrentRuby.new
+        rewriter       = Parser::Source::Rewriter.new(buffer)
         root, comments = parser.parse_with_comments(buffer)
-        [buffer, parser, root, comments, rewriter]
+        [buffer, root, comments, rewriter]
       end
 
       def line_nums_to_last_index_on_line(buffer, code)
@@ -61,7 +61,6 @@ class SeeingIsBelieving
       end
 
       def remove_lines_whose_newline_is_escaped(lines_and_indexes)
-        # TODO: will this -1 be a problem if there are empty lines at the top of the file?
         lines_and_indexes.select { |line_number, index_of_newline| code[index_of_newline-1] == '\\' }
                          .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
       end

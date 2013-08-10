@@ -9,6 +9,10 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
     described_class.call code, &block
   end
 
+  example 'just checking some edge cases' do
+    call("") { ';' }.should == ";"
+  end
+
   it "doesn't comment lines whose newline is escaped" do
     call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }.should == "1 +\\\n2--2--"
   end
@@ -135,6 +139,7 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
 
   example 'big comprehensive example' do
 input=<<INPUT
+
 # comment
 1 # comment after line
 =begin
@@ -280,16 +285,18 @@ begin
   1
 rescue
   2
-rescue => a
+rescue a
   3
-rescue Exception
+rescue => a
   4
-rescue Exception => a
+rescue Exception
   5
-else
+rescue Exception => a
   6
-ensure
+else
   7
+ensure
+  8
 end
 1 rescue nil
 
@@ -458,6 +465,7 @@ a\#{
 INPUT
 
 output=<<OUTPUT
+;
 # comment
 1 # comment after line
 =begin
@@ -603,16 +611,18 @@ begin;
   1;
 rescue;
   2;
-rescue => a;
+rescue a;
   3;
-rescue Exception;
+rescue => a;
   4;
-rescue Exception => a;
+rescue Exception;
   5;
-else;
+rescue Exception => a;
   6;
-ensure;
+else;
   7;
+ensure;
+  8;
 end;
 1 rescue nil;
 ;

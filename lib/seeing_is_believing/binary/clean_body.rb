@@ -15,11 +15,6 @@ class SeeingIsBelieving
       def initialize(code, should_clean_values)
         self.should_clean_values = should_clean_values
         self.code                = code
-        self.removed_comments    = { result:    [],
-                                     exception: [],
-                                     stdout:    [],
-                                     stderr:    [],
-                                   }
       end
 
       def call
@@ -28,6 +23,7 @@ class SeeingIsBelieving
         parser                = Parser::CurrentRuby.new
         rewriter              = Parser::Source::Rewriter.new(buffer)
         ast, comments         = parser.parse_with_comments(buffer)
+        removed_comments      = { result: [], exception: [], stdout: [], stderr: [] }
 
         comments.each do |comment|
           case comment.text
@@ -48,7 +44,7 @@ class SeeingIsBelieving
           end
         end
 
-        remove_whitespace_preceeding_comments(buffer, rewriter)
+        remove_whitespace_preceeding_comments(buffer, rewriter, removed_comments)
         rewriter.process
       rescue Parser::SyntaxError => e
         raise SyntaxError, e.message
@@ -56,9 +52,9 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :code, :removed_comments, :should_clean_values, :buffer
+      attr_accessor :code, :should_clean_values, :buffer
 
-      def remove_whitespace_preceeding_comments(buffer, rewriter)
+      def remove_whitespace_preceeding_comments(buffer, rewriter, removed_comments)
         removed_comments[:result].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, false }
         removed_comments[:exception].each { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
         removed_comments[:stdout].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }

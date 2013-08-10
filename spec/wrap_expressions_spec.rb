@@ -482,6 +482,10 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("[1, 2,\n]").should == "<[1, <2>,\n]>"
     end
 
+    it 'does not wrap magic arrays' do
+      wrap("%w[\n1\n]").should == "<%w[\n1\n]>"
+    end
+
     it 'does not wrap splat elements' do
       wrap("[1,\n*2..3,\n4\n]").should == "<[<1>,\n*2..3,\n<4>\n]>"
     end
@@ -608,6 +612,10 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("begin\n1\nend").should == "<begin\n<1>\nend>"
       wrap("begin\nend").should == "<begin\nend>"
       wrap("begin\n1\nensure\n2\nend").should == "<begin\n<1>\nensure\n<2>\nend>"
+    end
+    it 'does not wrap arguments to rescue' do
+      wrap("begin\nrescue\nrescue => a\nrescue SyntaxError\nrescue Exception => a\nelse\nensure\nend").should ==
+            "<begin\nrescue\nrescue => a\nrescue SyntaxError\nrescue Exception => a\nelse\nensure\nend>"
     end
     it 'does not wrap retry' do
       # in this case, it could wrap the retry

@@ -110,6 +110,10 @@ class SeeingIsBelieving
       when :resbody
         exception_type, variable_name, body = ast.children
         find_wrappings body
+      when :array
+        add_to_wrappings ast
+        the_begin = ast.location.begin
+        add_children ast if the_begin && the_begin.source !~ /\A%/
       when :block
         add_to_wrappings ast
 
