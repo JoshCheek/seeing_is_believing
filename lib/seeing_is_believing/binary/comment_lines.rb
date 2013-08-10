@@ -24,11 +24,12 @@ class SeeingIsBelieving
       def call
         @call ||= begin
           buffer, root, comments, rewriter = parse(code)
-          lines_and_indexes = line_nums_to_last_index_on_line(buffer, code)
+          lines_and_indexes = line_nums_to_last_index_on_line(buffer)
+          remove_lines_after_data_segment(lines_and_indexes)
           remove_lines_whose_newline_is_escaped(lines_and_indexes)
           remove_lines_ending_in_comments(comments, lines_and_indexes)
           remove_lines_inside_of_strings_and_things(root, lines_and_indexes)
-          add_comments(rewriter, buffer, code, lines_and_indexes, &commenter)
+          add_comments(rewriter, buffer, lines_and_indexes, &commenter)
           rewriter.process
         end
       end
@@ -45,7 +46,7 @@ class SeeingIsBelieving
         [buffer, root, comments, rewriter]
       end
 
-      def line_nums_to_last_index_on_line(buffer, code)
+      def line_nums_to_last_index_on_line(buffer)
         lines_and_indexes = code.each_char
                                 .with_index
                                 .select { |char, index| char == "\n" } # <-- is this okay? what about other OSes?
@@ -129,7 +130,22 @@ class SeeingIsBelieving
           (the_begin.source =~ /^\<\<-?/)
       end
 
-      def add_comments(rewriter, buffer, code, lines_and_indexes, &commenter)
+      def remove_lines_after_data_segment(lines_and_indexes)
+        data_segment_line, _ = lines_and_indexes.find do |line_number, end_index|
+          if end_index == 7
+            code.start_with? '__END__'
+          elsif end_index < 7
+            false
+          else
+            code[(end_index-8)...end_index] == "\n__END__"
+          end
+        end
+        return unless data_segment_line
+        max_line = lines_and_indexes.keys.max
+        data_segment_line.upto(max_line) { |line_number| lines_and_indexes.delete line_number }
+      end
+
+      def add_comments(rewriter, buffer, lines_and_indexes, &commenter)
         lines_and_indexes.each do |line_number, index_of_newline|
           first_index  = last_index = index_of_newline
           first_index -= 1 while first_index > 0 && code[first_index-1] != "\n"

@@ -11,6 +11,8 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
 
   example 'just checking some edge cases' do
     call("") { ';' }.should == ";"
+    call("__END__\n1") { ';' }.should == "__END__\n1"
+    call("1\n__END__") { ';' }.should == "1;\n__END__"
   end
 
   it "doesn't comment lines whose newline is escaped" do
@@ -508,6 +510,8 @@ a\#{
 %q.
   1
   .
+__END__
+1
 INPUT
 
 output=<<OUTPUT
@@ -834,6 +838,8 @@ a\#{
 %q.
   1
   .;
+__END__
+1
 OUTPUT
 
     call(input) { ';' }.should == output
