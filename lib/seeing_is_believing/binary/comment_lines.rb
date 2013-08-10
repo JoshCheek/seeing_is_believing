@@ -89,7 +89,12 @@ class SeeingIsBelieving
 
       def ranges_of_atomic_expressions(ast, found_ranges)
         return found_ranges unless ast.kind_of? ::AST::Node
-        if no_comment_zone? ast
+        if no_comment_zone?(ast) && heredoc?(ast)
+          begin_pos  = ast.location.expression.begin.begin_pos
+          begin_pos += (ast.location.expression.source =~ /\n/).next
+          end_pos    = ast.location.expression.end.end_pos.next
+          found_ranges << (begin_pos...end_pos)
+        elsif no_comment_zone? ast
           begin_pos = ast.location.expression.begin.begin_pos
           end_pos   = ast.location.expression.end.end_pos
           found_ranges << (begin_pos...end_pos)
@@ -109,6 +114,19 @@ class SeeingIsBelieving
         else
           false
         end
+      end
+
+      # copy/pasted from wrap_expressions
+      def heredoc?(ast)
+        # some strings are fucking weird.
+        # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
+        # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection, so it has no #begin
+        ast.kind_of?(Parser::AST::Node)           &&
+          (ast.type == :dstr || ast.type == :str) &&
+          (location  = ast.location)              &&
+          (location.respond_to?(:begin))          &&
+          (the_begin = location.begin)            &&
+          (the_begin.source =~ /^\<\<-?/)
       end
 
       def add_comments(rewriter, buffer, code, lines_and_indexes, &commenter)

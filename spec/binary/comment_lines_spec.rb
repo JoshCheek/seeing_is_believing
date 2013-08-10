@@ -47,6 +47,52 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
     OUTPUT
   end
 
+  it 'does comment the first line of a heredoc' do
+    call(<<-INPUT.gsub(/^ */, '')) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT.gsub(/^ */, '')
+    <<A
+    1
+    A
+    <<-A
+    1
+    A
+    <<A.b
+    1
+    A
+    b <<A
+    1
+    A
+    <<A.b <<C
+    1
+    A
+    2
+    C
+    a(<<B)
+    1
+    B
+    INPUT
+    <<A--1--
+    1
+    A
+    <<-A--4--
+    1
+    A
+    <<A.b--7--
+    1
+    A
+    b <<A--10--
+    1
+    A
+    <<A.b <<C--13--
+    1
+    A
+    2
+    C
+    a(<<B)--18--
+    1
+    B
+    OUTPUT
+  end
+
   it "doesn't comment lines inside of regexes" do
     call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
     /a\#{1+1
