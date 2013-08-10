@@ -13,7 +13,6 @@ require 'seeing_is_believing/syntax_analyzer' # can we get rid of this?
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
-  include TracksLineNumbersSeen
   BLANK_REGEX = /\A\s*\Z/
 
   def self.call(*args)

@@ -1,6 +1,5 @@
 require 'seeing_is_believing/line'
 require 'seeing_is_believing/has_exception'
-require 'seeing_is_believing/tracks_line_numbers_seen'
 
 class SeeingIsBelieving
   class Result
