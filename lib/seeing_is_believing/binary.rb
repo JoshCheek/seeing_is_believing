@@ -1,7 +1,7 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/arg_parser'
 require 'seeing_is_believing/binary/add_annotations'
-require 'seeing_is_believing/binary/remove_previous_annotations'
+require 'seeing_is_believing/binary/clean_body'
 require 'timeout'
 
 
@@ -155,7 +155,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print RemovePreviousAnnotations.call body
+      stdout.print CleanBody.call(body, true)
     end
   end
 end

@@ -2,7 +2,7 @@ require 'stringio'
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/comment_formatter'
-require 'seeing_is_believing/binary/remove_previous_annotations'
+
 require 'seeing_is_believing/binary/clean_body'
 require 'seeing_is_believing/binary/rewrite_comments'
 require 'seeing_is_believing/binary/comment_lines'
