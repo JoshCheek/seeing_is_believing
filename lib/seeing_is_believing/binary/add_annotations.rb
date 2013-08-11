@@ -1,8 +1,11 @@
 require 'stringio'
 require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
-require 'seeing_is_believing/binary/line_formatter'
+require 'seeing_is_believing/binary/comment_formatter'
 require 'seeing_is_believing/binary/remove_previous_annotations'
+require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/rewrite_comments'
+require 'seeing_is_believing/binary/comment_lines'
 
 # I think there is a bug where with xmpfilter_style set,
 # the exceptions won't be shown. But it's not totally clear
@@ -21,18 +24,13 @@ class SeeingIsBelieving
     class AddAnnotations
       include HasException
 
-         RESULT_PREFIX = '# =>'
-      EXCEPTION_PREFIX = '# ~>'
-         STDOUT_PREFIX = '# >>'
-         STDERR_PREFIX = '# !>'
-
       def self.method_from_options(*args)
         define_method(args.first) { options.fetch *args }
       end
 
       method_from_options :filename, nil
-      method_from_options :start_line
-      method_from_options :end_line
+      method_from_options :start_line # rename: line_to_begin_recording
+      method_from_options :end_line   # rename: line_to_end_recording
       method_from_options :line_length,    Float::INFINITY
       method_from_options :result_length,  Float::INFINITY
       method_from_options :xmpfilter_style
@@ -40,40 +38,110 @@ class SeeingIsBelieving
 
       attr_accessor :file_result
       def initialize(body, options={})
-        cleaned_body            = RemovePreviousAnnotations.call body
-        self.options            = options
-        self.body               = (xmpfilter_style ? body : cleaned_body)
-        self.file_result        = SeeingIsBelieving.call body(),
-                                                         filename:     (options[:as] || options[:filename]),
-                                                         require:      options[:require],
-                                                         load_path:    options[:load_path],
-                                                         encoding:     options[:encoding],
-                                                         stdin:        options[:stdin],
-                                                         timeout:      options[:timeout],
-                                                         debugger:     debugger
-        self.alignment_strategy = options[:alignment_strategy].new cleaned_body, start_line, end_line
+        self.options = options
+        body = CleanBody.call body, !xmpfilter_style
+        results = SeeingIsBelieving.call body,
+                                         filename:     (options[:as] || options[:filename]),
+                                         require:      options[:require],
+                                         load_path:    options[:load_path],
+                                         encoding:     options[:encoding],
+                                         stdin:        options[:stdin],
+                                         timeout:      options[:timeout],
+                                         debugger:     debugger
+
+        self.file_result = results
+
+        new_body = if xmpfilter_style
+          RewriteComments.call body do |line_number, line, whitespace, comment|
+            # FIXME: can we centralize these regexes?
+            if !comment[/\A#\s*=>/]
+              [whitespace, comment]
+            elsif line.empty?
+              # should go through comment formatter
+              [whitespace, "# => #{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            else
+              # should go through comment formatter
+              [whitespace, "# => #{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            end
+          end
+        else
+          alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
+          CommentLines.call body do |line, line_number|
+            options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
+            if line_number < start_line || end_line < line_number
+              ''
+            elsif results[line_number].has_exception?
+              exception = results[line_number].exception
+              result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
+              CommentFormatter.new(line, "# ~> ", result, options).call
+            elsif results[line_number].any?
+              result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+              CommentFormatter.call(line, "# => ", result, options)
+            else
+              ''
+            end
+          end
+        end
+
+        output = ""
+
+        if file_result.has_stdout?
+          output << "\n"
+          file_result.stdout.each_line do |line|
+            output << CommentFormatter.call('', "# >> ", line.chomp, options()) << "\n"
+          end
+        end
+
+        if file_result.has_stderr?
+          output << "\n"
+          file_result.stderr.each_line do |line|
+            output << CommentFormatter.call('', "# !> ", line.chomp, options()) << "\n"
+          end
+        end
+
+        add_exception output, results
+
+        if new_body["\n__END__\n"]
+          new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
+        else
+          new_body << "\n" << output
+        end
+
+        new_body = if debugger.enabled?
+          debugger.context("RESULT") { new_body }.to_s
+        else
+          new_body
+        end
+
+
+        @new_body = new_body
       end
+
+      def call
+        @new_body
+      end
+
 
       def new_body
         @new_body ||= ''
       end
 
-      def call
-        @printed_program ||= begin
-          # can we put the call to chomp into the line_queue initialization code?
-          line_queue.until { |line, line_number| SyntaxAnalyzer.begins_data_segment?(line.chomp) }
-                    .each  { |line, line_number| add_line line, line_number }
-          add_stdout
-          add_stderr
-          add_exception
-          add_remaining_lines
-          if debugger.enabled?
-            debugger.context("RESULT") { new_body }.to_s
-          else
-            new_body
-          end
-        end
-      end
+      # def call
+      #   @printed_program ||= begin
+      #     # can we put the call to chomp into the line_queue initialization code?
+      #     line_queue.until { |line, line_number| SyntaxAnalyzer.begins_data_segment?(line.chomp) }
+      #               .each  { |line, line_number| add_line line, line_number }
+      #     add_stdout
+      #     add_stderr
+      #     add_exception
+      #     add_remaining_lines
+      #     if debugger.enabled?
+      #       debugger.context("RESULT") { new_body }.to_s
+      #     else
+      #       new_body
+      #     end
+      #   end
+      # end
 
       private
 
@@ -127,17 +195,17 @@ class SeeingIsBelieving
         end
       end
 
-      def add_exception
+      def add_exception(output, file_result)
         return unless file_result.has_exception?
         exception = file_result.exception
-        new_body << "\n"
-        new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", exception.class_name, options).call << "\n"
+        output << "\n"
+        output << CommentFormatter.new('', "# ~> ", exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
-          new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new('', "# ~> ", line.chomp, options).call << "\n"
         end
-        new_body << "#{EXCEPTION_PREFIX}\n"
+        output << "# ~>\n"
         exception.backtrace.each do |line|
-          new_body << LineFormatter.new('', "#{EXCEPTION_PREFIX} ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new('', "# ~> ", line.chomp, options).call << "\n"
         end
       end
 

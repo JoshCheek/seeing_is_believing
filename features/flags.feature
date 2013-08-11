@@ -485,7 +485,7 @@ Feature: Using flags
     # => "omg2"
     """
 
-  # TODO: do we want to print the source without its comments?
+
   Scenario: --debug
     Given the file "simple_program.rb":
     """
@@ -496,19 +496,18 @@ Feature: Using flags
     When I run "seeing_is_believing --debug simple_program.rb"
     Then stderr is empty
     And the exit status is 0
-    # source without comments
-    # And stdout includes "SOURCE WITHOUT COMMENTS:"
-    # And stdout includes:
-    # """
-    # # encoding: utf-8
-    # 1
-    # 2
-    # """
     # translated program
     And stdout includes "TRANSLATED PROGRAM:"
     And stdout includes "$seeing_is_believing_current_result"
     # result
     And stdout includes "RESULT:"
+    """
+      @stdout=""
+      @results={2=>#<SIB:Line["1"] no exception>, 3=>#<SIB:Line["2"] no exception>}
+      @stderr=""
+      @bug_in_sib=nil>
+    """
+    # translated program
     And stdout includes:
     """
     # encoding: utf-8

@@ -296,7 +296,7 @@ describe SeeingIsBelieving do
                                                   ['[6, 12]']]
   end
 
-  context 'when given a debugger' do
+  context 'when given a debugger', t:true do
     let(:debugger) { SeeingIsBelieving::Debugger.new enabled: true }
 
     def call
