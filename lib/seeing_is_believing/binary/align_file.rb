@@ -9,19 +9,14 @@ class SeeingIsBelieving
 
       # max line length of the lines to output (exempting comments) + 2 spaces for padding
       def line_length_for(line_number)
-        @max_source_line_length ||= 2 + body.each_line
-                                            .map(&:chomp)
-                                            .select.with_index(1) { |line, index| start_line <= index && index <= end_line }
-                                            .take_while { |line| not start_of_data_segment? line }
-                                            .select { |line| not SyntaxAnalyzer.begins_multiline_comment?(line) .. SyntaxAnalyzer.ends_multiline_comment?(line ) }
-                                            .reject { |line| SyntaxAnalyzer.ends_in_comment? line }
-                                            .map(&:length)
-                                            .concat([0])
-                                            .max
-      end
-
-      def start_of_data_segment?(line)
-        SyntaxAnalyzer.begins_data_segment?(line.chomp)
+        @max_source_line_length ||= 2 + begin
+          lines_and_indexes, * = CommentLines.new(body).commentable_lines
+          max_value = lines_and_indexes
+                           .select { |line_num, _| start_line <= line_num && line_num <= end_line }
+                           .values
+                           .map { |index, col| col }.max
+          max_value || 0
+        end
       end
     end
   end

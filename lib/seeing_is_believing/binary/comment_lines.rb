@@ -17,14 +17,21 @@ class SeeingIsBelieving
 
       def call
         @call ||= begin
+          lines_and_indexes, buffer, root, comments, rewriter = commentable_lines
+          add_comments(rewriter, buffer, lines_and_indexes, &commenter)
+          rewriter.process
+        end
+      end
+
+      def commentable_lines
+        @call ||= begin
           buffer, root, comments, rewriter = parse(code)
-          lines_and_indexes = line_nums_to_last_index_on_line(buffer)
+          lines_and_indexes = line_nums_to_last_index_and_col(buffer)
           remove_lines_after_data_segment(lines_and_indexes)
           remove_lines_whose_newline_is_escaped(lines_and_indexes)
           remove_lines_ending_in_comments(comments, lines_and_indexes)
           remove_lines_inside_of_strings_and_things(root, lines_and_indexes)
-          add_comments(rewriter, buffer, lines_and_indexes, &commenter)
-          rewriter.process
+          [lines_and_indexes, buffer, root, comments, rewriter]
         end
       end
 
@@ -40,24 +47,24 @@ class SeeingIsBelieving
         [buffer, root, comments, rewriter]
       end
 
-      def line_nums_to_last_index_on_line(buffer)
+      def line_nums_to_last_index_and_col(buffer)
         lines_and_indexes = code.each_char
                                 .with_index
                                 .select { |char, index| char == "\n" } # <-- is this okay? what about other OSes?
                                 .each_with_object(Hash.new) do |(_, index), hash|
                                   line, col = buffer.decompose_position index
-                                  hash[line] = index
+                                  hash[line] = [index, col]
                                 end
         if code[code.size-1] != "\n" # account for the fact that the last line wouldn't have been found above if it doesn't end in a newline
           line, col = buffer.decompose_position code.size
-          lines_and_indexes[line] = code.size
+          lines_and_indexes[line] = [code.size, col]
         end
         lines_and_indexes
       end
 
       def remove_lines_whose_newline_is_escaped(lines_and_indexes)
-        lines_and_indexes.select { |line_number, index_of_newline| code[index_of_newline-1] == '\\' }
-                         .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+        lines_and_indexes.select { |line_number, (index_of_newline, col)| code[index_of_newline-1] == '\\' }
+                         .each   { |line_number, (index_of_newline, col)| lines_and_indexes.delete line_number }
       end
 
       def remove_lines_ending_in_comments(comments, lines_and_indexes)
@@ -68,8 +75,8 @@ class SeeingIsBelieving
             begin_pos = comment.location.expression.begin_pos
             end_pos   = comment.location.expression.end_pos
             range     = begin_pos...end_pos
-            lines_and_indexes.select { |line_number, index_of_newline| range.include? index_of_newline }
-                             .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+            lines_and_indexes.select { |line_number, (index_of_newline, col)| range.include? index_of_newline }
+                             .each   { |line_number, (index_of_newline, col)| lines_and_indexes.delete line_number }
           end
         end
       end
@@ -77,8 +84,8 @@ class SeeingIsBelieving
       def remove_lines_inside_of_strings_and_things(ast, lines_and_indexes)
         invalid_boundaries = ranges_of_atomic_expressions ast, []
         invalid_boundaries.each do |invalid_boundary|
-          lines_and_indexes.select { |line_number, index_of_newline| invalid_boundary.include? index_of_newline }
-                           .each   { |line_number, index_of_newline| lines_and_indexes.delete line_number }
+          lines_and_indexes.select { |line_number, (index_of_newline, col)| invalid_boundary.include? index_of_newline }
+                           .each   { |line_number, (index_of_newline, col)| lines_and_indexes.delete line_number }
         end
       end
 
@@ -125,7 +132,7 @@ class SeeingIsBelieving
       end
 
       def remove_lines_after_data_segment(lines_and_indexes)
-        data_segment_line, _ = lines_and_indexes.find do |line_number, end_index|
+        data_segment_line, _ = lines_and_indexes.find do |line_number, (end_index, col)|
           if end_index == 7
             code.start_with? '__END__'
           elsif end_index < 7
@@ -140,7 +147,7 @@ class SeeingIsBelieving
       end
 
       def add_comments(rewriter, buffer, lines_and_indexes, &commenter)
-        lines_and_indexes.each do |line_number, index_of_newline|
+        lines_and_indexes.each do |line_number, (index_of_newline, col)|
           first_index  = last_index = index_of_newline
           first_index -= 1 while first_index > 0 && code[first_index-1] != "\n"
           comment_text = commenter.call code[first_index...last_index], line_number

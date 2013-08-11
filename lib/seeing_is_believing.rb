@@ -9,7 +9,6 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/wrap_expressions'
-require 'seeing_is_believing/syntax_analyzer' # can we get rid of this?
 
 # might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving

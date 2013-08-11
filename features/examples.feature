@@ -89,7 +89,7 @@ Feature: Running the binary successfully
      b/x  # => /a\n b/x
 
     # don't record heredocs b/c they're just too fucking different
-    <<HERE    # => "is a doc\n"
+    <<HERE  # => "is a doc\n"
     is a doc
     HERE
 
