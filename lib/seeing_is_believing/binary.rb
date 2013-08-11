@@ -94,7 +94,7 @@ class SeeingIsBelieving
     end
 
     def results
-      printer.file_result
+      printer.results
     end
 
     def flags_have_errors?
