@@ -4,12 +4,6 @@ require 'parser/current'
 #   takes a body and a block
 #   passes the block the line
 #   the block returns the comment to add at the end of it
-#
-# This class will get hit by the heredoc issue
-# but it won't matter, because it's only used by AddAnnotations
-# which won't have any result on that line
-# Eventually, Parser should have this accounted for,
-# and it will magically fix itself
 class SeeingIsBelieving
   class Binary
     class CommentLines

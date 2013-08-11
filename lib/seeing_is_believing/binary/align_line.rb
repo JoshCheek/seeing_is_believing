@@ -20,10 +20,6 @@ class SeeingIsBelieving
                                     .map { |line, index| [index, line.length+2] }
                               ]
       end
-
-      def start_of_data_segment?(line)
-        SyntaxAnalyzer.begins_data_segment?(line.chomp)
-      end
     end
   end
 end

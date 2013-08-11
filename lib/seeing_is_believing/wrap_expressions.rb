@@ -254,6 +254,8 @@ class SeeingIsBelieving
 
     # this is the scardest fucking method I think I've ever written.
     # *anything* can go wrong!
+    #
+    # !!NOTE!! This method is copy/pasted into Binary::CommentLines
     def heredoc?(ast)
       # some strings are fucking weird.
       # e.g. the "1" in `%w[1]` returns nil for ast.location.begin

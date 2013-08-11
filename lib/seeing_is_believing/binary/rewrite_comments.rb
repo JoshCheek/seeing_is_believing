@@ -2,16 +2,8 @@ require 'parser/current'
 
 class SeeingIsBelieving
   class Binary
-    class RewriteComments
+    module RewriteComments
       def self.call(code, &mapping)
-        new(code, &mapping).call
-      end
-
-      def initialize(code, &mapping)
-        self.code, self.mapping = code, mapping
-      end
-
-      def call
         buffer        = Parser::Source::Buffer.new "strip_comments"
         buffer.source = code
         parser        = Parser::CurrentRuby.new
@@ -45,10 +37,6 @@ class SeeingIsBelieving
 
         rewriter.process
       end
-
-      private
-
-      attr_accessor :code, :mapping
     end
   end
 end
