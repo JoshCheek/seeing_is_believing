@@ -496,18 +496,11 @@ Feature: Using flags
     When I run "seeing_is_believing --debug simple_program.rb"
     Then stderr is empty
     And the exit status is 0
-    # translated program
     And stdout includes "TRANSLATED PROGRAM:"
     And stdout includes "$seeing_is_believing_current_result"
-    # result
     And stdout includes "RESULT:"
-    """
-      @stdout=""
-      @results={2=>#<SIB:Line["1"] no exception>, 3=>#<SIB:Line["2"] no exception>}
-      @stderr=""
-      @bug_in_sib=nil>
-    """
-    # translated program
+    And stdout includes "@results="
+    And stdout includes "OUTPUT:"
     And stdout includes:
     """
     # encoding: utf-8

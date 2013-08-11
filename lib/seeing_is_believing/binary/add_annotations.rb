@@ -108,7 +108,7 @@ class SeeingIsBelieving
         end
 
         new_body = if debugger.enabled?
-          debugger.context("RESULT") { new_body }.to_s
+          debugger.context("OUTPUT") { new_body }.to_s
         else
           new_body
         end
