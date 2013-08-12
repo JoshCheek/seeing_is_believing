@@ -1,27 +1,24 @@
 require 'parser/current'
 
-# CommentLines
-#   takes a body and a block
-#   passes the block the line
-#   the block returns the comment to add at the end of it
 class SeeingIsBelieving
   class Binary
+
     class CommentableLines
-      def self.call(code, &commenter)
-        new(code, &commenter).call
+      def self.call(code)
+        new(code).call
       end
 
-      def initialize(code, &commenter)
-        self.code, self.commenter = code, commenter
+      def initialize(code)
+        self.code = code
       end
 
       def call
         @call ||= begin
           lines_and_indexes = line_nums_to_last_index_and_col(buffer)
-          remove_lines_after_data_segment(lines_and_indexes)
-          remove_lines_whose_newline_is_escaped(lines_and_indexes)
-          remove_lines_ending_in_comments(comments, lines_and_indexes)
-          remove_lines_inside_of_strings_and_things(root, lines_and_indexes)
+          remove_lines_after_data_segment           lines_and_indexes
+          remove_lines_whose_newline_is_escaped     lines_and_indexes
+          remove_lines_ending_in_comments           lines_and_indexes, comments
+          remove_lines_inside_of_strings_and_things lines_and_indexes, root
           lines_and_indexes
         end
       end
@@ -36,7 +33,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :code, :commenter
+      attr_accessor :code
 
       def parser
         @parser ||= Parser::CurrentRuby.new
@@ -78,7 +75,7 @@ class SeeingIsBelieving
                          .each   { |line_number, (index_of_newline, col)| lines_and_indexes.delete line_number }
       end
 
-      def remove_lines_ending_in_comments(comments, lines_and_indexes)
+      def remove_lines_ending_in_comments(lines_and_indexes, comments)
         comments.each do |comment|
           if comment.type == :inline
             lines_and_indexes.delete comment.location.line
@@ -92,7 +89,7 @@ class SeeingIsBelieving
         end
       end
 
-      def remove_lines_inside_of_strings_and_things(ast, lines_and_indexes)
+      def remove_lines_inside_of_strings_and_things(lines_and_indexes, ast)
         invalid_boundaries = ranges_of_atomic_expressions ast, []
         invalid_boundaries.each do |invalid_boundary|
           lines_and_indexes.select { |line_number, (index_of_newline, col)| invalid_boundary.include? index_of_newline }
@@ -155,16 +152,6 @@ class SeeingIsBelieving
         return unless data_segment_line
         max_line = lines_and_indexes.keys.max
         data_segment_line.upto(max_line) { |line_number| lines_and_indexes.delete line_number }
-      end
-
-      def add_comments(rewriter, buffer, lines_and_indexes, &commenter)
-        lines_and_indexes.each do |line_number, (index_of_newline, col)|
-          first_index  = last_index = index_of_newline
-          first_index -= 1 while first_index > 0 && code[first_index-1] != "\n"
-          comment_text = commenter.call code[first_index...last_index], line_number
-          range        = Parser::Source::Range.new(buffer, first_index, last_index)
-          rewriter.insert_after range, comment_text
-        end
       end
     end
   end

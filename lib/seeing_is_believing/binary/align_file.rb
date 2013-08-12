@@ -12,7 +12,7 @@ class SeeingIsBelieving
       # max line length of the lines to output (exempting comments) + 2 spaces for padding
       def line_length_for(line_number)
         @max_source_line_length ||= 2 + begin
-          lines_and_indexes = CommentableLines.new(body).call
+          lines_and_indexes = CommentableLines.new(body).call # {line_number => [index_in_file, index_in_col]}
           max_value = lines_and_indexes
                            .select { |line_num, _| start_line <= line_num && line_num <= end_line }
                            .values

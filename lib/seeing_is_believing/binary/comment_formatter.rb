@@ -5,8 +5,6 @@ class SeeingIsBelieving
         new(*args).call
       end
 
-      attr_accessor :line_length, :separator, :result, :options
-
       def initialize(line_length, separator, result, options)
        self.line_length = line_length
        self.separator   = separator
@@ -15,14 +13,18 @@ class SeeingIsBelieving
       end
 
       def call
-        formatted = truncate "#{separator}#{result}", max_result_length
-        formatted = "#{' '*padding_length}#{formatted}"
-        formatted = truncate formatted, max_line_length
-        formatted = '' unless formatted.sub(/^ */, '').start_with? separator
-        formatted
+        @formatted ||= begin
+          formatted = truncate "#{separator}#{result}", max_result_length
+          formatted = "#{' '*padding_length}#{formatted}"
+          formatted = truncate formatted, max_line_length
+          formatted = '' unless formatted.sub(/^ */, '').start_with? separator
+          formatted
+        end
       end
 
       private
+
+      attr_accessor :line_length, :separator, :result, :options
 
       def max_line_length
         length = options.fetch(:max_line_length, Float::INFINITY) - line_length

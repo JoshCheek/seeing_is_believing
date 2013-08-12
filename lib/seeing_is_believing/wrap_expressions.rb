@@ -1,7 +1,7 @@
 require 'parser/current'
 
 # hack rewriter to apply insertions in stable order
-# until https://github.com/whitequark/parser/pull/102 gets merged in
+# until https://github.com/whitequark/parser/pull/102 gets released
 module Parser
   module Source
     class Rewriter

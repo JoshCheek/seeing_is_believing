@@ -16,9 +16,9 @@ class SeeingIsBelieving
 
       def line_lengths
         @line_lengths ||= begin
-          lines_and_indexes = CommentableLines.new(body).call
+          lines_and_indexes = CommentableLines.new(body).call # {line_number => [index_in_file, index_in_col]}
           Hash[lines_and_indexes
-                 .keys # line_numbers
+                 .keys
                  .sort
                  .slice_before { |line_number| lines_and_indexes[line_number].last.zero? }
                  .map { |slice|
