@@ -1,3 +1,5 @@
+require 'seeing_is_believing/binary/align_file'
+
 class SeeingIsBelieving
   class Binary
     class AlignChunk
@@ -14,7 +16,7 @@ class SeeingIsBelieving
 
       def line_lengths
         @line_lengths ||= begin
-          lines_and_indexes, * = CommentLines.new(body).commentable_lines
+          lines_and_indexes = CommentableLines.new(body).call
           Hash[lines_and_indexes
                  .keys # line_numbers
                  .sort
