@@ -14,7 +14,7 @@ class SeeingIsBelieving
 
       def line_lengths
         @line_lengths ||= begin
-          lines_and_indexes = CommentLines.new(body).commentable_lines
+          lines_and_indexes, * = CommentLines.new(body).commentable_lines
           Hash[lines_and_indexes
                  .keys # line_numbers
                  .sort
