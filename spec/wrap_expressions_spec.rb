@@ -11,11 +11,6 @@ describe SeeingIsBelieving::WrapExpressions do
       after_each:  -> * { '>' }
   end
 
-  # when we get to 2.0 syntax:
-  # example 'ah' do
-  # wrap '-> { }.()'
-  # end
-
   it 'raises a SyntaxError if the program is invalid' do
     expect { wrap '+' }.to raise_error SyntaxError
   end
@@ -303,6 +298,7 @@ describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps multiple assignments' do
+      wrap("a,b=c").should == "<a,b=c>"
       wrap("a,b=1,2").should == "<a,b=1,2>"
       wrap("a,b.c=1,2").should == "<a,b.c=1,2>"
       wrap("a,B=1,2").should == "<a,B=1,2>"
@@ -310,6 +306,8 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a,@b=1,2").should == "<a,@b=1,2>"
       wrap("a,@@b=1,2").should == "<a,@@b=1,2>"
       wrap("a,$b=1,2").should == "<a,$b=1,2>"
+      wrap("a, b = x.()").should == "<a, b = x.()>"
+      wrap("a, b = c\n.d,\ne\n.f").should == "<a, b = <<c>\n.d>,\n<e>\n.f>"
     end
 
     it 'wraps multiple assignment on each line' do
@@ -549,6 +547,12 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap('%Q(A)').should == '<%Q(A)>'
       wrap('%Q.A.').should == '<%Q.A.>'
     end
+
+    it 'wraps heredocs with call defined on them (edge cases on edge cases *sigh*)' do
+      pending "just don't care this much right now, hopefully it will magically be fixed when new parser is released" do
+        wrap("<<HERE.()\na\nHERE").should == "<<<HERE.()>\na\nHERE"
+      end
+    end
   end
 
   describe 'heredocs' do
@@ -690,6 +694,28 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("def a\n1\nrescue\n2\nend").should == "def a\n<1>\nrescue\n<2>\nend"
       wrap("def a\n1\nrescue\n2\nensure\n3\nend").should == "def a\n<1>\nrescue\n<2>\nensure\n<3>\nend"
       wrap("def a\n1\nensure\n2\nend").should == "def a\n<1>\nensure\n<2>\nend"
+    end
+  end
+
+  describe 'lambdas' do
+    it 'wraps the lambda' do
+      wrap("lambda { }").should == "<lambda { }>"
+      wrap("-> { }").should == "<-> { }>"
+      wrap("-> a, b { }").should == "<-> a, b { }>"
+      wrap("-> {\n1\n}").should == "<-> {\n<1>\n}>"
+      pending "Parser doesn't parse this https://github.com/whitequark/parser/issues/103" do
+        wrap("-> * { }").should == "<-> * { }>"
+      end
+    end
+
+    it 'wraps the full invocation' do
+      wrap("lambda { }.()").should == "<lambda { }.()>"
+      wrap("-> { }.()").should == "<-> { }.()>"
+      wrap("-> a, b {\n1\n}.(1,\n2)").should == "<-> a, b {\n<1>\n}.(<1>,\n2)>"
+      wrap("-> a, b { }.call(1, 2)").should == "<-> a, b { }.call(1, 2)>"
+      pending "Parser doesn't parse this https://github.com/whitequark/parser/issues/103" do
+        wrap("-> * { }()").should == "<-> * { }.()>"
+      end
     end
   end
 end

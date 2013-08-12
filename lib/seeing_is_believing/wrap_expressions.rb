@@ -144,12 +144,15 @@ class SeeingIsBelieving
         # in the second, there is an implicit Array wrapped around it, with the wrong end_pos,
         # so we must take the end_pos of the last arg
         array = ast.children.last
-        if array.location.expression.source.start_with? '['
+        if array.type != :array # e.g. `a, g = c`
+          add_to_wrappings ast
+          add_to_wrappings ast.children.last
+        elsif array.location.expression.source.start_with? '['
           add_to_wrappings ast
           find_wrappings array
         else
           begin_pos = ast.location.expression.begin_pos
-          end_pos   = heredoc_hack(ast.children.last.children.last).location.expression.end_pos
+          end_pos   = heredoc_hack(array.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
           add_children ast.children.last
@@ -198,11 +201,13 @@ class SeeingIsBelieving
         elsif last_arg
           end_pos = ast.location.expression.end_pos
 
+        # in lambda{}.() the send has no selector, so use the expression
+        # I'm going to ignore the fact that you could define call on a heredoc and do <<HERE.(),
+        elsif !ast.location.selector
+          end_pos = ast.location.expression.end_pos
+
         # there is no last arg, but there are parens, find the closing paren
         # we can't trust the expression range because the *target* could be a heredoc
-        # FIXME: This blows up on 2.0 with ->{}.() because it has no selector, so in this case
-        #        we would want to use the expression, but I'm ignoring that for now, because
-        #        we would have to check the target to see whether to use the selector or the expression
         elsif buffer.source[ast.location.selector.end_pos] == '('
           closing_paren_index = ast.location.selector.end_pos + 1
           closing_paren_index += 1 until buffer.source[closing_paren_index] == ')'

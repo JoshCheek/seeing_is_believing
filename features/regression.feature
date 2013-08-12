@@ -164,7 +164,6 @@ Feature:
     'ç'  # => "ç"
     """
 
-  @not-implemented
   Scenario: Some strings look like comments
     Given the file "strings_that_look_like_comments.rb":
     """
@@ -178,7 +177,6 @@ Feature:
      #{2}"  # => "1\n 2"
     """
 
-  @not-implemented
   Scenario: Kori's bug (Issue #11)
     Given the file "koris_bug.rb":
     """
@@ -202,8 +200,49 @@ Feature:
     end
 
     # ~> NoMethodError
-    # # ~> undefined method `describe' for main:Object
-    # # ~>
-    # # ~> {{Haiti.config.proving_grounds_dir}}/koris_bug.rb:5:in `<main>'
+    # ~> undefined method `describe' for main:Object
+    # ~>
+    # ~> koris_bug.rb:5:in `<main>'
+    """
+
+  Scenario: lambda-style fibonacci generator
+    Given the file "lambda_style_fib_gen.rb":
+    """
+    class Proc
+      def inspect
+        "<PROC>"
+      end
+    end
+
+    generic_fib_gen = -> current, prev {
+      -> {
+        [(current+prev), generic_fib_gen.(current+prev, current)]
+      }
+    }
+
+    fib_gen    = generic_fib_gen.(1, -1)
+    n, fib_gen = fib_gen.()
+    n, fib_gen = fib_gen.()
+    n, fib_gen = fib_gen.()
+    """
+    When I run "seeing_is_believing lambda_style_fib_gen.rb"
+    Then stdout is:
+    """
+    class Proc
+      def inspect
+        "<PROC>"   # => "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>"
+      end
+    end
+
+    generic_fib_gen = -> current, prev {
+      -> {
+        [(current+prev), generic_fib_gen.(current+prev, current)]  # => [0, <PROC>], [1, <PROC>], [1, <PROC>]
+      }                                                            # => <PROC>, <PROC>, <PROC>, <PROC>
+    }                                                              # => <PROC>
+
+    fib_gen    = generic_fib_gen.(1, -1)  # => <PROC>
+    n, fib_gen = fib_gen.()               # => [0, <PROC>]
+    n, fib_gen = fib_gen.()               # => [1, <PROC>]
+    n, fib_gen = fib_gen.()               # => [1, <PROC>]
     """
 
