@@ -2,7 +2,6 @@ require 'stringio'
 require 'tmpdir'
 require 'timeout'
 
-require 'seeing_is_believing/queue'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'

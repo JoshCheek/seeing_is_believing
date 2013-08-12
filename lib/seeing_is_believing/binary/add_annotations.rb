@@ -1,5 +1,4 @@
 require 'stringio'
-require 'seeing_is_believing/queue'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/comment_formatter'
 
