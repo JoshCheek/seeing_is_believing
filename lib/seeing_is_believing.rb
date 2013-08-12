@@ -30,25 +30,13 @@ class SeeingIsBelieving
 
   def call
     @memoized_result ||= begin
-      # must use newline after code, or comments will comment out rescue section
-      wrapped = WrapExpressions.call "#@program\n",
-                                     before_all:  "begin;",
-                                     after_all:   "\n"\
-                                                  "rescue Exception;"\
-                                                    "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
-                                                    "$SiB.record_exception line_number, $!;"\
-                                                    "$SiB.exitstatus = 1;"\
-                                                    "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
-                                                  "end",
-                                     before_each: -> line_number { "$SiB.record_result(#{line_number}, (" },
-                                     after_each:  -> line_number { "))" }
-      debugger.context("TRANSLATED PROGRAM") { wrapped }
-      result = result_for wrapped
+      new_program = program_that_will_record_expressions
+      debugger.context("TRANSLATED PROGRAM") { new_program }
+      result = result_for new_program
       debugger.context("RESULT") { result.inspect }
       result
     end
   end
-
 
   private
 
@@ -57,6 +45,21 @@ class SeeingIsBelieving
   def to_stream(string_or_stream)
     return string_or_stream if string_or_stream.respond_to? :gets
     StringIO.new string_or_stream
+  end
+
+  def program_that_will_record_expressions
+    WrapExpressions.call "#@program\n",
+                         before_all:  "begin;",
+                         # must use newline after code, or comments will comment out rescue section
+                         after_all:   "\n"\
+                                      "rescue Exception;"\
+                                        "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
+                                        "$SiB.record_exception line_number, $!;"\
+                                        "$SiB.exitstatus = 1;"\
+                                        "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                      "end",
+                         before_each: -> line_number { "$SiB.record_result(#{line_number}, (" },
+                         after_each:  -> line_number { "))" }
   end
 
   def result_for(program)

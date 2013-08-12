@@ -7,7 +7,6 @@ class SeeingIsBelieving
 
       attr_accessor :line, :separator, :result, :options
 
-      # we don't technically need the line for this, just its length, but w/e
       def initialize(line, separator, result, options)
        self.line      = line
        self.separator = separator

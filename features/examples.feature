@@ -34,7 +34,6 @@ Feature: Running the binary successfully
     /a
      b/x
 
-    # don't record heredocs b/c they're just too fucking different
     <<HERE
     is a doc
     HERE
@@ -88,7 +87,6 @@ Feature: Running the binary successfully
     /a
      b/x  # => /a\n b/x
 
-    # don't record heredocs b/c they're just too fucking different
     <<HERE  # => "is a doc\n"
     is a doc
     HERE

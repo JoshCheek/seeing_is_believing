@@ -9,8 +9,7 @@ class SeeingIsBelieving
 
       # max line length of the the chunk (newline separated sections of code exempting comments) + 2 spaces for padding
       def line_length_for(line_number)
-        return 0 if line_number < start_line || end_line < line_number
-        line_lengths[line_number]
+        line_lengths.fetch line_number, 0
       end
 
       def line_lengths
