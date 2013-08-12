@@ -5,7 +5,6 @@ require 'timeout'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/remove_inline_comments'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/wrap_expressions'
 
