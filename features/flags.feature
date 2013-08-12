@@ -497,7 +497,7 @@ Feature: Using flags
     Then stderr is empty
     And the exit status is 0
     And stdout includes "TRANSLATED PROGRAM:"
-    And stdout includes "$seeing_is_believing_current_result"
+    And stdout includes "$SiB"
     And stdout includes "RESULT:"
     And stdout includes "@results="
     And stdout includes "OUTPUT:"

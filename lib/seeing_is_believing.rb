@@ -36,12 +36,12 @@ class SeeingIsBelieving
                                      after_all:   "\n"\
                                                   "rescue Exception;"\
                                                     "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
-                                                    "$seeing_is_believing_current_result.record_exception line_number, $!;"\
-                                                    "$seeing_is_believing_current_result.exitstatus = 1;"\
-                                                    "$seeing_is_believing_current_result.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                                    "$SiB.record_exception line_number, $!;"\
+                                                    "$SiB.exitstatus = 1;"\
+                                                    "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
                                                   "end",
-                                     before_each: -> line_number { "($seeing_is_believing_current_result.record_result(#{line_number}, (" },
-                                     after_each:  -> line_number { ")))" }
+                                     before_each: -> line_number { "$SiB.record_result(#{line_number}, (" },
+                                     after_each:  -> line_number { "))" }
       debugger.context("TRANSLATED PROGRAM") { wrapped }
       result = result_for wrapped
       debugger.context("RESULT") { result.inspect }
