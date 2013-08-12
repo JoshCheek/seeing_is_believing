@@ -18,8 +18,6 @@ class SeeingIsBelieving
       method_from_options :filename, nil
       method_from_options :start_line # rename: line_to_begin_recording
       method_from_options :end_line   # rename: line_to_end_recording
-      method_from_options :line_length,    Float::INFINITY
-      method_from_options :result_length,  Float::INFINITY
       method_from_options :xmpfilter_style
       method_from_options :debugger
 
@@ -61,10 +59,10 @@ class SeeingIsBelieving
               elsif results[line_number].has_exception?
                 exception = results[line_number].exception
                 result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
-                CommentFormatter.new(line, "# ~> ", result, options).call
+                CommentFormatter.new(line.size, "# ~> ", result, options).call
               elsif results[line_number].any?
                 result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-                CommentFormatter.call(line, "# => ", result, options)
+                CommentFormatter.call(line.size, "# => ", result, options)
               else
                 ''
               end
@@ -76,14 +74,14 @@ class SeeingIsBelieving
           if results.has_stdout?
             output << "\n"
             results.stdout.each_line do |line|
-              output << CommentFormatter.call('', "# >> ", line.chomp, options()) << "\n"
+              output << CommentFormatter.call(0, "# >> ", line.chomp, options()) << "\n"
             end
           end
 
           if results.has_stderr?
             output << "\n"
             results.stderr.each_line do |line|
-              output << CommentFormatter.call('', "# !> ", line.chomp, options()) << "\n"
+              output << CommentFormatter.call(0, "# !> ", line.chomp, options()) << "\n"
             end
           end
 
@@ -111,13 +109,13 @@ class SeeingIsBelieving
         return unless file_result.has_exception?
         exception = file_result.exception
         output << "\n"
-        output << CommentFormatter.new('', "# ~> ", exception.class_name, options).call << "\n"
+        output << CommentFormatter.new(0, "# ~> ", exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
-          output << CommentFormatter.new('', "# ~> ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
         end
         output << "# ~>\n"
         exception.backtrace.each do |line|
-          output << CommentFormatter.new('', "# ~> ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
         end
       end
 

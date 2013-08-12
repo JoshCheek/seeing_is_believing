@@ -29,15 +29,15 @@ class SeeingIsBelieving
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
             when '-g', '--debug'               then options[:debugger]            = Debugger.new(enabled: true, colour: true)
-            when '-l', '--start-line'          then extract_positive_int_for :start_line,    arg
-            when '-L', '--end-line'            then extract_positive_int_for :end_line,      arg
-            when '-d', '--line-length'         then extract_positive_int_for :line_length,   arg
-            when '-D', '--result-length'       then extract_positive_int_for :result_length, arg
-            when '-t', '--timeout'             then extract_non_negative_float_for :timeout, arg
-            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]            << filename }
-            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path]          << dir }
-            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]            = program }
-            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]                 = filename }
+            when '-l', '--start-line'          then extract_positive_int_for :start_line,        arg
+            when '-L', '--end-line'            then extract_positive_int_for :end_line,          arg
+            when '-d', '--line-length'         then extract_positive_int_for :max_line_length,   arg
+            when '-D', '--result-length'       then extract_positive_int_for :max_result_length, arg
+            when '-t', '--timeout'             then extract_non_negative_float_for :timeout,     arg
+            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]   << filename }
+            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path] << dir }
+            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]   =  program }
+            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]        =  filename }
             when '-s', '--alignment-strategy'  then extract_alignment_strategy
             when /\A-K(.+)/                    then options[:encoding] = $1
             when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
@@ -78,9 +78,9 @@ class SeeingIsBelieving
           program:             nil,
           filename:            nil,
           start_line:          1,
-          line_length:         Float::INFINITY,
           end_line:            Float::INFINITY,
-          result_length:       Float::INFINITY,
+          max_line_length:     Float::INFINITY,
+          max_result_length:   Float::INFINITY,
           timeout:             0, # timeout lib treats this as infinity
           errors:              [],
           require:             [],

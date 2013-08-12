@@ -5,37 +5,37 @@ class SeeingIsBelieving
         new(*args).call
       end
 
-      attr_accessor :line, :separator, :result, :options
+      attr_accessor :line_length, :separator, :result, :options
 
-      def initialize(line, separator, result, options)
-       self.line      = line
-       self.separator = separator
-       self.result    = result.gsub "\n", '\n'
-       self.options   = options
+      def initialize(line_length, separator, result, options)
+       self.line_length = line_length
+       self.separator   = separator
+       self.result      = result.gsub "\n", '\n'
+       self.options     = options
       end
 
       def call
-        formatted = truncate "#{separator}#{result}", result_length
+        formatted = truncate "#{separator}#{result}", max_result_length
         formatted = "#{' '*padding_length}#{formatted}"
-        formatted = truncate formatted, line_length
+        formatted = truncate formatted, max_line_length
         formatted = '' unless formatted.sub(/^ */, '').start_with? separator
         formatted
       end
 
       private
 
-      def line_length
-        length = options.fetch(:line_length, Float::INFINITY) - line.size
+      def max_line_length
+        length = options.fetch(:max_line_length, Float::INFINITY) - line_length
         length = 0 if length < 0
         length
       end
 
-      def result_length
-        options.fetch :result_length, Float::INFINITY
+      def max_result_length
+        options.fetch :max_result_length, Float::INFINITY
       end
 
       def padding_length
-        padding_length = options.fetch(:pad_to, 0) - line.size
+        padding_length = options.fetch(:pad_to, 0) - line_length
         padding_length = 0 if padding_length < 0
         padding_length
       end
