@@ -37,6 +37,7 @@ class SeeingIsBelieving
 
       def call
         @new_body ||= begin
+          # uhm, these basically look like strategies for commenting.
           new_body = if xmpfilter_style
             RewriteComments.call body do |line_number, line, whitespace, comment|
               # FIXME: can we centralize these regexes?
@@ -69,23 +70,9 @@ class SeeingIsBelieving
             end
           end
 
-          output = ""
-
-          if results.has_stdout?
-            output << "\n"
-            results.stdout.each_line do |line|
-              output << CommentFormatter.call(0, "# >> ", line.chomp, options()) << "\n"
-            end
-          end
-
-          if results.has_stderr?
-            output << "\n"
-            results.stderr.each_line do |line|
-              output << CommentFormatter.call(0, "# !> ", line.chomp, options()) << "\n"
-            end
-          end
-
-          add_exception output, results
+          output = stdout_ouptut_for(results)    <<
+                   stderr_ouptut_for(results)    <<
+                   exception_output_for(results)
 
           if new_body["\n__END__\n"]
             new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
@@ -105,10 +92,28 @@ class SeeingIsBelieving
 
       attr_accessor :body, :options, :alignment_strategy
 
-      def add_exception(output, file_result)
-        return unless file_result.has_exception?
-        exception = file_result.exception
-        output << "\n"
+      def stdout_ouptut_for(results)
+        return '' unless results.has_stdout?
+        output = "\n"
+        results.stdout.each_line do |line|
+          output << CommentFormatter.call(0, "# >> ", line.chomp, options()) << "\n"
+        end
+        output
+      end
+
+      def stderr_ouptut_for(results)
+        return '' unless results.has_stderr?
+        output = "\n"
+        results.stderr.each_line do |line|
+          output << CommentFormatter.call(0, "# !> ", line.chomp, options()) << "\n"
+        end
+        output
+      end
+
+      def exception_output_for(results)
+        return '' unless results.has_exception?
+        exception = results.exception
+        output = "\n"
         output << CommentFormatter.new(0, "# ~> ", exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
           output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
@@ -117,6 +122,7 @@ class SeeingIsBelieving
         exception.backtrace.each do |line|
           output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
         end
+        output
       end
 
     end
