@@ -629,6 +629,7 @@ describe SeeingIsBelieving::WrapExpressions do
     it 'wraps methods tacked onto the end of heredocs' do
       wrap("<<A.size\nA").should == "<<<A.size>\nA"
       wrap("<<A.size 1\nA").should == "<<<A.size 1>\nA"
+      wrap("<<A.size(1)\nA").should == "<<<A.size(1)>\nA"
       wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
       wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
       wrap("<<A.size()\nA").should == "<<<A.size()>\nA"

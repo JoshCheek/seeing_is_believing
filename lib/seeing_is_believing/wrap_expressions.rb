@@ -190,6 +190,13 @@ class SeeingIsBelieving
             end_pos += 1
           end
 
+        # target is a heredoc, so we can't trust the expression
+        # but method has parens, so we can't trust the last arg
+        elsif heredoc?(target) && last_arg && buffer.source[ast.location.selector.end_pos] == '('
+          end_pos = last_arg.location.expression.end_pos
+          end_pos += 1 until buffer.source[end_pos] == ')'
+          end_pos += 1
+
         elsif heredoc?(target) && last_arg
           end_pos = last_arg.location.expression.end_pos
 
