@@ -246,3 +246,12 @@ Feature:
     n, fib_gen = fib_gen.()               # => [1, <PROC>]
     """
 
+  Scenario: Repeated invocations
+    When I run "echo 'puts 1' | seeing_is_believing | seeing_is_believing"
+    Then stdout is:
+    """
+    puts 1  # => nil
+
+    # >> 1
+    """
+

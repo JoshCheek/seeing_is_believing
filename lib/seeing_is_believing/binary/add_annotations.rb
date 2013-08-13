@@ -77,7 +77,8 @@ class SeeingIsBelieving
           if new_body["\n__END__\n"]
             new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
           else
-            new_body << "\n" << output
+            new_body << "\n" unless new_body.end_with? "\n"
+            new_body << output
           end
 
           new_body = if debugger.enabled?
