@@ -330,7 +330,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a=\nb=\n1").should == "<a=\nb=\n1>"
     end
 
-    it 'wraps operator assignment', t:true do
+    it 'wraps operator assignment' do
       wrap("a += 1").should == "<a += 1>"
       wrap("a *= 1").should == "<a *= 1>"
       wrap("a -= 1").should == "<a -= 1>"

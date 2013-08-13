@@ -296,7 +296,7 @@ describe SeeingIsBelieving do
                                                   ['[6, 12]']]
   end
 
-  context 'when given a debugger', t:true do
+  context 'when given a debugger' do
     let(:debugger) { SeeingIsBelieving::Debugger.new enabled: true }
 
     def call
@@ -309,7 +309,7 @@ describe SeeingIsBelieving do
       debugger.to_s.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
-    it 'prints the result', t:true do
+    it 'prints the result' do
       call
       debugger.to_s.should include "RESULT:"
       debugger.to_s.should include '1=>#<SIB:Line["1"] no exception>'

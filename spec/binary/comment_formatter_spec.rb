@@ -34,7 +34,7 @@ describe SeeingIsBelieving::Binary::CommentFormatter do
     result_for(line_length, separator, result, max_line_length: 0).should == ''
   end
 
-  specify 'pad_to will pad the length that the line is displayed in',t:true do
+  specify 'pad_to will pad the length that the line is displayed in' do
     result_for(1, '=>', '2', pad_to: 0).should == '=>2'
     result_for(1, '=>', '2', pad_to: 1).should == '=>2'
     result_for(1, '=>', '2', pad_to: 2).should == ' =>2'

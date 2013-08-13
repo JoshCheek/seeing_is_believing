@@ -206,7 +206,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # ~> 8
     CODE
 
-    example('', t:true) { call(<<-CODE).should == "1\n\nputs \"omg\"" }
+    example { call(<<-CODE).should == "1\n\nputs \"omg\"" }
     1  # => 1
 
     puts "omg"  # ~> RuntimeError: omg
