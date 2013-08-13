@@ -50,9 +50,7 @@ class SeeingIsBelieving
   def program_that_will_record_expressions
     WrapExpressions.call "#@program\n",
                          before_all:  "begin;",
-                         # must use newline after code, or comments will comment out rescue section
-                         after_all:   "\n"\
-                                      "rescue Exception;"\
+                         after_all:   ";rescue Exception;"\
                                         "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
                                         "$SiB.record_exception line_number, $!;"\
                                         "$SiB.exitstatus = 1;"\

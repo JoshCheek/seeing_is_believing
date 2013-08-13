@@ -255,3 +255,19 @@ Feature:
     # >> 1
     """
 
+  Scenario: Heredoc at the end test
+    Given the file "heredoc_at_the_end.rb":
+    """
+    puts(<<A)
+    omg
+    A
+    """
+    When I run "seeing_is_believing heredoc_at_the_end.rb"
+    Then stdout is:
+    """
+    puts(<<A)  # => nil
+    omg
+    A
+
+    # >> omg
+    """

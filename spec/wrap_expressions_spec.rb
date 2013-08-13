@@ -15,14 +15,48 @@ describe SeeingIsBelieving::WrapExpressions do
     expect { wrap '+' }.to raise_error SyntaxError
   end
 
-  it 'wraps the entire body, ignoring leading comments and the data segment' do
-    described_class.call("#comment\nA\n__END__\n1",
-                         before_all: "[",
-                         after_all:  "]",
-                         before_each: -> * { '<' },
-                         after_each:  -> * { '>' }
-                        )
-                   .should == "#comment\n[<A>]\n__END__\n1"
+  describe 'wrapping the body' do
+    let(:options) { { before_all: "[",
+                      after_all:  "]",
+                      before_each: -> * { '<' },
+                      after_each:  -> * { '>' } } }
+
+    it 'wraps the entire body, ignoring leading comments and the data segment' do
+      described_class.call("#comment\nA\n__END__\n1", options).should == "#comment\n[<A>]\n__END__\n1"
+    end
+
+    it 'does nothing when there are only comments' do
+      described_class.call("# abc", options).should == "# abc"
+    end
+
+    it 'comes in before trailing comments' do
+      described_class.call("1# abc", options).should == "[<1>]# abc"
+    end
+
+    context 'fucking heredocs' do
+      example 'single heredoc' do
+        described_class.call("<<A\nA", options).should == "[<<<A>]\nA"
+      end
+
+      example 'multiple heredocs' do
+        # a stupid implementatnio issue from hacking around heredocs
+        # causes the toplevel begin to wrap the whole file.
+        # It's fine b/c it is ultimately the same, but that's why it's
+        # "[<<<<A>\nA\n<<B>]\nB"
+        # instead of
+        # "[<<<A>\nA\n<<<B>]\nB"
+        described_class.call("<<A\nA\n<<B\nB", options).should == "[<<<<A>\nA\n<<B>]\nB"
+      end
+
+      example 'heredocs as targets and arguments to methods' do
+        described_class.call("<<A.size 1\nA", options).should == "[<<<A.size 1>]\nA"
+        described_class.call("<<A.size\nA", options).should == "[<<<A.size>]\nA"
+        described_class.call("<<A.size()\nA", options).should == "[<<<A.size()>]\nA"
+        described_class.call("a.size <<A\nA", options).should == "[<a.size <<A>]\nA"
+        described_class.call("<<A.size <<B\nA\nB", options).should == "[<<<A.size <<B>]\nA\nB"
+        described_class.call("<<A.size(<<B)\nA\nB", options).should == "[<<<A.size(<<B)>]\nA\nB"
+      end
+    end
   end
 
   it 'passes the current line number to the before_each and after_each wrappers' do
@@ -574,9 +608,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("1\n<<A\nA").should == "<<1>\n<<A>\nA"
       wrap("<<A + <<B\n1\nA\n2\nB").should == "<<<A + <<B>\n1\nA\n2\nB"
       wrap("<<A\n1\nA\n<<B\n2\nB").should == "<<<<A>\n1\nA\n<<B>\n2\nB"
-      pending 'turtles all the way down :(' do
-        wrap("puts <<A\nA\nputs <<B\nB").should == "<<puts <<A>\nA\nputs <<B>\nB"
-      end
+      wrap("puts <<A\nA\nputs <<B\nB").should == "<puts <<A>\nA\n<puts <<B>\nB"
     end
 
     it "wraps methods that wrap heredocs, even whent hey don't have parentheses" do
@@ -597,6 +629,7 @@ describe SeeingIsBelieving::WrapExpressions do
 
     it 'wraps methods tacked onto the end of heredocs' do
       wrap("<<A.size\nA").should == "<<<A.size>\nA"
+      wrap("<<A.size 1\nA").should == "<<<A.size 1>\nA"
       wrap("<<A.whatever <<B\nA\nB").should == "<<<A.whatever <<B>\nA\nB"
       wrap("<<A.whatever(<<B)\nA\nB").should == "<<<A.whatever(<<B)>\nA\nB"
       wrap("<<A.size()\nA").should == "<<<A.size()>\nA"

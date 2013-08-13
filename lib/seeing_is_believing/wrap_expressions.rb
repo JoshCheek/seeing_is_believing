@@ -62,7 +62,11 @@ class SeeingIsBelieving
             rewriter.insert_after  range, after_each.call(line_num)
           end
 
-          rewriter.insert_after root.location.expression, after_all
+          # another stupid hack to get around a heredoc at the end of the document
+          # hopefully we can remove this after next version of Parser is released
+          last_index, (range, col) = wrappings.max_by(&:first)
+          range ||= root.location.expression
+          rewriter.insert_after range, after_all
         end
 
         rewriter.process
@@ -186,7 +190,10 @@ class SeeingIsBelieving
             end_pos += 1
           end
 
-        # the last arg is not a heredoc, the range of the expression can be trusted
+        elsif heredoc?(target) && last_arg
+          end_pos = last_arg.location.expression.end_pos
+
+        # neither the target, nor the last arg are heredocs, the range of the expression can be trusted
         elsif last_arg
           end_pos = ast.location.expression.end_pos
 

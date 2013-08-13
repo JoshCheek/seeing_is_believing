@@ -1,4 +1,4 @@
-require 'seeing_is_believing/binary/align_file'
+require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
   class Binary
