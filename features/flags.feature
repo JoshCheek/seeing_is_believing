@@ -292,6 +292,7 @@ Feature: Using flags
     """
 
 
+  @not-implemented
   Scenario: --clean on an invalid file will clean
     When I run 'seeing_is_believing --clean -e "1+  # => lkj"'
     Then stderr is empty

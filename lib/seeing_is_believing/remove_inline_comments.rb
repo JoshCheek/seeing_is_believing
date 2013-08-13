@@ -16,7 +16,7 @@ class SeeingIsBelieving
         end
 
         RemoveInlineComments.call code, additional_rewrites: nonleading_comments do |comment|
-          ranges << comment.location
+          ranges << comment.location.expression
           false
         end
       end
