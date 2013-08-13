@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'stringio'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
@@ -158,6 +160,85 @@ Usage: seeing_is_believing [options] [filename]
   -i, --inherit-exit-status     # exit with the exit status of the program being eval
   -v, --version                 # print the version (#{VERSION})
   -h, --help                    # this help screen
+
+Examples: A few examples, for a more comprehensive set of examples, check out features/flags.feature
+
+  Run the file f.rb
+    $ echo __FILE__ > f.rb; seeing_is_believing f.rb
+    __FILE__  # => "f.rb"
+
+  Aligning comments
+    $ ruby -e 'puts "123\\n4\\n\\n567890"' > f.rb
+
+
+    $ seeing_is_believing f.rb -s line
+    123  # => 123
+    4  # => 4
+
+    567890  # => 567890
+
+
+    $ seeing_is_believing f.rb -s chunk
+    123  # => 123
+    4    # => 4
+
+    567890  # => 567890
+
+
+    $ seeing_is_believing f.rb -s file
+    123     # => 123
+    4       # => 4
+
+    567890  # => 567890
+
+  Run against standard input
+    $ echo '3.times { |i| puts i }' | seeing_is_believing
+    2.times { |i| puts i }  # => 2
+
+    # >> 0
+    # >> 1
+
+  Run against a library you're working on by fixing the load path
+    $ seeing_is_believing -I lib f.rb
+
+  Load up some library (can be used in tandem with -I)
+    $ seeing_is_believing -r pp -e 'pp [[*1..15],[*15..30]]; nil'
+    pp [[*1..15],[*15..30]]; nil  # => nil
+
+    # >> [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    # >>  [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
+
+  Only update the lines you've marked
+    $ ruby -e 'puts "1\\n2 # =>\\n3"' | seeing_is_believing -x
+    1
+    2 # => 2
+    3
+
+  Set a timeout (especially useful if running via an editor)
+    $ seeing_is_believing -e 'loop { sleep 1 }' -t 3
+    Timeout Error after 3.0 seconds!
+
+  Set the encoding to utf-8
+    $ seeing_is_believing -Ku -e '"⛄ "'
+    "⛄ "  # => "⛄ "
+
+  The exit status will be 1 if the error is displayable inline
+    $ seeing_is_believing -e 'raise "omg"'; echo $?
+    raise "omg"  # ~> RuntimeError: omg
+    1
+
+  The exit status will be 2 if the error is not displayable
+    $ seeing_is_believing -e 'a='; echo $status
+    -:1: syntax error, unexpected $end
+    2
+
+  Run with previous output
+    $ echo "1+1  # => old-value" | seeing_is_believing
+    1+1  # => 2
+
+    $ echo "1+1  # => old-value" | seeing_is_believing --clean
+    1+1
+
 HELP_SCREEN
     end
   end

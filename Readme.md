@@ -146,7 +146,6 @@ Known Issues
 Todo
 ====
 
-* Add examples of invocations to the help screen
 * Add xmpfilter option to sublime text
 * Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
 * How about if begin/rescue/end was able to record the result on the rescue section
@@ -161,6 +160,7 @@ Todo
 * uhm, can we wrap the parser setup code in one place? `ack Parser::Source::Buffer`
 * Make the fucking debugger not lazy
 * Go through Peter's email about how to make the use of Parser better
+* If given a file with a unicode character, but not set unicode, inform the user
 
 License
 =======
