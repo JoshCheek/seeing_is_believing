@@ -157,22 +157,11 @@ class SeeingIsBelieving
           add_to_wrappings range
           add_children ast.children.last
         end
-      when :lvasgn
+      when :lvasgn, :ivasgn, :gvasgn, :cvasgn, :casgn # local variable, instance variable, global variable, class variable, constant
         # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
         # we must hack around this
 
-        # can have one or two children:
-        #   in a=1 (has children :a, and 1)
-        #   in a,b=1,2 it comes out like:
-        #     (masgn
-        #       (mlhs
-        #         (lvasgn :a) <-- one child
-        #
-        #         (lvasgn :b))
-        #       (array
-        #         (int 1)
-        #         (int 2)))
-        if ast.children.size == 2
+        if ast.children.last.kind_of? ::AST::Node
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
@@ -248,6 +237,7 @@ class SeeingIsBelieving
       puts $!
       require "pry"
       binding.pry
+      raise
     end
 
     def heredoc_hack(ast)

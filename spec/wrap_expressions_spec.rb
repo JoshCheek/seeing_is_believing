@@ -291,6 +291,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a=1").should == "<a=1>"
       wrap("a.b=1").should == "<a.b=1>"
       wrap("A=1").should == "<A=1>"
+      wrap("::A=1").should == "<::A=1>"
       wrap("A::B=1").should == "<A::B=1>"
       wrap("@a=1").should == "<@a=1>"
       wrap("@@a=1").should == "<@@a=1>"
@@ -329,7 +330,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a=\nb=\n1").should == "<a=\nb=\n1>"
     end
 
-    it 'wraps operator assignment' do
+    it 'wraps operator assignment', t:true do
       wrap("a += 1").should == "<a += 1>"
       wrap("a *= 1").should == "<a *= 1>"
       wrap("a -= 1").should == "<a -= 1>"
@@ -341,6 +342,15 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a &&= 1").should == "<a &&= 1>"
       wrap("a[1] = 2").should == "<a[1] = 2>"
       wrap("a[1] ||= 2").should == "<a[1] ||= 2>"
+      wrap("@a  ||= 123").should == "<@a  ||= 123>"
+      wrap("$a  ||= 123").should == "<$a  ||= 123>"
+      wrap("@@a ||= 123").should == "<@@a ||= 123>"
+      wrap("B   ||= 123").should == "<B   ||= 123>"
+      wrap("@a  ||= begin\n123\nend").should == "<@a  ||= begin\n<123>\nend>"
+      wrap("$a  ||= begin\n123\nend").should == "<$a  ||= begin\n<123>\nend>"
+      wrap("@@a ||= begin\n123\nend").should == "<@@a ||= begin\n<123>\nend>"
+      wrap("B   ||= begin\n123\nend").should == "<B   ||= begin\n<123>\nend>"
+      wrap("::B ||= begin\n123\nend").should == "<::B ||= begin\n<123>\nend>"
     end
 
     it 'wraps arguments in the assignment' do

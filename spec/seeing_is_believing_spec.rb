@@ -316,5 +316,4 @@ describe SeeingIsBelieving do
     end
     # should ProgramRewriter have some debug options?
   end
-
 end
