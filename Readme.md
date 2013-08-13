@@ -141,6 +141,7 @@ Known Issues
 ============
 
 * `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
+* `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
 
 Todo
 ====
@@ -148,31 +149,18 @@ Todo
 * Add examples of invocations to the help screen
 * Add xmpfilter option to sublime text
 * Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
-* Remove the SyntaxAnalyzer altogether!
 * How about if begin/rescue/end was able to record the result on the rescue section
 * Check how begin/rescue/end with multiple rescue blocks works
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 * Be able to clean an invalid file (used to be able to do this, but parser can't identify comments in an invalid file the way that I'm currently using it, cuke is still there, marked as @not-implemented)
 * Add a flag to allow you to just get the results so that it can be easily used without a Ruby runtime
-
-Up Next
-=======
-
-rename ProgramRewriter -> WrapExpressions
-find that fucking regex bug
-add the inspected result --debug output
-Fix high-level shit:
-  remove all previous output except if -x flag is set, then leave `# =>`
-  `gsub(/\s*$/, '')`
-  run it through sib
-  if -x flag is set
-    for each comment
-      if it is `# =>`, update it
-  else
-    printable_list = get a list of each line that is an actual end and has no comments with sib (can ignore heredocs b/c they will have no value)
-                     this list is like line_number => [col_number, character_number] (e.g. where to insert on that line)
-    for each line, add it at that character location, adjusting from the col_number to pad it correctly
-
+* Go through each cuke and spec, implementing however many not-implemented ones that we can
+* Check %w and all the others
+* Add a --shebang flag
+* Make sure the examples in this readme all still make sense (mountain berry fields?)
+* uhm, can we wrap the parser setup code in one place? `ack Parser::Source::Buffer`
+* Make the fucking debugger not lazy
+* Go through Peter's email about how to make the use of Parser better
 
 License
 =======
