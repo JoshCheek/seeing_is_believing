@@ -98,25 +98,58 @@ are instructions for RVM (I recommend the wrapper approach).
 [Here](http://uberfork.com/post/12280974742/integrate-rbenv-with-textmate)
 are instructions for rbenv.
 
-Go to the bundle editor, create this new command in the Ruby bundle:
+Go to the bundle editor, create a new command (I put it in the Ruby bundle)
+You can name it what you want, I went with "seeing is believing annotate all lines"
 
 ```shell
+#!/bin/bash
+
+# set result length because TextMate has difficulty displaying long lines
+default_options=""
+default_options="$default_options -Ku"
+default_options="$default_options --result-length 200"
+default_options="$default_options --alignment-strategy chunk"
+default_options="$default_options --timeout 12"
+
 if [ -z "$TM_FILEPATH" ]; then
-  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --alignment-strategy chunk --timeout 12
+  "${TM_RUBY}" -S seeing_is_believing $default_options
 else
-  "${TM_RUBY}" -S seeing_is_believing -Ku --result-length 200 --as "$TM_FILEPATH" --alignment-strategy chunk --timeout 12
+  "${TM_RUBY}" -S seeing_is_believing $default_options --as "$TM_FILEPATH"
 fi
 ```
 
-It should look like this:
-
-![textmate-integration][textmate-integration]
-
-I also recommend a second command for cleaning the output:
+You can also make one for annotating only the lines you have marked.
+I named it "seeing is believing annotate marked lines"
 
 ```shell
+#!/bin/bash
+
+# set result length because TextMate has difficulty displaying long lines
+default_options=""
+default_options="$default_options --xmpfilter-style"
+default_options="$default_options -Ku"
+default_options="$default_options --result-length 200"
+default_options="$default_options --alignment-strategy chunk"
+default_options="$default_options --timeout 12"
+
+if [ -z "$TM_FILEPATH" ]; then
+  "${TM_RUBY}" -S seeing_is_believing $default_options
+else
+  "${TM_RUBY}" -S seeing_is_believing $default_options --as "$TM_FILEPATH"
+fi
+```
+
+And you'll probably want one to clean out the outpt
+
+```shell
+#!/bin/bash
 "${TM_RUBY}" -S seeing_is_believing -Ku --clean
 ```
+
+You can bind them to whatever keys you want, but I'll recomend (for consistency with what I chose for the Sublime bundle)
+* annotate all lines -> Command Option b
+* annotate marked lines -> Command Option n
+* remove annotations -> Command Option v
 
 Emacs Integration
 =================
@@ -147,7 +180,7 @@ Todo
 ====
 
 * Add xmpfilter option to sublime text
-* Update TextMate examples to use same keys as sublime, add xmpfilter option on cmd+opt+N
+* Make TextMate 1 and 2 bundles
 * How about if begin/rescue/end was able to record the result on the rescue section
 * Check how begin/rescue/end with multiple rescue blocks works
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
