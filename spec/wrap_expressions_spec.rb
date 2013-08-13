@@ -384,7 +384,6 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("$a  ||= begin\n123\nend").should == "<$a  ||= begin\n<123>\nend>"
       wrap("@@a ||= begin\n123\nend").should == "<@@a ||= begin\n<123>\nend>"
       wrap("B   ||= begin\n123\nend").should == "<B   ||= begin\n<123>\nend>"
-      wrap("::B ||= begin\n123\nend").should == "<::B ||= begin\n<123>\nend>"
     end
 
     it 'wraps arguments in the assignment' do
