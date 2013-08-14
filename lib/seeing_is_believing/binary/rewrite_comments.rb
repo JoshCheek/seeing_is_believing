@@ -1,14 +1,10 @@
-require 'parser/current'
+require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
   class Binary
     module RewriteComments
       def self.call(code, &mapping)
-        buffer        = Parser::Source::Buffer.new "strip_comments"
-        buffer.source = code
-        parser        = Parser::CurrentRuby.new
-        rewriter      = Parser::Source::Rewriter.new(buffer)
-        ast, comments = parser.parse_with_comments(buffer)
+        buffer, parser, rewriter, ast, comments = ParserHelpers.initialize_parser code, 'strip_comments'
 
         comments.each do |comment|
           next unless comment.type == :inline

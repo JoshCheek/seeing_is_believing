@@ -1,4 +1,5 @@
 require 'parser/current'
+require 'seeing_is_believing/parser_helpers'
 
 # hack rewriter to apply insertions in stable order
 # until https://github.com/whitequark/parser/pull/102 gets released
@@ -31,6 +32,9 @@ end
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 class SeeingIsBelieving
   class WrapExpressions
+
+    include ParserHelpers
+
     def self.call(program, wrappings)
       new(program, wrappings).call
     end
@@ -41,10 +45,7 @@ class SeeingIsBelieving
       self.after_all   = wrappings.fetch :after_all,   ''.freeze
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
-      self.buffer      = Parser::Source::Buffer.new('program-without-annotations')
-      buffer.source    = program
-      self.root        = Parser::CurrentRuby.new.parse buffer
-      self.rewriter    = Parser::Source::Rewriter.new buffer
+      self.buffer, _, self.rewriter, self.root, _ = initialize_parser(program, 'program-without-annotations')
       self.wrappings   = {}
     rescue Parser::SyntaxError => e
       raise ::SyntaxError, e.message
@@ -244,51 +245,6 @@ class SeeingIsBelieving
       else
         add_to_wrappings ast
         add_children ast
-      end
-    rescue
-      # TODO: delete this rescue block once things get stabler
-      puts ast.type
-      puts $!
-      require "pry"
-      binding.pry
-      raise
-    end
-
-    def heredoc_hack(ast)
-      return ast unless heredoc? ast
-      Parser::AST::Node.new :str,
-                            [],
-                            location: Parser::Source::Map.new(ast.location.begin)
-    end
-
-    # this is the scardest fucking method I think I've ever written.
-    # *anything* can go wrong!
-    #
-    # !!NOTE!! This method is copy/pasted into Binary::CommentLines
-    def heredoc?(ast)
-      # some strings are fucking weird.
-      # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
-      # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection, so it has no #begin
-      ast.kind_of?(Parser::AST::Node)           &&
-        (ast.type == :dstr || ast.type == :str) &&
-        (location  = ast.location)              &&
-        (location.respond_to?(:begin))          &&
-        (the_begin = location.begin)            &&
-        (the_begin.source =~ /^\<\<-?/)
-    end
-
-    def void_value?(ast)
-      case ast && ast.type
-      when :begin, :kwbegin, :resbody
-        void_value?(ast.children[-1])
-      when :rescue, :ensure
-        ast.children.any? { |child| void_value? child }
-      when :if
-        void_value?(ast.children[1]) || void_value?(ast.children[2])
-      when :return, :next, :redo, :retry, :break
-        true
-      else
-        false
       end
     end
   end

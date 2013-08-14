@@ -3,7 +3,7 @@
 #   removes annotations
 #   only removes "# =>" when should_clean_values is false
 
-require 'parser/current'
+require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
   class Binary
@@ -18,11 +18,7 @@ class SeeingIsBelieving
       end
 
       def call
-        buffer                = Parser::Source::Buffer.new "strip_comments"
-        buffer.source         = code
-        parser                = Parser::CurrentRuby.new
-        rewriter              = Parser::Source::Rewriter.new(buffer)
-        ast, comments         = parser.parse_with_comments(buffer)
+        buffer, parser, rewriter, ast, comments = ParserHelpers.initialize_parser code, 'strip_comments'
         removed_comments      = { result: [], exception: [], stdout: [], stderr: [] }
 
         comments.each do |comment|

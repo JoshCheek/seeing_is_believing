@@ -1,15 +1,19 @@
-require 'parser/current'
+require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
   class Binary
-
     class CommentableLines
+
+      include ParserHelpers
+
       def self.call(code)
         new(code).call
       end
 
       def initialize(code)
         self.code = code
+        self.buffer, self.parser, self.rewriter, self.root, self.comments =
+          initialize_parser(code, 'strip_comments')
       end
 
       def call
@@ -23,37 +27,12 @@ class SeeingIsBelieving
         end
       end
 
-      def buffer
-        @buffer ||= Parser::Source::Buffer.new("strip_comments").tap { |b| b.source = code }
-      end
-
-      def rewriter
-        @rewriter ||= Parser::Source::Rewriter.new(buffer)
-      end
+      attr_reader :buffer, :rewriter
 
       private
 
-      attr_accessor :code
-
-      def parser
-        @parser ||= Parser::CurrentRuby.new
-      end
-
-      def root
-        parse!
-        @root
-      end
-
-      def comments
-        parse!
-        @comments
-      end
-
-
-      def parse!
-        return if @root
-        @root, @comments = parser.parse_with_comments(buffer)
-      end
+      attr_writer :buffer, :rewriter
+      attr_accessor :code, :parser, :root, :comments
 
       def line_nums_to_last_index_and_col(buffer)
         line_num_to_indexes = code.each_char
@@ -124,19 +103,6 @@ class SeeingIsBelieving
         else
           false
         end
-      end
-
-      # copy/pasted from wrap_expressions
-      def heredoc?(ast)
-        # some strings are fucking weird.
-        # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
-        # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection, so it has no #begin
-        ast.kind_of?(Parser::AST::Node)           &&
-          (ast.type == :dstr || ast.type == :str) &&
-          (location  = ast.location)              &&
-          (location.respond_to?(:begin))          &&
-          (the_begin = location.begin)            &&
-          (the_begin.source =~ /^\<\<-?/)
       end
 
       def remove_lines_after_data_segment(line_num_to_indexes)

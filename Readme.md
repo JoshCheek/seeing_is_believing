@@ -182,9 +182,7 @@ Todo
 * Add xmpfilter option to sublime text
 * Make TextMate 1 and 2 bundles
 * Go through each cuke and spec, implementing however many not-implemented ones that we can
-* Check %w and all the others
 * Make sure the examples in this readme all still make sense (mountain berry fields?)
-* uhm, can we wrap the parser setup code in one place? `ack Parser::Source::Buffer`
 * Go through Peter's email about how to make the use of Parser better
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
