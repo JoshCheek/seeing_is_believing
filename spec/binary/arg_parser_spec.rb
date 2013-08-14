@@ -1,6 +1,6 @@
-require 'seeing_is_believing/binary/arg_parser'
+require 'seeing_is_believing/binary/parse_args'
 
-describe SeeingIsBelieving::Binary::ArgParser do
+describe SeeingIsBelieving::Binary::ParseArgs do
   RSpec::Matchers.define :have_error do |error_assertion|
     match do |options|
       options[:errors].find do |error|

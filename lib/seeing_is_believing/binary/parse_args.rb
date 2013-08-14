@@ -9,7 +9,7 @@ require 'seeing_is_believing/binary/align_chunk'
 
 class SeeingIsBelieving
   class Binary
-    class ArgParser
+    class ParseArgs
       def self.call(args, outstream)
         new(args, outstream).call
       end
@@ -134,7 +134,7 @@ class SeeingIsBelieving
 
     end
 
-    def ArgParser.help_screen
+    def ParseArgs.help_screen
 <<HELP_SCREEN
 Usage: seeing_is_believing [options] [filename]
 

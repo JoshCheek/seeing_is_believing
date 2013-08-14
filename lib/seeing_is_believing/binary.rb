@@ -1,5 +1,5 @@
 require 'seeing_is_believing'
-require 'seeing_is_believing/binary/arg_parser'
+require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/add_annotations'
 require 'seeing_is_believing/binary/clean_body'
 require 'timeout'
@@ -52,7 +52,7 @@ class SeeingIsBelieving
     end
 
     def parse_flags
-      self.flags = ArgParser.call argv, stdout
+      self.flags = ParseArgs.call argv, stdout
     end
 
     def has_filename?
