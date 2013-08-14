@@ -22,7 +22,7 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout
+    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -34,6 +34,7 @@ class SeeingIsBelieving
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
       self.timeout         = options[:timeout]
+      self.ruby_executable = options.fetch :ruby_executable, 'ruby'
     end
 
     def call
@@ -117,7 +118,7 @@ class SeeingIsBelieving
     end
 
     def popen_args
-      ['ruby',
+      [ruby_executable,
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path

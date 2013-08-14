@@ -344,5 +344,20 @@ describe SeeingIsBelieving::Binary::ArgParser do
       parse(['-g'])[:debugger].should be_enabled
     end
   end
+
+  describe ':shebang' do
+    it 'defaults to "ruby"' do
+      parse([])[:shebang].should == 'ruby'
+    end
+
+    it 'can be enabled with --shebang' do
+      parse(['--shebang', 'not_ruby'])[:shebang].should == 'not_ruby'
+    end
+
+    it 'sets an error if not given a next arg to execute' do
+      parse([]).should_not have_error /--shebang/
+      parse(['--shebang']).should have_error /--shebang/
+    end
+  end
 end
 

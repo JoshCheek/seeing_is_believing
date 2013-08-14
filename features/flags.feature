@@ -507,3 +507,21 @@ Feature: Using flags
     1# 123
     2  # => 2
     """
+
+  Scenario: --shebang
+    Given the file "fake_ruby":
+    """
+    #!/usr/bin/env ruby
+    # yes, this uses knowledge of where the proving grounds is
+    $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib", __FILE__
+
+    require 'seeing_is_believing'
+    result = SeeingIsBelieving::Result.new
+    result.record_result(1, /omg/)
+
+    require 'yaml'
+    puts YAML.dump result
+    """
+    When I run "chmod +x fake_ruby"
+    When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
+    Then stdout is "123  # => /omg/"

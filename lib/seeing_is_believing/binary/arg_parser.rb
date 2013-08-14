@@ -36,10 +36,11 @@ class SeeingIsBelieving
             when '-d', '--line-length'         then extract_positive_int_for :max_line_length,   arg
             when '-D', '--result-length'       then extract_positive_int_for :max_result_length, arg
             when '-t', '--timeout'             then extract_non_negative_float_for :timeout,     arg
-            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:require]   << filename }
-            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|      options[:load_path] << dir }
-            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|  options[:program]   =  program }
-            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename| options[:as]        =  filename }
+            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
+            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
+            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
+            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
+            when       '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   = executable }
             when '-s', '--alignment-strategy'  then extract_alignment_strategy
             when /\A-K(.+)/                    then options[:encoding] = $1
             when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
@@ -88,6 +89,7 @@ class SeeingIsBelieving
           require:             [],
           load_path:           [],
           alignment_strategy:  AlignChunk,
+          shebang:             'ruby',
         }
       end
 
@@ -158,6 +160,7 @@ Usage: seeing_is_believing [options] [filename]
   -g, --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
   -x, --xmpfilter-style         # annotate marked lines instead of every line
   -i, --inherit-exit-status     # exit with the exit status of the program being eval
+      --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
   -v, --version                 # print the version (#{VERSION})
   -h, --help                    # this help screen
 
@@ -238,6 +241,10 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
     $ echo "1+1  # => old-value" | seeing_is_believing --clean
     1+1
+
+  If your Ruby binary is named something else (e.g. ruby2.0)
+    $ ruby2.0 -S seeing_is_believing --shebang ruby2.0 -e '123'
+    123  # => 123
 
 HELP_SCREEN
     end

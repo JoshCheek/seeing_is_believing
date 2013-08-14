@@ -138,7 +138,7 @@ class SeeingIsBelieving
     end
 
     def syntax_error_notice
-      out, err, syntax_status = Open3.capture3 'ruby', '-c', stdin_data: body
+      out, err, syntax_status = Open3.capture3 flags[:shebang], '-c', stdin_data: body
       return err unless syntax_status.success?
     end
 

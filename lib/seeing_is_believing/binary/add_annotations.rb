@@ -26,13 +26,14 @@ class SeeingIsBelieving
         self.options = options
         self.body    = CleanBody.call uncleaned_body, !xmpfilter_style
         self.results = SeeingIsBelieving.call body,
-                                              filename:     (options[:as] || options[:filename]),
-                                              require:      options[:require],
-                                              load_path:    options[:load_path],
-                                              encoding:     options[:encoding],
-                                              stdin:        options[:stdin],
-                                              timeout:      options[:timeout],
-                                              debugger:     debugger
+                                              filename:        (options[:as] || options[:filename]),
+                                              require:         options[:require],
+                                              load_path:       options[:load_path],
+                                              encoding:        options[:encoding],
+                                              stdin:           options[:stdin],
+                                              timeout:         options[:timeout],
+                                              debugger:        debugger,
+                                              ruby_executable: options[:shebang]
       end
 
       def call

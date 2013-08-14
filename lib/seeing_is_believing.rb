@@ -26,6 +26,7 @@ class SeeingIsBelieving
     @encoding        = options.fetch :encoding, nil
     @timeout         = options[:timeout]
     @debugger        = options.fetch :debugger, Debugger.new(enabled: false)
+    @ruby_executable = options.fetch :ruby_executable, 'ruby'
   end
 
   def call
@@ -70,7 +71,8 @@ class SeeingIsBelieving
                                 require:         @require,
                                 load_path:       @load_path,
                                 encoding:        @encoding,
-                                timeout:         @timeout)
+                                timeout:         @timeout,
+                                ruby_executable: @ruby_executable)
                            .call
     end
   end

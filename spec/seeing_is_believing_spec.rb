@@ -7,8 +7,8 @@ describe SeeingIsBelieving do
     described_class.new(input, options).call
   end
 
-  def values_for(input)
-    invoke(input).to_a
+  def values_for(input, options={})
+    invoke(input, options).to_a
   end
 
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
@@ -294,6 +294,29 @@ describe SeeingIsBelieving do
                                                   ['[4, 8]'],
                                                   ['[2, 4]'],
                                                   ['[6, 12]']]
+  end
+
+  it 'can evaluate under a different ruby executable' do
+    Dir.chdir proving_grounds_dir do
+      File.write 'omg-ruby', "#!/usr/bin/env ruby
+        $LOAD_PATH.unshift '#{File.expand_path '../lib', __FILE__}'
+
+        require 'seeing_is_believing'
+        result = SeeingIsBelieving::Result.new
+        result.record_result(1, /omg/)
+
+        require 'yaml'
+        puts YAML.dump result
+      "
+      File.chmod 0755, 'omg-ruby'
+      old_path = ENV['PATH']
+      ENV['PATH'] = "#{proving_grounds_dir}:#{old_path}"
+      begin
+        values_for("1", ruby_executable: 'omg-ruby').should == [["/omg/"]]
+      ensure
+        ENV['PATH'] = old_path
+      end
+    end
   end
 
   context 'when given a debugger' do
