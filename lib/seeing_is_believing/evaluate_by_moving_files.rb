@@ -18,11 +18,12 @@ require 'stringio'
 require 'fileutils'
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
+require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable
+    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -35,6 +36,7 @@ class SeeingIsBelieving
       self.encoding        = options.fetch :encoding, nil
       self.timeout         = options[:timeout]
       self.ruby_executable = options.fetch :ruby_executable, 'ruby'
+      self.debugger        = options.fetch :debugger, Debugger.new(stream: nil)
     end
 
     def call
@@ -137,6 +139,8 @@ class SeeingIsBelieving
     end
 
     def notify_user_of_error
+      debugger.context "Program could not be evaluated"
+
       error_stream.puts "It blew up because SeeingIsBelieving isn't good enough >.<"
       error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
       error_stream.puts

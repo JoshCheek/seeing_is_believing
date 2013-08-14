@@ -1,27 +1,40 @@
 require 'seeing_is_believing/debugger'
+require 'stringio'
 
 describe SeeingIsBelieving::Debugger do
-  specify 'the debugger is enabled by default' do
-    described_class.new.should be_enabled
-    described_class.new(enabled: true).should be_enabled
-    described_class.new(enabled: false).should_not be_enabled
+  let(:stream) { StringIO.new }
+
+  specify 'is enabled when given a stream' do
+    described_class.new(stream: nil).should_not be_enabled
+    described_class.new(stream: stream).should be_enabled
   end
 
-  it 'does not evaluate its contexts when disabled' do
-    expect { described_class.new(enabled:  true).context('c') { raise 'omg' } }.to raise_error 'omg'
-    expect { described_class.new(enabled: false).context('c') { raise 'omg' } }.to_not raise_error
+  specify 'colour is disabled by default' do
+    described_class.new.should_not be_coloured
+    described_class.new(colour: false).should_not be_coloured
+    described_class.new(colour:  true).should be_coloured
   end
 
-  it 'caches results under a name which all appear consecutively next to eachother regardless of when they were called' do
-    described_class.new(enabled: true, color: false)
-                   .context('a') { '1' }
-                   .context('b') { '3' }
-                   .context('a') { '2' }
-                   .to_s.should == "a:\n1\n2\n\nb:\n3\n"
+  context 'when given a steram' do
+    it 'prints the the context and the value of the block' do
+      described_class.new(stream: stream).context('C') { 'V' }
+      stream.string.should == "C:\nV\n"
+    end
+
+    it 'colours the context when colour is set to true' do
+      described_class.new(stream: stream, colour: true).context('C') { 'V' }
+      stream.string.should == "#{described_class::CONTEXT_COLOUR}C:#{described_class::RESET_COLOUR}\nV\n"
+    end
   end
 
-  specify 'colouring is disabled by default' do
-    described_class.new(enabled: true, colour: true).context('AAA') { 'BBB' }.to_s.should ==
-      "#{described_class::CONTEXT_COLOUR}AAA:#{described_class::RESET_COLOUR}\nBBB\n"
+  context 'when not given a stream' do
+    it 'prints nothing' do
+      described_class.new.context('C') { 'V' }
+      stream.string.should be_empty
+    end
+
+    it 'does not evaluate the blocks' do
+      described_class.new.context('C') { fail }
+    end
   end
 end

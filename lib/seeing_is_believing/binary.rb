@@ -52,7 +52,7 @@ class SeeingIsBelieving
     end
 
     def parse_flags
-      self.flags = ArgParser.parse argv
+      self.flags = ArgParser.parse argv, stdout
     end
 
     def has_filename?

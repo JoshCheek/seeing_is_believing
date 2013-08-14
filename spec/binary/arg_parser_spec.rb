@@ -22,8 +22,8 @@ describe SeeingIsBelieving::Binary::ArgParser do
     end
   end
 
-  def parse(args)
-    described_class.parse args
+  def parse(args, outstream=nil)
+    described_class.parse args, outstream
   end
 
   shared_examples 'it requires a positive int argument' do |flags|
@@ -336,12 +336,16 @@ describe SeeingIsBelieving::Binary::ArgParser do
 
   describe ':debugger' do
     it 'defaults to a debugger that is disabled' do
-      parse([])[:debugger].should_not be_enabled
+      parse([], :fake_stream)[:debugger].should_not be_enabled
     end
 
     it 'can be enabled with --debug or -g' do
-      parse(['--debug'])[:debugger].should be_enabled
-      parse(['-g'])[:debugger].should be_enabled
+      parse(['--debug'], :fake_stream)[:debugger].should be_enabled
+      parse(['-g'], :fake_stream)[:debugger].should be_enabled
+    end
+
+    it 'sets the stream to the one passed in' do
+      parse(['-g'], :fake_stream)[:debugger].stream.should == :fake_stream
     end
   end
 

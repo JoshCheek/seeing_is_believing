@@ -185,9 +185,7 @@ Todo
 * Check %w and all the others
 * Make sure the examples in this readme all still make sense (mountain berry fields?)
 * uhm, can we wrap the parser setup code in one place? `ack Parser::Source::Buffer`
-* Make the fucking debugger not lazy
 * Go through Peter's email about how to make the use of Parser better
-* If given a file with a unicode character, but not set unicode, inform the user
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================
@@ -196,6 +194,7 @@ Shit that will probably never get done (or if it does, won't be until after 2.0)
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 * Add a flag to allow you to just get the results so that it can be easily used without a Ruby runtime (difficult in that its unclear how to separate line output from stdout, stderr, exit status, exceptions, etc. Maybe just serialize the result as JSON?)
 * Be able to clean an invalid file (used to be able to do this, but parser can't identify comments in an invalid file the way that I'm currently using it, cuke is still there, marked as @not-implemented)
+* If given a file with a unicode character, but not set unicode, inform the user
 
 License
 =======

@@ -10,15 +10,16 @@ require 'seeing_is_believing/binary/align_chunk'
 class SeeingIsBelieving
   class Binary
     class ArgParser
-      def self.parse(args)
-        new(args).call
+      def self.parse(args, outstream)
+        new(args, outstream).call
       end
 
-      attr_accessor :args
+      attr_accessor :args, :outstream
 
-      def initialize(args)
+      def initialize(args, outstream)
         self.args      = args
         self.filenames = []
+        self.outstream = outstream
       end
 
       def call
@@ -30,7 +31,7 @@ class SeeingIsBelieving
             when '-v', '--version'             then options[:version]             = true
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
-            when '-g', '--debug'               then options[:debugger]            = Debugger.new(enabled: true, colour: true)
+            when '-g', '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
             when '-l', '--start-line'          then extract_positive_int_for :start_line,        arg
             when '-L', '--end-line'            then extract_positive_int_for :end_line,          arg
             when '-d', '--line-length'         then extract_positive_int_for :max_line_length,   arg
@@ -73,7 +74,7 @@ class SeeingIsBelieving
 
       def options
         @options ||= {
-          debugger:            Debugger.new(enabled: false, colour: true),
+          debugger:            Debugger.new(stream: nil),
           version:             false,
           clean:               false,
           xmpfilter_style:     false,

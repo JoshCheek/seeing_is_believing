@@ -5,32 +5,27 @@ class SeeingIsBelieving
     RESET_COLOUR   = "\e[0m"
 
     def initialize(options={})
-      @contexts = Hash.new { |h, k| h[k] = [] }
-      @enabled  = options.fetch :enabled, true
-      @coloured = options.fetch :colour,  false
-    end
-
-    def enabled?
-      @enabled
+      @coloured = options[:colour]
+      @stream   = options[:stream]
     end
 
     def coloured?
       @coloured
     end
 
+    attr_reader :stream
+    alias enabled? stream
+
     def context(name, &block)
-      @contexts[name] << block.call if enabled?
+      if stream
+        stream << CONTEXT_COLOUR          if coloured?
+        stream << "#{name}:"
+        stream << RESET_COLOUR            if coloured?
+        stream << "\n"
+        stream << block.call.to_s << "\n" if block
+      end
       self
     end
 
-    def to_s
-      @contexts.map { |name, values|
-        string = ""
-        string << CONTEXT_COLOUR if coloured?
-        string << "#{name}:"
-        string << RESET_COLOUR if coloured?
-        string << "\n#{values.join "\n"}\n"
-      }.join("\n")
-    end
   end
 end

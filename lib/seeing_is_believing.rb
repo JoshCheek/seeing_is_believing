@@ -25,7 +25,7 @@ class SeeingIsBelieving
     @load_path       = options.fetch :load_path, []
     @encoding        = options.fetch :encoding, nil
     @timeout         = options[:timeout]
-    @debugger        = options.fetch :debugger, Debugger.new(enabled: false)
+    @debugger        = options.fetch :debugger, Debugger.new(stream: nil)
     @ruby_executable = options.fetch :ruby_executable, 'ruby'
   end
 
@@ -72,7 +72,8 @@ class SeeingIsBelieving
                                 load_path:       @load_path,
                                 encoding:        @encoding,
                                 timeout:         @timeout,
-                                ruby_executable: @ruby_executable)
+                                ruby_executable: @ruby_executable,
+                                debugger:        @debugger)
                            .call
     end
   end

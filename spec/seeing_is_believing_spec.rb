@@ -320,7 +320,8 @@ describe SeeingIsBelieving do
   end
 
   context 'when given a debugger' do
-    let(:debugger) { SeeingIsBelieving::Debugger.new enabled: true }
+    let(:stream)   { StringIO.new }
+    let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
 
     def call
       invoke "1", debugger: debugger
@@ -328,14 +329,14 @@ describe SeeingIsBelieving do
 
     it 'prints the pre-evaluated program' do
       call
-      debugger.to_s.should include "TRANSLATED PROGRAM:"
-      debugger.to_s.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
+      stream.string.should include "TRANSLATED PROGRAM:"
+      stream.string.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
     it 'prints the result' do
       call
-      debugger.to_s.should include "RESULT:"
-      debugger.to_s.should include '1=>#<SIB:Line["1"] no exception>'
+      stream.string.should include "RESULT:"
+      stream.string.should include '1=>#<SIB:Line["1"] no exception>'
     end
     # should ProgramRewriter have some debug options?
   end
