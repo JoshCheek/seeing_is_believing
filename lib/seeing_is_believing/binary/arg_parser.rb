@@ -10,11 +10,9 @@ require 'seeing_is_believing/binary/align_chunk'
 class SeeingIsBelieving
   class Binary
     class ArgParser
-      def self.parse(args, outstream)
+      def self.call(args, outstream)
         new(args, outstream).call
       end
-
-      attr_accessor :args, :outstream
 
       def initialize(args, outstream)
         self.args      = args
@@ -58,7 +56,8 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :filenames
+      attr_accessor :filenames, :args, :outstream
+
 
       def normalize_and_validate
         if 1 < filenames.size

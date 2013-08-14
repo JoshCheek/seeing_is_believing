@@ -23,7 +23,7 @@ describe SeeingIsBelieving::Binary::ArgParser do
   end
 
   def parse(args, outstream=nil)
-    described_class.parse args, outstream
+    described_class.call args, outstream
   end
 
   shared_examples 'it requires a positive int argument' do |flags|
