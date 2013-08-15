@@ -11,4 +11,18 @@ class SeeingIsBelieving
             " then delete TEMPFILE. Otherwise rename TEMPFILE to FILE."
     end
   end
+
+  class BugInSib < SeeingIsBelievingError
+    def initialize(error)
+      require 'parser/version'
+      require 'seeing_is_believing/version'
+
+      super "It blew up >.< Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues\n"\
+            "SeeingIsBelieving::VERSION  #{SeeingIsBelieving::VERSION.inspect}\n"\
+            "Parser::VERSION             #{Parser::VERSION.inspect}\n"\
+            "RUBY_VERSION                #{RUBY_VERSION.inspect}\n"\
+            "ENV['RUBY_VERSION']         #{ENV['RUBY_VERSION'].inspect}\n"\
+            "Also include the source code of program that caused this behaviour."
+    end
+  end
 end

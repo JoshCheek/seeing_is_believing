@@ -23,12 +23,11 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-    attr_accessor :program, :filename, :error_stream, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
+    attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
 
     def initialize(program, filename, options={})
       self.program         = program
       self.filename        = filename
-      self.error_stream    = options.fetch :error_stream, $stderr # hmm, not really liking the global here
       self.input_stream    = options.fetch :input_stream, StringIO.new('')
       self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
       self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
@@ -50,9 +49,9 @@ class SeeingIsBelieving
             deserialize_result.tap { |result| fail if result.bug_in_sib? }
           # Okay, really, I should wrap this in another exception and raise it on up,
           # but for now, I'm feeling a little lazy and am not going to do it
-          rescue Exception
-            notify_user_of_error if error_implies_bug_in_sib? $!
-            raise $!
+          rescue Exception => error
+            error = wrap_error error if error_implies_bug_in_sib? error
+            raise error
           end
         },
         ensure: -> {
@@ -138,19 +137,14 @@ class SeeingIsBelieving
       YAML.load stdout
     end
 
-    def notify_user_of_error
-      debugger.context "Program could not be evaluated"
-
-      error_stream.puts "It blew up because SeeingIsBelieving isn't good enough >.<"
-      error_stream.puts "Please log an issue at: https://github.com/JoshCheek/seeing_is_believing/issues"
-      error_stream.puts
-      error_stream.puts "Program: #{program.inspect}"
-      error_stream.puts
-      error_stream.puts "Stdout: #{stdout.inspect}"
-      error_stream.puts
-      error_stream.puts "Stderr: #{stderr.inspect}"
-      error_stream.puts
-      error_stream.puts "Status: #{exitstatus.inspect}"
+    def wrap_error(error)
+      debugger.context "Program could not be evaluated" do
+        "Program: #{program.inspect.chomp}\n\n"\
+        "Stdout: #{stdout.inspect.chomp}\n\n"\
+        "Stderr: #{stderr.inspect.chomp}\n\n"\
+        "Status: #{exitstatus.inspect.chomp}\n"
+      end
+      BugInSib.new error
     end
   end
 end

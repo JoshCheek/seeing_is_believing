@@ -42,7 +42,7 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'uses HardCoreEnsure to move the file back' do
-    evaluator = described_class.new 'PROGRAM', filename, error_stream: StringIO.new
+    evaluator = described_class.new 'PROGRAM', filename
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
     FileUtils.rm_rf evaluator.temp_filename
     SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
@@ -64,7 +64,7 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
-    evaluator = described_class.new 'PROGRAM', filename, error_stream: StringIO.new
+    evaluator = described_class.new 'PROGRAM', filename
     FileUtils.rm_rf filename
     SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
       # initial state
@@ -100,11 +100,11 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     invoke('print "ç"', encoding: 'u').stdout.should == "ç"
   end
 
-  it 'prints some error handling code to stderr if it fails' do
-    stderr    = StringIO.new
-    evaluator = described_class.new 'raise "omg"', filename, error_stream: stderr
+  it 'if it fails, it prints some debugging information and raises an error', t:true do
+    error_stream = StringIO.new
+    evaluator = described_class.new 'raise "omg"', filename, debugger: SeeingIsBelieving::Debugger.new(stream: error_stream)
     FileUtils.rm_f evaluator.temp_filename
-    expect { evaluator.call }.to raise_error
-    stderr.string.should include "It blew up"
+    expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib
+    error_stream.string.should include "Program could not be evaluated"
   end
 end
