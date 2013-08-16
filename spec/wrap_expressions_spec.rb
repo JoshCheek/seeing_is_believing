@@ -15,6 +15,10 @@ describe SeeingIsBelieving::WrapExpressions do
     expect { wrap '+' }.to raise_error SyntaxError
   end
 
+  it 'can inject syntax errors with __SYNTAX__ERROR__' do
+    wrap('__SYNTAX_ERROR__').should == '<.....SYNTAX ERROR!.....>'
+  end
+
   describe 'wrapping the body' do
     let(:options) { { before_all: "[",
                       after_all:  "]",

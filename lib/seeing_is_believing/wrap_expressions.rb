@@ -64,6 +64,8 @@ class SeeingIsBelieving
             if meta == :wrap_in_braces
               rewriter.insert_before range, '{'
               rewriter.insert_after  range,  '}'
+            elsif meta == :syntax_error
+              rewriter.replace range,  '.....SYNTAX ERROR!.....'
             end
             rewriter.insert_after  range, after_each.call(line_num)
           end
@@ -233,7 +235,10 @@ class SeeingIsBelieving
 
         begin_pos = ast.location.expression.begin_pos
         range     = Parser::Source::Range.new(buffer, begin_pos, end_pos)
-        add_to_wrappings range
+
+        meta = nil
+        meta = :syntax_error if message == :__SYNTAX_ERROR__
+        add_to_wrappings range, meta
         add_children ast
       when :begin
         last_child = ast.children.last
