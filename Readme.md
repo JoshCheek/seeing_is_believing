@@ -181,7 +181,6 @@ Todo
 
 * Sublime: Merge xmpfilter option into main after 2.0 release
 * Make TextMate 1 and 2 bundles
-* Go through each cuke and spec, implementing however many not-implemented ones that we can
 * Make sure the examples in this readme all still make sense (mountain berry fields?)
 * Go through Peter's email about how to make the use of Parser better
 * Make a new video

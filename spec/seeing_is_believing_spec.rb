@@ -125,17 +125,17 @@ describe SeeingIsBelieving do
     values_for("-> {  \n return 1          \n }.call"        ).should == [[], ['1'], ['1']]
     values_for("-> { return 1 }.call"                        ).should == [['1']]
 
-    pending "we'd like this to record 1 and nil, but currently we dont' differentiate between inline and multiline if statements" do
+    pending "would be really cool if this would record 1 and nil, but it probably won't ever happen." do
+      # Currently we dont' differentiate between inline and multiline if statements,
+      # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
+      # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
       values_for("def meth \n return 1 if true  \n end \n meth").should == [[], ['1'], [], ['1']]   # records true instead of 1
       values_for("def meth \n return 1 if false \n end \n meth").should == [[], ['nil'], [], ['nil']] # records false instead of nil
     end
   end
 
   it 'does not try to record the keyword next' do
-    # tbh, I don't even really know what I want in this case. Maybe record nothing since there is no arg to next?
-    pending 'broken because of misordering in the rewriter' do
-      values_for("(1..2).each do |i|\nnext if i == 1\ni\nend").should == [['1..2'], [], ['true', 'false'], ['1..2']]
-    end
+    values_for("(1..2).each do |i|\nnext if i == 1\ni\nend").should == [['1..2'], ['true', 'false'], ['2'], ['1..2']]
   end
 
   it 'does not try to record the keyword redo' do
@@ -152,25 +152,28 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword retry' do
-    pending 'uhhh, what do I want here?' do
-      values_for(<<-DOC).should == [[], [], [], ['nil']]
-        def meth
-        rescue
-          retry
-        end
-      DOC
-    end
+    values_for(<<-DOC).should == [[], [], [], [], ['nil']]
+      def meth
+      rescue
+        retry
+      end
+      meth
+    DOC
   end
 
   it 'does not try to record the keyword retry' do
-    pending 'uhhh, what do I want here?' do
-      values_for(<<-DOC).should == [[], ['0'], [], ['nil']]
-        (0..2).each do |n|
-          n
-          break
-        end
-      DOC
-    end
+    values_for(<<-DOC).should == [['0..2'], ['0'], [], ['nil']]
+      (0..2).each do |n|
+        n
+        break
+      end
+    DOC
+    values_for(<<-DOC).should == [['0..2'], ['0'], ['10'], ['10']]
+      (0..2).each do |n|
+        n
+        break 10
+      end
+    DOC
   end
 
   it 'does not affect its environment' do
