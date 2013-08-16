@@ -769,4 +769,32 @@ describe SeeingIsBelieving::WrapExpressions do
       end
     end
   end
+
+  describe 'BEGIN/END' do
+    # not implemented b/c we cannot wrap around these either.
+    # So what does it mean to wrap around?
+    # mabe this?
+    #   1
+    #   BEGIN {}
+    #   2
+    #   END {}
+    #   3
+    #
+    # becomes
+    #   BEGIN {}
+    #   END {}
+    #   [<1>
+    #   <2>
+    #   <3>]
+    #
+    # idk, but then we also need to deal with the fact that we're changing result of __LINE__
+    # which we could do with some meta, just replacing it with the literal when we parse it
+    # but still, moving this out of here will be really annoying, and no one is going to use it, so fuck it
+    it 'does not record them', not_implemented: true do
+      wrap("BEGIN {}").should == "BEGIN {}"
+      wrap("END {}").should == "END {}"
+      wrap("BEGIN {\n123\n}").should == "BEGIN {\n<123>\n}"
+      wrap("END {\n123\n}").should == "END {\n<123>\n}"
+    end
+  end
 end

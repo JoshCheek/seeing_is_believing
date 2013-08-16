@@ -173,17 +173,18 @@ or current buffer contents with the output of running it through
 Known Issues
 ============
 
-* `BEGIN/END` breaks things and I probably won't take the time to fix it, becuase it's nontrivial and its really meant for command-line scripts, but there is currently a cuke for it
+* `BEGIN/END` breaks things and I probably won't ever fix it, becuase it's annoying and its really meant for command-line scripts... but there is currently a spec for it
 * `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
 
 Todo
 ====
 
-* Add xmpfilter option to sublime text
+* Sublime: Merge xmpfilter option into main after 2.0 release
 * Make TextMate 1 and 2 bundles
 * Go through each cuke and spec, implementing however many not-implemented ones that we can
 * Make sure the examples in this readme all still make sense (mountain berry fields?)
 * Go through Peter's email about how to make the use of Parser better
+* Make a new video
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================

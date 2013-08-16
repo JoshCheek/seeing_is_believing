@@ -319,6 +319,22 @@ describe SeeingIsBelieving do
     end
   end
 
+  it 'does not record BEGIN and END', not_implemented: true do
+    expect { invoke <<-CODE }.to_not raise_error
+    puts 1
+    BEGIN {
+      puts "begin code"
+      some_var = 2
+    }
+    puts 3
+    END {
+      puts "end code"
+      puts some_var
+    }
+    puts 4
+    CODE
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
