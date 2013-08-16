@@ -76,7 +76,7 @@ class SeeingIsBelieving
         current_chunk     = 0
         last_line_seen    = -100
         chunks_to_comment = comments.chunk do |comment|
-          line, col = buffer.decompose_position comment.location.begin_pos
+          line = comment.location.begin_pos.line
           if last_line_seen.next == line
             last_line_seen = line
             current_chunk

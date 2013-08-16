@@ -4,11 +4,13 @@ class SeeingIsBelieving
     extend self
 
     def initialize_parser(code, name)
-      buffer         = Parser::Source::Buffer.new(name)
-      buffer.source  = code
-      parser         = Parser::CurrentRuby.new
-      root, comments = parser.parse_with_comments buffer
-      rewriter       = Parser::Source::Rewriter.new buffer
+      buffer                             = Parser::Source::Buffer.new(name)
+      buffer.source                      = code
+      builder                            = Parser::Builders::Default.new
+      builder.emit_file_line_as_literals = false
+      parser                             = Parser::CurrentRuby.new builder
+      root, comments                     = parser.parse_with_comments buffer
+      rewriter                           = Parser::Source::Rewriter.new buffer
       [buffer, parser, rewriter, root, comments]
     end
 
@@ -21,7 +23,6 @@ class SeeingIsBelieving
       ast.kind_of?(Parser::AST::Node)           &&
         (ast.type == :dstr || ast.type == :str) &&
         (location  = ast.location)              &&
-        (location.respond_to?(:begin))          &&
         (the_begin = location.begin)            &&
         (the_begin.source =~ /^\<\<-?/)
     end
