@@ -514,6 +514,10 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("{\n1 => 2}").should == "<{\n1 => 2}>"
       wrap("{\n1 => 2,\n:abc => 3,\ndef: 4\n}").should == "<{\n1 => <2>,\n:abc => <3>,\ndef: <4>\n}>"
     end
+
+    it 'wraps explicit braces around recorded in method invocations' do
+      wrap("a(\nb: 1, c: 2\n)").should == "<a(\n<{b: 1, c: 2}>\n)>"
+    end
   end
 
   describe 'array literals' do

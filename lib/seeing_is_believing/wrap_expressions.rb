@@ -58,8 +58,13 @@ class SeeingIsBelieving
         if root # file may be empty
           rewriter.insert_before root.location.expression, before_all
 
-          wrappings.each do |line_num, (range, last_col)|
+
+          wrappings.each do |line_num, (range, last_col, meta)|
             rewriter.insert_before range, before_each.call(line_num)
+            if meta == :wrap_in_braces
+              rewriter.insert_before range, '{'
+              rewriter.insert_after  range,  '}'
+            end
             rewriter.insert_after  range, after_each.call(line_num)
           end
 
@@ -78,12 +83,12 @@ class SeeingIsBelieving
 
     attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
 
-    def add_to_wrappings(range_or_ast)
+    def add_to_wrappings(range_or_ast, meta=nil)
       range = range_or_ast
       range = range_or_ast.location.expression if range.kind_of? ::AST::Node
       line, col = buffer.decompose_position range.end_pos
-      _, prev_col = wrappings[line]
-      wrappings[line] = (!wrappings[line] || prev_col < col ? [range, col] : wrappings[line] )
+      _, prev_col, _ = wrappings[line]
+      wrappings[line] = (!wrappings[line] || prev_col < col ? [range, col, meta] : wrappings[line] )
     end
 
     def add_children(ast, omit_first = false)
@@ -242,6 +247,13 @@ class SeeingIsBelieving
         add_children ast
       when :str, :dstr, :xstr, :regexp
         add_to_wrappings heredoc_hack ast
+
+      when :hash
+        meta = :wrap_in_braces
+        meta = nil if ast.location.begin
+        add_to_wrappings ast, meta
+        add_children ast
+
       else
         add_to_wrappings ast
         add_children ast
