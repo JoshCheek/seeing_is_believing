@@ -11,6 +11,18 @@ class SeeingIsBelieving
     DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
 
+    VALUE_MARKER     = "# => "
+    EXCEPTION_MARKER = "# ~> "
+    STDOUT_MARKER    = "# >> "
+    STDERR_MARKER    = "# !> "
+
+    VALUE_REGEX      = /\A#\s*=>/
+    EXCEPTION_REGEX  = /\A#\s*~>/
+    STDOUT_REGEX     = /\A#\s*>>/
+    STDERR_REGEX     = /\A#\s*!>/
+
+
+
     attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error, :unexpected_exception
 
     def initialize(argv, stdin, stdout, stderr)

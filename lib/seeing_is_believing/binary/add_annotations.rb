@@ -2,6 +2,7 @@ require 'stringio'
 require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/comment_formatter'
 
+require 'seeing_is_believing/binary'
 require 'seeing_is_believing/binary/clean_body'
 require 'seeing_is_believing/binary/rewrite_comments'
 require 'seeing_is_believing/binary/comment_lines'
@@ -57,15 +58,14 @@ class SeeingIsBelieving
 
       def body_with_updated_annotations
         RewriteComments.call body do |line_number, line_to_whitespace, whitespace, comment|
-          # FIXME: can we centralize these regexes?
-          if !comment[/\A#\s*=>/]
+          if !comment[VALUE_REGEX]
             [whitespace, comment]
           elsif line_to_whitespace.empty?
             # should go through comment formatter
-            [whitespace, "# => #{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            [whitespace, "#{VALUE_MARKER}#{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
           else
             # should go through comment formatter
-            [whitespace, "# => #{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            [whitespace, "#{VALUE_MARKER}#{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
           end
         end
       end
@@ -79,10 +79,10 @@ class SeeingIsBelieving
           elsif results[line_number].has_exception?
             exception = results[line_number].exception
             result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
-            CommentFormatter.new(line.size, "# ~> ", result, options).call
+            CommentFormatter.new(line.size, EXCEPTION_MARKER, result, options).call
           elsif results[line_number].any?
             result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-            CommentFormatter.call(line.size, "# => ", result, options)
+            CommentFormatter.call(line.size, VALUE_MARKER, result, options)
           else
             ''
           end
@@ -107,7 +107,7 @@ class SeeingIsBelieving
         return '' unless results.has_stdout?
         output = "\n"
         results.stdout.each_line do |line|
-          output << CommentFormatter.call(0, "# >> ", line.chomp, options()) << "\n"
+          output << CommentFormatter.call(0, STDOUT_MARKER, line.chomp, options()) << "\n"
         end
         output
       end
@@ -116,7 +116,7 @@ class SeeingIsBelieving
         return '' unless results.has_stderr?
         output = "\n"
         results.stderr.each_line do |line|
-          output << CommentFormatter.call(0, "# !> ", line.chomp, options()) << "\n"
+          output << CommentFormatter.call(0, STDERR_MARKER, line.chomp, options()) << "\n"
         end
         output
       end
@@ -125,13 +125,13 @@ class SeeingIsBelieving
         return '' unless results.has_exception?
         exception = results.exception
         output = "\n"
-        output << CommentFormatter.new(0, "# ~> ", exception.class_name, options).call << "\n"
+        output << CommentFormatter.new(0, EXCEPTION_MARKER, exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
-          output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, EXCEPTION_MARKER, line.chomp, options).call << "\n"
         end
-        output << "# ~>\n"
+        output << EXCEPTION_MARKER.sub(/\s+$/, '') << "\n"
         exception.backtrace.each do |line|
-          output << CommentFormatter.new(0, "# ~> ", line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, EXCEPTION_MARKER, line.chomp, options).call << "\n"
         end
         output
       end

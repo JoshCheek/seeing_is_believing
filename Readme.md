@@ -167,9 +167,8 @@ Todo
 ====
 
 * Sublime: Merge xmpfilter option into main after 2.0 release
+* Add test showing that xmpfilter style adheres to the line length restrictions
 * Make TextMate 2 bundle
-* Refactor AddAnnotations
-* Profile this shit, can we speed it up?
 * Make a new video
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)

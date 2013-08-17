@@ -2,6 +2,7 @@
 
 require 'stringio'
 require 'seeing_is_believing/version'
+require 'seeing_is_believing/binary'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
@@ -145,7 +146,7 @@ Usage: seeing_is_believing [options] [filename]
   -l, --start-line n            # line number to begin showing results on
   -L, --end-line n              # line number to stop showing results on
   -d, --line-length n           # max length of the entire line (only truncates results, not source lines)
-  -D, --result-length n         # max length of the portion after the "# => "
+  -D, --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
   -s, --alignment-strategy name # select the alignment strategy:
                                   chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                   file            =>  the entire file is at the same alignment
@@ -168,53 +169,53 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Run the file f.rb
     $ echo __FILE__ > f.rb; seeing_is_believing f.rb
-    __FILE__  # => "f.rb"
+    __FILE__  #{VALUE_MARKER}"f.rb"
 
   Aligning comments
     $ ruby -e 'puts "123\\n4\\n\\n567890"' > f.rb
 
 
     $ seeing_is_believing f.rb -s line
-    123  # => 123
-    4  # => 4
+    123  #{VALUE_MARKER}123
+    4  #{VALUE_MARKER}4
 
-    567890  # => 567890
+    567890  #{VALUE_MARKER}567890
 
 
     $ seeing_is_believing f.rb -s chunk
-    123  # => 123
-    4    # => 4
+    123  #{VALUE_MARKER}123
+    4    #{VALUE_MARKER}4
 
-    567890  # => 567890
+    567890  #{VALUE_MARKER}567890
 
 
     $ seeing_is_believing f.rb -s file
-    123     # => 123
-    4       # => 4
+    123     #{VALUE_MARKER}123
+    4       #{VALUE_MARKER}4
 
-    567890  # => 567890
+    567890  #{VALUE_MARKER}567890
 
   Run against standard input
     $ echo '3.times { |i| puts i }' | seeing_is_believing
-    2.times { |i| puts i }  # => 2
+    2.times { |i| puts i }  #{VALUE_MARKER}2
 
-    # >> 0
-    # >> 1
+    #{STDOUT_MARKER}0
+    #{STDOUT_MARKER}1
 
   Run against a library you're working on by fixing the load path
     $ seeing_is_believing -I lib f.rb
 
   Load up some library (can be used in tandem with -I)
     $ seeing_is_believing -r pp -e 'pp [[*1..15],[*15..30]]; nil'
-    pp [[*1..15],[*15..30]]; nil  # => nil
+    pp [[*1..15],[*15..30]]; nil  #{VALUE_MARKER}nil
 
-    # >> [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-    # >>  [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
+    #{STDOUT_MARKER}[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    #{STDOUT_MARKER} [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
 
   Only update the lines you've marked
     $ ruby -e 'puts "1\\n2 # =>\\n3"' | seeing_is_believing -x
     1
-    2 # => 2
+    2 #{VALUE_MARKER}2
     3
 
   Set a timeout (especially useful if running via an editor)
@@ -223,11 +224,11 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Set the encoding to utf-8
     $ seeing_is_believing -Ku -e '"⛄ "'
-    "⛄ "  # => "⛄ "
+    "⛄ "  #{VALUE_MARKER}"⛄ "
 
   The exit status will be 1 if the error is displayable inline
     $ seeing_is_believing -e 'raise "omg"'; echo $?
-    raise "omg"  # ~> RuntimeError: omg
+    raise "omg"  #{EXCEPTION_MARKER}RuntimeError: omg
     1
 
   The exit status will be 2 if the error is not displayable
@@ -236,15 +237,15 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
     2
 
   Run with previous output
-    $ echo "1+1  # => old-value" | seeing_is_believing
-    1+1  # => 2
+    $ echo "1+1  #{VALUE_MARKER}old-value" | seeing_is_believing
+    1+1  #{VALUE_MARKER}2
 
-    $ echo "1+1  # => old-value" | seeing_is_believing --clean
+    $ echo "1+1  #{VALUE_MARKER}old-value" | seeing_is_believing --clean
     1+1
 
   If your Ruby binary is named something else (e.g. ruby2.0)
     $ ruby2.0 -S seeing_is_believing --shebang ruby2.0 -e '123'
-    123  # => 123
+    123  #{VALUE_MARKER}123
 
 HELP_SCREEN
     end
