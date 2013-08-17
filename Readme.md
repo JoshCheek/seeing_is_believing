@@ -17,25 +17,16 @@ Use The Binary
 ==============
 
 ```ruby
-# $ seeing_is_believing proving_grounds/basic_functionality.rb
+$ cat simple_example.rb
 5.times do |i|
-  i * 2         # => 0, 2, 4, 6, 8
+    i * 2
+end
+
+
+$ seeing_is_believing simple_example.rb
+5.times do |i|  # => 5
+    i * 2       # => 0, 2, 4, 6, 8
 end             # => 5
-
-def meth(n)
-  n             # => "12", "34"
-end             # => nil
-
-# some invocations
-meth "12"       # => "12"
-meth "34"       # => "34"
-```
-
-```ruby
-# $ bin/seeing_is_believing proving_grounds/raises_exception.rb
-1 + 1          # => 2
-raise "ZOMG!"  # ~> RuntimeError: ZOMG!
-1 + 1
 ```
 
 Use The Lib
@@ -43,25 +34,21 @@ Use The Lib
 
 ```ruby
 require 'seeing_is_believing'
-
-believer = SeeingIsBelieving.new("%w[a b c].each do |i|
+believer = SeeingIsBelieving.new("[:a, :b, :c].each do |i|
                                     i.upcase
                                   end")
 
-result = believer.call
-result                # => #<SeeingIsBelieving::Result:0x007f832298e340 @max_line_number=3, @min_line_number=1, @results={2=>#<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=["\"A\"", "\"B\"", "\"C\""]>, 3=>#<SeeingIsBelieving::Result::Line:0x007f832298db98 @array=["[\"a\", \"b\", \"c\"]"]>}, @stdout="", @stderr="">
+result = believer.call # => #<SIB::Result @results={1=>#<SIB:Line["[:a, :b, :c]"] no exception>, 2=>#<SIB:Line[":A", ":B", ":C"] no exception>, 3=>#<SIB:Line["[:a, :b, :c]"] no exception>}\n  @stdout=""\n  @stderr=""\n  @exitstatus=0\n  @bug_in_sib=nil>
 
-result.to_a           # => [#<SeeingIsBelieving::Result::Line:0x007f832299adc0 @array=[]>,
-                      #     #<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=['"A"', '"B"', '"C"']>,
-                      #     #<SeeingIsBelieving::Result::Line:0x007f832298db98 @array=['["a", "b", "c"]']>]
+result[2]            # => #<SIB:Line[":A", ":B", ":C"] no exception>
+result[2][0]         # => ":A"
+result[2][1]         # => ":B"
+result[2][2]         # => ":C"
+result[2].join(", ") # => ":A, :B, :C"
 
-result[2]             # => #<SeeingIsBelieving::Result::Line:0x007f832298df30 @array=['"A"', '"B"', '"C"']>
-
-# this result object is a thin wrapper around its array
-result[2][0]          # => '"A"'
-result[2][1]          # => '"B"'
-result[2][2]          # => '"C"'
-result[2].join(", ")  # => '"A", "B", "C"'
+result.stdout    # => ""
+result.stderr    # => ""
+result.exception # => nil
 ```
 
 Install
@@ -180,8 +167,9 @@ Todo
 ====
 
 * Sublime: Merge xmpfilter option into main after 2.0 release
-* Make TextMate 1 and 2 bundles
-* Make sure the examples in this readme all still make sense (mountain berry fields?)
+* Make TextMate 2 bundle
+* Refactor AddAnnotations
+* Profile this shit, can we speed it up?
 * Make a new video
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
