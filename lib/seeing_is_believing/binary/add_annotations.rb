@@ -22,7 +22,7 @@ class SeeingIsBelieving
       method_from_options :debugger
 
       attr_accessor :results, :body
-      def initialize(uncleaned_body, options={})
+      def initialize(uncleaned_body, options={}, &annotater)
         self.options = options
         self.body    = CleanBody.call uncleaned_body, !xmpfilter_style
         self.results = SeeingIsBelieving.call body,
@@ -38,49 +38,13 @@ class SeeingIsBelieving
 
       def call
         @new_body ||= begin
-          # uhm, these basically look like strategies for commenting.
           new_body = if xmpfilter_style
-            RewriteComments.call body do |line_number, line, whitespace, comment|
-              # FIXME: can we centralize these regexes?
-              if !comment[/\A#\s*=>/]
-                [whitespace, comment]
-              elsif line.empty?
-                # should go through comment formatter
-                [whitespace, "# => #{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
-              else
-                # should go through comment formatter
-                [whitespace, "# => #{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
-              end
-            end
-          else
-            alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
-            CommentLines.call body do |line, line_number|
-              options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
-              if line_number < start_line || end_line < line_number
-                ''
-              elsif results[line_number].has_exception?
-                exception = results[line_number].exception
-                result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
-                CommentFormatter.new(line.size, "# ~> ", result, options).call
-              elsif results[line_number].any?
-                result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-                CommentFormatter.call(line.size, "# => ", result, options)
-              else
-                ''
-              end
-            end
-          end
+                       body_with_updated_annotations
+                     else
+                       body_with_everything_annotated
+                     end
 
-          output = stdout_ouptut_for(results)    <<
-                   stderr_ouptut_for(results)    <<
-                   exception_output_for(results)
-
-          if new_body["\n__END__\n"]
-            new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
-          else
-            new_body << "\n" unless new_body.end_with? "\n"
-            new_body << output
-          end
+          add_stdout_stderr_and_exceptions_to new_body
 
           debugger.context "OUTPUT"
           new_body
@@ -90,6 +54,54 @@ class SeeingIsBelieving
       private
 
       attr_accessor :body, :options, :alignment_strategy
+
+      def body_with_updated_annotations
+        RewriteComments.call body do |line_number, line_to_whitespace, whitespace, comment|
+          # FIXME: can we centralize these regexes?
+          if !comment[/\A#\s*=>/]
+            [whitespace, comment]
+          elsif line_to_whitespace.empty?
+            # should go through comment formatter
+            [whitespace, "# => #{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+          else
+            # should go through comment formatter
+            [whitespace, "# => #{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+          end
+        end
+      end
+
+      def body_with_everything_annotated
+        alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
+        CommentLines.call body do |line, line_number|
+          options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
+          if line_number < start_line || end_line < line_number
+            ''
+          elsif results[line_number].has_exception?
+            exception = results[line_number].exception
+            result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
+            CommentFormatter.new(line.size, "# ~> ", result, options).call
+          elsif results[line_number].any?
+            result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+            CommentFormatter.call(line.size, "# => ", result, options)
+          else
+            ''
+          end
+        end
+      end
+
+      def add_stdout_stderr_and_exceptions_to(new_body)
+        output = stdout_ouptut_for(results)    <<
+                 stderr_ouptut_for(results)    <<
+                 exception_output_for(results)
+
+        if new_body["\n__END__\n"]
+          new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
+        else
+          new_body << "\n" unless new_body.end_with? "\n"
+          new_body << output
+        end
+
+      end
 
       def stdout_ouptut_for(results)
         return '' unless results.has_stdout?
