@@ -65,8 +65,8 @@ class SeeingIsBelieving
             if meta == :wrap_in_braces
               rewriter.insert_before range, '{'
               rewriter.insert_after  range,  '}'
-            elsif meta == :syntax_error
-              rewriter.replace range,  '.....SYNTAX ERROR!.....'
+            elsif meta == :total_fucking_failure
+              rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
             end
             rewriter.insert_after  range, after_each.call(line_num)
           end
@@ -238,7 +238,7 @@ class SeeingIsBelieving
         range     = Parser::Source::Range.new(buffer, begin_pos, end_pos)
 
         meta = nil
-        meta = :syntax_error if message == :__SYNTAX_ERROR__
+        meta = :total_fucking_failure if message == :__TOTAL_FUCKING_FAILURE__
         add_to_wrappings range, meta
         add_children ast
       when :begin

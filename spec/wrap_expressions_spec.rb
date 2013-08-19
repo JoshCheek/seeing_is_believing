@@ -1,9 +1,5 @@
 require 'seeing_is_believing/wrap_expressions'
 
-# eventually make this not wrap BEGIN and END
-# but for now, leave it b/c it's convenient to be able to make it blow up
-# Probably replace this with some macro like __INVALID_SYNTAX__ that blows it up :)
-
 describe SeeingIsBelieving::WrapExpressions do
   def wrap(code)
     described_class.call code,
@@ -15,8 +11,8 @@ describe SeeingIsBelieving::WrapExpressions do
     expect { wrap '+' }.to raise_error SyntaxError
   end
 
-  it 'can inject syntax errors with __SYNTAX__ERROR__' do
-    wrap('__SYNTAX_ERROR__').should == '<.....SYNTAX ERROR!.....>'
+  it 'can inject syntax errors with __TOTAL_FUCKING_FAILURE__' do
+    wrap('__TOTAL_FUCKING_FAILURE__').should == '<.....TOTAL FUCKING FAILURE!.....>'
   end
 
   describe 'wrapping the body' do

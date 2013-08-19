@@ -93,7 +93,7 @@ Feature: Running the binary unsuccessfully
     """
 
   Scenario: Total Fucking Failure
-    Given the file "sib_will_utterly_die.rb" "__SYNTAX_ERROR__"
+    Given the file "sib_will_utterly_die.rb" "__TOTAL_FUCKING_FAILURE__"
     When I run "seeing_is_believing sib_will_utterly_die.rb"
     Then stderr is not empty
     And the exit status is 2
