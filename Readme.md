@@ -167,7 +167,6 @@ Todo
 ====
 
 * Sublime: Merge xmpfilter option into main after 2.0 release
-* Add test showing that xmpfilter style adheres to the line length restrictions
 * Make TextMate 2 bundle
 * Make a new video
 
