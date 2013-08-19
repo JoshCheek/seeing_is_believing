@@ -4,12 +4,12 @@ Seeing Is Believing
 ===================
 
 Evaluates a file, recording the results of each line of code.
-You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle][inventing_on_principle].
+You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle](http://vimeo.com/36579366).
 Except, obviously, his is like a million times better.
 
 Also comes with a binary to show how it might be used.
 
-For whatever reason, I can't embed videos, but **here's a ~1 minute [video][video]** showing it off.
+For whatever reason, I can't embed videos, but **here's a ~1 minute [video](http://vimeo.com/58766950)** showing it off.
 
 Works in Ruby 1.9 and 2.0
 
@@ -54,89 +54,18 @@ result.exception # => nil
 Install
 =======
 
+Currently requires Ruby 1.9 or 2.0 I don't have specific plans to make it available on 1.8,
+but it could happen.
 
     $ gem install seeing_is_believing
 
-Or if you haven't fixed your gem home, and you aren't using any version managers:
 
-    $ sudo gem install seeing_is_believing
+Editor Integration
+==================
 
-Rubygems is allowing pushes again, but if it goes back down, you can install like this:
-
-    $ git clone https://github.com/JoshCheek/seeing_is_believing/
-    $ cd seeing_is_believing
-    $ gem build seeing_is_believing.gemspec
-    $ gem install seeing_is_believing-0.0.8.gem
-    $ cd ..
-    $ rm -rf "./seeing_is_believing"
-
-Sublime Text 2 Integration
-==========================
-
-See [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-text-2-seeing-is-believing).
-
-
-TextMate Integration
-====================
-
-Note: This assumes you've already set up Ruby to work with TextMate.
-If not, you'll need to start there. [Here](https://rvm.io/integration/textmate/)
-are instructions for RVM (I recommend the wrapper approach).
-[Here](http://uberfork.com/post/12280974742/integrate-rbenv-with-textmate)
-are instructions for rbenv.
-
-Go to the bundle editor, create a new command (I put it in the Ruby bundle)
-You can name it what you want, I went with "seeing is believing annotate all lines"
-
-```shell
-#!/bin/bash
-
-# set result length because TextMate has difficulty displaying long lines
-default_options=""
-default_options="$default_options -Ku"
-default_options="$default_options --result-length 200"
-default_options="$default_options --alignment-strategy chunk"
-default_options="$default_options --timeout 12"
-
-if [ -z "$TM_FILEPATH" ]; then
-  "${TM_RUBY}" -S seeing_is_believing $default_options
-else
-  "${TM_RUBY}" -S seeing_is_believing $default_options --as "$TM_FILEPATH"
-fi
-```
-
-You can also make one for annotating only the lines you have marked.
-I named it "seeing is believing annotate marked lines"
-
-```shell
-#!/bin/bash
-
-# set result length because TextMate has difficulty displaying long lines
-default_options=""
-default_options="$default_options --xmpfilter-style"
-default_options="$default_options -Ku"
-default_options="$default_options --result-length 200"
-default_options="$default_options --alignment-strategy chunk"
-default_options="$default_options --timeout 12"
-
-if [ -z "$TM_FILEPATH" ]; then
-  "${TM_RUBY}" -S seeing_is_believing $default_options
-else
-  "${TM_RUBY}" -S seeing_is_believing $default_options --as "$TM_FILEPATH"
-fi
-```
-
-And you'll probably want one to clean out the outpt
-
-```shell
-#!/bin/bash
-"${TM_RUBY}" -S seeing_is_believing -Ku --clean
-```
-
-You can bind them to whatever keys you want, but I'll recomend (for consistency with what I chose for the Sublime bundle)
-* annotate all lines -> Command Option b
-* annotate marked lines -> Command Option n
-* remove annotations -> Command Option v
+* [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-text-2-seeing-is-believing)
+* [TextMate 1](https://github.com/JoshCheek/textmate/text_mate_1-seeing-is_believing)
+* [TextMate 2](https://github.com/JoshCheek/textmate/text_mate_2-seeing-is_believing)
 
 Emacs Integration
 =================
@@ -162,12 +91,12 @@ Known Issues
 
 * `BEGIN/END` breaks things and I probably won't ever fix it, becuase it's annoying and its really meant for command-line scripts... but there is currently a spec for it
 * `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
+* The code to find the data segment is naive, and could wind up interpolating results into a string or something
 
 Todo
 ====
 
 * Sublime: Merge xmpfilter option into main after 2.0 release
-* Make TextMate 2 bundle
 * Make a new video
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
@@ -197,7 +126,3 @@ License
      0. You just DO WHAT THE FUCK YOU WANT TO.
 
 
-
-[inventing_on_principle]: http://vimeo.com/36579366
-[textmate-integration]:   https://raw.github.com/JoshCheek/seeing_is_believing/master/textmate-integration.png
-[video]:                  http://vimeo.com/58766950
