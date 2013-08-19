@@ -56,16 +56,17 @@ class SeeingIsBelieving
 
       attr_accessor :body, :options, :alignment_strategy
 
+      # doesn't currently realign output markers, do we want to do that?
       def body_with_updated_annotations
         RewriteComments.call body do |line_number, line_to_whitespace, whitespace, comment|
           if !comment[VALUE_REGEX]
             [whitespace, comment]
           elsif line_to_whitespace.empty?
-            # should go through comment formatter
-            [whitespace, "#{VALUE_MARKER}#{results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            result = results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')
+            [whitespace, CommentFormatter.call(whitespace.size, VALUE_MARKER, result, options)]
           else
-            # should go through comment formatter
-            [whitespace, "#{VALUE_MARKER}#{results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')}"] # FIXME: NEED TO CONSIDER THE LINE LENGTH
+            result = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+            [whitespace, CommentFormatter.call(line_to_whitespace.size + whitespace.size, VALUE_MARKER, result, options)]
           end
         end
       end
@@ -79,7 +80,7 @@ class SeeingIsBelieving
           elsif results[line_number].has_exception?
             exception = results[line_number].exception
             result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
-            CommentFormatter.new(line.size, EXCEPTION_MARKER, result, options).call
+            CommentFormatter.call(line.size, EXCEPTION_MARKER, result, options)
           elsif results[line_number].any?
             result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
             CommentFormatter.call(line.size, VALUE_MARKER, result, options)

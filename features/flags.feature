@@ -184,6 +184,19 @@ Feature: Using flags
     When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
 
+  Scenario: --xmpfilter-style respects the line formatting (but not currently alignment strategies, it just preserves submitted alignment)
+    Given the file "line_lengths3.rb":
+    """
+    '1' * 30 # =>
+    # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style --line-length 19 line_lengths3.rb"
+    Then stdout is:
+    """
+    '1' * 30 # => "1...
+    # => "1111111111...
+    """
+
 
   Scenario: --require
     Given the file "print_1.rb" "puts 1"
