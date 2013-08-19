@@ -150,7 +150,7 @@ class SeeingIsBelieving
     end
 
     def print_program
-      stdout.puts interpolated_program
+      stdout.print interpolated_program
     end
 
     def syntax_error_notice

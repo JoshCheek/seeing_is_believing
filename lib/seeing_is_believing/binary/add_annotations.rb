@@ -95,13 +95,14 @@ class SeeingIsBelieving
                  stderr_ouptut_for(results)    <<
                  exception_output_for(results)
 
-        if new_body["\n__END__\n"]
-          new_body.sub! "\n__END__\n", "\n#{output}__END__\n"
+        # this technically could find an __END__ in a string or whatever
+        # going to just ignore that, though
+        if new_body[/^__END__$/]
+          new_body.sub! "\n__END__", "\n#{output}__END__"
         else
           new_body << "\n" unless new_body.end_with? "\n"
           new_body << output
         end
-
       end
 
       def stdout_ouptut_for(results)

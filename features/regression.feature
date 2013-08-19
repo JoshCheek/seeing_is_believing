@@ -105,7 +105,7 @@ Feature:
     __END__
     """
     When I run "seeing_is_believing modified_result.rb"
-    Then stdout is:
+    Then stdout is exactly:
     """
     1  # => 1
     2  # => 2

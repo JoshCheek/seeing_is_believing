@@ -6,3 +6,7 @@ Haiti.configure do |config|
   config.bin_dir             = File.expand_path '../../../bin',             __FILE__
 end
 
+
+Then 'stdout is exactly:' do |code|
+  @last_executed.stdout.should == eval_curlies(code)
+end
