@@ -45,7 +45,8 @@ class SeeingIsBelieving
       self.after_all   = wrappings.fetch :after_all,   ''.freeze
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
-      self.buffer, _, self.rewriter, self.root, _ = initialize_parser(program, 'program-without-annotations')
+      self.buffer, parser, self.rewriter = initialize_parser(program, 'program-without-annotations')
+      self.root        = parser.parse buffer
       self.wrappings   = {}
     rescue Parser::SyntaxError => e
       raise ::SyntaxError, e.message

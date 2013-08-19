@@ -18,7 +18,9 @@ class SeeingIsBelieving
       end
 
       def call
-        buffer, parser, rewriter, ast, comments = ParserHelpers.initialize_parser code, 'strip_comments'
+        buffer, parser, rewriter = ParserHelpers.initialize_parser code, 'strip_comments'
+        comments                 = ParserHelpers.comments_from parser, buffer
+
         removed_comments      = { result: [], exception: [], stdout: [], stderr: [] }
 
         comments.each do |comment|

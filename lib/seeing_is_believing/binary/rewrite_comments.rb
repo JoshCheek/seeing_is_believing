@@ -4,7 +4,8 @@ class SeeingIsBelieving
   class Binary
     module RewriteComments
       def self.call(code, &mapping)
-        buffer, parser, rewriter, ast, comments = ParserHelpers.initialize_parser code, 'strip_comments'
+        buffer, parser, rewriter = ParserHelpers.initialize_parser code, 'rewrite_comments'
+        ast, comments  = parser.parse_with_comments buffer
 
         comments.each do |comment|
           next unless comment.type == :inline

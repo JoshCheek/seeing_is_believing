@@ -1,17 +1,36 @@
 require 'parser/current'
 class SeeingIsBelieving
   module ParserHelpers
+
+    # override #process so it does not raise an error on
+    # fatal parsings (we want to keep going if possible,
+    # this allows us to find comments in syntactically invalid files
+    class NullDiagnostics < Parser::Diagnostic::Engine
+      def process(*)
+        # no op
+      end
+    end
+
     extend self
 
     def initialize_parser(code, name)
       buffer                             = Parser::Source::Buffer.new(name)
       buffer.source                      = code
+
       builder                            = Parser::Builders::Default.new
       builder.emit_file_line_as_literals = false
+
       parser                             = Parser::CurrentRuby.new builder
-      root, comments                     = parser.parse_with_comments buffer
       rewriter                           = Parser::Source::Rewriter.new buffer
-      [buffer, parser, rewriter, root, comments]
+
+      [buffer, parser, rewriter]
+    end
+
+    # useful b/c it can find comments even in syntactically invalid code
+    def comments_from(parser, buffer)
+      parser.instance_variable_set(:@diagnostics, NullDiagnostics.new) # seems really fucking risky
+      success, comments, tokens, * = parser.tokenize buffer            # experimentally, seems to be what these things return
+      comments
     end
 
     # this is the scardest fucking method I think I've ever written.

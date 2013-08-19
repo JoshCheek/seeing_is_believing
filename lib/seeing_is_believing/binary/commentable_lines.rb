@@ -2,6 +2,8 @@ require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
   class Binary
+
+    # could possibly be sped up by just reflecting on the tokens instead of the whole ast
     class CommentableLines
 
       include ParserHelpers
@@ -12,8 +14,8 @@ class SeeingIsBelieving
 
       def initialize(code)
         self.code = code
-        self.buffer, self.parser, self.rewriter, self.root, self.comments =
-          initialize_parser(code, 'strip_comments')
+        self.buffer, self.parser, self.rewriter = initialize_parser(code, 'finding_commentable_lines')
+        self.root, self.comments = parser.parse_with_comments(buffer)
       end
 
       def call
