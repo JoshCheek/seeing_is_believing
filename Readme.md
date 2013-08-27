@@ -93,12 +93,6 @@ Known Issues
 * `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
 * The code to find the data segment is naive, and could wind up interpolating results into a string or something
 
-Todo
-====
-
-* Sublime: Merge xmpfilter option into main after 2.0 release
-* Make a new video
-
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================
 
