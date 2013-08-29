@@ -17,16 +17,17 @@ class SeeingIsBelieving
   end
 
   def initialize(program, options={})
-    @program         = program
-    @matrix_filename = options[:matrix_filename]
-    @filename        = options[:filename]
-    @stdin           = to_stream options.fetch(:stdin, '')
-    @require         = options.fetch :require, []
-    @load_path       = options.fetch :load_path, []
-    @encoding        = options.fetch :encoding, nil
-    @timeout         = options[:timeout]
-    @debugger        = options.fetch :debugger, Debugger.new(stream: nil)
-    @ruby_executable = options.fetch :ruby_executable, 'ruby'
+    @program            = program
+    @matrix_filename    = options[:matrix_filename]
+    @filename           = options[:filename]
+    @stdin              = to_stream options.fetch(:stdin, '')
+    @require            = options.fetch :require, []
+    @load_path          = options.fetch :load_path, []
+    @encoding           = options.fetch :encoding, nil
+    @timeout            = options[:timeout]
+    @debugger           = options.fetch :debugger, Debugger.new(stream: nil)
+    @ruby_executable    = options.fetch :ruby_executable, 'ruby'
+    @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
   end
 
   def call
@@ -50,7 +51,7 @@ class SeeingIsBelieving
 
   def program_that_will_record_expressions
     WrapExpressions.call "#@program\n",
-                         before_all:  "begin;",
+                         before_all:  "begin; $SiB.number_of_captures = #{number_of_captures_as_str}; ",
                          after_all:   ";rescue Exception;"\
                                         "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
                                         "$SiB.record_exception line_number, $!;"\
@@ -66,15 +67,21 @@ class SeeingIsBelieving
       filename = @filename || File.join(dir, 'program.rb')
       EvaluateByMovingFiles.new(program,
                                 filename,
-                                input_stream:    @stdin,
-                                matrix_filename: matrix_filename,
-                                require:         @require,
-                                load_path:       @load_path,
-                                encoding:        @encoding,
-                                timeout:         @timeout,
-                                ruby_executable: @ruby_executable,
-                                debugger:        @debugger)
+                                input_stream:       @stdin,
+                                matrix_filename:    matrix_filename,
+                                require:            @require,
+                                load_path:          @load_path,
+                                encoding:           @encoding,
+                                timeout:            @timeout,
+                                ruby_executable:    @ruby_executable,
+                                debugger:           @debugger,
+                                number_of_captures: @number_of_captures)
                            .call
     end
+  end
+
+  def number_of_captures_as_str
+    return 'Float::INFINITY' if @number_of_captures == Float::INFINITY
+    @number_of_captures.inspect
   end
 end

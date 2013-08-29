@@ -363,5 +363,18 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       parse(['--shebang']).should have_error /--shebang/
     end
   end
+
+  describe ':number_of_captures' do
+    it 'defaults to infinity' do
+      parse([])[:number_of_captures].should == Float::INFINITY
+    end
+
+    it 'can be set with --number-of-captures or -n' do
+      parse(['-n', '10'])[:number_of_captures].should == 10
+      parse(['--number-of-captures', '10'])[:number_of_captures].should == 10
+    end
+
+    it_behaves_like 'it requires a positive int argument', ['-n', '--number-of-captures']
+  end
 end
 

@@ -31,11 +31,12 @@ class SeeingIsBelieving
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
             when '-g', '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
-            when '-l', '--start-line'          then extract_positive_int_for :start_line,        arg
-            when '-L', '--end-line'            then extract_positive_int_for :end_line,          arg
-            when '-d', '--line-length'         then extract_positive_int_for :max_line_length,   arg
-            when '-D', '--result-length'       then extract_positive_int_for :max_result_length, arg
-            when '-t', '--timeout'             then extract_non_negative_float_for :timeout,     arg
+            when '-l', '--start-line'          then extract_positive_int_for :start_line,         arg
+            when '-L', '--end-line'            then extract_positive_int_for :end_line,           arg
+            when '-d', '--line-length'         then extract_positive_int_for :max_line_length,    arg
+            when '-D', '--result-length'       then extract_positive_int_for :max_result_length,  arg
+            when '-n', '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
+            when '-t', '--timeout'             then extract_non_negative_float_for :timeout,      arg
             when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
             when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
             when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
@@ -85,6 +86,7 @@ class SeeingIsBelieving
           end_line:            Float::INFINITY,
           max_line_length:     Float::INFINITY,
           max_result_length:   Float::INFINITY,
+          number_of_captures:  Float::INFINITY,
           timeout:             0, # timeout lib treats this as infinity
           errors:              [],
           require:             [],
@@ -147,6 +149,9 @@ Usage: seeing_is_believing [options] [filename]
   -L, --end-line n              # line number to stop showing results on
   -d, --line-length n           # max length of the entire line (only truncates results, not source lines)
   -D, --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
+  -n, --number-of-captures n    # how many results to capture for a given line
+                                  if you had 1 million results on a line, it could take a long time to record
+                                  and serialize them, you might limit it to 1000 results as an optimization
   -s, --alignment-strategy name # select the alignment strategy:
                                   chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                   file            =>  the entire file is at the same alignment

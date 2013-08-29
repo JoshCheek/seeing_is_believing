@@ -6,7 +6,7 @@ class SeeingIsBelieving
     include HasException
     include Enumerable
 
-    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib
+    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures
 
     alias bug_in_sib? bug_in_sib
 
@@ -19,7 +19,9 @@ class SeeingIsBelieving
     end
 
     def record_result(line_number, value)
-      results_for(line_number) << value.inspect
+      if    results_for(line_number).size <  number_of_captures then results_for(line_number) << value.inspect
+      elsif results_for(line_number).size == number_of_captures then results_for(line_number) << '...'
+      end
       value
     end
 
@@ -45,6 +47,10 @@ class SeeingIsBelieving
       "#<SIB::Result #{
         instance_variables.map { |name| "#{name}=#{instance_variable_get(name).inspect}" }.join("\n  ")
       }>"
+    end
+
+    def number_of_captures
+      @number_of_captures || Float::INFINITY
     end
 
     private

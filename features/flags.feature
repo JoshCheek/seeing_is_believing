@@ -184,6 +184,28 @@ Feature: Using flags
     When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
 
+  Scenario: --number-of-captures determines how many times a line will be recorded
+    Given the file "number_of_captures.rb":
+    """
+    5.times do |i|
+      i
+    end
+    """
+    When I run "seeing_is_believing --number-of-captures 4 number_of_captures.rb"
+    Then stdout is:
+    """
+    5.times do |i|  # => 5
+      i             # => 0, 1, 2, 3, ...
+    end             # => 5
+    """
+    When I run "seeing_is_believing --number-of-captures 5 number_of_captures.rb"
+    Then stdout is:
+    """
+    5.times do |i|  # => 5
+      i             # => 0, 1, 2, 3, 4
+    end             # => 5
+    """
+
   Scenario: --xmpfilter-style respects the line formatting (but not currently alignment strategies, it just preserves submitted alignment)
     Given the file "line_lengths3.rb":
     """

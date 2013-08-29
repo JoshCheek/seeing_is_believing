@@ -299,6 +299,13 @@ describe SeeingIsBelieving do
                                                   ['[6, 12]']]
   end
 
+  it 'can be limited to a specific number of captures', t:true do
+    values_for("2.times do\n1\nend", number_of_captures: 1)
+      .should == [['2'],
+                  ['1', '...'],
+                  ['2']]
+  end
+
   it 'can evaluate under a different ruby executable' do
     Dir.chdir proving_grounds_dir do
       File.write 'omg-ruby', "#!/usr/bin/env ruby
