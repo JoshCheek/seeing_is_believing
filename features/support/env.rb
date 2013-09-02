@@ -10,3 +10,10 @@ end
 Then 'stdout is exactly:' do |code|
   @last_executed.stdout.should == eval_curlies(code)
 end
+
+Then 'stdout is the JSON:' do |json|
+  File.open('out.json', 'w') { |f| f.puts json }
+  expected = JSON.parse(json)
+  actual   = JSON.parse(@last_executed.stdout)
+  actual.should == expected
+end

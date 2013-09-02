@@ -30,6 +30,7 @@ class SeeingIsBelieving
             when '-v', '--version'             then options[:version]             = true
             when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
+            when '-j', '--json'                then options[:result_as_json]      = true
             when '-g', '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
             when '-l', '--start-line'          then extract_positive_int_for :start_line,        arg
             when '-L', '--end-line'            then extract_positive_int_for :end_line,          arg
@@ -91,6 +92,7 @@ class SeeingIsBelieving
           load_path:           [],
           alignment_strategy:  AlignChunk,
           shebang:             'ruby',
+          result_as_json:      false,
         }
       end
 
@@ -160,6 +162,7 @@ Usage: seeing_is_believing [options] [filename]
   -c, --clean                   # remove annotations from previous runs of seeing_is_believing
   -g, --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
   -x, --xmpfilter-style         # annotate marked lines instead of every line
+  -j, --json                    # print results in json format (i.e. so another program can consume them)
   -i, --inherit-exit-status     # exit with the exit status of the program being eval
       --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
   -v, --version                 # print the version (#{VERSION})

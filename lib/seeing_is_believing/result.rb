@@ -40,6 +40,12 @@ class SeeingIsBelieving
       (1..max).each { |line_number| block.call self[line_number] }
     end
 
+    def each_with_line_number(&block)
+      return to_enum :each_with_line_number unless block
+      max = results.keys.max || 1
+      (1..max).each { |line_number| block.call line_number, results_for(line_number) }
+    end
+
     def inspect
       results
       "#<SIB::Result #{

@@ -363,5 +363,16 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       parse(['--shebang']).should have_error /--shebang/
     end
   end
+
+  describe ':result_as_json' do
+    it 'defaults to false' do
+      parse([])[:result_as_json].should == false
+    end
+
+    it 'can be enabled with --json or -j' do
+      parse(['--json'])[:result_as_json].should == true
+      parse(['-j'])[:result_as_json].should == true
+    end
+  end
 end
 
