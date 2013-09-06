@@ -559,3 +559,44 @@ Feature: Using flags
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
     Then stdout is "123  # => /omg/"
+
+  Scenario: --json
+    Given the file "all_kinds_of_output.rb":
+    """
+    3.times do |i|
+      i.to_s
+    end
+    $stdout.puts "b"
+    $stderr.puts "c"
+    raise "omg"
+    """
+    When I run "seeing_is_believing --json all_kinds_of_output.rb"
+    Then the exit status is 0
+    And stdout is the JSON:
+    """
+      {
+        "lines": {
+          "1": { "exception": null, "results": ["3"] },
+          "2": { "exception": null, "results": ["\"0\"", "\"1\"", "\"2\""] },
+          "3": { "exception": null, "results": ["3"] },
+          "4": { "exception": null, "results": ["nil"] },
+          "5": { "exception": null, "results": ["nil"] },
+          "6": { "exception": { "class_name": "RuntimeError",
+                                "message":    "omg",
+                                "backtrace":  ["all_kinds_of_output.rb:6:in `<main>'"]
+                              },
+                 "results": []
+               }
+        },
+        "exception": {
+          "line_number_in_this_file": 6,
+          "class_name":               "RuntimeError",
+          "message":                  "omg",
+          "backtrace":                ["all_kinds_of_output.rb:6:in `<main>'"]
+        },
+        "stdout": "b\n",
+        "stderr": "c\n",
+        "exit_status": 1
+      }
+    """
+

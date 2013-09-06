@@ -44,6 +44,7 @@ class SeeingIsBelieving
         elsif invalid_syntax?                       then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
         elsif (evaluate_program; program_timedout?) then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
         elsif something_blew_up?                    then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+        elsif output_as_json?                       then print_result_as_json   ; SUCCESS_STATUS
         else                                             print_program          ; program_exit_status
         end
       end
@@ -173,5 +174,40 @@ class SeeingIsBelieving
     def print_cleaned_program
       stdout.print CleanBody.call(body, true)
     end
+
+    def output_as_json?
+      flags[:result_as_json]
+    end
+
+    def print_result_as_json
+      require 'json'
+      stdout.puts JSON.dump result_as_data_structure
+    end
+
+    def result_as_data_structure
+      results = printer.results
+      { stdout:      results.stdout,
+        stderr:      results.stderr,
+        exit_status: results.exitstatus,
+        exception:   if results.has_exception?
+                       { line_number_in_this_file: results.each_with_line_number.find { |line_number, result| result.has_exception? }.first,
+                         class_name:               results.exception.class_name,
+                         message:                  results.exception.message,
+                         backtrace:                results.exception.backtrace,
+                       }
+                     end,
+        lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash|
+                       hash[line_number] = { results:   result.to_a,
+                                             exception: if result.has_exception?
+                                                          { class_name:               results.exception.class_name,
+                                                            message:                  results.exception.message,
+                                                            backtrace:                results.exception.backtrace,
+                                                          }
+                                                        end
+                       }
+                     },
+      }
+    end
+
   end
 end

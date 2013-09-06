@@ -100,7 +100,7 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     invoke('print "ç"', encoding: 'u').stdout.should == "ç"
   end
 
-  it 'if it fails, it prints some debugging information and raises an error', t:true do
+  it 'if it fails, it prints some debugging information and raises an error' do
     error_stream = StringIO.new
     evaluator = described_class.new 'raise "omg"', filename, debugger: SeeingIsBelieving::Debugger.new(stream: error_stream)
     FileUtils.rm_f evaluator.temp_filename
