@@ -1,0 +1,33 @@
+# intro
+  # show the website!
+  # omg, what's it do?
+  # integrates with the editors
+
+# walk through example of how to use it
+  # make a user class or something
+  # show the -n flag
+
+# features
+  # iteration
+  # method and invocations
+  # multilinezzz
+  # mutliple levels of nesting (e.g. class definition)
+  # printing to stdout/stderr, respecting DATA segment
+  # respecting macros
+  # exceptions displayed where they occur
+  # records hash results
+  # syntax errors
+  # total fucking failure
+
+# show the snippets
+  # s_arb
+  # s_sinatra
+  # s_nokogiri
+  # s_reflection
+
+# Show how to customize
+  # --line-length n
+  # --result-length n
+  # --alignment-strategy name
+  # --timeout n
+  # --debug
