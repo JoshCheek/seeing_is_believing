@@ -50,9 +50,16 @@ class SeeingIsBelieving
 
     def inspect
       results
-      "#<SIB::Result #{
-        instance_variables.map { |name| "#{name}=#{instance_variable_get(name).inspect}" }.join("\n  ")
-      }>"
+      variables = instance_variables.map do |name|
+        value = instance_variable_get(name)
+        inspected = if name.to_s == '@results'
+          "{#{value.sort_by(&:first).map { |k, v| "#{k.inspect}=>#{v.inspect}"}.join(",\n            ")}}"
+        else
+          value.inspect
+        end
+        "#{name}=#{inspected}"
+      end
+      "#<SIB::Result #{variables.join "\n  "}>"
     end
 
     def number_of_captures
