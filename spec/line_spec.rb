@@ -1,15 +1,22 @@
 require 'seeing_is_believing/result'
 
-describe SeeingIsBelieving::Line do
+describe SeeingIsBelieving::Line, t:true do
   Line = described_class
 
+  def line_for(*args)
+    line = Line.new
+    args.each { |a| line.record_result a }
+    line
+  end
+
   it 'inspects prettily' do
-    Line[].inspect.should == '#<SIB:Line[] no exception>'
-    Line["a"].inspect.should == '#<SIB:Line["a"] no exception>'
-    Line["a", 1].inspect.should == '#<SIB:Line["a", 1] no exception>'
-    line = Line[]
+    line_for(       ).inspect.should == '#<SIB:Line[] (0, 0) no exception>'
+    line_for("a"    ).inspect.should == '#<SIB:Line["\"a\""] (1, 3) no exception>'
+    line_for("a", 12).inspect.should == '#<SIB:Line["\"a\"", "12"] (2, 5) no exception>'
+
+    line = Line.new
     line.exception = RuntimeError.new("omg")
-    line.inspect.should == '#<SIB:Line[] RuntimeError:"omg">'
+    line.inspect.should == '#<SIB:Line[] (0, 0) RuntimeError:"omg">'
   end
 
   it 'knows when it has an exception' do
@@ -32,30 +39,30 @@ describe SeeingIsBelieving::Line do
   end
 
   it 'returns its array for #to_a and #to_ary' do
-    line = Line[1,2]
+    line = line_for 1, 2
     line.to_a.should be_a_kind_of Array
-    line.to_a.should == [1, 2]
+    line.to_a.should == %w[1 2]
     line.to_ary.should be_a_kind_of Array
-    line.to_ary.should == [1, 2]
+    line.to_ary.should == %w[1 2]
   end
 
   it 'is equal to arrays with the same elements as its array' do
-    Line[1, 2].should == [1, 2]
-    Line[1, 2].should_not == [2, 1]
+    line_for(1, 2).should == %w[1 2]
+    line_for(1, 2).should_not == %w[2 1]
   end
 
   # Exception equality seems to be based off of the message, and be indifferent to the class, I don't think it's that important to fix it
   it "is equal to lines with the same elements and the same exception" do
     exception = RuntimeError.new 'omg'
 
-    Line[1, 2].should == Line[1, 2]
-    Line[1, 2].should_not == Line[2, 1]
+    line_for(1, 2).should == line_for(1, 2)
+    line_for(1, 2).should_not == line_for(2, 1)
 
-    line1 = Line[1, 2]
+    line1 = line_for(1, 2)
     line1.exception = exception
-    line1.should_not == Line[1, 2]
+    line1.should_not == line_for(1, 2)
 
-    line2 = Line[1, 2]
+    line2 = line_for(1, 2)
     line2.exception = exception
     line1.should == line2
 

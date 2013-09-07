@@ -1,11 +1,8 @@
 require 'seeing_is_believing/has_exception'
+
 class SeeingIsBelieving
   # thin wrapper over an array, used by the result
   class Line
-    def self.[](*elements)
-      new(elements)
-    end
-
     include HasException
     include Enumerable
 
@@ -22,8 +19,22 @@ class SeeingIsBelieving
     end
     alias to_ary to_a
 
-    def initialize(array = [])
-      @array = array.dup
+    def initialize(array = [], max_number_of_captures=Float::INFINITY)
+      @array                  = []
+      @max_number_of_captures = max_number_of_captures
+      @num_results            = 0
+      @total_size             = 0
+      array.each { |element| record_result element }
+    end
+
+    def record_result(value)
+      inspected = value.inspect # only invoke inspect once, b/c the inspection may be recorded
+      if    size <  @max_number_of_captures then @array << inspected
+      elsif size == @max_number_of_captures then @array << '...'
+      end
+      @num_results += 1
+      @total_size  += inspected.size
+      self
     end
 
     def ==(ary_or_line)
@@ -33,7 +44,7 @@ class SeeingIsBelieving
 
     def inspect
       inspected_exception = has_exception? ? "#{exception.class}:#{exception.message.inspect}" : "no exception"
-      "#<SIB:Line#{@array.inspect} #{inspected_exception}>"
+      "#<SIB:Line#{@array.inspect} (#@num_results, #@total_size) #{inspected_exception}>"
     end
   end
 end

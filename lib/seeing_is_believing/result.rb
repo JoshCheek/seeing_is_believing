@@ -19,9 +19,7 @@ class SeeingIsBelieving
     end
 
     def record_result(line_number, value)
-      if    results_for(line_number).size <  number_of_captures then results_for(line_number) << value.inspect
-      elsif results_for(line_number).size == number_of_captures then results_for(line_number) << '...'
-      end
+      results_for(line_number).record_result(value)
       value
     end
 
@@ -69,7 +67,7 @@ class SeeingIsBelieving
     private
 
     def results_for(line_number)
-      results[line_number] ||= Line.new
+      results[line_number] ||= Line.new([], number_of_captures)
     end
 
     def results

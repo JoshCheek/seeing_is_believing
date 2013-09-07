@@ -19,6 +19,11 @@ describe SeeingIsBelieving do
     invoke(input)[2].should == ['"22"']
   end
 
+  it 'only invokes inspect once' do
+    input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
+    invoke(input)[1].should == ['"NUM"']
+  end
+
   it 'remembers context of previous lines' do
     values_for("a=12\na*2").should == [['12'], ['24']]
   end
@@ -362,7 +367,7 @@ describe SeeingIsBelieving do
     it 'prints the result' do
       call
       stream.string.should include "RESULT:"
-      stream.string.should include '1=>#<SIB:Line["1"] no exception>'
+      stream.string.should include '1=>#<SIB:Line["1"] (1, 1) no exception>'
     end
     # should ProgramRewriter have some debug options?
   end
