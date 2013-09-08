@@ -346,6 +346,14 @@ Feature: Using flags
     Then stderr is empty
     And the exit status is 0
     And stdout includes "Usage"
+    And stdout does not include "Examples:"
+
+  Scenario: --help+
+    When I run "seeing_is_believing --help+"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout includes "Usage"
+    And stdout includes "Examples:"
 
 
   Scenario: --timeout

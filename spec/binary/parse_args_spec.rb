@@ -167,9 +167,20 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       parse([])[:help].should be_nil
     end
 
-    it 'is set to the help screen with -h and --help and -help' do
-      parse(['-h'])[:help].should == described_class.help_screen
-      parse(['--help'])[:help].should == described_class.help_screen
+    it 'is set to the flag only help screen with -h and --help and -help' do
+      parse(['-h'])[:help].should include 'Usage:'
+      parse(['--help'])[:help].should include 'Usage:'
+
+      parse(['-h'])[:help].should_not include 'Examples:'
+      parse(['--help'])[:help].should_not include 'Examples:'
+    end
+
+    it 'is set to the flag with examples help screen with --help+ and -h+' do
+      parse(['-h+'])[:help].should include 'Usage:'
+      parse(['--help+'])[:help].should include 'Usage:'
+
+      parse(['-h+'])[:help].should include 'Examples:'
+      parse(['--help+'])[:help].should include 'Examples:'
     end
   end
 

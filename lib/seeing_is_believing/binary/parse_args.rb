@@ -25,25 +25,26 @@ class SeeingIsBelieving
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h', '--help'                then options[:help]                = self.class.help_screen
-            when '-c', '--clean'               then options[:clean]               = true
-            when '-v', '--version'             then options[:version]             = true
-            when '-x', '--xmpfilter-style'     then options[:xmpfilter_style]     = true
-            when '-i', '--inherit-exit-status' then options[:inherit_exit_status] = true
-            when '-j', '--json'                then options[:result_as_json]      = true
-            when '-g', '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
-            when '-l', '--start-line'          then extract_positive_int_for :start_line,         arg
-            when '-L', '--end-line'            then extract_positive_int_for :end_line,           arg
-            when '-d', '--line-length'         then extract_positive_int_for :max_line_length,    arg
-            when '-D', '--result-length'       then extract_positive_int_for :max_result_length,  arg
-            when '-n', '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
-            when '-t', '--timeout'             then extract_non_negative_float_for :timeout,      arg
-            when '-r', '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
-            when '-I', '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
-            when '-e', '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
-            when '-a', '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
-            when       '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   = executable }
-            when '-s', '--alignment-strategy'  then extract_alignment_strategy
+            when '-h',  '--help'                then options[:help]                = self.class.help_screen(false)
+            when '-h+', '--help+'               then options[:help]                = self.class.help_screen(true)
+            when '-c',  '--clean'               then options[:clean]               = true
+            when '-v',  '--version'             then options[:version]             = true
+            when '-x',  '--xmpfilter-style'     then options[:xmpfilter_style]     = true
+            when '-i',  '--inherit-exit-status' then options[:inherit_exit_status] = true
+            when '-j',  '--json'                then options[:result_as_json]      = true
+            when '-g',  '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
+            when '-l',  '--start-line'          then extract_positive_int_for :start_line,         arg
+            when '-L',  '--end-line'            then extract_positive_int_for :end_line,           arg
+            when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
+            when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
+            when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
+            when '-t',  '--timeout'             then extract_non_negative_float_for :timeout,      arg
+            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
+            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
+            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
+            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
+            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   = executable }
+            when '-s',  '--alignment-strategy'  then extract_alignment_strategy
             when /\A-K(.+)/                    then options[:encoding] = $1
             when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
             when /^-/                          then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
@@ -139,39 +140,41 @@ class SeeingIsBelieving
 
     end
 
-    def ParseArgs.help_screen
-<<HELP_SCREEN
+    def ParseArgs.help_screen(include_examples)
+<<FLAGS + if include_examples then <<EXAMPLES else '' end
 Usage: seeing_is_believing [options] [filename]
 
   seeing_is_believing is a program and library that will evaluate a Ruby file and capture/display the results.
 
   If no filename is provided, the binary will read the program from standard input.
 
-  -l, --start-line n            # line number to begin showing results on
-  -L, --end-line n              # line number to stop showing results on
-  -d, --line-length n           # max length of the entire line (only truncates results, not source lines)
-  -D, --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
-  -n, --number-of-captures n    # how many results to capture for a given line
-                                  if you had 1 million results on a line, it could take a long time to record
-                                  and serialize them, you might limit it to 1000 results as an optimization
-  -s, --alignment-strategy name # select the alignment strategy:
-                                  chunk (DEFAULT) =>  each chunk of code is at the same alignment
-                                  file            =>  the entire file is at the same alignment
-                                  line            =>  each line is at its own alignment
-  -t, --timeout n               # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
-  -I, --load-path dir           # a dir that should be added to the $LOAD_PATH
-  -r, --require file            # additional files to be required before running the program
-  -e, --program program         # Pass the program to execute as an argument
-  -K, --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
-  -a, --as filename             # run the program as if it was the specified filename
-  -c, --clean                   # remove annotations from previous runs of seeing_is_believing
-  -g, --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
-  -x, --xmpfilter-style         # annotate marked lines instead of every line
-  -j, --json                    # print results in json format (i.e. so another program can consume them)
-  -i, --inherit-exit-status     # exit with the exit status of the program being eval
-      --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
-  -v, --version                 # print the version (#{VERSION})
-  -h, --help                    # this help screen
+  -l,  --start-line n            # line number to begin showing results on
+  -L,  --end-line n              # line number to stop showing results on
+  -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
+  -D,  --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
+  -n,  --number-of-captures n    # how many results to capture for a given line
+                                   if you had 1 million results on a line, it could take a long time to record
+                                   and serialize them, you might limit it to 1000 results as an optimization
+  -s,  --alignment-strategy name # select the alignment strategy:
+                                   chunk (DEFAULT) =>  each chunk of code is at the same alignment
+                                   file            =>  the entire file is at the same alignment
+                                   line            =>  each line is at its own alignment
+  -t,  --timeout n               # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
+  -I,  --load-path dir           # a dir that should be added to the $LOAD_PATH
+  -r,  --require file            # additional files to be required before running the program
+  -e,  --program program         # Pass the program to execute as an argument
+  -K,  --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
+  -a,  --as filename             # run the program as if it was the specified filename
+  -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
+  -g,  --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
+  -x,  --xmpfilter-style         # annotate marked lines instead of every line
+  -j,  --json                    # print results in json format (i.e. so another program can consume them)
+  -i,  --inherit-exit-status     # exit with the exit status of the program being eval
+       --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
+  -v,  --version                 # print the version (#{VERSION})
+  -h,  --help                    # help screen without examples
+  -h+, --help+                   # help screen with examples
+FLAGS
 
 Examples: A few examples, for a more comprehensive set of examples, check out features/flags.feature
 
@@ -254,8 +257,7 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
   If your Ruby binary is named something else (e.g. ruby2.0)
     $ ruby2.0 -S seeing_is_believing --shebang ruby2.0 -e '123'
     123  #{VALUE_MARKER}123
-
-HELP_SCREEN
+EXAMPLES
     end
   end
 end
