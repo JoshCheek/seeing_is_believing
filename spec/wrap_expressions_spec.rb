@@ -347,6 +347,8 @@ describe SeeingIsBelieving::WrapExpressions do
 
     it 'wraps multiple assignment on each line' do
       wrap("a,b=1,\n2").should == "<a,b=<1>,\n2>"
+      wrap("a,b=[1,2]\n.map(&:to_s)").should == "<a,b=<[1,2]>\n.map(&:to_s)>"
+      wrap("a,b=[1,\n2\n.even?\n]").should == "<a,b=[<1>,\n<<2>\n.even?>\n]>"
     end
 
     it 'wraps multiple assignment with splats' do

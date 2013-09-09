@@ -152,17 +152,18 @@ class SeeingIsBelieving
       when :masgn
         # we must look at RHS because [1,<<A] and 1,<<A are both allowed
         #
-        # in the first case, we must take the end_pos of the array, or we'll insert the after_each in the wrong location
+        # in the first case, we must take the end_pos of the array,
+        # or we'll insert the after_each in the wrong location
         #
         # in the second, there is an implicit Array wrapped around it, with the wrong end_pos,
         # so we must take the end_pos of the last arg
         array = ast.children.last
-        if array.type != :array # e.g. `a, g = c`
+        if array.type != :array # e.g. `a, b = c`
           add_to_wrappings ast
-          add_to_wrappings ast.children.last
+          add_children ast, true
         elsif array.location.expression.source.start_with? '['
           add_to_wrappings ast
-          find_wrappings array
+          add_children ast, true
         else
           begin_pos = ast.location.expression.begin_pos
           end_pos   = heredoc_hack(array.children.last).location.expression.end_pos
