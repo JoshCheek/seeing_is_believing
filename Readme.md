@@ -9,7 +9,7 @@ Except, obviously, his is like a million times better.
 
 Also comes with a binary to show how it might be used.
 
-For whatever reason, I can't embed videos, but **here's a ~1 minute [video](http://vimeo.com/58766950)** showing it off.
+For whatever reason, I can't embed videos, but **here's a [video](vimeo.com/73866851)** showing it off.
 
 Works in Ruby 1.9 and 2.0
 
@@ -19,7 +19,7 @@ Use The Binary
 ```ruby
 $ cat simple_example.rb
 5.times do |i|
-    i * 2
+  i * 2
 end
 
 
