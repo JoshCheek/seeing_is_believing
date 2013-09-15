@@ -752,9 +752,7 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("-> { }").should == "<-> { }>"
       wrap("-> a, b { }").should == "<-> a, b { }>"
       wrap("-> {\n1\n}").should == "<-> {\n<1>\n}>"
-      pending "Parser doesn't parse this https://github.com/whitequark/parser/issues/103" do
-        wrap("-> * { }").should == "<-> * { }>"
-      end
+      wrap("-> * { }").should == "<-> * { }>"
     end
 
     it 'wraps the full invocation' do

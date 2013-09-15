@@ -1,33 +1,6 @@
 require 'parser/current'
 require 'seeing_is_believing/parser_helpers'
 
-# hack rewriter to apply insertions in stable order
-# until https://github.com/whitequark/parser/pull/102 gets released
-module Parser
-  module Source
-    class Rewriter
-      def process
-        adjustment   = 0
-        source       = @source_buffer.source.dup
-        sorted_queue = @queue.sort_by.with_index do |action, index|
-          [action.range.begin_pos, index]
-        end
-        sorted_queue.each do |action|
-          begin_pos = action.range.begin_pos + adjustment
-          end_pos   = begin_pos + action.range.length
-
-          source[begin_pos...end_pos] = action.replacement
-
-          adjustment += (action.replacement.length - action.range.length)
-        end
-
-        source
-      end
-    end
-  end
-end
-
-
 # comprehensive list of syntaxes that can come up
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 class SeeingIsBelieving
