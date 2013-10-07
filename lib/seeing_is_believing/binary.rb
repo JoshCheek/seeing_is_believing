@@ -45,7 +45,7 @@ class SeeingIsBelieving
         elsif (evaluate_program; program_timedout?) then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
         elsif something_blew_up?                    then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
         elsif output_as_json?                       then print_result_as_json   ; SUCCESS_STATUS
-        else                                             print_program          ; program_exit_status
+        else                                             print_program          ; exit_status
         end
       end
     end
@@ -54,64 +54,8 @@ class SeeingIsBelieving
 
     attr_accessor :flags, :interpolated_program
 
-    def program_exit_status
-      if flags[:inherit_exit_status]
-        results.exitstatus
-      elsif results.has_exception?
-        DISPLAYABLE_ERROR_STATUS
-      else
-        SUCCESS_STATUS
-      end
-    end
-
     def parse_flags
       self.flags = ParseArgs.call argv, stdout
-    end
-
-    def has_filename?
-      flags[:filename]
-    end
-
-    def evaluate_program
-      self.interpolated_program = printer.call
-    rescue Timeout::Error
-      self.timeout_error = true
-    rescue Exception
-      self.unexpected_exception = $!
-    end
-
-    # could we make this more obvious? I'd like to to be clear from #call
-    # that this is when the program gets evaluated
-    def program_timedout?
-      timeout_error
-    end
-
-    def print_timeout_error
-      stderr.puts "Timeout Error after #{@flags[:timeout]} seconds!"
-    end
-
-    def body
-      @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
-    end
-
-    def something_blew_up?
-      !!unexpected_exception
-    end
-
-    def print_unexpected_error
-      if unexpected_exception.kind_of? BugInSib
-        stderr.puts unexpected_exception.message
-      else
-        stderr.puts unexpected_exception.class, unexpected_exception.message, "", unexpected_exception.backtrace
-      end
-    end
-
-    def printer
-      @printer ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
-    end
-
-    def results
-      printer.results
     end
 
     def flags_have_errors?
@@ -138,8 +82,8 @@ class SeeingIsBelieving
       stdout.puts SeeingIsBelieving::VERSION
     end
 
-    def file_is_on_stdin?
-      flags[:filename].nil? && flags[:program].nil?
+    def has_filename?
+      flags[:filename]
     end
 
     def file_dne?
@@ -150,13 +94,12 @@ class SeeingIsBelieving
       stderr.puts "#{flags[:filename]} does not exist!"
     end
 
-    def print_program
-      stdout.print interpolated_program
+    def should_clean?
+      flags[:clean]
     end
 
-    def syntax_error_notice
-      out, err, syntax_status = Open3.capture3 flags[:shebang], '-c', stdin_data: body
-      return err unless syntax_status.success?
+    def print_cleaned_program
+      stdout.print CleanBody.call(body, true)
     end
 
     def invalid_syntax?
@@ -167,16 +110,63 @@ class SeeingIsBelieving
       stderr.puts syntax_error_notice
     end
 
-    def should_clean?
-      flags[:clean]
+    def evaluate_program
+      self.interpolated_program = printer.call
+    rescue Timeout::Error
+      self.timeout_error = true
+    rescue Exception
+      self.unexpected_exception = $!
     end
 
-    def print_cleaned_program
-      stdout.print CleanBody.call(body, true)
+    def program_timedout?
+      timeout_error
+    end
+
+    def print_timeout_error
+      stderr.puts "Timeout Error after #{@flags[:timeout]} seconds!"
+    end
+
+    def something_blew_up?
+      !!unexpected_exception
+    end
+
+    def print_unexpected_error
+      if unexpected_exception.kind_of? BugInSib
+        stderr.puts unexpected_exception.message
+      else
+        stderr.puts unexpected_exception.class, unexpected_exception.message, "", unexpected_exception.backtrace
+      end
     end
 
     def output_as_json?
       flags[:result_as_json]
+    end
+
+    def print_program
+      stdout.print interpolated_program
+    end
+
+    def body
+      @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
+    end
+
+    def printer
+      @printer ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+    end
+
+    def results
+      printer.results
+    end
+
+    def file_is_on_stdin?
+      flags[:filename].nil? && flags[:program].nil?
+    end
+
+    def syntax_error_notice
+      @error_notice = begin
+        out, err, syntax_status = Open3.capture3 flags[:shebang], '-c', stdin_data: body
+        err unless syntax_status.success?
+      end
     end
 
     def print_result_as_json
@@ -207,6 +197,16 @@ class SeeingIsBelieving
                        }
                      },
       }
+    end
+
+    def exit_status
+      if flags[:inherit_exit_status]
+        results.exitstatus
+      elsif results.has_exception?
+        DISPLAYABLE_ERROR_STATUS
+      else
+        SUCCESS_STATUS
+      end
     end
 
   end
