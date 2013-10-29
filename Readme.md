@@ -9,7 +9,7 @@ Except, obviously, his is like a million times better.
 
 Also comes with a binary to show how it might be used.
 
-For whatever reason, I can't embed videos, but **here's a [video](vimeo.com/73866851)** showing it off.
+For whatever reason, I can't embed videos, but **here's a [video](http://vimeo.com/73866851)** showing it off.
 
 Works in Ruby 1.9 and 2.0
 
@@ -54,7 +54,7 @@ result.exception # => nil
 Install
 =======
 
-Currently requires Ruby 1.9 or 2.0 I don't have specific plans to make it available on 1.8,
+Currently requires Ruby 1.9 or 2.0. I don't have specific plans to make it available on 1.8,
 but it could happen.
 
     $ gem install seeing_is_believing
@@ -66,6 +66,7 @@ Editor Integration
 * [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-text-2-seeing-is-believing)
 * [TextMate 1](https://github.com/JoshCheek/text_mate_1-seeing-is_believing)
 * [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing)
+* [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter) (has support for `seeing_is_believing`)
 
 Emacs Integration
 =================
@@ -89,9 +90,9 @@ or current buffer contents with the output of running it through
 Known Issues
 ============
 
-* `BEGIN/END` breaks things and I probably won't ever fix it, becuase it's annoying and its really meant for command-line scripts... but there is currently a spec for it
+* `BEGIN/END` breaks things and I probably won't ever fix it, because it's annoying and it's really meant for command-line scripts... but there is currently a spec for it.
 * `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
-* The code to find the data segment is naive, and could wind up interpolating results into a string or something
+* The code to find the data segment is naive, and could wind up interpolating results into a string or something.
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================
@@ -99,7 +100,7 @@ Shit that will probably never get done (or if it does, won't be until after 2.0)
 * How about if begin/rescue/end was able to record the result on the rescue section
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 * Be able to clean an invalid file (used to be able to do this, but parser can't identify comments in an invalid file the way that I'm currently using it, cuke is still there, marked as @not-implemented)
-* If given a file with a unicode character, but not set unicode, inform the user
+* If given a file with a Unicode character, but not set Unicode, inform the user
 
 License
 =======
