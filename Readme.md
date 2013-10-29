@@ -67,6 +67,7 @@ Editor Integration
 * [TextMate 1](https://github.com/JoshCheek/text_mate_1-seeing-is_believing)
 * [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing)
 * [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter) (has support for `seeing_is_believing`)
+* [vim-seeing-is-believing](https://github.com/hwartig/vim-seeing-is-believing)
 
 Emacs Integration
 =================
