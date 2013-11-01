@@ -787,10 +787,12 @@ describe SeeingIsBelieving::WrapExpressions do
     # which we could do with some meta, just replacing it with the literal when we parse it
     # but still, moving this out of here will be really annoying, and no one is going to use it, so fuck it
     it 'does not record them', not_implemented: true do
-      wrap("BEGIN {}").should == "BEGIN {}"
-      wrap("END {}").should == "END {}"
-      wrap("BEGIN {\n123\n}").should == "BEGIN {\n<123>\n}"
-      wrap("END {\n123\n}").should == "END {\n<123>\n}"
+      pending 'not implemented, and probably never will be' do
+        wrap("BEGIN {}").should == "BEGIN {}"
+        wrap("END {}").should == "END {}"
+        wrap("BEGIN {\n123\n}").should == "BEGIN {\n<123>\n}"
+        wrap("END {\n123\n}").should == "END {\n<123>\n}"
+      end
     end
   end
 end
