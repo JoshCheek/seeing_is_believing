@@ -8,7 +8,6 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/wrap_expressions'
 
-# might not work on windows b/c of assumptions about line ends
 class SeeingIsBelieving
   BLANK_REGEX = /\A\s*\Z/
 
