@@ -318,6 +318,10 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("a(\n*a\n)").should == "<a(\n*a\n)>"
       wrap("a(\n*1..2\n)").should == "<a(\n*1..2\n)>"
     end
+
+    it 'does not wrap hash args' do
+      wrap("a(b: 1,\nc: 2\n)").should == "<a(b: <1>,\nc: <2>\n)>"
+    end
   end
 
   describe 'assignment' do
@@ -515,10 +519,6 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("{}").should == "<{}>"
       wrap("{\n1 => 2}").should == "<{\n1 => 2}>"
       wrap("{\n1 => 2,\n:abc => 3,\ndef: 4\n}").should == "<{\n1 => <2>,\n:abc => <3>,\ndef: <4>\n}>"
-    end
-
-    it 'wraps explicit braces around recorded in method invocations' do
-      wrap("a(\nb: 1, c: 2\n)").should == "<a(\n<{b: 1, c: 2}>\n)>"
     end
   end
 

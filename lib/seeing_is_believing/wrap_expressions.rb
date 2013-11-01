@@ -35,10 +35,7 @@ class SeeingIsBelieving
 
           wrappings.each do |line_num, (range, last_col, meta)|
             rewriter.insert_before range, before_each.call(line_num)
-            if meta == :wrap_in_braces
-              rewriter.insert_before range, '{'
-              rewriter.insert_after  range,  '}'
-            elsif meta == :total_fucking_failure
+            if meta == :total_fucking_failure
               rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
             end
             rewriter.insert_after  range, after_each.call(line_num)
@@ -229,9 +226,9 @@ class SeeingIsBelieving
         add_to_wrappings heredoc_hack ast
 
       when :hash
-        meta = :wrap_in_braces
-        meta = nil if ast.location.begin
-        add_to_wrappings ast, meta
+        # method arguments might not have braces around them
+        # in these cases, we want to record the value, not the hash
+        add_to_wrappings ast, meta if ast.location.begin
         add_children ast
 
       else
