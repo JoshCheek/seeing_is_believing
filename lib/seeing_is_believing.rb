@@ -17,12 +17,12 @@ class SeeingIsBelieving
 
   def initialize(program, options={})
     @program            = program
-    @matrix_filename    = options[:matrix_filename]
+    @matrix_filename    = options.fetch :matrix_filename, 'seeing_is_believing/the_matrix' # how to hijack the env
     @filename           = options[:filename]
     @stdin              = to_stream options.fetch(:stdin, '')
-    @require            = options.fetch :require, []
+    @require            = options.fetch :require,   []
     @load_path          = options.fetch :load_path, []
-    @encoding           = options.fetch :encoding, nil
+    @encoding           = options.fetch :encoding,  nil
     @timeout            = options[:timeout]
     @debugger           = options.fetch :debugger, Debugger.new(stream: nil)
     @ruby_executable    = options.fetch :ruby_executable, 'ruby'
