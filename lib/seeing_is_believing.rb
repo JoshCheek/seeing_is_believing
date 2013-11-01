@@ -41,7 +41,7 @@ class SeeingIsBelieving
 
   private
 
-  attr_reader :matrix_filename, :debugger
+  attr_reader :debugger
 
   def to_stream(string_or_stream)
     return string_or_stream if string_or_stream.respond_to? :gets
@@ -49,7 +49,7 @@ class SeeingIsBelieving
   end
 
   def program_that_will_record_expressions
-    WrapExpressions.call "#@program\n",
+    WrapExpressions.call "#{@program}\n",
                          before_all:  "begin; $SiB.number_of_captures = #{number_of_captures_as_str}; ",
                          after_all:   ";rescue Exception;"\
                                         "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
@@ -64,18 +64,17 @@ class SeeingIsBelieving
   def result_for(program)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.new(program,
-                                filename,
-                                input_stream:       @stdin,
-                                matrix_filename:    matrix_filename,
-                                require:            @require,
-                                load_path:          @load_path,
-                                encoding:           @encoding,
-                                timeout:            @timeout,
-                                ruby_executable:    @ruby_executable,
-                                debugger:           @debugger,
-                                number_of_captures: @number_of_captures)
-                           .call
+      EvaluateByMovingFiles.call program,
+                                 filename,
+                                 input_stream:       @stdin,
+                                 matrix_filename:    @matrix_filename,
+                                 require:            @require,
+                                 load_path:          @load_path,
+                                 encoding:           @encoding,
+                                 timeout:            @timeout,
+                                 ruby_executable:    @ruby_executable,
+                                 debugger:           @debugger,
+                                 number_of_captures: @number_of_captures
     end
   end
 

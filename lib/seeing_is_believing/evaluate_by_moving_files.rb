@@ -23,6 +23,11 @@ require 'seeing_is_believing/hard_core_ensure'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
+
+    def self.call(*args)
+      new(*args).call
+    end
+
     attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
 
     def initialize(program, filename, options={})
