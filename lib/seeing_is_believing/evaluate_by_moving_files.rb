@@ -4,12 +4,12 @@
 #
 # Another option is to replace __FILE__ macros ourselves
 # and then write to a temp file but evaluate in the context
-# of the expected directory. I'm not doing that just because
-# I don't think the __FILE__ macro can be replaced correctly
-# without parsing the code, changing the AST, and then
-# regenerating it, which I'm not good enough to do. Though
-# I did look at Ripper, and it will invoke on_kw("__FILE__")
-# when it sees this.
+# of the expected directory. Some issues could arise with this,
+# though: if you required the file again, it wouldn't already
+# be in the loaded features (might be able to just add it)
+# if you  did something like File.read(__FILE__) it would
+# read the wrong file... of course, since we rewrite the file,
+# its body will be incorrect, anyway.
 
 require 'yaml'
 require 'open3'
