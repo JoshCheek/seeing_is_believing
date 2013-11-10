@@ -73,8 +73,7 @@ class SeeingIsBelieving
                                  encoding:           @encoding,
                                  timeout:            @timeout,
                                  ruby_executable:    @ruby_executable,
-                                 debugger:           @debugger,
-                                 number_of_captures: @number_of_captures
+                                 debugger:           @debugger
     end
   end
 
