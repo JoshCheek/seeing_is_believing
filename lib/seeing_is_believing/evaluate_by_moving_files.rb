@@ -52,8 +52,6 @@ class SeeingIsBelieving
           begin
             evaluate_file
             deserialize_result.tap { |result| fail if result.bug_in_sib? }
-          # Okay, really, I should wrap this in another exception and raise it on up,
-          # but for now, I'm feeling a little lazy and am not going to do it
           rescue Exception => error
             error = wrap_error error if error_implies_bug_in_sib? error
             raise error
