@@ -17,7 +17,7 @@ class SeeingIsBelieving
     alias enabled? stream
 
     def context(name, &block)
-      if stream
+      if enabled?
         stream << CONTEXT_COLOUR          if coloured?
         stream << "#{name}:"
         stream << RESET_COLOUR            if coloured?

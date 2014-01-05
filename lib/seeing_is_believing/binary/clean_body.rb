@@ -3,6 +3,7 @@
 #   removes annotations
 #   only removes "# =>" when should_clean_values is false
 
+require 'seeing_is_believing/binary'
 require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
@@ -25,18 +26,18 @@ class SeeingIsBelieving
 
         comments.each do |comment|
           case comment.text
-          when /\A#\s*=>/
+          when VALUE_REGEX
             if should_clean_values
               removed_comments[:result] << comment
               rewriter.remove comment.location.expression
             end
-          when /\A#\s*~>/
+          when EXCEPTION_REGEX
             removed_comments[:exception] << comment
             rewriter.remove comment.location.expression
-          when /\A#\s*>>/ then
+          when STDOUT_REGEX
             removed_comments[:stdout] << comment
             rewriter.remove comment.location.expression
-          when /\A#\s*!>/ then
+          when STDERR_REGEX
             removed_comments[:stderr] << comment
             rewriter.remove comment.location.expression
           end
