@@ -43,7 +43,7 @@ class SeeingIsBelieving
             when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
             when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
             when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
-            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   = executable }
+            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   =  executable }
             when '-s',  '--alignment-strategy'  then extract_alignment_strategy
             when /\A-K(.+)/                    then options[:encoding] = $1
             when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }

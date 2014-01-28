@@ -314,7 +314,7 @@ describe SeeingIsBelieving do
   it 'can evaluate under a different ruby executable' do
     Dir.chdir proving_grounds_dir do
       File.write 'omg-ruby', "#!/usr/bin/env ruby
-        $LOAD_PATH.unshift '#{File.expand_path '../lib', __FILE__}'
+        $LOAD_PATH.unshift '#{File.expand_path '../../lib', __FILE__}'
 
         require 'seeing_is_believing'
         result = SeeingIsBelieving::Result.new
