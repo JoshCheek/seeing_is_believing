@@ -12,6 +12,7 @@ Then 'stdout is exactly:' do |code|
 end
 
 Then 'stdout is the JSON:' do |json|
+  require 'json'
   expected = JSON.parse(json)
   actual   = JSON.parse(@last_executed.stdout)
   actual.should == expected
