@@ -28,7 +28,12 @@ class SeeingIsBelieving
     end
 
     def record_result(value)
-      inspected = value.inspect # only invoke inspect once, b/c the inspection may be recorded
+      begin
+        inspected = value.inspect.to_str # only invoke inspect once, b/c the inspection may be recorded
+      rescue NoMethodError
+        inspected = "#<no inspect available>"
+      end
+
       if    size <  @max_number_of_captures then @array << inspected
       elsif size == @max_number_of_captures then @array << '...'
       end

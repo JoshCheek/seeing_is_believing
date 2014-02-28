@@ -19,6 +19,19 @@ describe SeeingIsBelieving::Line, t:true do
     line.inspect.should == '#<SIB:Line[] (0, 0) RuntimeError:"omg">'
   end
 
+  it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
+    obj = BasicObject.new
+    line_for(obj).inspect.should == '#<SIB:Line["#<no inspect available>"] (1, 23) no exception>'
+  end
+
+  it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
+    obj = BasicObject.new
+    def obj.inspect
+      nil
+    end
+    line_for(obj).inspect.should == '#<SIB:Line["#<no inspect available>"] (1, 23) no exception>'
+  end
+
   it 'knows when it has an exception' do
     exception = RuntimeError.new 'omg'
     line = Line.new
