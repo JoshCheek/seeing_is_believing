@@ -39,7 +39,7 @@ describe SeeingIsBelieving::WrapExpressions do
       end
 
       example 'multiple heredocs' do
-        # a stupid implementatnio issue from hacking around heredocs
+        # a stupid implementation issue from hacking around heredocs
         # causes the toplevel begin to wrap the whole file.
         # It's fine b/c it is ultimately the same, but that's why it's
         # "[<<<<A>\nA\n<<B>]\nB"
@@ -598,9 +598,7 @@ describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps heredocs with call defined on them (edge cases on edge cases *sigh*)' do
-      pending "just don't care this much right now, hopefully it will magically be fixed when new parser is released" do
-        wrap("<<HERE.()\na\nHERE").should == "<<<HERE.()>\na\nHERE"
-      end
+      wrap("<<HERE.()\na\nHERE").should == "<<<HERE.()>\na\nHERE"
     end
   end
 

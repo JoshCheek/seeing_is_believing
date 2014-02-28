@@ -4,7 +4,7 @@ class SeeingIsBelieving
 
     # override #process so it does not raise an error on
     # fatal parsings (we want to keep going if possible,
-    # this allows us to find comments in syntactically invalid files
+    # this allows us to find comments in syntactically invalid files)
     class NullDiagnostics < Parser::Diagnostic::Engine
       def process(*)
         # no op
@@ -38,12 +38,12 @@ class SeeingIsBelieving
     def heredoc?(ast)
       # some strings are fucking weird.
       # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
-      # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection, so it has no #begin
+      # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection,
+      # so it has no #begin
       ast.kind_of?(Parser::AST::Node)           &&
         (ast.type == :dstr || ast.type == :str) &&
         (location  = ast.location)              &&
-        (the_begin = location.begin)            &&
-        (the_begin.source =~ /^\<\<-?/)
+        (ast.location.kind_of? Parser::Source::Map::Heredoc)
     end
 
     def void_value?(ast)
@@ -62,6 +62,7 @@ class SeeingIsBelieving
     end
 
     def heredoc_hack(ast)
+      return ast
       return ast unless heredoc? ast
       Parser::AST::Node.new :str,
                             [],

@@ -81,9 +81,8 @@ class SeeingIsBelieving
       def ranges_of_atomic_expressions(ast, found_ranges)
         return found_ranges unless ast.kind_of? ::AST::Node
         if no_comment_zone?(ast) && heredoc?(ast)
-          begin_pos  = ast.location.expression.begin.begin_pos
-          begin_pos += (ast.location.expression.source =~ /\n/).next
-          end_pos    = ast.location.expression.end.end_pos.next
+          begin_pos = ast.location.heredoc_body.begin_pos
+          end_pos   = ast.location.heredoc_end.end_pos.next
           found_ranges << (begin_pos...end_pos)
         elsif no_comment_zone? ast
           begin_pos = ast.location.expression.begin.begin_pos
