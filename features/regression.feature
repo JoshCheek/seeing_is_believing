@@ -84,17 +84,6 @@ Feature:
     """
 
 
-  # NOTE: Don't change the body of this file, it's nondeterministic
-  # I have no idea why this particular string fucks Parser up, but other similar ones don't
-  # We can probably remove this once parser reaches 2.0.0, they've fixed this bug now.
-  Scenario: Parser correctly identify comments
-    Given the file "parser_bug.rb" "Class # whatever"
-    When I run "seeing_is_believing parser_bug.rb"
-    Then stdout is "Class # whatever"
-    Then stderr is empty
-    And the exit status is 0
-
-
   Scenario: Modifying output doesn't fuck it up when passing it back again as input
     Given the file "modified_result.rb":
     """
