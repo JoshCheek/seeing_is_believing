@@ -260,3 +260,30 @@ Feature:
 
     # >> omg
     """
+
+  Scenario: Long DATA segment in a valid file
+    Given the file "long_valid_data_segment.rb":
+    """
+    __END__
+    {{'.' * 100_000}}
+    """
+    When I run "seeing_is_believing long_valid_data_segment.rb"
+    Then stderr is empty
+    Then stdout is:
+    """
+    __END__
+    {{'.' * 100_000}}
+    """
+
+
+  Scenario: Long DATA segment in an invalid file
+    Given the file "long_invalid_data_segment.rb":
+    """
+    '
+    __END__
+    {{'.' * 100_000}}
+    """
+    When I run "seeing_is_believing long_invalid_data_segment.rb"
+    Then stderr includes "1: unterminated string meets end of file"
+    And the exit status is 2
+    And stdout is empty

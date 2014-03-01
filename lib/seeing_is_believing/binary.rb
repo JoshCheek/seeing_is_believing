@@ -166,6 +166,13 @@ class SeeingIsBelieving
       @error_notice = begin
         out, err, syntax_status = Open3.capture3 flags[:shebang], '-c', stdin_data: body
         err unless syntax_status.success?
+
+      # The stdin_data may still be getting written when the pipe closes
+      # This is because Ruby will stop reading from stdin if everything left is in the DATA segment, and the data segment is not referenced.
+      # In this case, the Syntax is fine
+      # https://bugs.ruby-lang.org/issues/9583
+      rescue Errno::EPIPE
+        nil
       end
     end
 
