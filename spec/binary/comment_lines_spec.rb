@@ -1,9 +1,5 @@
 require 'seeing_is_believing/binary/comment_lines'
 
-# FIXME: For now ignoring heredocs
-#        because we know the user of this class won't have output on them
-#        and it's a PITA to deal with.
-#        Eventually, though, Parser should take this into account
 describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
   def call(code, &block)
     described_class.call code, &block
