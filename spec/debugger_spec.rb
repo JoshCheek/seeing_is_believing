@@ -15,7 +15,7 @@ describe SeeingIsBelieving::Debugger do
     described_class.new(colour:  true).should be_coloured
   end
 
-  context 'when given a steram' do
+  context 'when given a stream' do
     it 'prints the the context and the value of the block' do
       described_class.new(stream: stream).context('C') { 'V' }
       stream.string.should == "C:\nV\n"
