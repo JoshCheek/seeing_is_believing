@@ -100,7 +100,6 @@ Shit that will probably never get done (or if it does, won't be until after 2.0)
 
 * How about if begin/rescue/end was able to record the result on the rescue section
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
-* Be able to clean an invalid file (used to be able to do this, but parser can't identify comments in an invalid file the way that I'm currently using it, cuke is still there, marked as @not-implemented)
 * If given a file with a Unicode character, but not set Unicode, inform the user
 
 License
