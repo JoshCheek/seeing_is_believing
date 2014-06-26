@@ -33,6 +33,11 @@ describe SeeingIsBelieving::WrapExpressions do
       described_class.call("1# abc", options).should == "[<1>]# abc"
     end
 
+    it 'wraps bodies that are wrapped in parentheses' do
+      wrap('(1)').should == '<(1)>'
+      wrap("(\n<<doc\ndoc\n)").should == "<(\n<<<doc>\ndoc\n)>"
+    end
+
     context 'fucking heredocs' do
       example 'single heredoc' do
         described_class.call("<<A\nA", options).should == "[<<<A>]\nA"
@@ -161,8 +166,8 @@ describe SeeingIsBelieving::WrapExpressions do
 
     it 'wraps multiple expressions' do
       wrap("A\nB").should == "<A>\n<B>"
-      wrap("(1\n2)").should == "(<1>\n<2>)"
-      # wrap("(1\n2\n)").should == "<(<1>\n<2>\n)>" # just not worth the effort of identifying it, really
+      wrap("(1\n2)").should == "<(<1>\n2)>"
+      wrap("(1\n2\n)").should == "<(<1>\n<2>\n)>"
       wrap("begin\n1\n2\nend").should == "<begin\n<1>\n<2>\nend>"
     end
 

@@ -213,14 +213,18 @@ class SeeingIsBelieving
         add_to_wrappings range, meta
         add_children ast
       when :begin
-        last_child = ast.children.last
-        if heredoc? last_child
-          range = Parser::Source::Range.new buffer,
-                                            ast.location.expression.begin_pos,
-                                            heredoc_hack(last_child).location.expression.end_pos
-          add_to_wrappings range unless void_value? ast.children.last
+        if ast.location.expression.source.start_with?("(") && # e.g. `(1)` we want `<(1)>`
+           !void_value?(ast)                                  # e.g. `(return 1)` we want `(return <1>)`
+          add_to_wrappings ast
+        else # e.g. `A\nB` we want `<A>\n<B>`
+          last_child = ast.children.last
+          if heredoc? last_child
+            range = Parser::Source::Range.new buffer,
+                                              ast.location.expression.begin_pos,
+                                              heredoc_hack(last_child).location.expression.end_pos
+            add_to_wrappings range unless void_value? ast.children.last
+          end
         end
-
         add_children ast
       when :str, :dstr, :xstr, :regexp
         add_to_wrappings heredoc_hack ast
