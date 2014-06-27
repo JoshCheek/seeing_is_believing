@@ -287,3 +287,22 @@ Feature:
     Then stderr includes "1: unterminated string meets end of file"
     And the exit status is 2
     And stdout is empty
+
+  Scenario: A program using system
+    Given the file "invoking_system.rb":
+    """
+    system %(ruby -e '$stdout.puts %(hello)')
+    system %(ruby -e '$stderr.puts %(world)')
+    """
+    When I run "seeing_is_believing invoking_system.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    system %(ruby -e '$stdout.puts %(hello)')  # => true
+    system %(ruby -e '$stderr.puts %(world)')  # => true
+
+    # >> hello
+
+    # !> world
+    """

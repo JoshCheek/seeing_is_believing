@@ -9,6 +9,7 @@ STDOUT = $stdout = fake_stdout = StringIO.new
 STDERR = $stderr = fake_stderr = StringIO.new
 
 require 'seeing_is_believing/result'
+require 'seeing_is_believing/core_fixes'
 $SiB = SeeingIsBelieving::Result.new
 
 at_exit do
