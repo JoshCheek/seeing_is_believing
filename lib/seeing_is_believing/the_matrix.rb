@@ -1,20 +1,32 @@
 # WARNING: DO NOT REQUIRE THIS FILE, IT WILL FUCK YOU UP!!!!!!
 
+# READ THIS IF YOU WANT TO USE YOUR OWN MATRIX FILE:
+# https://github.com/JoshCheek/seeing_is_believing/issues/24
+#
+# (or if you want to understand why we do the pipe dance)
+
 
 require 'yaml'
-require 'stringio'
-real_stdout = STDOUT
-real_stderr = STDERR
-STDOUT = $stdout = fake_stdout = StringIO.new
-STDERR = $stderr = fake_stderr = StringIO.new
-
 require 'seeing_is_believing/result'
-require 'seeing_is_believing/core_fixes'
 $SiB = SeeingIsBelieving::Result.new
 
+real_stdout = STDOUT.dup
+real_stderr = STDERR.dup
+read_from_fake_out, write_to_fake_out = IO.pipe
+read_from_fake_err, write_to_fake_err = IO.pipe
+
+STDOUT.reopen write_to_fake_out
+STDERR.reopen write_to_fake_err
+
 at_exit do
-  $SiB.stdout = fake_stdout.string
-  $SiB.stderr = fake_stderr.string
+  STDOUT.reopen real_stdout
+  STDERR.reopen real_stderr
+  write_to_fake_out.close unless write_to_fake_out.closed?
+  write_to_fake_err.close unless write_to_fake_err.closed?
+  $SiB.stdout = read_from_fake_out.read
+  $SiB.stderr = read_from_fake_err.read
+  read_from_fake_out.close
+  read_from_fake_err.close
 
   $SiB.exitstatus ||= 0
   $SiB.exitstatus   = 1         if $!
