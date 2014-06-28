@@ -304,7 +304,7 @@ describe SeeingIsBelieving do
                                                   ['[6, 12]']]
   end
 
-  it 'can be limited to a specific number of captures', t:true do
+  it 'can be limited to a specific number of captures' do
     values_for("2.times do\n1\nend", number_of_captures: 1)
       .should == [['2'],
                   ['1', '...'],
@@ -350,6 +350,13 @@ describe SeeingIsBelieving do
         puts 4
       CODE
     end
+  end
+
+  # For more info about this one
+  # https://github.com/JoshCheek/seeing_is_believing/issues/24
+  it 'does not blow up when executing commands that bypass stdout and talk directly to low-level stdout fd (e.g. C\'s system command from stdlib.h)' do
+    invoke(%q[system "ruby -e '$stdout.print ?a'"]).stdout.should == "a"
+    invoke(%q[system "ruby -e '$stderr.print ?a'"]).stderr.should == "a"
   end
 
   context 'when given a debugger' do
