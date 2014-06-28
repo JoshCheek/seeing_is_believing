@@ -56,8 +56,7 @@ describe SeeingIsBelieving::HardCoreEnsure do
   end
 
   it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
-    pending 'need parser to work for 2.2' do
-      fail if RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2'
+    test = lambda do
       channel = IChannel.new Marshal
       pid = fork do
         old_handler = trap 'INT', 'IGNORE'
@@ -71,6 +70,12 @@ describe SeeingIsBelieving::HardCoreEnsure do
       channel.get.should == "ensure invoked"
       channel.get.should == 'code result'
       channel.should_not be_readable
+    end
+
+    if RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2'
+      pending 'This test can\'t run on 2.1.1 or 2.1.2'
+    else
+      test.call
     end
   end
 end
