@@ -186,21 +186,21 @@ class SeeingIsBelieving
       { stdout:      results.stdout,
         stderr:      results.stderr,
         exit_status: results.exitstatus,
-        exception:   if results.has_exception?
+        exception:   (if results.has_exception?
                        { line_number_in_this_file: results.each_with_line_number.find { |line_number, result| result.has_exception? }.first,
                          class_name:               results.exception.class_name,
                          message:                  results.exception.message,
                          backtrace:                results.exception.backtrace,
                        }
-                     end,
+                     end),
         lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash|
                        hash[line_number] = { results:   result.to_a,
-                                             exception: if result.has_exception?
+                                             exception: (if result.has_exception?
                                                           { class_name:               results.exception.class_name,
                                                             message:                  results.exception.message,
                                                             backtrace:                results.exception.backtrace,
                                                           }
-                                                        end
+                                                        end)
                        }
                      },
       }
