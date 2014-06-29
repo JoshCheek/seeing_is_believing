@@ -306,3 +306,32 @@ Feature:
 
     # !> world
     """
+
+  Scenario: A program overriding stdout/stderr
+    Given the file "black_hole.rb":
+    """
+    File.open '/dev/null', 'w' do |black_hole|
+      STDERR = $stderr = black_hole
+      STDOUT = $stdout = black_hole
+      puts "You won't see this, it goes into the black hole"
+      system %q(ruby -e '$stdout.puts "stdout gets past it b/c of dumb ruby bug"')
+      system %q(ruby -e '$stderr.puts "stderr gets past it b/c of dumb ruby bug"')
+    end
+    """
+    When I run "seeing_is_believing black_hole.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    File.open '/dev/null', 'w' do |black_hole|                                      # => File
+      STDERR = $stderr = black_hole                                                 # => #<File:/dev/null>
+      STDOUT = $stdout = black_hole                                                 # => #<File:/dev/null>
+      puts "You won't see this, it goes into the black hole"                        # => nil
+      system %q(ruby -e '$stdout.puts "stdout gets past it b/c of dumb ruby bug"')  # => true
+      system %q(ruby -e '$stderr.puts "stderr gets past it b/c of dumb ruby bug"')  # => true
+    end                                                                             # => true
+
+    # >> stdout gets past it b/c of dumb ruby bug
+
+    # !> stderr gets past it b/c of dumb ruby bug
+    """
