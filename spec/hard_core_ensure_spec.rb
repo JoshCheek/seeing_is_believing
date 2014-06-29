@@ -41,18 +41,25 @@ describe SeeingIsBelieving::HardCoreEnsure do
   end
 
   it 'invokes the code even if an interrupt is sent and there is a default handler' do
-    channel = IChannel.new Marshal
-    pid = fork do
-      old_handler = trap('INT') { channel.put "old handler invoked" }
-      call code: -> { sleep 0.1 }, ensure: -> { channel.put "ensure invoked" }
-      trap 'INT', old_handler
+    test = lambda do
+      channel = IChannel.new Marshal
+      pid = fork do
+        old_handler = trap('INT') { channel.put "old handler invoked" }
+        call code: -> { sleep 0.1 }, ensure: -> { channel.put "ensure invoked" }
+        trap 'INT', old_handler
+      end
+      sleep 0.05
+      Process.kill 'INT', pid
+      Process.wait pid
+      channel.get.should == "ensure invoked"
+      channel.get.should == "old handler invoked"
+      channel.should_not be_readable
     end
-    sleep 0.05
-    Process.kill 'INT', pid
-    Process.wait pid
-    channel.get.should == "ensure invoked"
-    channel.get.should == "old handler invoked"
-    channel.should_not be_readable
+    if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
+      pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
+    else
+      test.call
+    end
   end
 
   it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
@@ -72,10 +79,12 @@ describe SeeingIsBelieving::HardCoreEnsure do
       channel.should_not be_readable
     end
 
-    if RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2'
-      pending 'This test can\'t run on 2.1.1 or 2.1.2'
+    if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
+      pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
+    elsif (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby') && (RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2')
+      pending 'This test can\'t run on MRI (2.1.1 or 2.1.2) b/c of bug, see https://github.com/JoshCheek/seeing_is_believing/issues/26'
     else
-      test.call
+      test.call # e.g. works on Rubinius
     end
   end
 end
