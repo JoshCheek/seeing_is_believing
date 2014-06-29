@@ -1,6 +1,6 @@
 require 'seeing_is_believing/result'
 
-describe SeeingIsBelieving::Line, t:true do
+describe SeeingIsBelieving::Line do
   Line = described_class
 
   def line_for(*args)
