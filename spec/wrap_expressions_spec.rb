@@ -397,6 +397,60 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("B   ||= begin\n123\nend").should == "<B   ||= begin\n<123>\nend>"
     end
 
+    it 'wraps assignments that span multiple lines' do
+      # simple assignment
+      wrap("a={\n}").should == "<a={\n}>"
+      wrap("a, b = c,{\n}").should == "<a, b = <c>,{\n}>"
+      wrap("a.b={\n}").should == "<<a>.b={\n}>"
+      wrap("A={\n}").should == "<A={\n}>"
+      wrap("::A={\n}").should == "<::A={\n}>"
+      wrap("A::B={\n}").should == "<A::B={\n}>"
+      wrap("@a={\n}").should == "<@a={\n}>"
+      wrap("@@a={\n}").should == "<@@a={\n}>"
+      wrap("$a={\n}").should == "<$a={\n}>"
+
+      # multiple assignment
+      wrap("a,b={\n}").should == "<a,b={\n}>"
+      wrap("a,b={\n},{\n}").should == "<a,b=<{\n}>,{\n}>"
+      wrap("a,b.c={\n},{\n}").should == "<a,b.c=<{\n}>,{\n}>"
+      wrap("a,B={\n},{\n}").should == "<a,B=<{\n}>,{\n}>"
+      wrap("a,B::C={\n},{\n}").should == "<a,B::C=<{\n}>,{\n}>"
+      wrap("a,@b={\n},{\n}").should == "<a,@b=<{\n}>,{\n}>"
+      wrap("a,@@b={\n},{\n}").should == "<a,@@b=<{\n}>,{\n}>"
+      wrap("a,$b={\n},{\n}").should == "<a,$b=<{\n}>,{\n}>"
+
+      # repeated assignments
+      wrap("a=\nb={\n}").should == "<a=\nb={\n}>"
+
+      # operator assignment
+      wrap("a +={\n}").should == "<a +={\n}>"
+      wrap("a *= {\n}").should == "<a *= {\n}>"
+      wrap("a -= {\n}").should == "<a -= {\n}>"
+      wrap("a /= {\n}").should == "<a /= {\n}>"
+      wrap("a **= {\n}").should == "<a **= {\n}>"
+      wrap("a |= {\n}").should == "<a |= {\n}>"
+      wrap("a &= {\n}").should == "<a &= {\n}>"
+      wrap("a ||= {\n}").should == "<a ||= {\n}>"
+      wrap("a &&= {\n}").should == "<a &&= {\n}>"
+      wrap("a[1] = {\n}").should == "<a[<1>] = {\n}>"
+      wrap("a[1]   ||= {\n}").should == "<a[1]   ||= {\n}>"
+      wrap("@a     ||= {\n}").should == "<@a     ||= {\n}>"
+      wrap("$a     ||= {\n}").should == "<$a     ||= {\n}>"
+      wrap("@@a    ||= {\n}").should == "<@@a    ||= {\n}>"
+      wrap("B      ||= {\n}").should == "<B      ||= {\n}>"
+      wrap("{}[:a] ||= {\n}").should == "<{}[:a] ||= {\n}>"
+
+      # LHS with values in it on all the operator assignments
+      wrap("a.b  += {\n}").should == "<a.b  += {\n}>"
+      wrap("a.b  *= {\n}").should == "<a.b  *= {\n}>"
+      wrap("a.b  -= {\n}").should == "<a.b  -= {\n}>"
+      wrap("a.b  /= {\n}").should == "<a.b  /= {\n}>"
+      wrap("a.b **= {\n}").should == "<a.b **= {\n}>"
+      wrap("a.b  |= {\n}").should == "<a.b  |= {\n}>"
+      wrap("a.b  &= {\n}").should == "<a.b  &= {\n}>"
+      wrap("a.b &&= {\n}").should == "<a.b &&= {\n}>"
+    end
+
     it 'wraps arguments in the assignment' do
       wrap("a[1\n]=2").should == "<a[<1>\n]=2>"
       wrap("a[1,\n2\n]=3").should == "<a[<1>,\n<2>\n]=3>"
