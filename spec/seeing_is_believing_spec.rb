@@ -130,13 +130,12 @@ describe SeeingIsBelieving do
     values_for("-> {  \n return 1          \n }.call"        ).should == [[], ['1'], ['1']]
     values_for("-> { return 1 }.call"                        ).should == [['1']]
 
-    pending "would be really cool if this would record 1 and nil, but it probably won't ever happen." do
-      # Currently we dont' differentiate between inline and multiline if statements,
-      # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
-      # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
-      values_for("def meth \n return 1 if true  \n end \n meth").should == [[], ['1'], [], ['1']]   # records true instead of 1
-      values_for("def meth \n return 1 if false \n end \n meth").should == [[], ['nil'], [], ['nil']] # records false instead of nil
-    end
+    pending "would be really cool if this would record 1 and nil, but it probably won't ever happen."
+    # Currently we dont' differentiate between inline and multiline if statements,
+    # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
+    # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
+    values_for("def meth \n return 1 if true  \n end \n meth").should == [[], ['1'], [], ['1']]   # records true instead of 1
+    values_for("def meth \n return 1 if false \n end \n meth").should == [[], ['nil'], [], ['nil']] # records false instead of nil
   end
 
   it 'does not try to record the keyword next' do
@@ -335,21 +334,20 @@ describe SeeingIsBelieving do
   end
 
   it 'does not record BEGIN and END', not_implemented: true do
-    pending 'not implemented' do
-      expect { invoke <<-CODE }.to_not raise_error
-        puts 1
-        BEGIN {
-          puts "begin code"
-          some_var = 2
-        }
-        puts 3
-        END {
-          puts "end code"
-          puts some_var
-        }
-        puts 4
-      CODE
-    end
+    pending 'not implemented'
+    expect { invoke <<-CODE }.to_not raise_error
+      puts 1
+      BEGIN {
+        puts "begin code"
+        some_var = 2
+      }
+      puts 3
+      END {
+        puts "end code"
+        puts some_var
+      }
+      puts 4
+    CODE
   end
 
   # For more info about this one

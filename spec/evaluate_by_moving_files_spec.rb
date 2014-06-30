@@ -45,7 +45,7 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     evaluator = described_class.new 'PROGRAM', filename
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
     FileUtils.rm_rf evaluator.temp_filename
-    SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
+    expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
       File.exist?(evaluator.temp_filename).should == false
       File.read(filename).should == 'ORIGINAL'
@@ -66,7 +66,7 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
     evaluator = described_class.new 'PROGRAM', filename
     FileUtils.rm_rf filename
-    SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
+    expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
       File.exist?(filename).should == false
 

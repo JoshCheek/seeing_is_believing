@@ -13,17 +13,17 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       end
     end
 
-    failure_message_for_should do |options|
+    failure_message do |options|
       "#{error_assertion.inspect} should have matched one of the errors: #{options[:errors].inspect}"
     end
 
-    failure_message_for_should_not do |options|
+    failure_message_when_negated do |options|
       "#{error_assertion.inspect} should NOT have matched any of the errors: #{options[:errors].inspect}"
     end
   end
 
   def parse(args, outstream=nil)
-    described_class.call args, outstream
+    SeeingIsBelieving::Binary::ParseArgs.call args, outstream
   end
 
   shared_examples 'it requires a positive int argument' do |flags|
@@ -325,23 +325,23 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe ':inherit_exit_status' do
     it 'defaults to false' do
-      parse([])[:inherit_exit_status].should be_false
+      parse([])[:inherit_exit_status].should eq false
     end
 
     it 'can be set with --inherit-exit-status or -i' do
-      parse(['--inherit-exit-status'])[:inherit_exit_status].should be_true
-      parse(['-i'])[:inherit_exit_status].should be_true
+      parse(['--inherit-exit-status'])[:inherit_exit_status].should be true
+      parse(['-i'])[:inherit_exit_status].should be true
     end
   end
 
   describe ':xmpfilter_style' do
     it 'defaults to false' do
-      parse([])[:xmpfilter_style].should be_false
+      parse([])[:xmpfilter_style].should be false
     end
 
     it 'can be set with --xmpfilter-style or -x' do
-      parse(['--xmpfilter-style'])[:xmpfilter_style].should be_true
-      parse(['-x'])[:xmpfilter_style].should be_true
+      parse(['--xmpfilter-style'])[:xmpfilter_style].should be true
+      parse(['-x'])[:xmpfilter_style].should be true
     end
   end
 

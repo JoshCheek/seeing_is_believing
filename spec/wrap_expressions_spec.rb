@@ -12,7 +12,7 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   it 'can inject syntax errors with __TOTAL_FUCKING_FAILURE__' do
-    wrap('__TOTAL_FUCKING_FAILURE__').should == '<.....TOTAL FUCKING FAILURE!.....>'
+    expect(wrap('__TOTAL_FUCKING_FAILURE__')).to eq '<.....TOTAL FUCKING FAILURE!.....>'
   end
 
   describe 'wrapping the body' do
@@ -22,25 +22,25 @@ describe SeeingIsBelieving::WrapExpressions do
                       after_each:  -> * { '>' } } }
 
     it 'wraps the entire body, ignoring leading comments and the data segment' do
-      described_class.call("#comment\nA\n__END__\n1", options).should == "#comment\n[<A>]\n__END__\n1"
+      expect(described_class.call("#comment\nA\n__END__\n1", options)).to eq "#comment\n[<A>]\n__END__\n1"
     end
 
     it 'does nothing when there are only comments' do
-      described_class.call("# abc", options).should == "# abc"
+      expect(described_class.call("# abc", options)).to eq "# abc"
     end
 
     it 'comes in before trailing comments' do
-      described_class.call("1# abc", options).should == "[<1>]# abc"
+      expect(described_class.call("1# abc", options)).to eq "[<1>]# abc"
     end
 
     it 'wraps bodies that are wrapped in parentheses' do
-      wrap('(1)').should == '<(1)>'
-      wrap("(\n<<doc\ndoc\n)").should == "<(\n<<<doc>\ndoc\n)>"
+      expect(wrap('(1)')).to eq '<(1)>'
+      expect(wrap("(\n<<doc\ndoc\n)")).to eq "<(\n<<<doc>\ndoc\n)>"
     end
 
     context 'fucking heredocs' do
       example 'single heredoc' do
-        described_class.call("<<A\nA", options).should == "[<<<A>]\nA"
+        expect(described_class.call("<<A\nA", options)).to eq "[<<<A>]\nA"
       end
 
       example 'multiple heredocs' do
@@ -50,16 +50,16 @@ describe SeeingIsBelieving::WrapExpressions do
         # "[<<<<A>\nA\n<<B>]\nB"
         # instead of
         # "[<<<A>\nA\n<<<B>]\nB"
-        described_class.call("<<A\nA\n<<B\nB", options).should == "[<<<<A>\nA\n<<B>]\nB"
+        expect(described_class.call("<<A\nA\n<<B\nB", options)).to eq "[<<<<A>\nA\n<<B>]\nB"
       end
 
       example 'heredocs as targets and arguments to methods' do
-        described_class.call("<<A.size 1\nA", options).should == "[<<<A.size 1>]\nA"
-        described_class.call("<<A.size\nA", options).should == "[<<<A.size>]\nA"
-        described_class.call("<<A.size()\nA", options).should == "[<<<A.size()>]\nA"
-        described_class.call("a.size <<A\nA", options).should == "[<a.size <<A>]\nA"
-        described_class.call("<<A.size <<B\nA\nB", options).should == "[<<<A.size <<B>]\nA\nB"
-        described_class.call("<<A.size(<<B)\nA\nB", options).should == "[<<<A.size(<<B)>]\nA\nB"
+        expect(described_class.call("<<A.size 1\nA", options)).to eq "[<<<A.size 1>]\nA"
+        expect(described_class.call("<<A.size\nA", options)).to eq "[<<<A.size>]\nA"
+        expect(described_class.call("<<A.size()\nA", options)).to eq "[<<<A.size()>]\nA"
+        expect(described_class.call("a.size <<A\nA", options)).to eq "[<a.size <<A>]\nA"
+        expect(described_class.call("<<A.size <<B\nA\nB", options)).to eq "[<<<A.size <<B>]\nA\nB"
+        expect(described_class.call("<<A.size(<<B)\nA\nB", options)).to eq "[<<<A.size(<<B)>]\nA\nB"
       end
     end
   end
@@ -70,20 +70,20 @@ describe SeeingIsBelieving::WrapExpressions do
                          before_each: -> _pre_line_num  { pre_line_num  = _pre_line_num;  '<' },
                          after_each:  -> _post_line_num { post_line_num = _post_line_num; '>' }
                         )
-    pre_line_num.should == 2
-    post_line_num.should == 2
+    expect(pre_line_num).to eq 2
+    expect(post_line_num).to eq 2
   end
 
   it 'does nothing for an empty program' do
-    wrap("").should == ""
-    wrap("\n").should == "\n"
+    expect(wrap("")).to eq ""
+    expect(wrap("\n")).to eq "\n"
   end
 
   it 'ignores comments' do
-    wrap("# comment").should == "# comment"
-    wrap("1 #abc\n#def").should == "<1> #abc\n#def"
-    wrap("1\n=begin\n2\n=end").should == "<1>\n=begin\n2\n=end"
-    wrap("=begin\n1\n=end\n2").should == "=begin\n1\n=end\n<2>"
+    expect(wrap "# comment"         ).to eq "# comment"
+    expect(wrap "1 #abc\n#def"      ).to eq "<1> #abc\n#def"
+    expect(wrap "1\n=begin\n2\n=end").to eq "<1>\n=begin\n2\n=end"
+    expect(wrap "=begin\n1\n=end\n2").to eq "=begin\n1\n=end\n<2>"
   end
 
   describe 'void value expressions' do
@@ -97,65 +97,65 @@ describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'knows a `return`, `next`, `redo`, `retry`, and `break` are void values' do
-      void_value?(ast_for("def a; return; end").children.last).should be_true
-      void_value?(ast_for("loop { next  }").children.last).should be_true
-      void_value?(ast_for("loop { redo  }").children.last).should be_true
-      void_value?(ast_for("loop { break }").children.last).should be_true
+      expect(void_value?(ast_for("def a; return; end").children.last)).to be true
+      expect(void_value?(ast_for("loop { next  }"    ).children.last)).to be true
+      expect(void_value?(ast_for("loop { redo  }"    ).children.last)).to be true
+      expect(void_value?(ast_for("loop { break }"    ).children.last)).to be true
 
       the_retry = ast_for("begin; rescue; retry; end").children.first.children[1].children.last
-      the_retry.type.should == :retry
-      void_value?(the_retry).should be_true
+      expect(the_retry.type).to eq :retry
+      expect(void_value? the_retry).to eq true
     end
     it 'knows an `if` is a void value if either side is a void value' do
       the_if = ast_for("def a; if 1; return 2; else; 3; end; end").children.last
       the_if.type.should == :if
-      void_value?(the_if).should be_true
+      void_value?(the_if).should be true
 
       the_if = ast_for("def a; if 1; 2; else; return 3; end; end").children.last
       the_if.type.should == :if
-      void_value?(the_if).should be_true
+      void_value?(the_if).should be true
 
       the_if = ast_for("def a; if 1; 2; else; 3; end; end").children.last
       the_if.type.should == :if
-      void_value?(the_if).should be_false
+      void_value?(the_if).should be false
     end
     it 'knows a begin is a void value if its last element is a void value' do
       the_begin = ast_for("loop { begin; break; end }").children.last
       [:begin, :kwbegin].should include the_begin.type
-      void_value?(the_begin).should be_true
+      void_value?(the_begin).should be true
 
       the_begin = ast_for("loop { begin; 1; end }").children.last
       [:begin, :kwbegin].should include the_begin.type
-      void_value?(the_begin).should be_false
+      void_value?(the_begin).should be false
     end
     it 'knows a rescue is a void value if its last child or its else is a void value' do
       the_rescue = ast_for("begin; rescue; retry; end").children.first
       the_rescue.type.should == :rescue
-      void_value?(the_rescue).should be_true
+      void_value?(the_rescue).should be true
 
       the_rescue = ast_for("begin; rescue; 1; else; retry; end").children.first
       the_rescue.type.should == :rescue
-      void_value?(the_rescue).should be_true
+      void_value?(the_rescue).should be true
 
       the_rescue = ast_for("begin; rescue; 1; else; 2; end").children.first
       the_rescue.type.should == :rescue
-      void_value?(the_rescue).should be_false
+      void_value?(the_rescue).should be false
     end
     it 'knows an ensure is a void value if its body or ensure portion are void values' do
       the_ensure = ast_for("loop { begin; break; ensure; 1; end }").children.last.children.last
       the_ensure.type.should == :ensure
-      void_value?(the_ensure).should be_true
+      void_value?(the_ensure).should be true
 
       the_ensure = ast_for("loop { begin; 1; ensure; break; end }").children.last.children.last
       the_ensure.type.should == :ensure
-      void_value?(the_ensure).should be_true
+      void_value?(the_ensure).should be true
 
       the_ensure = ast_for("loop { begin; 1; ensure; 2; end }").children.last.children.last
       the_ensure.type.should == :ensure
-      void_value?(the_ensure).should be_false
+      void_value?(the_ensure).should be false
     end
     it 'knows other things are not void values' do
-      void_value?(ast_for "123").should be_false
+      void_value?(ast_for "123").should be false
     end
   end
 
@@ -707,9 +707,8 @@ describe SeeingIsBelieving::WrapExpressions do
       wrap("begin\nrescue Exception\n$!\nend").should == "<begin\nrescue Exception\n<$!>\nend>"
     end
     it 'wraps inline rescues' do
-      pending "can't figure out how to identify these as different from begin/rescue/end" do
-        wrap("1 rescue nil").should == "<1 rescue nil>"
-      end
+      pending "can't figure out how to identify these as different from begin/rescue/end"
+      wrap("1 rescue nil").should == "<1 rescue nil>"
     end
     it 'wraps the bodies' do
       wrap("begin\n1\nrescue\n2\nelse\n3\nensure\n4\nend").should ==
@@ -842,12 +841,11 @@ describe SeeingIsBelieving::WrapExpressions do
     # which we could do with some meta, just replacing it with the literal when we parse it
     # but still, moving this out of here will be really annoying, and no one is going to use it, so fuck it
     it 'does not record them', not_implemented: true do
-      pending 'not implemented, and probably never will be' do
-        wrap("BEGIN {}").should == "BEGIN {}"
-        wrap("END {}").should == "END {}"
-        wrap("BEGIN {\n123\n}").should == "BEGIN {\n<123>\n}"
-        wrap("END {\n123\n}").should == "END {\n<123>\n}"
-      end
+      pending 'not implemented, and probably never will be'
+      wrap("BEGIN {}").should == "BEGIN {}"
+      wrap("END {}").should == "END {}"
+      wrap("BEGIN {\n123\n}").should == "BEGIN {\n<123>\n}"
+      wrap("END {\n123\n}").should == "END {\n<123>\n}"
     end
   end
 end
