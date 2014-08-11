@@ -63,6 +63,18 @@ describe SeeingIsBelieving::WrapExpressions do
         expect(described_class.call("<<A.size(<<B)\nA\nB", options)).to eq "[<<<A.size(<<B)>]\nA\nB"
       end
     end
+
+    it 'identifies the last line of the body' do
+      expect(described_class.call("a\n"\
+                                  "def b\n"\
+                                  "  c = 1\n"\
+                                  "end",
+                                  options)
+            ).to eq "[<a>\n"\
+                    "def b\n"\
+                    "  <c = 1>\n"\
+                    "end]"
+    end
   end
 
   it 'passes the current line number to the before_each and after_each wrappers' do

@@ -41,10 +41,7 @@ class SeeingIsBelieving
             rewriter.insert_after  range, after_each.call(line_num)
           end
 
-          # another stupid hack to get around a heredoc at the end of the document
-          # hopefully we can remove this after next version of Parser is released
-          last_index, (range, col) = wrappings.max_by(&:first)
-          range ||= root.location.expression
+          range = root.location.expression
           rewriter.insert_after range, after_all
         end
 

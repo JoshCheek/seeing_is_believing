@@ -335,3 +335,32 @@ Feature:
 
     # !> stderr gets past it b/c of dumb ruby bug
     """
+
+  @wip
+  Scenario: Incorrect wrapping in some programs
+    Given the file "incorrect_wrapping.rb":
+    """
+    a
+    class B
+      def c
+        d = 1
+      end
+    end
+    """
+    When I run "seeing_is_believing incorrect_wrapping.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    a          # ~> NameError: undefined local variable or method `a' for main:Object
+    class B
+      def c
+        d = 1
+      end
+    end
+
+    # ~> NameError
+    # ~> undefined local variable or method `a' for main:Object
+    # ~>
+    # ~> incorrect_wrapping.rb:1:in `<main>'
+    """
