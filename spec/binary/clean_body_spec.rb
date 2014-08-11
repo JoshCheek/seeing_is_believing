@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/clean_body'
 
 describe SeeingIsBelieving::Binary::CleanBody do

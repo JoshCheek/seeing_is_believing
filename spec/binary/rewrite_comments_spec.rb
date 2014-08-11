@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/rewrite_comments'
 
 describe SeeingIsBelieving::Binary::RewriteComments do
@@ -11,7 +12,7 @@ describe SeeingIsBelieving::Binary::RewriteComments do
       seen << args
       args[-2..-1]
     end
-    seen.should == []
+    expect(seen).to eq []
   end
 
   it 'yields the line_number, line upto the whitespace, whitespace, and comment' do
@@ -26,12 +27,12 @@ describe SeeingIsBelieving::Binary::RewriteComments do
       seen << args
       args[-2..-1]
     end
-    seen.should == [
+    expect(seen).to eq [
       [1,  "",     "",      "# c1"],
       [2,  "123",  " ",     "#   c2 # x"],
       [4,  "",     " \t ",  "# c3"],
       [6,  " 1}",  "",      "#c4"],
-      [7,  "",    "",      "# c5"],
+      [7,  "",     "",      "# c5"],
     ]
   end
 
@@ -44,11 +45,11 @@ describe SeeingIsBelieving::Binary::RewriteComments do
                      " 1}#c4") do |line_number, *|
       ["NEW_WHITESPACE#{line_number}", "--COMMENT-#{line_number}--"]
     end
-    rewritten.should == "NEW_WHITESPACE1--COMMENT-1--\n"\
-                        "123NEW_WHITESPACE2--COMMENT-2--\n"\
-                        "n456\n"\
-                        "NEW_WHITESPACE4--COMMENT-4--\n"\
-                        "%Q{\n"\
-                        " 1}NEW_WHITESPACE6--COMMENT-6--"
+    expect(rewritten).to eq "NEW_WHITESPACE1--COMMENT-1--\n"\
+                            "123NEW_WHITESPACE2--COMMENT-2--\n"\
+                            "n456\n"\
+                            "NEW_WHITESPACE4--COMMENT-4--\n"\
+                            "%Q{\n"\
+                            " 1}NEW_WHITESPACE6--COMMENT-6--"
   end
 end

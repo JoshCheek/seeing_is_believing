@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/comment_formatter'
 
 describe SeeingIsBelieving::Binary::CommentFormatter do

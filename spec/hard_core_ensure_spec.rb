@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'ichannel'
 require 'seeing_is_believing/hard_core_ensure'
 
@@ -23,13 +24,13 @@ describe SeeingIsBelieving::HardCoreEnsure do
   end
 
   it 'invokes the code and returns the value' do
-    call(code: -> { :result }, ensure: -> {}).should == :result
+    expect(call(code: -> { :result }, ensure: -> {})).to eq :result
   end
 
   it 'invokes the ensure after the code' do
     seen = []
     call code: -> { seen << :code }, ensure: -> { seen << :ensure }
-    seen.should == [:code, :ensure]
+    expect(seen).to eq [:code, :ensure]
   end
 
   it 'invokes the ensure even if an exception is raised' do
@@ -37,7 +38,7 @@ describe SeeingIsBelieving::HardCoreEnsure do
     expect do
       call code: -> { raise Exception, 'omg!' }, ensure: -> { ensure_invoked = true }
     end.to raise_error Exception, 'omg!'
-    ensure_invoked.should == true
+    expect(ensure_invoked).to eq true
   end
 
   it 'invokes the code even if an interrupt is sent and there is a default handler' do
@@ -51,9 +52,9 @@ describe SeeingIsBelieving::HardCoreEnsure do
       sleep 0.05
       Process.kill 'INT', pid
       Process.wait pid
-      channel.get.should == "ensure invoked"
-      channel.get.should == "old handler invoked"
-      channel.should_not be_readable
+      expect(channel.get).to eq "ensure invoked"
+      expect(channel.get).to eq "old handler invoked"
+      expect(channel).to_not be_readable
     end
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
       pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
@@ -74,9 +75,9 @@ describe SeeingIsBelieving::HardCoreEnsure do
       sleep 0.05
       Process.kill 'INT', pid
       Process.wait pid
-      channel.get.should == "ensure invoked"
-      channel.get.should == 'code result'
-      channel.should_not be_readable
+      expect(channel.get).to eq "ensure invoked"
+      expect(channel.get).to eq 'code result'
+      expect(channel).to_not be_readable
     end
 
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'

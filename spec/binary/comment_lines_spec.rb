@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/comment_lines'
 
 describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
@@ -6,17 +7,17 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
   end
 
   example 'just checking some edge cases' do
-    call("") { ';' }.should == ";"
-    call("__END__\n1") { ';' }.should == "__END__\n1"
-    call("1\n__END__") { ';' }.should == "1;\n__END__"
+    expect(call("") { ';' }).to eq ";"
+    expect(call("__END__\n1") { ';' }).to eq "__END__\n1"
+    expect(call("1\n__END__") { ';' }).to eq "1;\n__END__"
   end
 
   it "doesn't comment lines whose newline is escaped" do
-    call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }.should == "1 +\\\n2--2--"
+    expect(call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }).to eq "1 +\\\n2--2--"
   end
 
   it "doesn't comment lines inside of strings" do
-    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    expect(call(<<-INPUT) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT
     "a\#{1+1
     }"
     "a
@@ -46,7 +47,7 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
   end
 
   it 'does comment the first line of a heredoc' do
-    call(<<-INPUT.gsub(/^ */, '')) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT.gsub(/^ */, '')
+    expect(call(<<-INPUT.gsub(/^ */, '')) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT.gsub(/^ */, '')
     <<A
     1
     A
@@ -92,7 +93,7 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
   end
 
   it "doesn't comment lines inside of regexes" do
-    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    expect(call(<<-INPUT) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT
     /a\#{1+1
     }/
     /a
@@ -110,7 +111,7 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
   end
 
   it "doesn't comment lines inside of backticks/%x" do
-    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    expect(call(<<-INPUT) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT
     `a\#{1+1
     }`
     %x[\#{1+1
@@ -136,7 +137,7 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
   end
 
   it "doesn't comment lines inside of string arrays" do
-    call(<<-INPUT) { |_, line_number| "--#{line_number}--" }.should == <<-OUTPUT
+    expect(call(<<-INPUT) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT
     %w[
       a
       ]
@@ -158,26 +159,26 @@ describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentabl
                   "'4\n"\
                   "5'+\n"\
                   "%Q'\n"\
-                  " \#{5+6} 7'\n") do |line, line_number|
-      lines << line
-      "--#{line_number}--"
-    end
+                  " \#{5+6} 7'\n") { |line, line_number|
+                    lines << line
+                    "--#{line_number}--"
+                  }
 
-    lines.should == [ "1 +",
-                      "    2",
-                      "",
-                      "5'+",
-                      " \#{5+6} 7'"]
+    expect(lines).to eq ["1 +",
+                         "    2",
+                         "",
+                         "5'+",
+                         " \#{5+6} 7'"]
 
-    result.should == "1 +--1--\n"\
-                     "    2--2--\n"\
-                     "--3--\n"\
-                     "# just a comment\n"\
-                     "3 # already has a comment\n"\
-                     "'4\n"\
-                     "5'+--7--\n"\
-                     "%Q'\n"\
-                     " \#{5+6} 7'--9--\n"
+    expect(result).to eq "1 +--1--\n"\
+                         "    2--2--\n"\
+                         "--3--\n"\
+                         "# just a comment\n"\
+                         "3 # already has a comment\n"\
+                         "'4\n"\
+                         "5'+--7--\n"\
+                         "%Q'\n"\
+                         " \#{5+6} 7'--9--\n"
   end
 
 
@@ -838,6 +839,6 @@ __END__
 1
 OUTPUT
 
-    call(input) { ';' }.should == output
+    expect(call(input) { ';' }).to eq output
   end
 end
