@@ -14,7 +14,7 @@ describe SeeingIsBelieving do
 
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
 
-  it 'takes a string or and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
+  it 'takes a string and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "10+10\n'2'+'2'"
     expect(invoke(input)[1]).to eq ["20"]
     expect(invoke(input)[2]).to eq ['"22"']
@@ -58,6 +58,10 @@ describe SeeingIsBelieving do
   it 'records the targets of chained methods' do
     expect(values_for("[*1..5]\n.map { |n| n * 2 }\n.take(2)\n.size")).to eq\
       [["[1, 2, 3, 4, 5]"], ["[2, 4, 6, 8, 10]"], ["[2, 4]"], ["2"]]
+  end
+
+  it 'does not add additional vars' do
+    expect(values_for 'local_variables').to eq [["[]"]]
   end
 
   it "records heredocs" do

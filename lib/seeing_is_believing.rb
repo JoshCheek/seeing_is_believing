@@ -52,10 +52,12 @@ class SeeingIsBelieving
     WrapExpressions.call "#{@program}\n",
                          before_all:  "begin; $SiB.number_of_captures = #{number_of_captures_as_str}; ",
                          after_all:   ";rescue Exception;"\
-                                        "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
-                                        "$SiB.record_exception line_number, $!;"\
-                                        "$SiB.exitstatus = 1;"\
-                                        "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                        "lambda {"\
+                                          "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
+                                          "$SiB.record_exception line_number, $!;"\
+                                          "$SiB.exitstatus = 1;"\
+                                          "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                        "}.call;"\
                                       "end",
                          before_each: -> line_number { "$SiB.record_result(#{line_number}, (" },
                          after_each:  -> line_number { "))" }
