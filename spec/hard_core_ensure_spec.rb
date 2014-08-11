@@ -58,6 +58,7 @@ describe SeeingIsBelieving::HardCoreEnsure do
     end
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
       pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
+      raise
     else
       test.call
     end

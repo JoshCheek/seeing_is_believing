@@ -100,9 +100,8 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'will set the encoding' do
     test = -> { expect(invoke('print "ç"', encoding: 'u').stdout).to eq "ç" }
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
-      pending "Rubinius doesn't seem to use -Kx, but rather -U" do
-        test.call
-      end
+      pending "Rubinius doesn't seem to use -Kx, but rather -U"
+      test.call
     else
       test.call
     end
