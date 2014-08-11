@@ -8,12 +8,12 @@ end
 
 
 Then 'stdout is exactly:' do |code|
-  @last_executed.stdout.should == eval_curlies(code)
+  expect(@last_executed.stdout).to eq eval_curlies(code)
 end
 
 Then 'stdout is the JSON:' do |json|
   require 'json'
   expected = JSON.parse(json)
   actual   = JSON.parse(@last_executed.stdout)
-  actual.should == expected
+  expect(actual).to eq expected
 end

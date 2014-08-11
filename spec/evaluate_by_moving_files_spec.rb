@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'fileutils'
 
@@ -17,12 +18,12 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'evaluates the code when the file DNE' do
     FileUtils.rm_f filename
-    invoke('print 1').stdout.should == '1'
+    expect(invoke('print 1').stdout).to eq '1'
   end
 
   it 'evaluates the code when the file Exists' do
     FileUtils.touch filename
-    invoke('print 1').stdout.should == '1'
+    expect(invoke('print 1').stdout).to eq '1'
   end
 
   it 'raises an error when the temp file already exists' do
@@ -32,33 +33,33 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'evaluates the code as the given file' do
-    invoke('print __FILE__').stdout.should == filename
+    expect(invoke('print __FILE__').stdout).to eq filename
   end
 
   it 'does not change the original file' do
     File.open(filename, 'w') { |f| f.write "ORIGINAL" }
     invoke '1 + 1'
-    File.read(filename).should == "ORIGINAL"
+    expect(File.read filename).to eq "ORIGINAL"
   end
 
   it 'uses HardCoreEnsure to move the file back' do
     evaluator = described_class.new 'PROGRAM', filename
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
     FileUtils.rm_rf evaluator.temp_filename
-    SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
+    expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
-      File.exist?(evaluator.temp_filename).should == false
-      File.read(filename).should == 'ORIGINAL'
+      expect(File.exist? evaluator.temp_filename).to eq false
+      expect(File.read filename).to eq 'ORIGINAL'
 
       # after code
       options[:code].call rescue nil
-      File.read(evaluator.temp_filename).should == 'ORIGINAL'
-      File.read(filename).should == 'PROGRAM'
+      expect(File.read evaluator.temp_filename).to eq 'ORIGINAL'
+      expect(File.read filename).to eq 'PROGRAM'
 
       # after ensure
       options[:ensure].call
-      File.read(filename).should == 'ORIGINAL'
-      File.exist?(evaluator.temp_filename).should == false
+      expect(File.read filename).to eq 'ORIGINAL'
+      expect(File.exist? evaluator.temp_filename).to eq false
     end
     evaluator.call
   end
@@ -66,17 +67,17 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
     evaluator = described_class.new 'PROGRAM', filename
     FileUtils.rm_rf filename
-    SeeingIsBelieving::HardCoreEnsure.should_receive(:call) do |options|
+    expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
-      File.exist?(filename).should == false
+      expect(File.exist? filename).to eq false
 
       # after code
       options[:code].call rescue nil
-      File.read(filename).should == 'PROGRAM'
+      expect(File.read filename).to eq 'PROGRAM'
 
       # after ensure
       options[:ensure].call
-      File.exist?(filename).should == false
+      expect(File.exist? filename).to eq false
     end
     evaluator.call
   end
@@ -87,17 +88,24 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     File.open(other_filename1, 'w') { |f| f.puts "puts 123" }
     File.open(other_filename2, 'w') { |f| f.puts "puts 456" }
     result = invoke '', require: [other_filename1, other_filename2]
-    result.stdout.should == "123\n456\n"
+    expect(result.stdout).to eq "123\n456\n"
   end
 
   it 'can set the load path' do
     File.open(File.join(filedir, 'other1.rb'), 'w') { |f| f.puts "puts 123" }
     result = invoke '', require: ['other1'], load_path: [filedir]
-    result.stdout.should == "123\n"
+    expect(result.stdout).to eq "123\n"
   end
 
   it 'will set the encoding' do
-    invoke('print "ç"', encoding: 'u').stdout.should == "ç"
+    test = -> { expect(invoke('print "ç"', encoding: 'u').stdout).to eq "ç" }
+    if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
+      pending "Rubinius doesn't seem to use -Kx, but rather -U" do
+        test.call
+      end
+    else
+      test.call
+    end
   end
 
   it 'if it fails, it prints some debugging information and raises an error' do
@@ -105,6 +113,6 @@ describe SeeingIsBelieving::EvaluateByMovingFiles do
     evaluator = described_class.new 'raise "omg"', filename, debugger: SeeingIsBelieving::Debugger.new(stream: error_stream)
     FileUtils.rm_f evaluator.temp_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib
-    error_stream.string.should include "Program could not be evaluated"
+    expect(error_stream.string).to include "Program could not be evaluated"
   end
 end

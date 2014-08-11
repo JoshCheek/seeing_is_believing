@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'spec_helper'
 require 'seeing_is_believing'
 require 'stringio'
 
@@ -15,53 +16,53 @@ describe SeeingIsBelieving do
 
   it 'takes a string or and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "10+10\n'2'+'2'"
-    invoke(input)[1].should == ["20"]
-    invoke(input)[2].should == ['"22"']
+    expect(invoke(input)[1]).to eq ["20"]
+    expect(invoke(input)[2]).to eq ['"22"']
   end
 
   it 'only invokes inspect once' do
     input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
-    invoke(input)[1].should == ['"NUM"']
+    expect(invoke(input)[1]).to eq ['"NUM"']
   end
 
   it 'remembers context of previous lines' do
-    values_for("a=12\na*2").should == [['12'], ['24']]
+    expect(values_for("a=12\na*2")).to eq [['12'], ['24']]
   end
 
   it 'can be invoked multiple times, returning the same result' do
     believer = described_class.new("$xyz||=1\n$xyz+=1")
-    believer.call.to_a.should == [['1'], ['2']]
-    believer.call.to_a.should == [['1'], ['2']]
+    expect(believer.call.to_a).to eq [['1'], ['2']]
+    expect(believer.call.to_a).to eq [['1'], ['2']]
   end
 
   it 'is evaluated at the toplevel' do
-    values_for('self').should == [['main']]
+    expect(values_for('self')).to eq [['main']]
   end
 
   it 'records the value immediately, so that it is correct even if the result is mutated' do
-    values_for("a = 'a'\na << 'b'").should == [['"a"'], ['"ab"']]
+    expect(values_for("a = 'a'\na << 'b'")).to eq [['"a"'], ['"ab"']]
   end
 
   it 'records each value when a line is evaluated multiple times' do
-    values_for("(1..2).each do |i|\ni\nend").should == [['1..2'], ['1', '2'], ['1..2']]
+    expect(values_for("(1..2).each do |i|\ni\nend")).to eq [['1..2'], ['1', '2'], ['1..2']]
   end
 
   # now that we're using Parser, there's very very few of these
   it 'evalutes to an empty array for lines that it cannot understand' do
-    values_for("[3].map \\\ndo |n|\n n*2\n end").should == [['[3]'], [], ['6'], ['[6]']]
-    values_for("'\n1\n'").should == [[], [], ['"\n1\n"']]
-    values_for("<<HEREDOC\n\n1\nHEREDOC").should ==  [[%Q'"\\n1\\n"']] # newlines escaped b/c lib inspects them
-    values_for("<<-HEREDOC\n\n1\nHEREDOC").should == [[%Q'"\\n1\\n"']]
+    expect(values_for("[3].map \\\ndo |n|\n n*2\n end")).to eq [['[3]'], [], ['6'], ['[6]']]
+    expect(values_for("'\n1\n'")).to eq [[], [], ['"\n1\n"']]
+    expect(values_for("<<HEREDOC\n\n1\nHEREDOC")).to eq  [[%Q'"\\n1\\n"']] # newlines escaped b/c lib inspects them
+    expect(values_for("<<-HEREDOC\n\n1\nHEREDOC")).to eq [[%Q'"\\n1\\n"']]
   end
 
   it 'records the targets of chained methods' do
-    values_for("[*1..5]\n.map { |n| n * 2 }\n.take(2)\n.size").should ==
+    expect(values_for("[*1..5]\n.map { |n| n * 2 }\n.take(2)\n.size")).to eq\
       [["[1, 2, 3, 4, 5]"], ["[2, 4, 6, 8, 10]"], ["[2, 4]"], ["2"]]
   end
 
   it "records heredocs" do
-    values_for("<<A\n1\nA").should == [[%'"1\\n"']]
-    values_for("<<-A\n1\nA").should == [[%'"1\\n"']]
+    expect(values_for("<<A\n1\nA")).to eq [[%'"1\\n"']]
+    expect(values_for("<<-A\n1\nA")).to eq [[%'"1\\n"']]
   end
 
   it 'does not insert code into the middle of heredocs' do
@@ -82,69 +83,69 @@ describe SeeingIsBelieving do
       DOC5
     HEREDOC
 
-    invoked.stdout.should == "doc1\ndoc2\ndoc3\ndoc4\ndoc5\n"
+    expect(invoked.stdout).to eq "doc1\ndoc2\ndoc3\ndoc4\ndoc5\n"
   end
 
   it 'has no output for empty lines' do
-    values_for('').should == [[]]
-    values_for('  ').should == [[]]
-    values_for("  \n").should == [[]]
-    values_for("1\n\n2").should == [['1'],[],['2']]
+    expect(values_for('')).to eq [[]]
+    expect(values_for('  ')).to eq [[]]
+    expect(values_for("  \n")).to eq [[]]
+    expect(values_for("1\n\n2")).to eq [['1'],[],['2']]
   end
 
   it 'stops executing on errors and reports them' do
-    invoke("'no exception'").should_not have_exception
+    expect(invoke("'no exception'")).to_not have_exception
 
     result = invoke("12\nraise Exception, 'omg!'\n12")
-    result.should have_exception
-    result.exception.message.should == 'omg!'
+    expect(result).to have_exception
+    expect(result.exception.message).to eq 'omg!'
 
-    result[1].should == ['12']
+    expect(result[1]).to eq ['12']
 
-    result[2].should == []
-    result[2].exception.should == result.exception
+    expect(result[2]).to eq []
+    expect(result[2].exception).to eq result.exception
 
-    result[3].should == []
+    expect(result[3]).to eq []
   end
 
   it 'records the backtrace on the errors' do
     result = invoke("12\nraise Exception, 'omg!'\n12")
-    result.exception.backtrace.should be_a_kind_of Array
+    expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
   it 'does not fuck up __LINE__ macro' do
-    values_for('__LINE__
-                __LINE__
+    expect(values_for( '__LINE__
+                        __LINE__
 
-                def meth
-                  __LINE__
-                end
-                meth
+                        def meth
+                          __LINE__
+                        end
+                        meth
 
-                # comment
-                __LINE__').should == [['1'], ['2'], [], [], ['5'], [], ['5'], [], [], ['10']]
+                        # comment
+                        __LINE__')
+    ).to eq [['1'], ['2'], [], [], ['5'], [], ['5'], [], [], ['10']]
   end
 
   it 'records return statements' do
-    values_for("def meth \n return 1          \n end \n meth").should == [[], ['1'], [], ['1']]
-    values_for("-> {  \n return 1          \n }.call"        ).should == [[], ['1'], ['1']]
-    values_for("-> { return 1 }.call"                        ).should == [['1']]
+    expect(values_for("def meth \n return 1          \n end \n meth")).to eq [[], ['1'], [], ['1']]
+    expect(values_for("-> {  \n return 1          \n }.call"        )).to eq [[], ['1'], ['1']]
+    expect(values_for("-> { return 1 }.call"                        )).to eq [['1']]
 
-    pending "would be really cool if this would record 1 and nil, but it probably won't ever happen." do
-      # Currently we dont' differentiate between inline and multiline if statements,
-      # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
-      # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
-      values_for("def meth \n return 1 if true  \n end \n meth").should == [[], ['1'], [], ['1']]   # records true instead of 1
-      values_for("def meth \n return 1 if false \n end \n meth").should == [[], ['nil'], [], ['nil']] # records false instead of nil
-    end
+    pending "would be really cool if this would record 1 and nil, but it probably won't ever happen."
+    # Currently we dont' differentiate between inline and multiline if statements,
+    # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
+    # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
+    expect(values_for("def meth \n return 1 if true  \n end \n meth")).to eq [[], ['1'], [], ['1']]   # records true instead of 1
+    expect(values_for("def meth \n return 1 if false \n end \n meth")).to eq [[], ['nil'], [], ['nil']] # records false instead of nil
   end
 
   it 'does not try to record the keyword next' do
-    values_for("(1..2).each do |i|\nnext if i == 1\ni\nend").should == [['1..2'], ['true', 'false'], ['2'], ['1..2']]
+    expect(values_for("(1..2).each do |i|\nnext if i == 1\ni\nend")).to eq [['1..2'], ['true', 'false'], ['2'], ['1..2']]
   end
 
   it 'does not try to record the keyword redo' do
-    values_for(<<-DOC).should == [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [], ['0...3']]
+    expect(values_for(<<-DOC)).to eq [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [], ['0...3']]
       def meth
         n = 0
         for i in 0...3
@@ -157,7 +158,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword retry' do
-    values_for(<<-DOC).should == [[], [], [], [], ['nil']]
+    expect(values_for(<<-DOC)).to eq [[], [], [], [], ['nil']]
       def meth
       rescue
         retry
@@ -167,13 +168,13 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword retry' do
-    values_for(<<-DOC).should == [['0..2'], ['0'], [], ['nil']]
+    expect(values_for(<<-DOC)).to eq [['0..2'], ['0'], [], ['nil']]
       (0..2).each do |n|
         n
         break
       end
     DOC
-    values_for(<<-DOC).should == [['0..2'], ['0'], ['10'], ['10']]
+    expect(values_for(<<-DOC)).to eq [['0..2'], ['0'], ['10'], ['10']]
       (0..2).each do |n|
         n
         break 10
@@ -183,7 +184,7 @@ describe SeeingIsBelieving do
 
   it 'does not affect its environment' do
     invoke 'def Object.abc() end'
-    Object.should_not respond_to :abc
+    expect(Object).to_not respond_to :abc
   end
 
   it 'captures the standard output and error' do
@@ -194,36 +195,36 @@ describe SeeingIsBelieving do
                      $stderr.puts '3'
                      $stdout = $stderr
                      puts '4'"
-    result.stdout.should == "a\nb\n" "a\nb\n" "c\n" "d\n"
-    result.stderr.should == "1\n2\n" "3\n" "4\n"
-    result.should have_stdout
-    result.should have_stderr
+    expect(result.stdout).to eq "a\nb\n" "a\nb\n" "c\n" "d\n"
+    expect(result.stderr).to eq "1\n2\n" "3\n" "4\n"
+    expect(result).to have_stdout
+    expect(result).to have_stderr
 
     result = invoke '1+1'
-    result.should_not have_stdout
-    result.should_not have_stderr
+    expect(result).to_not have_stdout
+    expect(result).to_not have_stderr
   end
 
   it 'defaults the filename to temp_dir/program.rb' do
     result = invoke('print File.expand_path __FILE__')
-    File.basename(result.stdout).should == 'program.rb'
+    expect(File.basename(result.stdout)).to eq 'program.rb'
   end
 
   it 'can be told to run as a given file (in a given dir/with a given filename)' do
     filename = File.join proving_grounds_dir, 'mah_file.rb'
     FileUtils.rm_f filename
     result   = invoke 'print File.expand_path __FILE__', filename: filename
-    result.stdout.should == filename
+    expect(result.stdout).to eq filename
   end
 
   specify 'cwd of the file is the cwd of the evaluating program' do
     filename = File.join proving_grounds_dir, 'mah_file.rb'
     FileUtils.rm_f filename
-    invoke('print File.expand_path(Dir.pwd)', filename: filename).stdout.should == Dir.pwd
+    expect(invoke('print File.expand_path(Dir.pwd)', filename: filename).stdout).to eq Dir.pwd
   end
 
   it 'does not capture output from __END__ onward' do
-    values_for("1+1\nDATA.read\n__END__\n....").should == [['2'], ['"....\n"']] # <-- should this actually write a newline on the end?
+    expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"']] # <-- should this actually write a newline on the end?
   end
 
   it 'raises a SyntaxError when the whole program is invalid' do
@@ -231,26 +232,26 @@ describe SeeingIsBelieving do
   end
 
   it 'can be given a stdin stream' do
-    invoke('$stdin.read', stdin: StringIO.new("input"))[1].should == ['"input"']
+    expect(invoke('$stdin.read', stdin: StringIO.new("input"))[1]).to eq ['"input"']
   end
 
   it 'can be given a stdin string' do
-    invoke('$stdin.read', stdin: "input")[1].should == ['"input"']
+    expect(invoke('$stdin.read', stdin: "input")[1]).to eq ['"input"']
   end
 
   it 'defaults the stdin stream to an empty string' do
-    invoke('$stdin.read')[1].should == ['""']
+    expect(invoke('$stdin.read')[1]).to eq ['""']
   end
 
   it 'can deal with methods that are invoked entirely on the next line' do
-    values_for("a = 1\n.even?\na").should == [['1'], ['false'], ['false']]
-    values_for("a = 1.\neven?\na").should == [['1'], ['false'], ['false']]
-    values_for("1\n.even?\n__END__").should == [['1'], ['false']]
+    expect(values_for("a = 1\n.even?\na")).to eq [['1'], ['false'], ['false']]
+    expect(values_for("a = 1.\neven?\na")).to eq [['1'], ['false'], ['false']]
+    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false']]
   end
 
   it 'does not record leading comments' do
-    values_for("# -*- coding: utf-8 -*-\n'ç'\n__LINE__").should == [[], ['"ç"'], ['3']]
-    values_for("=begin\n1\n=end\n=begin\n=end\n__LINE__").should == [[], [], [],
+    expect(values_for("# -*- coding: utf-8 -*-\n'ç'\n__LINE__")).to eq [[], ['"ç"'], ['3']]
+    expect(values_for("=begin\n1\n=end\n=begin\n=end\n__LINE__")).to eq [[], [], [],
                                                                      [], [],
                                                                      ['6']]
   end
@@ -260,55 +261,55 @@ describe SeeingIsBelieving do
   end
 
   it 'records the exit status' do
-    invoke('raise "omg"').exitstatus.should == 1
-    invoke('exit 123').exitstatus.should == 123
-    invoke('at_exit { exit 121 }').exitstatus.should == 121
+    expect(invoke('raise "omg"').exitstatus).to eq 1
+    expect(invoke('exit 123').exitstatus).to eq 123
+    expect(invoke('at_exit { exit 121 }').exitstatus).to eq 121
   end
 
   it 'records lines that have comments on them' do
-    values_for('1+1 # comment uno
-                #comment dos
-                3#comment tres').should == [['2'], [], ['3']]
+    expect(values_for('1+1 # comment uno
+                      #comment dos
+                      3#comment tres')).to eq [['2'], [], ['3']]
   end
 
   it "doesn't fuck up when there are lines with magic comments in the middle of the app" do
-    values_for('1+1
-                # encoding: wtf').should == [['2']]
+    expect(values_for '1+1
+                       # encoding: wtf').to eq [['2']]
   end
 
   it "doesn't remove multiple leading comments" do
-    values_for("#!/usr/bin/env ruby\n"\
-               "# encoding: utf-8\n"\
-               "'ç'").should == [[], [], ['"ç"']]
-    values_for("#!/usr/bin/env ruby\n"\
-               "1 # encoding: utf-8\n"\
-               "2").should == [[], ['1'], ['2']]
+    expect(values_for "#!/usr/bin/env ruby\n"\
+                      "# encoding: utf-8\n"\
+                      "'ç'").to eq [[], [], ['"ç"']]
+    expect(values_for "#!/usr/bin/env ruby\n"\
+                      "1 # encoding: utf-8\n"\
+                      "2").to eq [[], ['1'], ['2']]
   end
 
   it 'can record the middle of a chain of calls'  do
-    values_for("1 +\n2").should == [['1'], ['3']]
-    values_for("1\\\n+ 2").should == [['1'], ['3']]
-    values_for("[*1..5]
-                  .select(&:even?)
-                  .map { |n| n * 3 }").should == [['[1, 2, 3, 4, 5]'],
-                                                  ['[2, 4]'],
-                                                  ['[6, 12]']]
-    values_for("[*1..5]
-                  .select(&:even?)
-                  .map { |n| n * 2 }.
-                  map  { |n| n / 2 }\\
-                  .map { |n| n * 3 }").should == [['[1, 2, 3, 4, 5]'],
-                                                  ['[2, 4]'],
-                                                  ['[4, 8]'],
-                                                  ['[2, 4]'],
-                                                  ['[6, 12]']]
+    expect(values_for("1 +\n2")).to eq [['1'], ['3']]
+    expect(values_for("1\\\n+ 2")).to eq [['1'], ['3']]
+    expect(values_for("[*1..5]
+                        .select(&:even?)
+                        .map { |n| n * 3 }")).to eq [['[1, 2, 3, 4, 5]'],
+                                                     ['[2, 4]'],
+                                                     ['[6, 12]']]
+    expect(values_for("[*1..5]
+                        .select(&:even?)
+                        .map { |n| n * 2 }.
+                        map  { |n| n / 2 }\\
+                        .map { |n| n * 3 }")).to eq [['[1, 2, 3, 4, 5]'],
+                                                        ['[2, 4]'],
+                                                        ['[4, 8]'],
+                                                        ['[2, 4]'],
+                                                        ['[6, 12]']]
   end
 
   it 'can be limited to a specific number of captures' do
-    values_for("2.times do\n1\nend", number_of_captures: 1)
-      .should == [['2'],
-                  ['1', '...'],
-                  ['2']]
+    expect(values_for "2.times do\n1\nend", number_of_captures: 1).to \
+      eq [['2'],
+          ['1', '...'],
+          ['2']]
   end
 
   it 'can evaluate under a different ruby executable' do
@@ -327,7 +328,7 @@ describe SeeingIsBelieving do
       old_path = ENV['PATH']
       ENV['PATH'] = "#{proving_grounds_dir}:#{old_path}"
       begin
-        values_for("1", ruby_executable: 'omg-ruby').should == [["/omg/"]]
+        expect(values_for("1", ruby_executable: 'omg-ruby')).to eq [["/omg/"]]
       ensure
         ENV['PATH'] = old_path
       end
@@ -335,28 +336,27 @@ describe SeeingIsBelieving do
   end
 
   it 'does not record BEGIN and END', not_implemented: true do
-    pending 'not implemented' do
-      expect { invoke <<-CODE }.to_not raise_error
-        puts 1
-        BEGIN {
-          puts "begin code"
-          some_var = 2
-        }
-        puts 3
-        END {
-          puts "end code"
-          puts some_var
-        }
-        puts 4
-      CODE
-    end
+    pending 'not implemented'
+    expect { invoke <<-CODE }.to_not raise_error
+      puts 1
+      BEGIN {
+        puts "begin code"
+        some_var = 2
+      }
+      puts 3
+      END {
+        puts "end code"
+        puts some_var
+      }
+      puts 4
+    CODE
   end
 
   # For more info about this one
   # https://github.com/JoshCheek/seeing_is_believing/issues/24
   it 'does not blow up when executing commands that bypass stdout and talk directly to low-level stdout fd (e.g. C\'s system command from stdlib.h)' do
-    invoke(%q[system "ruby -e '$stdout.print ?a'"]).stdout.should == "a"
-    invoke(%q[system "ruby -e '$stderr.print ?a'"]).stderr.should == "a"
+    expect(invoke(%q[system "ruby -e '$stdout.print ?a'"]).stdout).to eq "a"
+    expect(invoke(%q[system "ruby -e '$stderr.print ?a'"]).stderr).to eq "a"
   end
 
   context 'when given a debugger' do
@@ -369,14 +369,14 @@ describe SeeingIsBelieving do
 
     it 'prints the pre-evaluated program' do
       call
-      stream.string.should include "TRANSLATED PROGRAM:"
-      stream.string.should include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
+      expect(stream.string).to include "TRANSLATED PROGRAM:"
+      expect(stream.string).to include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
     it 'prints the result' do
       call
-      stream.string.should include "RESULT:"
-      stream.string.should include '1=>#<SIB:Line["1"] (1, 1) no exception>'
+      expect(stream.string).to include "RESULT:"
+      expect(stream.string).to include '1=>#<SIB:Line["1"] (1, 1) no exception>'
     end
     # should ProgramRewriter have some debug options?
   end

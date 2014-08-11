@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/clean_body'
 
 describe SeeingIsBelieving::Binary::CleanBody do
@@ -8,58 +9,58 @@ describe SeeingIsBelieving::Binary::CleanBody do
   end
 
   context 'when told to clean out value annotations' do
-    example { call("1#=>1", true).should == "1" }
-    example { call("1 #=>1", true).should == "1" }
-    example { call("1  #=>1", true).should == "1" }
-    example { call("1  #=> 1", true).should == "1" }
-    example { call("1   #=> 1", true).should == "1" }
-    example { call("1  #=>  1", true).should == "1" }
-    example { call("\n1 # => 1", true).should == "\n1" }
+    example { expect(call "1#=>1",      true).to eq "1" }
+    example { expect(call "1 #=>1",     true).to eq "1" }
+    example { expect(call "1  #=>1",    true).to eq "1" }
+    example { expect(call "1  #=> 1",   true).to eq "1" }
+    example { expect(call "1   #=> 1",  true).to eq "1" }
+    example { expect(call "1  #=>  1",  true).to eq "1" }
+    example { expect(call "\n1 # => 1", true).to eq "\n1" }
   end
 
   context 'when told not to clean out value annotations' do
-    example { call("1#=>1", false).should == "1#=>1" }
-    example { call("1 #=>1", false).should == "1 #=>1" }
-    example { call("1  #=>1", false).should == "1  #=>1" }
-    example { call("1  #=> 1", false).should == "1  #=> 1" }
-    example { call("1   #=> 1", false).should == "1   #=> 1" }
-    example { call("1  #=>  1", false).should == "1  #=>  1" }
-    example { call("\n1 # => 1", false).should == "\n1 # => 1" }
+    example { expect(call "1#=>1",      false).to eq "1#=>1" }
+    example { expect(call "1 #=>1",     false).to eq "1 #=>1" }
+    example { expect(call "1  #=>1",    false).to eq "1  #=>1" }
+    example { expect(call "1  #=> 1",   false).to eq "1  #=> 1" }
+    example { expect(call "1   #=> 1",  false).to eq "1   #=> 1" }
+    example { expect(call "1  #=>  1",  false).to eq "1  #=>  1" }
+    example { expect(call "\n1 # => 1", false).to eq "\n1 # => 1" }
   end
 
   context 'cleaning inline exception annotations' do
-    example { call("1#~>1").should == "1" }
-    example { call("1 #~>1").should == "1" }
-    example { call("1  #~>1").should == "1" }
-    example { call("1  #~> 1").should == "1" }
-    example { call("1   #~> 1").should == "1" }
-    example { call("1  #~>  1").should == "1" }
-    example { call("\n1 # ~> 1").should == "\n1" }
+    example { expect(call "1#~>1"     ).to eq "1" }
+    example { expect(call "1 #~>1"    ).to eq "1" }
+    example { expect(call "1  #~>1"   ).to eq "1" }
+    example { expect(call "1  #~> 1"  ).to eq "1" }
+    example { expect(call "1   #~> 1" ).to eq "1" }
+    example { expect(call "1  #~>  1" ).to eq "1" }
+    example { expect(call "\n1 # ~> 1").to eq "\n1" }
 
-    example { call("# >> 1").should == "" }
-    example { call("# !> 1").should == "" }
+    example { expect(call "# >> 1").to eq "" }
+    example { expect(call "# !> 1").to eq "" }
   end
 
   context 'cleaning stdout annotations' do
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
     # >> 2
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # >> 2
     CODE
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1
 
 
     # >> 2
     CODE
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1
 
 
@@ -69,7 +70,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     CODE
 
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1
 
 
@@ -79,25 +80,25 @@ describe SeeingIsBelieving::Binary::CleanBody do
   end
 
   context 'cleaning stderr annotations' do
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
     # !> 2
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # !> 2
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # !> 2
     # !> 3
     CODE
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1
 
 
@@ -109,25 +110,25 @@ describe SeeingIsBelieving::Binary::CleanBody do
 
 
   context 'cleaning end of file exception annotations' do
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
     # ~>2
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # ~> 2
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # ~> 2
     # ~> 3
     CODE
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1
 
 
@@ -136,7 +137,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
      # ~> 2
     CODE
 
-    example { call(<<-CODE).should == "1\n" }
+    example { expect(call(<<-CODE)).to eq "1\n" }
     1 # ~> error
 
 
@@ -145,7 +146,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
   end
 
   context 'putting it all together' do
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # >> 1
@@ -158,7 +159,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # ~> 6
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # >> 1
@@ -174,7 +175,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # ~> 6
     CODE
 
-    example { call(<<-CODE).should == "1" }
+    example { expect(call(<<-CODE)).to eq "1" }
     1
 
     # >> 1
@@ -185,7 +186,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # ~> 6
     CODE
 
-    example { call(<<-CODE).should == "1\n3" }
+    example { expect(call(<<-CODE)).to eq "1\n3" }
     1
     # >> 1
     # >> 2
@@ -194,7 +195,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # !> 5
     CODE
 
-    example { call(<<-CODE).should == "1\n3\n6" }
+    example { expect(call(<<-CODE)).to eq "1\n3\n6" }
     1
     # >> 1
     # >> 2
@@ -206,7 +207,7 @@ describe SeeingIsBelieving::Binary::CleanBody do
     # ~> 8
     CODE
 
-    example { call(<<-CODE).should == "1\n\nputs \"omg\"" }
+    example { expect(call(<<-CODE)).to eq "1\n\nputs \"omg\"" }
     1  # => 1
 
     puts "omg"  # ~> RuntimeError: omg

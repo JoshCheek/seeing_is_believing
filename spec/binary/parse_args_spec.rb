@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'seeing_is_believing/binary/parse_args'
 
 describe SeeingIsBelieving::Binary::ParseArgs do
@@ -13,29 +14,29 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       end
     end
 
-    failure_message_for_should do |options|
+    failure_message do |options|
       "#{error_assertion.inspect} should have matched one of the errors: #{options[:errors].inspect}"
     end
 
-    failure_message_for_should_not do |options|
+    failure_message_when_negated do |options|
       "#{error_assertion.inspect} should NOT have matched any of the errors: #{options[:errors].inspect}"
     end
   end
 
   def parse(args, outstream=nil)
-    described_class.call args, outstream
+    SeeingIsBelieving::Binary::ParseArgs.call args, outstream
   end
 
   shared_examples 'it requires a positive int argument' do |flags|
     it 'expects an integer argument' do
       flags.each do |flag|
-        parse([flag,   '1']).should_not have_error /#{flag}/
-        parse([flag,   '0']).should     have_error /#{flag}/
-        parse([flag,  '-1']).should     have_error /#{flag}/
-        parse([flag, '1.0']).should     have_error /#{flag}/
-        parse([flag,   'a']).should     have_error /#{flag}/
-        parse([flag,   '' ]).should     have_error /#{flag}/
-        parse([flag       ]).should     have_error /#{flag}/
+        expect(parse([flag,   '1'])).to_not have_error /#{flag}/
+        expect(parse([flag,   '0'])).to     have_error /#{flag}/
+        expect(parse([flag,  '-1'])).to     have_error /#{flag}/
+        expect(parse([flag, '1.0'])).to     have_error /#{flag}/
+        expect(parse([flag,   'a'])).to     have_error /#{flag}/
+        expect(parse([flag,   '' ])).to     have_error /#{flag}/
+        expect(parse([flag       ])).to     have_error /#{flag}/
       end
     end
   end
@@ -43,60 +44,60 @@ describe SeeingIsBelieving::Binary::ParseArgs do
   shared_examples 'it requires a non-negative float or int' do |flags|
     it 'expects a non-negative float or int argument' do
       flags.each do |flag|
-        parse([flag,   '1']).should_not have_error /#{flag}/
-        parse([flag,   '0']).should_not have_error /#{flag}/
-        parse([flag,  '-1']).should     have_error /#{flag}/
-        parse([flag,'-1.0']).should     have_error /#{flag}/
-        parse([flag, '1.0']).should_not have_error /#{flag}/
-        parse([flag,   'a']).should     have_error /#{flag}/
-        parse([flag,   '' ]).should     have_error /#{flag}/
-        parse([flag       ]).should     have_error /#{flag}/
+        expect(parse([flag,   '1'])).to_not have_error /#{flag}/
+        expect(parse([flag,   '0'])).to_not have_error /#{flag}/
+        expect(parse([flag,  '-1'])).to     have_error /#{flag}/
+        expect(parse([flag,'-1.0'])).to     have_error /#{flag}/
+        expect(parse([flag, '1.0'])).to_not have_error /#{flag}/
+        expect(parse([flag,   'a'])).to     have_error /#{flag}/
+        expect(parse([flag,   '' ])).to     have_error /#{flag}/
+        expect(parse([flag       ])).to     have_error /#{flag}/
       end
     end
   end
 
   specify 'unknown options set an error' do
-    parse(['--xyz']).should have_error 'Unknown option: "--xyz"'
-    parse(['-y']).should have_error 'Unknown option: "-y"'
-    parse(['-y', 'b']).should have_error 'Unknown option: "-y"'
+    expect(parse(['--xyz'])).to have_error 'Unknown option: "--xyz"'
+    expect(parse(['-y'])).to have_error 'Unknown option: "-y"'
+    expect(parse(['-y', 'b'])).to have_error 'Unknown option: "-y"'
   end
 
   example 'example: multiple args' do
     options = parse(%w[filename -l 12 -L 20 -h -r torequire])
-    options[:filename].should == 'filename'
-    options[:start_line].should == 12
-    options[:end_line].should == 20
-    options[:require].should == ['torequire']
-    options[:help].should be_a_kind_of String
-    options[:errors].should be_empty
+    expect(options[:filename]).to eq 'filename'
+    expect(options[:start_line]).to eq 12
+    expect(options[:end_line]).to eq 20
+    expect(options[:require]).to eq ['torequire']
+    expect(options[:help]).to be_a_kind_of String
+    expect(options[:errors]).to be_empty
   end
 
   describe ':filename' do
     it 'defaults to nil' do
-      parse([])[:filename].should be_nil
+      expect(parse([])[:filename]).to be_nil
     end
 
     it 'is the first non-flag' do
-      parse(['a'])[:filename].should == 'a'
-      parse(['-x', 'a'])[:filename].should == 'a'
-      parse(['a', '-x'])[:filename].should == 'a'
+      expect(parse(['a'])[:filename]).to eq 'a'
+      expect(parse(['-x', 'a'])[:filename]).to eq 'a'
+      expect(parse(['a', '-x'])[:filename]).to eq 'a'
     end
 
     it 'sets an error if given multiple filenames' do
-      parse([]).should_not have_error /name/
-      parse(['a']).should_not have_error /Can only have one filename/
-      parse(['a', 'b']).should have_error 'Can only have one filename, but had: "a", "b"'
+      expect(parse([])).to_not have_error /name/
+      expect(parse(['a'])).to_not have_error /Can only have one filename/
+      expect(parse(['a', 'b'])).to have_error 'Can only have one filename, but had: "a", "b"'
     end
   end
 
   describe ':start_line' do
     it 'defaults to 1' do
-      parse([])[:start_line].should equal 1
+      expect(parse([])[:start_line]).to equal 1
     end
 
     it 'is set with -l and --start-line' do
-      parse(['-l', '1'])[:start_line].should == 1
-      parse(['--start-line', '12'])[:start_line].should == 12
+      expect(parse(['-l', '1'])[:start_line]).to eq 1
+      expect(parse(['--start-line', '12'])[:start_line]).to eq 12
     end
 
     it_behaves_like 'it requires a positive int argument', ['-l', '--start-line']
@@ -104,30 +105,30 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe ':end_line' do
     it 'defaults to infinity' do
-      parse([])[:end_line].should equal Float::INFINITY
+      expect(parse([])[:end_line]).to equal Float::INFINITY
     end
 
     it 'is set with -L and --end-line' do
-      parse(['-L', '1'])[:end_line].should == 1
-      parse(['--end-line', '12'])[:end_line].should == 12
+      expect(parse(['-L', '1'])[:end_line]).to eq 1
+      expect(parse(['--end-line', '12'])[:end_line]).to eq 12
     end
 
     it_behaves_like 'it requires a positive int argument', ['-L', '--end-line']
   end
 
   it 'swaps start and end line around if they are out of order' do
-    parse(%w[-l 2 -L 1])[:start_line].should == 1
-    parse(%w[-l 2 -L 1])[:end_line].should == 2
+    expect(parse(%w[-l 2 -L 1])[:start_line]).to eq 1
+    expect(parse(%w[-l 2 -L 1])[:end_line]).to eq 2
   end
 
   describe ':result_length' do
     it 'defaults to infinity' do
-      parse([])[:max_result_length].should == Float::INFINITY
+      expect(parse([])[:max_result_length]).to eq Float::INFINITY
     end
 
     it 'is set with -D and --result-length' do
-      parse(['-D',              '10'])[:max_result_length].should == 10
-      parse(['--result-length', '10'])[:max_result_length].should == 10
+      expect(parse(['-D',              '10'])[:max_result_length]).to eq 10
+      expect(parse(['--result-length', '10'])[:max_result_length]).to eq 10
     end
 
     it_behaves_like 'it requires a positive int argument', ['-D', '--result-length']
@@ -135,12 +136,12 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe ':max_line_length' do
     it 'defaults to infinity' do
-      parse([])[:max_line_length].should == Float::INFINITY
+      expect(parse([])[:max_line_length]).to eq Float::INFINITY
     end
 
     it 'is set with -d and --line-length' do
-      parse(['-d',            '10'])[:max_line_length].should == 10
-      parse(['--line-length', '10'])[:max_line_length].should == 10
+      expect(parse(['-d',            '10'])[:max_line_length]).to eq 10
+      expect(parse(['--line-length', '10'])[:max_line_length]).to eq 10
     end
 
     it_behaves_like 'it requires a positive int argument', ['-d', '--line-length']
@@ -148,148 +149,148 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe :require do
     it 'defaults to an empty array' do
-      parse([])[:require].should be_empty
+      expect(parse([])[:require]).to be_empty
     end
 
     it '-r and --require sets each required file into the result array' do
-      parse(%w[-r f1 --require f2])[:require].should == %w[f1 f2]
+      expect(parse(%w[-r f1 --require f2])[:require]).to eq %w[f1 f2]
     end
 
     it 'sets an error if not provided with a filename' do
-      parse(['--require', 'f']).should_not have_error /-r/
-      parse(['-r']).should have_error /-r\b/
-      parse(['--require']).should have_error /--require\b/
+      expect(parse(['--require', 'f'])).to_not have_error /-r/
+      expect(parse(['-r'])).to have_error /-r\b/
+      expect(parse(['--require'])).to have_error /--require\b/
     end
   end
 
   describe ':help' do
     it 'defaults to nil' do
-      parse([])[:help].should be_nil
+      expect(parse([])[:help]).to be_nil
     end
 
     it 'is set to the flag only help screen with -h and --help and -help' do
-      parse(['-h'])[:help].should include 'Usage:'
-      parse(['--help'])[:help].should include 'Usage:'
+      expect(parse(['-h'])[:help]).to include 'Usage:'
+      expect(parse(['--help'])[:help]).to include 'Usage:'
 
-      parse(['-h'])[:help].should_not include 'Examples:'
-      parse(['--help'])[:help].should_not include 'Examples:'
+      expect(parse(['-h'])[:help]).to_not include 'Examples:'
+      expect(parse(['--help'])[:help]).to_not include 'Examples:'
     end
 
     it 'is set to the flag with examples help screen with --help+ and -h+' do
-      parse(['-h+'])[:help].should include 'Usage:'
-      parse(['--help+'])[:help].should include 'Usage:'
+      expect(parse(['-h+'])[:help]).to include 'Usage:'
+      expect(parse(['--help+'])[:help]).to include 'Usage:'
 
-      parse(['-h+'])[:help].should include 'Examples:'
-      parse(['--help+'])[:help].should include 'Examples:'
+      expect(parse(['-h+'])[:help]).to include 'Examples:'
+      expect(parse(['--help+'])[:help]).to include 'Examples:'
     end
   end
 
   describe ':program' do
     it 'defaults to nil' do
-      parse([])[:program].should be_nil
+      expect(parse([])[:program]).to be_nil
     end
 
     it 'is set with -e or --program, and takes the next arg' do
-      parse(['-e', '1'])[:program].should == '1'
-      parse(['--program', '1'])[:program].should == '1'
+      expect(parse(['-e', '1'])[:program]).to eq '1'
+      expect(parse(['--program', '1'])[:program]).to eq '1'
     end
 
     it 'sets an error if not given a program' do
-      parse([]).should_not have_error /-e/
-      parse([]).should_not have_error /--program/
-      parse(['-e']).should have_error /-e/
-      parse(['--program']).should have_error /--program/
+      expect(parse([])).to_not have_error /-e/
+      expect(parse([])).to_not have_error /--program/
+      expect(parse(['-e'])).to have_error /-e/
+      expect(parse(['--program'])).to have_error /--program/
     end
 
     it 'sets an error if a filename is also give' do
-      parse(['-e', '1']).should_not have_error /-e/
-      parse(['-e', '1', 'abc']).should have_error /"abc"/
+      expect(parse(['-e', '1'])).to_not have_error /-e/
+      expect(parse(['-e', '1', 'abc'])).to have_error /"abc"/
     end
   end
 
   describe':load_path' do
     it 'defaults to an empty array' do
-      parse([])[:load_path].should be_empty
+      expect(parse([])[:load_path]).to be_empty
     end
 
     specify '-I and --load-path sets each required file into the result array' do
-      parse(%w[-I f1 --load-path f2])[:load_path].should == %w[f1 f2]
+      expect(parse(%w[-I f1 --load-path f2])[:load_path]).to eq %w[f1 f2]
     end
 
     it 'sets an error if not provided with a dir' do
-      parse(['--load-path', 'f']).should_not have_error /-I/
-      parse(['-I']).should have_error /-I\b/
-      parse(['--load-path']).should have_error /--load-path\b/
+      expect(parse(['--load-path', 'f'])).to_not have_error /-I/
+      expect(parse(['-I'])).to have_error /-I\b/
+      expect(parse(['--load-path'])).to have_error /--load-path\b/
     end
   end
 
   describe ':encoding' do
     it 'defaults to nil' do
-      parse([])[:encoding].should be_nil
+      expect(parse([])[:encoding]).to be_nil
     end
 
     specify '-K and --encoding sets the encoding to the next argument' do
-      parse(%w[-K u])[:encoding].should == 'u'
-      parse(%w[--encoding u])[:encoding].should == 'u'
+      expect(parse(%w[-K u])[:encoding]).to eq 'u'
+      expect(parse(%w[--encoding u])[:encoding]).to eq 'u'
     end
 
     specify 'with -K, the argument can be placed immediately after it (e.g. -Ku) because Ruby allows this' do
-      parse(['-Ku'])[:encoding].should == 'u'
-      parse(['-Ku']).should_not have_error /-K/
+      expect(parse(['-Ku'])[:encoding]).to eq 'u'
+      expect(parse(['-Ku'])).to_not have_error /-K/
     end
 
     it 'sets an error if not provided with an encoding' do
-      parse(['-Ku']).should_not have_error /-K/
-      parse(['-K u']).should_not have_error /-K/
-      parse(['--encoding', 'u']).should_not have_error /--encoding/
-      parse(['-K']).should have_error /-K/
-      parse(['--encoding']).should have_error /--encoding/
+      expect(parse(['-Ku'])).to_not have_error /-K/
+      expect(parse(['-K u'])).to_not have_error /-K/
+      expect(parse(['--encoding', 'u'])).to_not have_error /--encoding/
+      expect(parse(['-K'])).to have_error /-K/
+      expect(parse(['--encoding'])).to have_error /--encoding/
     end
   end
 
   describe ':as' do
     it 'defaults to nil' do
-      parse([])[:as].should be_nil
+      expect(parse([])[:as]).to be_nil
     end
 
     it 'can be set with -a and --as' do
-      parse(%w[-a   abc])[:as].should == 'abc'
-      parse(%w[--as abc])[:as].should == 'abc'
+      expect(parse(%w[-a   abc])[:as]).to eq 'abc'
+      expect(parse(%w[--as abc])[:as]).to eq 'abc'
     end
 
     it 'sets an error if not provided with a filename' do
-      parse(%w[-a  f]).should_not have_error /-a/
-      parse(%w[-as f]).should_not have_error /--as/
-      parse(%w[-a   ]).should have_error /-a/
-      parse(%w[--as ]).should have_error /--as/
+      expect(parse(%w[-a  f])).to_not have_error /-a/
+      expect(parse(%w[-as f])).to_not have_error /--as/
+      expect(parse(%w[-a   ])).to have_error /-a/
+      expect(parse(%w[--as ])).to have_error /--as/
     end
   end
 
   describe ':clean' do
     it 'defaults to false' do
-      parse([])[:clean].should == false
+      expect(parse([])[:clean]).to eq false
     end
 
     it 'can be set with -c and --clean' do
-      parse(%w[-c])[:clean].should == true
-      parse(%w[--clean])[:clean].should == true
+      expect(parse(%w[-c])[:clean]).to eq true
+      expect(parse(%w[--clean])[:clean]).to eq true
     end
   end
 
   describe ':version' do
     it 'defaults to false' do
-      parse([])[:version].should == false
+      expect(parse([])[:version]).to eq false
     end
 
     it 'can be set with -v and --version' do
-      parse(%w[-v])[:version].should == true
-      parse(%w[--version])[:version].should == true
+      expect(parse(%w[-v])[:version]).to eq true
+      expect(parse(%w[--version])[:version]).to eq true
     end
   end
 
   describe ':timeout' do
     it 'defaults to 0' do
-      parse([])[:timeout].should == 0
+      expect(parse([])[:timeout]).to eq 0
     end
 
     it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout']
@@ -302,87 +303,87 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
     # maybe change the default?
     it 'defaults to AlignChunk' do
-      parse([])[:alignment_strategy].should == AlignChunk
+      expect(parse([])[:alignment_strategy]).to eq AlignChunk
     end
 
     specify '-s and --alignment-strategy sets the alignment strategy' do
-      parse(['-s',                   'chunk'])[:alignment_strategy].should == AlignChunk
-      parse(['--alignment-strategy', 'chunk'])[:alignment_strategy].should == AlignChunk
+      expect(parse(['-s',                   'chunk'])[:alignment_strategy]).to eq AlignChunk
+      expect(parse(['--alignment-strategy', 'chunk'])[:alignment_strategy]).to eq AlignChunk
     end
 
     it 'accepts values: file, line, chunk' do
-      parse(['-s',  'file'])[:alignment_strategy].should == AlignFile
-      parse(['-s',  'line'])[:alignment_strategy].should == AlignLine
-      parse(['-s', 'chunk'])[:alignment_strategy].should == AlignChunk
+      expect(parse(['-s',  'file'])[:alignment_strategy]).to eq AlignFile
+      expect(parse(['-s',  'line'])[:alignment_strategy]).to eq AlignLine
+      expect(parse(['-s', 'chunk'])[:alignment_strategy]).to eq AlignChunk
     end
 
     it 'sets an error if not provided with a strategy, or if provided with an unknown strategy' do
-      parse(['-s', 'file']).should_not have_error /alignment-strategy/
-      parse(['-s',  'abc']).should     have_error /alignment-strategy/
-      parse(['-s'        ]).should     have_error /alignment-strategy/
+      expect(parse(['-s', 'file'])).to_not have_error /alignment-strategy/
+      expect(parse(['-s',  'abc'])).to     have_error /alignment-strategy/
+      expect(parse(['-s'        ])).to     have_error /alignment-strategy/
     end
   end
 
   describe ':inherit_exit_status' do
     it 'defaults to false' do
-      parse([])[:inherit_exit_status].should be_false
+      expect(parse([])[:inherit_exit_status]).to eq false
     end
 
     it 'can be set with --inherit-exit-status or -i' do
-      parse(['--inherit-exit-status'])[:inherit_exit_status].should be_true
-      parse(['-i'])[:inherit_exit_status].should be_true
+      expect(parse(['--inherit-exit-status'])[:inherit_exit_status]).to be true
+      expect(parse(['-i'])[:inherit_exit_status]).to be true
     end
   end
 
   describe ':xmpfilter_style' do
     it 'defaults to false' do
-      parse([])[:xmpfilter_style].should be_false
+      expect(parse([])[:xmpfilter_style]).to be false
     end
 
     it 'can be set with --xmpfilter-style or -x' do
-      parse(['--xmpfilter-style'])[:xmpfilter_style].should be_true
-      parse(['-x'])[:xmpfilter_style].should be_true
+      expect(parse(['--xmpfilter-style'])[:xmpfilter_style]).to be true
+      expect(parse(['-x'])[:xmpfilter_style]).to be true
     end
   end
 
   describe ':debugger' do
     it 'defaults to a debugger that is disabled' do
-      parse([], :fake_stream)[:debugger].should_not be_enabled
+      expect(parse([], :fake_stream)[:debugger]).to_not be_enabled
     end
 
     it 'can be enabled with --debug or -g' do
-      parse(['--debug'], :fake_stream)[:debugger].should be_enabled
-      parse(['-g'], :fake_stream)[:debugger].should be_enabled
+      expect(parse(['--debug'], :fake_stream)[:debugger]).to be_enabled
+      expect(parse(['-g'], :fake_stream)[:debugger]).to be_enabled
     end
 
     it 'sets the stream to the one passed in' do
-      parse(['-g'], :fake_stream)[:debugger].stream.should == :fake_stream
+      expect(parse(['-g'], :fake_stream)[:debugger].stream).to eq :fake_stream
     end
   end
 
   describe ':shebang' do
     it 'defaults to "ruby"' do
-      parse([])[:shebang].should == 'ruby'
+      expect(parse([])[:shebang]).to eq 'ruby'
     end
 
     it 'can be enabled with --shebang' do
-      parse(['--shebang', 'not_ruby'])[:shebang].should == 'not_ruby'
+      expect(parse(['--shebang', 'not_ruby'])[:shebang]).to eq 'not_ruby'
     end
 
     it 'sets an error if not given a next arg to execute' do
-      parse([]).should_not have_error /--shebang/
-      parse(['--shebang']).should have_error /--shebang/
+      expect(parse([])).to_not have_error /--shebang/
+      expect(parse(['--shebang'])).to have_error /--shebang/
     end
   end
 
   describe ':number_of_captures' do
     it 'defaults to infinity' do
-      parse([])[:number_of_captures].should == Float::INFINITY
+      expect(parse([])[:number_of_captures]).to eq Float::INFINITY
     end
 
     it 'can be set with --number-of-captures or -n' do
-      parse(['-n', '10'])[:number_of_captures].should == 10
-      parse(['--number-of-captures', '10'])[:number_of_captures].should == 10
+      expect(parse(['-n', '10'])[:number_of_captures]).to eq 10
+      expect(parse(['--number-of-captures', '10'])[:number_of_captures]).to eq 10
     end
 
     it_behaves_like 'it requires a positive int argument', ['-n', '--number-of-captures']
@@ -390,12 +391,12 @@ describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe ':result_as_json' do
     it 'defaults to false' do
-      parse([])[:result_as_json].should == false
+      expect(parse([])[:result_as_json]).to eq false
     end
 
     it 'can be enabled with --json or -j' do
-      parse(['--json'])[:result_as_json].should == true
-      parse(['-j'])[:result_as_json].should == true
+      expect(parse(['--json'])[:result_as_json]).to eq true
+      expect(parse(['-j'])[:result_as_json]).to eq true
     end
   end
 end

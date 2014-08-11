@@ -167,7 +167,11 @@ class SeeingIsBelieving
         range = ast.location.expression
 
         # first two children: target, message, so we want the last child only if it is an argument
-        target, message, *, last_arg = ast.children
+        children = ast.children
+        target   = children[0]
+        message  = children[1]
+        last_arg = children.size > 2 ? children[-1] : nil
+
 
         # last arg is a heredoc, use the closing paren, or the end of the first line of the heredoc
         if heredoc? last_arg
