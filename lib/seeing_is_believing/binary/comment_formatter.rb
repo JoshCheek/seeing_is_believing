@@ -1,5 +1,12 @@
 class SeeingIsBelieving
   class Binary
+    # not sure I like this name, it formats comments that
+    # show results e.g. "# => [1, 2, 3]"
+    #
+    # line_length is the length of the line this comment is being appended to
+    #
+    # For examples of what the options are, and how they all fit together, see
+    # spec/binary/comment_formatter_spec.rb
     class CommentFormatter
       def self.call(*args)
         new(*args).call
@@ -48,7 +55,7 @@ class SeeingIsBelieving
       end
 
       def ellipsify(string)
-        string.sub(/.{0,3}$/) { |last_chars| last_chars.gsub /./, '.' }
+        string.sub(/.{0,3}$/) { |last_chars| '.' * last_chars.size }
       end
     end
   end

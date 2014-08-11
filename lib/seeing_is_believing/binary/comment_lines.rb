@@ -1,6 +1,7 @@
 require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
+  # spec/binary/comment_lines_spec.rb
   class Binary
 
     # takes a body and a block

@@ -22,7 +22,7 @@ class SeeingIsBelieving
         buffer, parser, rewriter = ParserHelpers.initialize_parser code, 'strip_comments'
         comments                 = ParserHelpers.comments_from parser, buffer
 
-        removed_comments      = { result: [], exception: [], stdout: [], stderr: [] }
+        removed_comments         = { result: [], exception: [], stdout: [], stderr: [] }
 
         comments.each do |comment|
           case comment.text
