@@ -363,6 +363,18 @@ describe SeeingIsBelieving do
     expect(invoke(%q[system "ruby -e '$stderr.print ?a'"]).stderr).to eq "a"
   end
 
+  it 'does not blow up when inspect recurses infinitely' do
+    result = invoke(%[def self.inspect
+                        self
+                      end
+                      self], filename: 'blowsup.rb')
+    expect(result).to have_exception
+    expect(result.exception.class_name).to eq 'SystemStackError'
+    expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
+    expect(result.exception.message).to match /recursive/i
+    expect(result[4].exception).to eq result.exception
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }

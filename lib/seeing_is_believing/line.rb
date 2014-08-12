@@ -59,6 +59,12 @@ class SeeingIsBelieving
         inspected = value.inspect.to_str # only invoke inspect once, b/c the inspection may be recorded
       rescue NoMethodError
         inspected = "#<no inspect available>"
+      rescue SystemStackError
+        # this is necessary because SystemStackError won't show the backtrace of the method we tried to call
+        # which means there won't be anything showing the user where this came from
+        # so we need to re-raise the error to get a backtrace that shows where we came from
+        # otherwise it looks like the bug is in SiB and not the user's program, see https://github.com/JoshCheek/seeing_is_believing/issues/37
+        raise SystemStackError, "Calling inspect blew the stack (is it recursive w/o a base case?)"
       end
 
       if    size <  @max_number_of_captures then @array << inspected
