@@ -68,6 +68,7 @@ Editor Integration
 * [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing)
 * [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter) (has support for `seeing_is_believing`)
 * [vim-seeing-is-believing](https://github.com/hwartig/vim-seeing-is-believing)
+* [atom-seeing-is-believing](https://github.com/JoshCheek/atom-seeing-is-believing) (prob has best installation instructions)
 
 Emacs Integration
 =================
