@@ -6,7 +6,7 @@
 # (or if you want to understand why we do the pipe dance)
 
 
-require 'yaml'
+require 'json'
 require 'seeing_is_believing/result'
 $SiB = SeeingIsBelieving::Result.new
 
@@ -36,5 +36,5 @@ at_exit do
   $SiB.exitstatus   = $!.status if $!.kind_of? SystemExit
   $SiB.bug_in_sib   = $! && ! $!.kind_of?(SystemExit)
 
-  stdout_real_fd.write YAML.dump $SiB
+  stdout_real_fd.write JSON.dump $SiB.to_primitive
 end

@@ -325,8 +325,8 @@ describe SeeingIsBelieving do
         result = SeeingIsBelieving::Result.new
         result.record_result(1, /omg/)
 
-        require 'yaml'
-        puts YAML.dump result
+        require 'json'
+        puts JSON.dump result.to_primitive
       "
       File.chmod 0755, 'omg-ruby'
       old_path = ENV['PATH']

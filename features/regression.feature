@@ -336,7 +336,6 @@ Feature:
     # !> stderr gets past it b/c of dumb ruby bug
     """
 
-  @wip
   Scenario: Incorrect wrapping in some programs
     Given the file "incorrect_wrapping.rb":
     """
@@ -363,4 +362,23 @@ Feature:
     # ~> undefined local variable or method `a' for main:Object
     # ~>
     # ~> incorrect_wrapping.rb:1:in `<main>'
+    """
+
+  Scenario: Can deal with hostile environments
+    Given the file "bang_object.rb":
+    """
+    class Object
+      def !(a)
+      end
+    end
+    """
+    When I run "seeing_is_believing bang_object.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    class Object
+      def !(a)
+      end
+    end
     """

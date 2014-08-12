@@ -11,7 +11,7 @@
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
 
-require 'yaml'
+require 'json'
 require 'open3'
 require 'timeout'
 require 'stringio'
@@ -137,7 +137,7 @@ class SeeingIsBelieving
     end
 
     def deserialize_result
-      YAML.load stdout
+      Result.from_primitive JSON.load stdout
     end
 
     def wrap_error(error)

@@ -6,6 +6,37 @@ class SeeingIsBelieving
     include HasException
     include Enumerable
 
+    def self.from_primitive(primitive)
+      new.from_primitive(primitive)
+    end
+
+    def from_primitive(primitive)
+      self.exitstatus = primitive['exitstatus']
+      self.stdout     = primitive['stdout']
+      self.stderr     = primitive['stderr']
+      self.bug_in_sib = primitive['bug_in_sib']
+      self.exception  = RecordedException.from_primitive primitive['exception']
+      primitive['results'].each do |line_number, primitive_line|
+        results_for(line_number.to_i).from_primitive(primitive_line)
+      end
+      self
+    end
+
+    def to_primitive
+      primitive = {
+        'exitstatus' => exitstatus,
+        'stdout'     => stdout,
+        'stderr'     => stderr,
+        'bug_in_sib' => bug_in_sib,
+        'exception'  => (exception && exception.to_primitive),
+      }
+      primitive['results'] = results.each_with_object({}) do |(line_number, line), r|
+        r[line_number] = line.to_primitive
+      end
+      primitive
+    end
+
+
     attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures
 
     alias bug_in_sib? bug_in_sib

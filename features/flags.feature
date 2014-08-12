@@ -561,8 +561,8 @@ Feature: Using flags
     result = SeeingIsBelieving::Result.new
     result.record_result(1, /omg/)
 
-    require 'yaml'
-    puts YAML.dump result
+    require 'json'
+    puts JSON.dump result.to_primitive
     """
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
