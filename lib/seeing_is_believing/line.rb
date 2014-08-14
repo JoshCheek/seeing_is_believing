@@ -54,12 +54,14 @@ class SeeingIsBelieving
       array.each { |element| record_result element }
     end
 
+    StackErrors = [SystemStackError]
+    StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
     def record_result(value)
       begin
         inspected = value.inspect.to_str # only invoke inspect once, b/c the inspection may be recorded
       rescue NoMethodError
         inspected = "#<no inspect available>"
-      rescue SystemStackError
+      rescue *StackErrors
         # this is necessary because SystemStackError won't show the backtrace of the method we tried to call
         # which means there won't be anything showing the user where this came from
         # so we need to re-raise the error to get a backtrace that shows where we came from

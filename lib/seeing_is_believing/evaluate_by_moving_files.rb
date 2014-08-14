@@ -101,7 +101,7 @@ class SeeingIsBelieving
     end
 
     def evaluate_file
-      Open3.popen3 *popen_args do |process_stdin, process_stdout, process_stderr, thread|
+      Open3.popen3 ENV, *popen_args do |process_stdin, process_stdout, process_stderr, thread|
         out_reader = Thread.new { process_stdout.read }
         err_reader = Thread.new { process_stderr.read }
         Thread.new do

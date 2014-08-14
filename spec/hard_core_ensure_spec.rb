@@ -83,6 +83,7 @@ describe SeeingIsBelieving::HardCoreEnsure do
 
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
       pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
+      raise # new rspec will keep executing code and fail b/c nothing is raised
     elsif (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby') && (RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2')
       pending 'This test can\'t run on MRI (2.1.1 or 2.1.2) b/c of bug, see https://github.com/JoshCheek/seeing_is_believing/issues/26'
       raise # new rspec will keep executing code and fail b/c nothing is raised
