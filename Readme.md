@@ -19,13 +19,13 @@ Use The Binary
 ```ruby
 $ cat simple_example.rb
 5.times do |i|
-i * 2
+  i * 2
 end
 
 
 $ seeing_is_believing simple_example.rb
 5.times do |i|  # => 5
-    i * 2       # => 0, 2, 4, 6, 8
+  i * 2       # => 0, 2, 4, 6, 8
 end             # => 5
 ```
 
