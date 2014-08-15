@@ -19,7 +19,7 @@ Use The Binary
 ```ruby
 $ cat simple_example.rb
 5.times do |i|
-  i * 2
+i * 2
 end
 
 
