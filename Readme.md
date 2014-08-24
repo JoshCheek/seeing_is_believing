@@ -11,7 +11,7 @@ Also comes with a binary to show how it might be used.
 
 For whatever reason, I can't embed videos, but **here's a [video](http://vimeo.com/73866851)** showing it off.
 
-Works in Ruby 1.9 and 2.0
+Works in Ruby 1.9, 2.0, 2.1
 
 Use The Binary
 ==============
@@ -25,7 +25,7 @@ end
 
 $ seeing_is_believing simple_example.rb
 5.times do |i|  # => 5
-    i * 2       # => 0, 2, 4, 6, 8
+  i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
 ```
 
