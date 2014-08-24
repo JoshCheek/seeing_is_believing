@@ -106,19 +106,13 @@ Shit that will probably never get done (or if it does, won't be until after 2.0)
 License
 =======
 
-           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-                       Version 2, December 2004
+<a href="http://www.wtfpl.net/"><img src="http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl.svg" height="20" alt="WTFPL" /></a>
 
-    Copyright (C) 2012 Josh Cheek <josh.cheek@gmail.com>
+    Copyright (C) 2014 Josh Cheek <josh.cheek@gmail.com>
 
-    Everyone is permitted to copy and distribute verbatim or modified
-    copies of this license document, and changing it is allowed as long
-    as the name is changed.
-
-               DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-      TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-     0. You just DO WHAT THE FUCK YOU WANT TO.
-
-
-
+    This program is free software. It comes without any warranty,
+    to the extent permitted by applicable law.
+    You can redistribute it and/or modify it under the terms of the
+    Do What The Fuck You Want To Public License,
+    Version 2, as published by Sam Hocevar.
+    See http://www.wtfpl.net/ for more details.
