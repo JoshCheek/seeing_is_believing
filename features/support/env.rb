@@ -17,3 +17,7 @@ Then 'stdout is the JSON:' do |json|
   actual   = JSON.parse(@last_executed.stdout)
   expect(actual).to eq expected
 end
+
+Given %q(the file '$filename' '$body') do |filename, body|
+  Haiti::CommandLineHelpers.write_file filename, eval_curlies(body)
+end
