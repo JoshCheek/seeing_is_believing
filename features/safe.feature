@@ -11,8 +11,13 @@ Feature: Running in safe-mode
     And the stdin content "world"
     When I run "seeing_is_believing --safe safe-example1.rb"
     Then stderr is empty
-    And the exit status is 1
-    And stdout is 'print "hello, #{gets}"  # => "hello, world"'
+    And the exit status is 0
+    And stdout is:
+    """
+    print "hello, #{gets}"  # => nil
+
+    # >> hello, world
+    """
 
   Scenario: Unsafe code
   Scenario: With --xmpfilter
