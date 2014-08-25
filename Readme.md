@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/JoshCheek/seeing_is_believing.png?label=ready&title=Ready)](https://waffle.io/JoshCheek/seeing_is_believing)
 [![Build Status](https://secure.travis-ci.org/JoshCheek/seeing_is_believing.png?branch=master)](http://travis-ci.org/JoshCheek/seeing_is_believing)
 
 Seeing Is Believing
