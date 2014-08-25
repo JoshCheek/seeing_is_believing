@@ -111,7 +111,7 @@ class SeeingIsBelieving
     end
 
     def evaluate_program
-      self.interpolated_program = printer.call
+      self.interpolated_program = annotator.call
     rescue Timeout::Error
       self.timeout_error = true
     rescue Exception
@@ -150,12 +150,12 @@ class SeeingIsBelieving
       @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
     end
 
-    def printer
-      @printer ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+    def annotator
+      @annotator ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
     end
 
     def results
-      printer.results
+      annotator.results
     end
 
     def file_is_on_stdin?
@@ -182,7 +182,7 @@ class SeeingIsBelieving
     end
 
     def result_as_data_structure
-      results = printer.results
+      results = annotator.results
       { stdout:      results.stdout,
         stderr:      results.stderr,
         exit_status: results.exitstatus,
