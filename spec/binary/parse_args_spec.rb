@@ -399,5 +399,15 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       expect(parse(['-j'])[:result_as_json]).to eq true
     end
   end
+
+  describe ':evaluator' do
+    it 'defaults to EvaluateByMovingFiles' do
+      expect(parse([])[:evaluator]).to eq SeeingIsBelieving::EvaluateByMovingFiles
+    end
+
+    specify '--safe sets it to EvaluateWithEvalIn' do
+      expect(parse(['--safe'])[:evaluator]).to eq SeeingIsBelieving::EvaluateWithEvalIn
+    end
+  end
 end
 

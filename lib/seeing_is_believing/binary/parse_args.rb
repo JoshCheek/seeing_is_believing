@@ -7,6 +7,8 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
+require 'seeing_is_believing/evaluate_by_moving_files'
+require 'seeing_is_believing/evaluate_with_eval_in'
 
 class SeeingIsBelieving
   class Binary
@@ -33,6 +35,7 @@ class SeeingIsBelieving
             when '-i',  '--inherit-exit-status' then options[:inherit_exit_status] = true
             when '-j',  '--json'                then options[:result_as_json]      = true
             when '-g',  '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
+            when        '--safe'                then options[:evaluator]           = EvaluateWithEvalIn
             when '-l',  '--start-line'          then extract_positive_int_for :start_line,         arg
             when '-L',  '--end-line'            then extract_positive_int_for :end_line,           arg
             when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
@@ -45,9 +48,9 @@ class SeeingIsBelieving
             when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
             when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   =  executable }
             when '-s',  '--alignment-strategy'  then extract_alignment_strategy
-            when /\A-K(.+)/                    then options[:encoding] = $1
-            when '-K', '--encoding'            then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
-            when /^-/                          then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when /\A-K(.+)/                     then options[:encoding] = $1
+            when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
+            when /^-/                           then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else
               filenames << arg
               options[:filename] = arg
@@ -96,6 +99,7 @@ class SeeingIsBelieving
           alignment_strategy:  AlignChunk,
           shebang:             'ruby',
           result_as_json:      false,
+          evaluator:           EvaluateByMovingFiles,
         }
       end
 
