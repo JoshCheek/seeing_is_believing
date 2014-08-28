@@ -21,13 +21,15 @@ Gem::Specification.new do |s|
 
   s.add_dependency             "parser",   "~> 2.1.4"
   s.add_dependency             "psych",    "~> 2.0"
+  s.add_dependency             "eval_in",  "~> 0.1.2"
 
-  s.add_development_dependency "pry",      "~> 0.10.0"
-  s.add_development_dependency "haiti",    "~> 0.1.0"
+  s.add_development_dependency "webmock",  "~>  1.18"
+  s.add_development_dependency "pry",      "~>  0.10.0"
+  s.add_development_dependency "haiti",    "~>  0.1"
   s.add_development_dependency "rake",     "~> 10.0"
-  s.add_development_dependency "rspec",    "~> 3.0"
-  s.add_development_dependency "cucumber", "~> 1.2"
-  s.add_development_dependency "ichannel", "~> 5.1"
+  s.add_development_dependency "rspec",    "~>  3.0"
+  s.add_development_dependency "cucumber", "~>  1.2"
+  s.add_development_dependency "ichannel", "~>  5.1"
 
   s.post_install_message = <<'Omg, frogs <3'.gsub(/(gg+)/) { |capture| "\e[32m#{capture.gsub 'g', '.'}\e[0m" }.gsub("brown", "\e[33m").gsub("off", "\e[0m")
               .7

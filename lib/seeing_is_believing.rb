@@ -27,6 +27,7 @@ class SeeingIsBelieving
     @debugger           = options.fetch :debugger, Debugger.new(stream: nil)
     @ruby_executable    = options.fetch :ruby_executable, 'ruby'
     @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
+    @evaluator          = options.fetch :evaluator, EvaluateByMovingFiles
   end
 
   def call
@@ -66,16 +67,17 @@ class SeeingIsBelieving
   def result_for(program)
     Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
       filename = @filename || File.join(dir, 'program.rb')
-      EvaluateByMovingFiles.call program,
-                                 filename,
-                                 input_stream:       @stdin,
-                                 matrix_filename:    @matrix_filename,
-                                 require:            @require,
-                                 load_path:          @load_path,
-                                 encoding:           @encoding,
-                                 timeout:            @timeout,
-                                 ruby_executable:    @ruby_executable,
-                                 debugger:           @debugger
+
+      @evaluator.call program,
+                      filename,
+                      input_stream:       @stdin,
+                      matrix_filename:    @matrix_filename,
+                      require:            @require,
+                      load_path:          @load_path,
+                      encoding:           @encoding,
+                      timeout:            @timeout,
+                      ruby_executable:    @ruby_executable,
+                      debugger:           @debugger
     end
   end
 

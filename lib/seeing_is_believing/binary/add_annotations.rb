@@ -35,7 +35,8 @@ class SeeingIsBelieving
                                               timeout:            options[:timeout],
                                               debugger:           debugger,
                                               ruby_executable:    options[:shebang],
-                                              number_of_captures: options[:number_of_captures]
+                                              number_of_captures: options[:number_of_captures],
+                                              evaluate_with:      options[:evaluator]
       end
 
       def call
