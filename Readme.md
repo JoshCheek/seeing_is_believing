@@ -7,7 +7,7 @@ Seeing Is Believing
 Evaluates a file, recording the results of each line of code.
 Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing#editor-integration).
 
-![example](docs/example.gif)
+![example](https://s3.amazonaws.com/josh.cheek/images/scratch/sib-example1.gif)
 
 Watch a [longer video](http://vimeo.com/73866851).
 
