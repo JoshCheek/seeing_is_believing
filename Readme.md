@@ -7,7 +7,7 @@ Evaluates a file, recording the results of each line of code.
 You can then use this to display output values like Bret Victor does with JavaScript in his talk [Inventing on Principle](http://vimeo.com/36579366).
 Except, obviously, his is like a million times better.
 
-Also comes with a binary to show how it might be used.
+![example](docs/example.gif)
 
 For whatever reason, I can't embed videos, but **here's a [video](http://vimeo.com/73866851)** showing it off.
 
