@@ -21,7 +21,6 @@ class SeeingIsBelieving
       def call
         buffer, parser, rewriter = ParserHelpers.initialize_parser code, 'strip_comments'
         comments                 = ParserHelpers.comments_from parser, buffer
-
         removed_comments         = { result: [], exception: [], stdout: [], stderr: [] }
 
         comments.each do |comment|
@@ -71,24 +70,6 @@ class SeeingIsBelieving
         begin_pos -= 1 if code[begin_pos] == "\n" && remove_preceeding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
-      end
-
-      # returns comments in groups that are on consecutive lines
-      def adjacent_comments(comments, buffer)
-        comments          = comments.sort_by { |comment| comment.location.begin_pos }
-        current_chunk     = 0
-        last_line_seen    = -100
-        chunks_to_comment = comments.chunk do |comment|
-          line = comment.location.begin_pos.line
-          if last_line_seen.next == line
-            last_line_seen = line
-            current_chunk
-          else
-            last_line_seen = line
-            current_chunk += 1
-          end
-        end
-        chunks_to_comment.map &:last
       end
     end
   end
