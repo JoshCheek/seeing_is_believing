@@ -6,6 +6,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
   StderrResult     = SeeingIsBelieving::EventStream::Event::StderrResult
   ExceptionResult  = SeeingIsBelieving::EventStream::Event::ExceptionResult
   UnrecordedResult = SeeingIsBelieving::EventStream::Event::UnrecordedResult
+  BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiBResult
 
   attr_accessor :publisher, :consumer, :readstream, :writestream
 
@@ -160,9 +161,26 @@ RSpec.describe SeeingIsBelieving::EventStream do
   end
 
   describe 'finalize' do
+    # TODO: Should there also be an event for being complete (ie you can stop listening now)?
+    def final_event(publisher, consumer, event_class)
+      publisher.finalize
+      consumer.call(3).find { |e| e.class == event_class }
+    end
+
     describe 'bug_in_sib' do
-      it 'is true or false'
-      it 'is always emitted'
+      it 'truthy values are transated to true' do
+        publisher.bug_in_sib = 'a value'
+        expect(final_event(publisher, consumer, BugInSiB).value).to equal true
+      end
+
+      it 'falsy values are translated to false' do
+        publisher.bug_in_sib = nil
+        expect(final_event(publisher, consumer, BugInSiB).value).to equal false
+      end
+
+      it 'is false by default, and is always emitted' do
+        expect(final_event(publisher, consumer, BugInSiB).value).to equal false
+      end
     end
 
     describe 'max_line_captures' do

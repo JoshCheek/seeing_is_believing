@@ -7,6 +7,7 @@ class SeeingIsBelieving
       StdoutResult     = Struct.new(:stdout)
       StderrResult     = Struct.new(:stderr)
       UnrecordedResult = Struct.new(:type, :line_number)
+      BugInSiBResult   = Struct.new(:value)
       ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace) do
         def initialize
           super -1, '', '', []
@@ -75,6 +76,9 @@ class SeeingIsBelieving
           Event::StdoutResult.new(extract_string line)
         when :stderr
           Event::StderrResult.new(extract_string line)
+        when :bug_in_sib
+          Event::BugInSiBResult.new(extract_token(line) == 'true')
+        when :max_line_captures, :exitstatus
         else
           raise "IDK what #{event_name.inspect} is!"
         end
