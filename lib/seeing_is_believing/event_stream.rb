@@ -171,8 +171,7 @@ class SeeingIsBelieving
         queue << "stderr #{to_string_token stderr}"
       end
 
-      # TODO: rename to "finish" ?
-      def finalize
+      def finish!
         queue << "bug_in_sib #{bug_in_sib}"
         queue << "max_line_captures #{max_line_captures}"
         queue << "exitstatus #{exitstatus}"

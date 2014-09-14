@@ -21,7 +21,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
   end
 
   after {
-    publisher.finalize
+    publisher.finish!
     readstream.close  unless readstream.closed?
     writestream.close unless writestream.closed?
   }
@@ -191,9 +191,9 @@ RSpec.describe SeeingIsBelieving::EventStream do
     end
   end
 
-  describe 'finalize' do
+  describe 'finish!' do
     def final_event(publisher, consumer, event_class)
-      publisher.finalize
+      publisher.finish!
       consumer.call(4).find { |e| e.class == event_class }
     end
 
