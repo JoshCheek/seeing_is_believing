@@ -93,17 +93,28 @@ class SeeingIsBelieving
       end
     end
 
+    require 'thread'
     class Publisher
       attr_accessor :exitstatus, :bug_in_sib, :max_line_captures
-      attr_accessor :resultstream
       attr_accessor :recorded_results
 
       def initialize(resultstream)
-        self.resultstream      = resultstream
         self.exitstatus        = 0
         self.bug_in_sib        = false
         self.max_line_captures = Float::INFINITY
-        self.recorded_results  = Hash.new { |h, line_num| h[line_num] = Hash.new(0) }
+        self.recorded_results  = Hash.new { |h, line_num| h[line_num] = Hash.new(0) } # TODO: Swap with array?
+        self.queue             = Thread::Queue.new
+        self.publisher_thread  = Thread.new do
+          loop do
+            to_publish = queue.shift
+            if to_publish == "finish".freeze
+              resultstream << "finish\n"
+              break
+            else
+              resultstream << (to_publish << "\n")
+            end
+          end
+        end
       end
 
       # TODO: delete?
@@ -123,38 +134,44 @@ class SeeingIsBelieving
         count = recorded_results[line_number][type]
         recorded_results[line_number][type] = count + 1
         if count < max_line_captures
-          resultstream << "result #{line_number} #{type} #{to_string_token value.inspect}\n"
+          queue << "result #{line_number} #{type} #{to_string_token value.inspect}"
         elsif count == max_line_captures
-          resultstream << "maxed_result #{line_number} #{type}\n"
+          queue << "maxed_result #{line_number} #{type}"
         end
         value
       end
 
       def record_exception(line_number, exception)
-        resultstream << "exception begin\n"
-        resultstream << "exception line_number #{line_number}\n"
-        resultstream << "exception class_name  #{to_string_token exception.class.name}\n"
-        resultstream << "exception message     #{to_string_token exception.message}\n"
+        queue << "exception begin"
+        queue << "exception line_number #{line_number}"
+        queue << "exception class_name  #{to_string_token exception.class.name}"
+        queue << "exception message     #{to_string_token exception.message}"
         exception.backtrace.each do |line|
-          resultstream << "exception backtrace #{to_string_token line}\n"
+          queue << "exception backtrace #{to_string_token line}"
         end
-        resultstream << "exception end\n"
+        queue << "exception end"
       end
 
       # TODO with a mutex, we could also write this dynamically!
       def record_stdout(stdout)
-        resultstream << "stdout #{to_string_token stdout}\n"
+        queue << "stdout #{to_string_token stdout}"
       end
 
       def record_stderr(stderr)
-        resultstream << "stderr #{to_string_token stderr}\n"
+        queue << "stderr #{to_string_token stderr}"
       end
 
+      # TODO: rename to "finish" ?
       def finalize
-        resultstream << "bug_in_sib #{bug_in_sib}\n"
-        resultstream << "max_line_captures #{max_line_captures}\n"
-        resultstream << "exitstatus #{exitstatus}\n"
+        queue << "bug_in_sib #{bug_in_sib}"
+        queue << "max_line_captures #{max_line_captures}"
+        queue << "exitstatus #{exitstatus}"
+        queue << "finish".freeze
       end
+
+      private
+
+      attr_accessor :resultstream, :queue, :publisher_thread
     end
   end
 end

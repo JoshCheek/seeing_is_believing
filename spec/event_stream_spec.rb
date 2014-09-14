@@ -19,15 +19,42 @@ RSpec.describe SeeingIsBelieving::EventStream do
   end
 
   after {
+    publisher.finalize
     readstream.close  unless readstream.closed?
     writestream.close unless writestream.closed?
   }
 
-  # TODO: could not fucking figure out how to ask the goddam thing if it has data
-  # read docs for over an hour -.0
   describe 'emitting a result' do
+    # TODO: could not fucking figure out how to ask the goddam thing if it has data
+    # read docs for over an hour -.0
     it 'writes a line to stdout'
-    it 'is wrapped in a mutex to prevent multiple values from writing at the same time'
+
+    # This test is irrelevant on MRI b/c of the GIL,
+    # but I ran it on Rbx to make sure it works
+    it 'is wrapped in a mutex to prevent multiple values from writing at the same time' do
+      num_threads = 10
+      num_results = 1000
+      line_nums_and_inspections = num_threads.times.flat_map { |line_num|
+        num_results.times.map { |value| "#{line_num}|#{value.inspect}" }
+      }
+
+      publisher_threads = num_threads.times.map { |line_num|
+        Thread.new {
+          num_results.times { |value| publisher.record_result :type, line_num, value }
+        }
+      }
+
+      (num_threads * num_results).times do |n|
+        result = consumer.call
+        ary_val = "#{result.line_number}|#{result.inspected}"
+        index = line_nums_and_inspections.index(ary_val)
+        raise "#{ary_val.inspect} is already consumed!" unless index
+        line_nums_and_inspections.delete_at index
+      end
+
+      expect(line_nums_and_inspections).to eq []
+      expect(publisher_threads).to be_none(&:alive?)
+    end
   end
 
   describe 'record_results' do
