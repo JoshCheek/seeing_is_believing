@@ -21,13 +21,13 @@ class SeeingIsBelieving
 
       def extract_token(line)
         event_name = line[/[^ ]*/]
-        line.sub! /[^ ]* /, ''
+        line.sub! /[^ ]*\s*/, ''
         event_name
       end
 
+      # for a consideration of many different ways of doing this, see 5633064
       def extract_string(line)
-        puts "EXTRACTING: #{line.inspect}"
-        line
+        Marshal.load extract_token(line).unpack('m0').first
       end
 
       def event_for(line)
@@ -67,10 +67,9 @@ class SeeingIsBelieving
         @bug_in_sib = !!bool  # => false
       end
 
+      # for a consideration of many different ways of doing this, see 5633064
       def safe_string(string)
-        puts "SAFE STRING: #{string.inspect}"
-        string.gsub! "\n", "\\n"
-        string
+        [Marshal.dump(string)].pack('m0')
       end
 
       # TODO: can record basic object and that shit

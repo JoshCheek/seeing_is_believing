@@ -17,20 +17,14 @@ RSpec.describe SeeingIsBelieving::EventStream do
     writestream.close unless writestream.closed?
   }
 
+  # TODO: could not fucking figure out how to ask the goddam thing if it has data
+  # read docs for over an hour -.0
   describe 'emitting a result' do
     it 'writes a line to stdout'
     it 'is wrapped in a mutex to prevent multiple values from writing at the same time'
   end
 
   describe 'record_results' do
-    example 'Simple example' do
-      publisher.record_result :type, 1, "a"
-      expect(consumer.call).to eq LineResult.new(:type, 1, '"a"')
-
-      publisher.record_result :type, 1, 1
-      expect(consumer.call).to eq LineResult.new(:type, 1, '1')
-    end
-
     it 'emits a type, line_number, and escaped string' do
       publisher.record_result :type1, 123, [*'a'..'z', *'A'..'Z', *'0'..'9'].join("")
       publisher.record_result :type1, 123, '"'
@@ -93,6 +87,23 @@ RSpec.describe SeeingIsBelieving::EventStream do
     it 'returns the value' do
       o = Object.new
       expect(publisher.record_result :type, 123, o).to equal o
+    end
+
+    # Some examples, mostly for the purpose of running individually if things get confusing
+    example 'Example: Simple' do
+      publisher.record_result :type, 1, "a"
+      expect(consumer.call).to eq LineResult.new(:type, 1, '"a"')
+
+      publisher.record_result :type, 1, 1
+      expect(consumer.call).to eq LineResult.new(:type, 1, '1')
+    end
+
+    example 'Example: Complex' do
+      str1 = (0...128).map(&:chr).join('') << "Ω≈ç√∫˜µ≤≥åß∂ƒ©˙∆˚¬…æœ∑´®†¥¨ˆøπ“‘¡™£¢ªº’”"
+      str2 = str1.dup
+      publisher.record_result :type, 1, str2
+      expect(str2).to eq str1 # just making sure it doesn't mutate since this one is so complex
+      expect(consumer.call).to eq LineResult.new(:type, 1, str1.inspect)
     end
   end
 
