@@ -4,12 +4,15 @@ class SeeingIsBelieving
   module EventStream
     module Event
       LineResult       = Struct.new(:type, :line_number, :inspected)
+      StdoutResult     = Struct.new(:stdout)
+      StderrResult     = Struct.new(:stderr)
       UnrecordedResult = Struct.new(:type, :line_number)
-      Exception        = Struct.new(:line_number, :class_name, :message, :backtrace) do
+      ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace) do
         def initialize
           super -1, '', '', []
         end
       end
+
     end
 
     class Consumer
@@ -37,21 +40,21 @@ class SeeingIsBelieving
 
       def event_for(line)
         line.chomp!
-        event_name = extract_token(line)
+        event_name = extract_token(line).intern
         case event_name
-        when 'result'
+        when :result
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
           inspected   = extract_string(line)
           Event::LineResult.new(type, line_number, inspected)
-        when 'maxed_result'
+        when :maxed_result
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
           Event::UnrecordedResult.new(type, line_number)
-        when 'exception'
+        when :exception
           case extract_token(line).intern
           when :begin
-            @exception = Event::Exception.new
+            @exception = Event::ExceptionResult.new
             call
           when :line_number
             @exception.line_number = extract_token(line).to_i
@@ -68,6 +71,10 @@ class SeeingIsBelieving
           when :end
             @exception
           end
+        when :stdout
+          Event::StdoutResult.new(extract_string line)
+        when :stderr
+          Event::StderrResult.new(extract_string line)
         else
           raise "IDK what #{event_name.inspect} is!"
         end
@@ -124,11 +131,11 @@ class SeeingIsBelieving
 
       # TODO with a mutex, we could also write this dynamically!
       def record_stdout(stdout)
-        resultstream << "stdout #{stdout.inspect}\n"  # => #<StringIO:0x007f974404c788>
+        resultstream << "stdout #{to_string_token stdout}\n"  # => #<StringIO:0x007f974404c788>
       end
 
       def record_stderr(stderr)
-        resultstream << "stderr #{stderr.inspect}\n"  # => #<StringIO:0x007f974404c788>
+        resultstream << "stderr #{to_string_token stderr}\n"  # => #<StringIO:0x007f974404c788>
       end
 
       def finalize
