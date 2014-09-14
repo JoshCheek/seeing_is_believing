@@ -7,6 +7,8 @@ RSpec.describe SeeingIsBelieving::EventStream do
   ExceptionResult  = SeeingIsBelieving::EventStream::Event::ExceptionResult
   UnrecordedResult = SeeingIsBelieving::EventStream::Event::UnrecordedResult
   BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiBResult
+  MaxLineCaptures  = SeeingIsBelieving::EventStream::Event::MaxLineCaptures
+  Exitstatus       = SeeingIsBelieving::EventStream::Event::Exitstatus
 
   attr_accessor :publisher, :consumer, :readstream, :writestream
 
@@ -184,14 +186,30 @@ RSpec.describe SeeingIsBelieving::EventStream do
     end
 
     describe 'max_line_captures' do
-      it 'interprets numbers'
-      it 'interprets infinity'
-      it 'is infinity by default'
+      it 'interprets numbers' do
+        publisher.max_line_captures = 12
+        expect(final_event(publisher, consumer, MaxLineCaptures).value).to eq 12
+      end
+
+      it 'interprets infinity' do
+        publisher.max_line_captures = Float::INFINITY
+        expect(final_event(publisher, consumer, MaxLineCaptures).value).to eq Float::INFINITY
+      end
+
+      it 'is infinity by default' do
+        expect(final_event(publisher, consumer, MaxLineCaptures).value).to eq Float::INFINITY
+      end
     end
 
     describe 'exitstatus' do
-      it 'is 0 by default'
-      it 'can be overridden'
+      it 'is 0 by default' do
+        expect(final_event(publisher, consumer, Exitstatus).value).to eq 0
+      end
+
+      it 'can be overridden' do
+        publisher.exitstatus = 74
+        expect(final_event(publisher, consumer, Exitstatus).value).to eq 74
+      end
     end
   end
 end

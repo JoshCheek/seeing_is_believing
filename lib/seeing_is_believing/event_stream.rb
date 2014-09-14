@@ -8,6 +8,8 @@ class SeeingIsBelieving
       StderrResult     = Struct.new(:stderr)
       UnrecordedResult = Struct.new(:type, :line_number)
       BugInSiBResult   = Struct.new(:value)
+      MaxLineCaptures  = Struct.new(:value)
+      Exitstatus       = Struct.new(:value)
       ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace) do
         def initialize
           super -1, '', '', []
@@ -78,7 +80,13 @@ class SeeingIsBelieving
           Event::StderrResult.new(extract_string line)
         when :bug_in_sib
           Event::BugInSiBResult.new(extract_token(line) == 'true')
-        when :max_line_captures, :exitstatus
+        when :max_line_captures
+          token = extract_token(line)
+          value = token =~ /infinity/i ? Float::INFINITY : token.to_i
+          Event::MaxLineCaptures.new(value)
+        when :exitstatus
+          # TODO: Will this fuck it up if you run `exit true`?
+          Event::Exitstatus.new(extract_token(line).to_i)
         else
           raise "IDK what #{event_name.inspect} is!"
         end
