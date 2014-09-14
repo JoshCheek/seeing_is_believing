@@ -113,7 +113,7 @@ class SeeingIsBelieving
         self.exitstatus        = 0
         self.bug_in_sib        = false
         self.max_line_captures = Float::INFINITY
-        self.recorded_results  = Hash.new { |h, line_num| h[line_num] = Hash.new(0) } # TODO: Swap with array?
+        self.recorded_results  = []
         self.queue             = Thread::Queue.new
         self.publisher_thread  = Thread.new do
           loop do
@@ -142,8 +142,8 @@ class SeeingIsBelieving
       # TODO: only records inspect once
       # TODO: Check whatever else result is currently doing
       def record_result(type, line_number, value)
-        count = recorded_results[line_number][type]
-        recorded_results[line_number][type] = count + 1
+        count = (recorded_results[line_number] ||= Hash.new(0))[type]
+        recorded_results[line_number][type] = count.next
         if count < max_line_captures
           queue << "result #{line_number} #{type} #{to_string_token value.inspect}"
         elsif count == max_line_captures
@@ -163,7 +163,6 @@ class SeeingIsBelieving
         queue << "end"
       end
 
-      # TODO with a mutex, we could also write this dynamically!
       def record_stdout(stdout)
         queue << "stdout #{to_string_token stdout}"
       end
