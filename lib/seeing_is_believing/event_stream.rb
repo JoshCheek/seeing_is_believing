@@ -82,21 +82,21 @@ class SeeingIsBelieving
     end
 
     class Publisher
-      attr_accessor :exitstatus, :bug_in_sib, :max_line_captures  # => nil
-      attr_accessor :resultstream                                 # => nil
-      attr_accessor :recorded_results                             # => nil
+      attr_accessor :exitstatus, :bug_in_sib, :max_line_captures
+      attr_accessor :resultstream
+      attr_accessor :recorded_results
 
       def initialize(resultstream)
-        self.resultstream      = resultstream                                          # => #<StringIO:0x007f974404c788>
-        self.exitstatus        = 0                                                     # => 0
-        self.bug_in_sib        = false                                                 # => false
-        self.max_line_captures = Float::INFINITY                                       # => Infinity
-        self.recorded_results  = Hash.new { |h, line_num| h[line_num] = Hash.new(0) }  # => {}
+        self.resultstream      = resultstream
+        self.exitstatus        = 0
+        self.bug_in_sib        = false
+        self.max_line_captures = Float::INFINITY
+        self.recorded_results  = Hash.new { |h, line_num| h[line_num] = Hash.new(0) }
       end
 
       # TODO: delete?
       def bug_in_sib=(bool)
-        @bug_in_sib = !!bool  # => false
+        @bug_in_sib = !!bool
       end
 
       # for a consideration of many different ways of doing this, see 5633064
@@ -120,28 +120,28 @@ class SeeingIsBelieving
 
       def record_exception(line_number, exception)
         resultstream << "exception begin\n"
-        resultstream << "exception line_number #{line_number}\n"                        # => #<StringIO:0x007f974404c788>
-        resultstream << "exception class_name  #{to_string_token exception.class.name}\n"  # => #<StringIO:0x007f974404c788>
-        resultstream << "exception message     #{to_string_token exception.message}\n"     # => #<StringIO:0x007f974404c788>
-        exception.backtrace.each do |line|                                              # => ["/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20140913-72389-i6ovhi/program.rb:66:in `<main>'"]
-          resultstream << "exception backtrace #{to_string_token line}\n"                       # => #<StringIO:0x007f974404c788>
-        end                                                                             # => ["/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20140913-72389-i6ovhi/program.rb:66:in `<main>'"]
+        resultstream << "exception line_number #{line_number}\n"
+        resultstream << "exception class_name  #{to_string_token exception.class.name}\n"
+        resultstream << "exception message     #{to_string_token exception.message}\n"
+        exception.backtrace.each do |line|
+          resultstream << "exception backtrace #{to_string_token line}\n"
+        end
         resultstream << "exception end\n"
       end
 
       # TODO with a mutex, we could also write this dynamically!
       def record_stdout(stdout)
-        resultstream << "stdout #{to_string_token stdout}\n"  # => #<StringIO:0x007f974404c788>
+        resultstream << "stdout #{to_string_token stdout}\n"
       end
 
       def record_stderr(stderr)
-        resultstream << "stderr #{to_string_token stderr}\n"  # => #<StringIO:0x007f974404c788>
+        resultstream << "stderr #{to_string_token stderr}\n"
       end
 
       def finalize
-        resultstream << "bug_in_sib #{bug_in_sib}\n"                # => #<StringIO:0x007f974404c788>
-        resultstream << "max_line_captures #{max_line_captures}\n"  # => #<StringIO:0x007f974404c788>
-        resultstream << "exitstatus #{exitstatus}\n"                # => #<StringIO:0x007f974404c788>
+        resultstream << "bug_in_sib #{bug_in_sib}\n"
+        resultstream << "max_line_captures #{max_line_captures}\n"
+        resultstream << "exitstatus #{exitstatus}\n"
       end
     end
   end
