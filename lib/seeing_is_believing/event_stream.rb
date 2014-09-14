@@ -5,6 +5,11 @@ class SeeingIsBelieving
     module Event
       LineResult       = Struct.new(:type, :line_number, :inspected)
       UnrecordedResult = Struct.new(:type, :line_number)
+      Exception        = Struct.new(:line_number, :class_name, :message, :backtrace) do
+        def initialize
+          super -1, '', '', []
+        end
+      end
     end
 
     class Consumer
@@ -43,6 +48,26 @@ class SeeingIsBelieving
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
           Event::UnrecordedResult.new(type, line_number)
+        when 'exception'
+          case extract_token(line).intern
+          when :begin
+            @exception = Event::Exception.new
+            call
+          when :line_number
+            @exception.line_number = extract_token(line).to_i
+            call
+          when :class_name
+            @exception.class_name = extract_string(line)
+            call
+          when :message
+            @exception.message = extract_string(line)
+            call
+          when :backtrace
+            @exception.backtrace << extract_string(line)
+            call
+          when :end
+            @exception
+          end
         else
           raise "IDK what #{event_name.inspect} is!"
         end
@@ -68,8 +93,8 @@ class SeeingIsBelieving
       end
 
       # for a consideration of many different ways of doing this, see 5633064
-      def safe_string(string)
-        [Marshal.dump(string)].pack('m0')
+      def to_string_token(string)
+        [Marshal.dump(string.to_s)].pack('m0')
       end
 
       # TODO: can record basic object and that shit
@@ -79,7 +104,7 @@ class SeeingIsBelieving
         count = recorded_results[line_number][type]
         recorded_results[line_number][type] = count + 1
         if count < max_line_captures
-          resultstream << "result #{line_number} #{type} #{safe_string value.inspect}\n"
+          resultstream << "result #{line_number} #{type} #{to_string_token value.inspect}\n"
         elsif count == max_line_captures
           resultstream << "maxed_result #{line_number} #{type}\n"
         end
@@ -87,12 +112,14 @@ class SeeingIsBelieving
       end
 
       def record_exception(line_number, exception)
+        resultstream << "exception begin\n"
         resultstream << "exception line_number #{line_number}\n"                        # => #<StringIO:0x007f974404c788>
-        resultstream << "exception class_name  #{exception.class.name.to_s.inspect}\n"  # => #<StringIO:0x007f974404c788>
-        resultstream << "exception message     #{exception.message.to_s.inspect}\n"     # => #<StringIO:0x007f974404c788>
+        resultstream << "exception class_name  #{to_string_token exception.class.name}\n"  # => #<StringIO:0x007f974404c788>
+        resultstream << "exception message     #{to_string_token exception.message}\n"     # => #<StringIO:0x007f974404c788>
         exception.backtrace.each do |line|                                              # => ["/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20140913-72389-i6ovhi/program.rb:66:in `<main>'"]
-          resultstream << "exception backtrace #{line.inspect}\n"                       # => #<StringIO:0x007f974404c788>
+          resultstream << "exception backtrace #{to_string_token line}\n"                       # => #<StringIO:0x007f974404c788>
         end                                                                             # => ["/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20140913-72389-i6ovhi/program.rb:66:in `<main>'"]
+        resultstream << "exception end\n"
       end
 
       # TODO with a mutex, we could also write this dynamically!
