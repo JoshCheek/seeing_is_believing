@@ -108,48 +108,36 @@ RSpec.describe SeeingIsBelieving::EventStream do
   end
 
   describe 'exceptions' do
+    def assert_exception(recorded_exception, recorded_line_no, class_name, message_matcher, backtrace_index, backtrace_line)
+      expect(recorded_exception.line_number).to eq recorded_line_no
+      expect(recorded_exception.class_name).to  eq class_name
+      expect(recorded_exception.message).to match message_matcher
+
+      backtrace = recorded_exception.backtrace
+      expect(backtrace).to be_a_kind_of Array
+      expect(backtrace).to be_all { |frame| String === frame }
+      frame = backtrace[backtrace_index]
+      expect(frame).to match __FILE__
+      expect(frame).to match /\b#{backtrace_line}\b/
+    end
+
     it 'emits the line_number, an escaped class_name, an escaped message, and escaped backtrace' do
-      exception = nil
       begin
         raise ZeroDivisionError, 'omg'
       rescue
-        exception = $!
+        publisher.record_exception 12, $!
       end
-      publisher.record_exception 12, exception
-
-      recorded_exception = consumer.call
-      expect(recorded_exception.line_number).to eq 12
-      expect(recorded_exception.class_name).to  eq 'ZeroDivisionError'
-      expect(recorded_exception.message).to     eq 'omg'
-
-      backtrace = recorded_exception.backtrace
-      expect(backtrace).to be_a_kind_of Array
-      expect(backtrace).to be_all { |frame| String === frame }
-      first_frame = backtrace.first
-      expect(first_frame).to match __FILE__
-      expect(first_frame).to match /\b#{__LINE__-16}\b/
+      assert_exception consumer.call, 12, 'ZeroDivisionError', /\Aomg\Z/, 0, __LINE__-4
     end
 
     example 'Example: Common edge case: name error' do
-      exception = nil
       begin
         not_a_local_or_meth
       rescue
-        exception = $!
+        publisher.record_exception 99, $!
       end
-      publisher.record_exception 99, exception
-
-      recorded_exception = consumer.call
-      expect(recorded_exception.line_number).to eq 99
-      expect(recorded_exception.class_name).to  eq 'NameError'
-      expect(recorded_exception.message).to include 'not_a_local_or_meth'
-
-      backtrace = recorded_exception.backtrace
-      expect(backtrace).to be_a_kind_of Array
-      expect(backtrace).to be_all { |frame| String === frame }
-      first_frame = backtrace[1]
-      expect(first_frame).to match __FILE__
-      expect(first_frame).to match /\b#{__LINE__-16}\b/
+      backtrace_frame = 1 # b/c this one will get caught by method missing
+      assert_exception consumer.call, 99, 'NameError', /\bnot_a_local_or_meth\b/, 1, __LINE__-5
     end
   end
 
