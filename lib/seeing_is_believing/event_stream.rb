@@ -1,3 +1,5 @@
+require 'seeing_is_believing/error'
+
 class SeeingIsBelieving
   # At the CLI level, streaming will have to be opted into, b/c you'd need something on the other side that could display it
   module EventStream
@@ -10,19 +12,35 @@ class SeeingIsBelieving
       MaxLineCaptures  = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
       ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace)
+      Finish           = Class.new
     end
 
     class Consumer
+      NoMoreInput = Class.new SeeingIsBelievingError
+
       def initialize(readstream)
         @readstream = readstream
       end
 
       def call(n=1)
-        return event_for @readstream.gets if n == 1
-        n.times.map { event_for @readstream.gets }
+        raise NoMoreInput if finished?
+        if n == 1
+          note_finish event_for @readstream.gets
+        else
+          n.times.map { note_finish event_for @readstream.gets }
+        end
+      end
+
+      def finished?
+        @finished
       end
 
       private
+
+      def note_finish(event)
+        @finished = true if event.class == Event::Finish
+        event
+      end
 
       def extract_token(line)
         event_name = line[/[^ ]+/]
@@ -78,6 +96,8 @@ class SeeingIsBelieving
         when :exitstatus
           # TODO: Will this fuck it up if you run `exit true`?
           Event::Exitstatus.new(extract_token(line).to_i)
+        when :finish
+          Event::Finish.new
         else
           raise "IDK what #{event_name.inspect} is!"
         end

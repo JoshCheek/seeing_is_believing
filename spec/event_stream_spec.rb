@@ -9,6 +9,8 @@ RSpec.describe SeeingIsBelieving::EventStream do
   BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiBResult
   MaxLineCaptures  = SeeingIsBelieving::EventStream::Event::MaxLineCaptures
   Exitstatus       = SeeingIsBelieving::EventStream::Event::Exitstatus
+  Finish           = SeeingIsBelieving::EventStream::Event::Finish
+  NoMoreInput      = SeeingIsBelieving::EventStream::Consumer::NoMoreInput
 
   attr_accessor :publisher, :consumer, :readstream, :writestream
 
@@ -190,10 +192,9 @@ RSpec.describe SeeingIsBelieving::EventStream do
   end
 
   describe 'finalize' do
-    # TODO: Should there also be an event for being complete (ie you can stop listening now)?
     def final_event(publisher, consumer, event_class)
       publisher.finalize
-      consumer.call(3).find { |e| e.class == event_class }
+      consumer.call(4).find { |e| e.class == event_class }
     end
 
     describe 'bug_in_sib' do
@@ -236,6 +237,13 @@ RSpec.describe SeeingIsBelieving::EventStream do
       it 'can be overridden' do
         publisher.exitstatus = 74
         expect(final_event(publisher, consumer, Exitstatus).value).to eq 74
+      end
+    end
+
+    describe 'finish' do
+      it 'is the last thing that will be read' do
+        expect(final_event(publisher, consumer, Finish)).to be_a_kind_of Finish
+        expect { consumer.call }.to raise_error NoMoreInput
       end
     end
   end
