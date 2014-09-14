@@ -5,13 +5,13 @@ class SeeingIsBelieving
   module EventStream
     module Event
       LineResult       = Struct.new(:type, :line_number, :inspected)
-      StdoutResult     = Struct.new(:stdout)
-      StderrResult     = Struct.new(:stderr)
       UnrecordedResult = Struct.new(:type, :line_number)
-      BugInSiBResult   = Struct.new(:value)
+      Stdout           = Struct.new(:stdout)
+      Stderr           = Struct.new(:stderr)
+      BugInSiB         = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
-      ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace)
+      Exception        = Struct.new(:line_number, :class_name, :message, :backtrace)
       Finish           = Class.new
     end
 
@@ -71,7 +71,7 @@ class SeeingIsBelieving
           type        = extract_token(line).intern
           Event::UnrecordedResult.new(type, line_number)
         when :exception
-          Event::ExceptionResult.new(-1, '', '', []).tap do |exception|
+          Event::Exception.new(-1, '', '', []).tap do |exception|
             loop do
               line = @readstream.gets.chomp
               case extract_token(line).intern
@@ -84,11 +84,11 @@ class SeeingIsBelieving
             end
           end
         when :stdout
-          Event::StdoutResult.new(extract_string line)
+          Event::Stdout.new(extract_string line)
         when :stderr
-          Event::StderrResult.new(extract_string line)
+          Event::Stderr.new(extract_string line)
         when :bug_in_sib
-          Event::BugInSiBResult.new(extract_token(line) == 'true')
+          Event::BugInSiB.new(extract_token(line) == 'true')
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i

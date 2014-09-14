@@ -2,11 +2,11 @@ require 'seeing_is_believing/event_stream'
 
 RSpec.describe SeeingIsBelieving::EventStream do
   LineResult       = SeeingIsBelieving::EventStream::Event::LineResult
-  StdoutResult     = SeeingIsBelieving::EventStream::Event::StdoutResult
-  StderrResult     = SeeingIsBelieving::EventStream::Event::StderrResult
-  ExceptionResult  = SeeingIsBelieving::EventStream::Event::ExceptionResult
   UnrecordedResult = SeeingIsBelieving::EventStream::Event::UnrecordedResult
-  BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiBResult
+  Stdout           = SeeingIsBelieving::EventStream::Event::Stdout
+  Stderr           = SeeingIsBelieving::EventStream::Event::Stderr
+  ExceptionEvent   = SeeingIsBelieving::EventStream::Event::Exception
+  BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiB
   MaxLineCaptures  = SeeingIsBelieving::EventStream::Event::MaxLineCaptures
   Exitstatus       = SeeingIsBelieving::EventStream::Event::Exitstatus
   Finish           = SeeingIsBelieving::EventStream::Event::Finish
@@ -144,7 +144,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
   describe 'exceptions' do
     def assert_exception(recorded_exception, recorded_line_no, class_name, message_matcher, backtrace_index, backtrace_line)
-      expect(recorded_exception).to be_a_kind_of ExceptionResult
+      expect(recorded_exception).to be_a_kind_of ExceptionEvent
       expect(recorded_exception.line_number).to eq recorded_line_no
       expect(recorded_exception.class_name).to  eq class_name
       expect(recorded_exception.message).to match message_matcher
@@ -180,14 +180,14 @@ RSpec.describe SeeingIsBelieving::EventStream do
   describe 'stdout' do
     it 'is an escaped string' do
       publisher.record_stdout("this is the stdout¡")
-      expect(consumer.call).to eq StdoutResult.new("this is the stdout¡")
+      expect(consumer.call).to eq Stdout.new("this is the stdout¡")
     end
   end
 
   describe 'stderr' do
     it 'is an escaped string' do
       publisher.record_stderr("this is the stderr¡")
-      expect(consumer.call).to eq StderrResult.new("this is the stderr¡")
+      expect(consumer.call).to eq Stderr.new("this is the stderr¡")
     end
   end
 
