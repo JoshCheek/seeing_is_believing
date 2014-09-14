@@ -1,6 +1,5 @@
 class SeeingIsBelieving
-  # At the binary level, streaming will have to be opted into, b/c you'd need something on the other side that could display it
-  # TODO: we'll use eval for now, later just escape \ns
+  # At the CLI level, streaming will have to be opted into, b/c you'd need something on the other side that could display it
   module EventStream
     module Event
       LineResult       = Struct.new(:type, :line_number, :inspected)
@@ -10,12 +9,7 @@ class SeeingIsBelieving
       BugInSiBResult   = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
-      ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace) do
-        def initialize
-          super -1, '', '', []
-        end
-      end
-
+      ExceptionResult  = Struct.new(:line_number, :class_name, :message, :backtrace)
     end
 
     class Consumer
@@ -31,14 +25,18 @@ class SeeingIsBelieving
       private
 
       def extract_token(line)
-        event_name = line[/[^ ]*/]
-        line.sub! /[^ ]*\s*/, ''
+        event_name = line[/[^ ]+/]
+        line.sub! /^\s*[^ ]+\s*/, ''
         event_name
       end
 
       # for a consideration of many different ways of doing this, see 5633064
       def extract_string(line)
         Marshal.load extract_token(line).unpack('m0').first
+      end
+
+      def tokenize(line)
+        line.split(' ')
       end
 
       def event_for(line)
@@ -55,24 +53,17 @@ class SeeingIsBelieving
           type        = extract_token(line).intern
           Event::UnrecordedResult.new(type, line_number)
         when :exception
-          case extract_token(line).intern
-          when :begin
-            @exception = Event::ExceptionResult.new
-            call
-          when :line_number
-            @exception.line_number = extract_token(line).to_i
-            call
-          when :class_name
-            @exception.class_name = extract_string(line)
-            call
-          when :message
-            @exception.message = extract_string(line)
-            call
-          when :backtrace
-            @exception.backtrace << extract_string(line)
-            call
-          when :end
-            @exception
+          Event::ExceptionResult.new(-1, '', '', []).tap do |exception|
+            loop do
+              line = @readstream.gets.chomp
+              case extract_token(line).intern
+              when :line_number   then exception.line_number = extract_token(line).to_i
+              when :class_name    then exception.class_name  = extract_string(line)
+              when :message       then exception.message     = extract_string(line)
+              when :backtrace     then exception.backtrace << extract_string(line)
+              when :end           then break
+              end
+            end
           end
         when :stdout
           Event::StdoutResult.new(extract_string line)
@@ -142,14 +133,14 @@ class SeeingIsBelieving
       end
 
       def record_exception(line_number, exception)
-        queue << "exception begin"
-        queue << "exception line_number #{line_number}"
-        queue << "exception class_name  #{to_string_token exception.class.name}"
-        queue << "exception message     #{to_string_token exception.message}"
-        exception.backtrace.each do |line|
-          queue << "exception backtrace #{to_string_token line}"
-        end
-        queue << "exception end"
+        queue << "exception"
+        queue << "  line_number #{line_number}"
+        queue << "  class_name  #{to_string_token exception.class.name}"
+        queue << "  message     #{to_string_token exception.message}"
+        exception.backtrace.each { |line|
+          queue << "  backtrace   #{to_string_token line}"
+        }
+        queue << "end"
       end
 
       # TODO with a mutex, we could also write this dynamically!
