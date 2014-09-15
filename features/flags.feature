@@ -219,6 +219,40 @@ Feature: Using flags
     # => "1111111111...
     """
 
+  # TODO: Look into how xmpfilter decides what length to give it, maybe should default the value to 80, unless a line length or result length are given
+  @not-implemented
+  Scenario: --xmpfilter-style uses pp to inspect annotations whose value comes from the previous line (#44)
+  Given the file "xmpfilter-prev-line.rb":
+  """
+  { foo: 42,
+    bar: {
+      baz: 1,
+      buz: 2,
+      fuz: 3,
+    },
+    wibble: {
+      magic_word: "xyzzy",
+    }
+  } # =>
+  # =>
+  """
+  When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line.rb | seeing_is_believing --xmpfilter-style"
+  Then stdout is:
+  """
+  { foo: 42,
+    bar: {
+      baz: 1,
+      buz: 2,
+      fuz: 3,
+    },
+    wibble: {
+      magic_word: "xyzzy",
+    }
+  } # => {:foo=>42, :bar=>{:baz=>1, :buz=>2, :fuz=>3}, :wibble=>{:magic_word=>"xyzzy"}}
+  # => {:foo=>42,
+  #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+  #     :wibble=>{:magic_word=>"xyzzy"}}
+  """
 
   Scenario: --require
     Given the file "print_1.rb" "puts 1"
