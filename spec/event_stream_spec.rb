@@ -21,38 +21,6 @@ RSpec.describe SeeingIsBelieving::EventStream do
     writestream.close unless writestream.closed?
   }
 
-  # TODO: move this below emitting an event
-  describe 'each' do
-    it 'loops through and yields all events except the finish event' do
-      publisher.record_result :inspect, 100, 2
-      publisher.finish!
-
-      events = []
-      consumer.each { |e| events << e }
-      finish_event = events.find { |e| e.kind_of? Event::Finish }
-      line_result  = events.find { |e| e.kind_of? Event::LineResult }
-      exitstatus   = events.find { |e| e.kind_of? Event::Exitstatus }
-      expect(finish_event).to be_nil
-      expect(line_result.line_number).to eq 100
-      expect(exitstatus.value).to eq 0
-    end
-
-    it 'stops looping if there is no more input' do
-      writestream.close
-      expect(consumer.each.map { |e| e }).to eq []
-    end
-
-    it 'returns nil' do
-      publisher.finish!
-      expect(consumer.each { 1 }).to eq nil
-    end
-
-    it 'returns an enumerator if not given a block' do
-      publisher.finish!
-      expect(consumer.each.map &:class).to include Event::Exitstatus
-    end
-  end
-
   describe 'emitting an event' do
     # TODO: could not fucking figure out how to ask the goddam thing if it has data
     # read docs for over an hour -.0
@@ -109,6 +77,38 @@ RSpec.describe SeeingIsBelieving::EventStream do
       expect(consumer).to be_finished
     end
   end
+
+  describe 'each' do
+    it 'loops through and yields all events except the finish event' do
+      publisher.record_result :inspect, 100, 2
+      publisher.finish!
+
+      events = []
+      consumer.each { |e| events << e }
+      finish_event = events.find { |e| e.kind_of? Event::Finish }
+      line_result  = events.find { |e| e.kind_of? Event::LineResult }
+      exitstatus   = events.find { |e| e.kind_of? Event::Exitstatus }
+      expect(finish_event).to be_nil
+      expect(line_result.line_number).to eq 100
+      expect(exitstatus.value).to eq 0
+    end
+
+    it 'stops looping if there is no more input' do
+      writestream.close
+      expect(consumer.each.map { |e| e }).to eq []
+    end
+
+    it 'returns nil' do
+      publisher.finish!
+      expect(consumer.each { 1 }).to eq nil
+    end
+
+    it 'returns an enumerator if not given a block' do
+      publisher.finish!
+      expect(consumer.each.map &:class).to include Event::Exitstatus
+    end
+  end
+
 
   describe 'record_results' do
     it 'emits a type, line_number, and escaped string' do
