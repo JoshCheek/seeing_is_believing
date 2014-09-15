@@ -192,6 +192,7 @@ class SeeingIsBelieving
         queue << "max_line_captures #{max_line_captures}"
         queue << "exitstatus #{exitstatus}"
         queue << "finish".freeze
+        publisher_thread.join
       end
 
       private
