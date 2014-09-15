@@ -28,17 +28,17 @@ class SeeingIsBelieving
     @ruby_executable            = options.fetch :ruby_executable, 'ruby'
     @number_of_captures         = options.fetch :number_of_captures, Float::INFINITY
 
-    # TODO: would be nice to have before_all and after_all be callbacks, too
     @wrap_expressions_callbacks = {}
-    @wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  "begin; $SiB.max_line_captures = #{number_of_captures_as_str}; require 'pp'; "
-    @wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   ";rescue Exception;"\
-                                                                              "lambda {"\
-                                                                                "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
-                                                                                "$SiB.record_exception line_number, $!;"\
-                                                                                "$SiB.exitstatus = 1;"\
-                                                                                "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
-                                                                              "}.call;"\
-                                                                            "end"
+    @wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  -> { "begin; $SiB.max_line_captures = #{number_of_captures_as_str}; require 'pp'; " }
+    @wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   -> { ";rescue Exception;"\
+                                                                                   "lambda {"\
+                                                                                     "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
+                                                                                     "$SiB.record_exception line_number, $!;"\
+                                                                                     "$SiB.exitstatus = 1;"\
+                                                                                     "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
+                                                                                   "}.call;"\
+                                                                                 "end"
+                                                                            }
     @wrap_expressions_callbacks[:before_each] = options.fetch :before_each, -> line_number { "(" }
     @wrap_expressions_callbacks[:after_each]  = options.fetch :after_each,  -> line_number { ").tap { |value| "\
                                                                                 "$SiB.record_result(:inspect, #{line_number}, value);"\

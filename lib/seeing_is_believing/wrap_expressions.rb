@@ -14,8 +14,8 @@ class SeeingIsBelieving
 
     def initialize(program, wrappings)
       self.program     = program
-      self.before_all  = wrappings.fetch :before_all,  ''.freeze
-      self.after_all   = wrappings.fetch :after_all,   ''.freeze
+      self.before_all  = wrappings.fetch :before_all,  -> { ''.freeze }
+      self.after_all   = wrappings.fetch :after_all,   -> { ''.freeze }
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
       self.buffer, parser, self.rewriter = initialize_parser(program, 'program-without-annotations')
@@ -30,7 +30,7 @@ class SeeingIsBelieving
         find_wrappings
 
         if root # file may be empty
-          rewriter.insert_before root.location.expression, before_all
+          rewriter.insert_before root.location.expression, before_all.call
 
 
           wrappings.each do |line_num, (range, last_col, meta)|
@@ -42,7 +42,7 @@ class SeeingIsBelieving
           end
 
           range = root.location.expression
-          rewriter.insert_after range, after_all
+          rewriter.insert_after range, after_all.call
         end
 
         rewriter.process

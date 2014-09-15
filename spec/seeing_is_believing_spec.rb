@@ -31,8 +31,8 @@ describe SeeingIsBelieving do
   end
 
   it 'allows uers to override WrapExpressions initialization keys' do
-    expect(invoke(':body', before_all: 'if true;',  after_all: ';end;')[1]).to eq [':body']
-    expect(invoke(':body', before_all: 'if false;', after_all: ';end;')[1]).to eq []
+    expect(invoke(':body', before_all: -> { 'if true;'  }, after_all: -> { ';end;' })[1]).to eq [':body']
+    expect(invoke(':body', before_all: -> { 'if false;' }, after_all: -> { ';end;' })[1]).to eq []
 
     result = invoke ':body', before_each: -> line_number { "$SiB.record_result(:inspect, #{line_number*200}, (" },
                              after_each:  -> line_number { ").to_s.upcase + #{line_number}.inspect)" }

@@ -16,6 +16,10 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
   class, which will send the information back to the parent process as soon as it
   knows about it. For users who interact purely with the binary, this just means that
   JSON will not already be required.
+- WrapExpressions' `before_all` and `after_all` keys now point to values that are lambdas with no args.
+  Mostly this is for consistency since `before_each` and `after_each` are lambas,
+  But also, because at some point I might want to provide an argument, and this will make it easier.
+  And because it allows certain conveniences, such as setting local vars in the lambda.
 
 ### Removed
 - Dependency on psych

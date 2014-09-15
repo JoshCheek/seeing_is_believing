@@ -17,10 +17,10 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'wrapping the body' do
-    let(:options) { { before_all: "[",
-                      after_all:  "]",
-                      before_each: -> * { '<' },
-                      after_each:  -> * { '>' } } }
+    let(:options) { { before_all: -> { "[".freeze },
+                      after_all:  -> { "]".freeze },
+                      before_each: -> * { '<'.freeze },
+                      after_each:  -> * { '>'.freeze } } }
 
     it 'wraps the entire body, ignoring leading comments and the data segment' do
       expect(described_class.call("#comment\nA\n__END__\n1", options)).to eq "#comment\n[<A>]\n__END__\n1"
