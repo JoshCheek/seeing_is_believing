@@ -1,16 +1,17 @@
 require 'seeing_is_believing/event_stream'
 
 RSpec.describe SeeingIsBelieving::EventStream do
-  LineResult       = SeeingIsBelieving::EventStream::Event::LineResult
-  UnrecordedResult = SeeingIsBelieving::EventStream::Event::UnrecordedResult
-  Stdout           = SeeingIsBelieving::EventStream::Event::Stdout
-  Stderr           = SeeingIsBelieving::EventStream::Event::Stderr
-  ExceptionEvent   = SeeingIsBelieving::EventStream::Event::Exception
-  BugInSiB         = SeeingIsBelieving::EventStream::Event::BugInSiB
-  MaxLineCaptures  = SeeingIsBelieving::EventStream::Event::MaxLineCaptures
-  Exitstatus       = SeeingIsBelieving::EventStream::Event::Exitstatus
-  Finish           = SeeingIsBelieving::EventStream::Event::Finish
-  NoMoreInput      = SeeingIsBelieving::EventStream::Consumer::NoMoreInput
+  LineResult         = SeeingIsBelieving::EventStream::Event::LineResult
+  UnrecordedResult   = SeeingIsBelieving::EventStream::Event::UnrecordedResult
+  Stdout             = SeeingIsBelieving::EventStream::Event::Stdout
+  Stderr             = SeeingIsBelieving::EventStream::Event::Stderr
+  ExceptionEvent     = SeeingIsBelieving::EventStream::Event::Exception
+  BugInSiB           = SeeingIsBelieving::EventStream::Event::BugInSiB
+  MaxLineCaptures    = SeeingIsBelieving::EventStream::Event::MaxLineCaptures
+  Exitstatus         = SeeingIsBelieving::EventStream::Event::Exitstatus
+  Finish             = SeeingIsBelieving::EventStream::Event::Finish
+  NoMoreInput        = SeeingIsBelieving::EventStream::Consumer::NoMoreInput
+  WtfWhoClosedMyShit = SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
 
   attr_accessor :publisher, :consumer, :readstream, :writestream
 
@@ -26,6 +27,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
     writestream.close unless writestream.closed?
   }
 
+  # TODO: move this below emitting an event
   describe 'each' do
     it 'loops through and yields all events except the finish event' do
       publisher.record_result :inspect, 100, 2
@@ -41,6 +43,11 @@ RSpec.describe SeeingIsBelieving::EventStream do
       expect(exitstatus.value).to eq 0
     end
 
+    it 'stops looping if there is no more input' do
+      writestream.close
+      expect(consumer.each.map { |e| e }).to eq []
+    end
+
     it 'returns nil' do
       publisher.finish!
       expect(consumer.each { 1 }).to eq nil
@@ -52,7 +59,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
     end
   end
 
-  describe 'emitting a result' do
+  describe 'emitting an event' do
     # TODO: could not fucking figure out how to ask the goddam thing if it has data
     # read docs for over an hour -.0
     it 'writes a line to stdout'
@@ -82,6 +89,30 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
       expect(line_nums_and_inspections).to eq []
       expect(publisher_threads).to be_none(&:alive?)
+    end
+
+    it 'raises NoMoreInput and marks itself finished if input is closed before it finishes reading the number of requested inputs' do
+      publisher.finish!
+      expect { consumer.call 10 }.to raise_error NoMoreInput
+    end
+
+    it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
+      publisher.finish!
+      consumer.call 4
+      expect { consumer.call }.to raise_error NoMoreInput
+      expect(consumer).to be_finished
+    end
+
+    it 'raises NoMoreInput and marks itself finished once the other end of the stream is closed' do
+      writestream.close
+      expect { consumer.call }.to raise_error NoMoreInput
+      expect(consumer).to be_finished
+    end
+
+    it 'raises WtfWhoClosedMyShit and marks itself finished if its end of the stream is closed' do
+      readstream.close
+      expect { consumer.call }.to raise_error WtfWhoClosedMyShit
+      expect(consumer).to be_finished
     end
   end
 

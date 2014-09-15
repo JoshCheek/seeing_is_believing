@@ -6,8 +6,8 @@ class SeeingIsBelieving
     module Event
       LineResult       = Struct.new(:type, :line_number, :inspected)
       UnrecordedResult = Struct.new(:type, :line_number)
-      Stdout           = Struct.new(:stdout)
-      Stderr           = Struct.new(:stderr)
+      Stdout           = Struct.new(:stdout) # TODO: rename to value
+      Stderr           = Struct.new(:stderr) # TODO: rename to value
       BugInSiB         = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
@@ -16,28 +16,39 @@ class SeeingIsBelieving
     end
 
     class Consumer
-      NoMoreInput = Class.new SeeingIsBelievingError
+      NoMoreInput        = Class.new SeeingIsBelievingError
+      WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
 
       def initialize(readstream)
         @readstream = readstream
       end
 
       def call(n=1)
-        raise NoMoreInput if finished?
-        if n == 1
-          note_finish event_for @readstream.gets
-        else
-          n.times.map { note_finish event_for @readstream.gets }
+        events = n.times.map do
+          raise NoMoreInput if finished?
+          line = @readstream.gets
+          raise NoMoreInput if line.nil?
+          event = event_for line
+          @finished = true if Finish === event
+          event
         end
+        n == 1 ? events.first : events
+      rescue IOError
+        @finished = true
+        raise WtfWhoClosedMyShit, "Our end of the pipe was closed!"
+      rescue NoMoreInput
+        @finished = true
+        raise
       end
 
       def each
         return to_enum :each unless block_given?
-        until finished?
+        loop do
           event = call
-          break nil if Finish === event
-          yield event
+          yield event unless Finish === event
         end
+      rescue NoMoreInput
+        return nil
       end
 
       def finished?
@@ -45,11 +56,6 @@ class SeeingIsBelieving
       end
 
       private
-
-      def note_finish(event)
-        @finished = true if event.class == Event::Finish
-        event
-      end
 
       def extract_token(line)
         event_name = line[/[^ ]+/]
@@ -114,6 +120,7 @@ class SeeingIsBelieving
     end
 
     require 'thread'
+    # TODO: rename producer, don't forget about the one in the matrix
     class Publisher
       attr_accessor :exitstatus, :bug_in_sib, :max_line_captures
 
