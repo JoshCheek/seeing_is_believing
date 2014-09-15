@@ -131,15 +131,18 @@ class SeeingIsBelieving
         self.recorded_results  = []
         self.queue             = Thread::Queue.new
         self.publisher_thread  = Thread.new do
-          loop do
-            to_publish = queue.shift
-            File.open('published', 'a') { |f| f << "#{resultstream}\n" }
-            if to_publish == "finish".freeze
-              resultstream << "finish\n"
-              break
-            else
-              resultstream << (to_publish << "\n")
+          begin
+            loop do
+              to_publish = queue.shift
+              if to_publish == "finish".freeze
+                resultstream << "finish\n"
+                break
+              else
+                resultstream << (to_publish << "\n")
+              end
             end
+          rescue IOError, Errno::EPIPE
+            queue.clear # TODO: should probably keep emptying it until finish event
           end
         end
       end
