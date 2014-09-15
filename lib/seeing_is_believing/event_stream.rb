@@ -31,6 +31,15 @@ class SeeingIsBelieving
         end
       end
 
+      def each
+        return to_enum :each unless block_given?
+        until finished?
+          event = call
+          break nil if Finish === event
+          yield event
+        end
+      end
+
       def finished?
         @finished
       end
@@ -107,7 +116,6 @@ class SeeingIsBelieving
     require 'thread'
     class Publisher
       attr_accessor :exitstatus, :bug_in_sib, :max_line_captures
-      attr_accessor :recorded_results
 
       def initialize(resultstream)
         self.exitstatus        = 0
@@ -180,7 +188,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :resultstream, :queue, :publisher_thread
+      attr_accessor :resultstream, :queue, :publisher_thread, :recorded_results
     end
   end
 end

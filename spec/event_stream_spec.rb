@@ -26,6 +26,32 @@ RSpec.describe SeeingIsBelieving::EventStream do
     writestream.close unless writestream.closed?
   }
 
+  describe 'each' do
+    it 'loops through and yields all events except the finish event' do
+      publisher.record_result :inspect, 100, 2
+      publisher.finish!
+
+      events = []
+      consumer.each { |e| events << e }
+      finish_event = events.find { |e| e.kind_of? Finish     }
+      line_result  = events.find { |e| e.kind_of? LineResult }
+      exitstatus   = events.find { |e| e.kind_of? Exitstatus }
+      expect(finish_event).to be_nil
+      expect(line_result.line_number).to eq 100
+      expect(exitstatus.value).to eq 0
+    end
+
+    it 'returns nil' do
+      publisher.finish!
+      expect(consumer.each { 1 }).to eq nil
+    end
+
+    it 'returns an enumerator if not given a block' do
+      publisher.finish!
+      expect(consumer.each.map &:class).to include Exitstatus
+    end
+  end
+
   describe 'emitting a result' do
     # TODO: could not fucking figure out how to ask the goddam thing if it has data
     # read docs for over an hour -.0
@@ -35,7 +61,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
     # but I ran it on Rbx to make sure it works
     it 'is wrapped in a mutex to prevent multiple values from writing at the same time' do
       num_threads = 10
-      num_results = 1000
+      num_results = 600
       line_nums_and_inspections = num_threads.times.flat_map { |line_num|
         num_results.times.map { |value| "#{line_num}|#{value.inspect}" }
       }
