@@ -18,21 +18,17 @@ class SeeingIsBelieving
       stderr && !stderr.empty?
     end
 
-    def record_result(line_number, value)
-      results_for(line_number).record_result(value)
+    def record_result(type, line_number, value)
+      results_for(line_number, type) << value
       value
     end
 
     def record_exception(line_number, exception_class, exception_message, exception_backtrace)
-      recorded_exception = RecordedException.new exception_class,
-                                                 exception_message,
-                                                 exception_backtrace
-      self.exception = recorded_exception
-      results_for(line_number).exception = recorded_exception
+      self.exception = RecordedException.new exception_class, exception_message, exception_backtrace
     end
 
-    def [](line_number)
-      results_for(line_number)
+    def [](line_number, type=:inspect)
+      results_for(line_number, type)
     end
 
     def each(&block)
@@ -42,8 +38,8 @@ class SeeingIsBelieving
 
     def each_with_line_number(&block)
       return to_enum :each_with_line_number unless block
-      max = results.keys.max || 1
-      (1..max).each { |line_number| block.call line_number, results_for(line_number) }
+      max = esults.keys.max || 1
+      (1..max).each { |line_number| block.call line_number, results_for(line_number, :inspect) }
     end
 
     def inspect
@@ -66,8 +62,9 @@ class SeeingIsBelieving
 
     private
 
-    def results_for(line_number)
-      results[line_number] ||= Line.new
+    def results_for(line_number, type)
+      line_results = results[line_number] ||= Hash.new { |h, k| h[k] = [] }
+      line_results[type]
     end
 
     def results

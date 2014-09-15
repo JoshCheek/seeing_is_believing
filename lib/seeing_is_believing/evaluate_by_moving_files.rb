@@ -114,8 +114,8 @@ class SeeingIsBelieving
         event_consumer = Thread.new {
           EventStream::Consumer.new(process_stdout).each do |event|
             case event
-            when EventStream::Event::LineResult       then result.record_result(event.line_number, event.inspected) # TODO: Take type into consideration
-            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, '...')           # TODO: Take type into consideration
+            when EventStream::Event::LineResult       then result.record_result(event.type, event.line_number, event.inspected)
+            when EventStream::Event::UnrecordedResult then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
             when EventStream::Event::Stdout           then result.stdout             = event.stdout
             when EventStream::Event::Stderr           then result.stderr             = event.stderr
             when EventStream::Event::BugInSiB         then result.bug_in_sib         = event.value

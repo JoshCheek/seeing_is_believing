@@ -25,6 +25,7 @@ describe SeeingIsBelieving do
   end
 
   it 'only invokes inspect once' do
+    pending 'Need to make the producer smarter (ie call the block, rather than invoking inspect)'
     input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
@@ -109,10 +110,7 @@ describe SeeingIsBelieving do
     expect(result.exception.message).to eq 'omg!'
 
     expect(result[1]).to eq ['12']
-
     expect(result[2]).to eq []
-    expect(result[2].exception).to eq result.exception
-
     expect(result[3]).to eq []
   end
 
@@ -374,7 +372,6 @@ describe SeeingIsBelieving do
     expect(result.exception.class_name).to eq 'SystemStackError'
     expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
     expect(result.exception.message).to match /recursive/i
-    expect(result[4].exception).to eq result.exception
   end
 
   it 'makes the SeeingIsBelieving::VERSION available to the program' do
@@ -402,7 +399,8 @@ describe SeeingIsBelieving do
     it 'prints the result' do
       call
       expect(stream.string).to include "RESULT:"
-      expect(stream.string).to include '1=>#<SIB:Line["1"] no exception>'
+      expect(stream.string).to include 'SIB::Result'
+      expect(stream.string).to include '@results={'
     end
     # should ProgramRewriter have some debug options?
   end
