@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'seeing_is_believing/event_stream'
 
 RSpec.describe SeeingIsBelieving::EventStream do

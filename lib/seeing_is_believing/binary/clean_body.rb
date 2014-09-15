@@ -1,4 +1,4 @@
-# CleanedBody
+# CleaneBody
 #   takes a body
 #   removes annotations
 #   only removes "# =>" when should_clean_values is false
