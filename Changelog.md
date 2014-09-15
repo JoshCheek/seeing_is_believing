@@ -17,3 +17,6 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
   knows about it. For users who interact purely with the binary, this just means that
   JSON will not already be required.
 
+### Removed
+- Dependency on psych
+
