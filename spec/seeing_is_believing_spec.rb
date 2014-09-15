@@ -365,12 +365,11 @@ describe SeeingIsBelieving do
     expect(invoke(%q[system "ruby -e '$stderr.print ?a'"]).stderr).to eq "a"
   end
 
-  # NEEDS RESULT TO STOP THINKING OF ITSELF AS BEING THE RECORDER OF EXCEPTIONS
-  it 'does not blow up when inspect recurses infinitely', not_implemented:true do
+  it 'does not blow up when inspect recurses infinitely' do
     result = invoke(%[def self.inspect
                         self
                       end
-                      self], filename: 'blowsup.rb', debug: true)
+                      self], filename: 'blowsup.rb')
     expect(result).to have_exception
     expect(result.exception.class_name).to eq 'SystemStackError'
     expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
@@ -395,7 +394,7 @@ describe SeeingIsBelieving do
     it 'prints the result' do
       call
       expect(stream.string).to include "RESULT:"
-      expect(stream.string).to include '1=>#<SIB:Line["1"] (1, 1) no exception>'
+      expect(stream.string).to include '1=>#<SIB:Line["1"] no exception>'
     end
     # should ProgramRewriter have some debug options?
   end

@@ -157,14 +157,26 @@ class SeeingIsBelieving
         [Marshal.dump(string.to_s)].pack('m0')
       end
 
-      # TODO: can record basic object and that shit
-      # TODO: only records inspect once
-      # TODO: Check whatever else result is currently doing
+      # TODO: Use the type to inspect unless given a block
+      StackErrors = [SystemStackError]
+      StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)
-        count = (recorded_results[line_number] ||= Hash.new(0))[type]
+        counts = recorded_results[line_number] ||= Hash.new(0)
+        count  = counts[type]
         recorded_results[line_number][type] = count.next
         if count < max_line_captures
-          queue << "result #{line_number} #{type} #{to_string_token value.inspect}"
+          begin
+            inspected = value.inspect.to_str
+          rescue NoMethodError
+            inspected = "#<no inspect available>"
+          rescue *StackErrors
+            # this is necessary because SystemStackError won't show the backtrace of the method we tried to call
+            # which means there won't be anything showing the user where this came from
+            # so we need to re-raise the error to get a backtrace that shows where we came from
+            # otherwise it looks like the bug is in SiB and not the user's program, see https://github.com/JoshCheek/seeing_is_believing/issues/37
+            raise SystemStackError, "Calling inspect blew the stack (is it recursive w/o a base case?)"
+          end
+          queue << "result #{line_number} #{type} #{to_string_token inspected}"
         elsif count == max_line_captures
           queue << "maxed_result #{line_number} #{type}"
         end

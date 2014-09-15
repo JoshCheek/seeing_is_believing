@@ -109,32 +109,19 @@ class SeeingIsBelieving
           process_stdin.close
         }
 
-        # shitty hacky adapter between events and result
-        # (b/c result still thinks of itself as being the one to do the recording)
-        # TODO: remove this
-        inspect_faker = Class.new do
-          def initialize(inspected)
-            @inspected = inspected
-          end
-
-          def inspect
-            @inspected
-          end
-        end
-
         # consume events
         self.result = Result.new
         event_consumer = Thread.new {
           EventStream::Consumer.new(process_stdout).each do |event|
             case event
-            when EventStream::Event::LineResult       then result.record_result(event.line_number, inspect_faker.new(event.inspected)) # TODO: Take type into consideration
-            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, inspect_faker.new('...'))           # TODO: Take type into consideration
+            when EventStream::Event::LineResult       then result.record_result(event.line_number, event.inspected) # TODO: Take type into consideration
+            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, '...')           # TODO: Take type into consideration
             when EventStream::Event::Stdout           then result.stdout             = event.stdout
             when EventStream::Event::Stderr           then result.stderr             = event.stderr
             when EventStream::Event::BugInSiB         then result.bug_in_sib         = event.value
             when EventStream::Event::MaxLineCaptures  then result.number_of_captures = event.value
             when EventStream::Event::Exitstatus       then result.exitstatus         = event.value
-            when EventStream::Event::Exception        then result.record_exception event.line_number, event
+            when EventStream::Event::Exception        then result.record_exception event.line_number, event.class_name, event.message, event.backtrace
             else raise "Unknown event: #{event.inspect}"
             end
           end

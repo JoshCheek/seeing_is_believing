@@ -173,6 +173,32 @@ RSpec.describe SeeingIsBelieving::EventStream do
       expect(publisher.record_result :type, 123, o).to equal o
     end
 
+    it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
+      obj = BasicObject.new
+      publisher.record_result :type, 1, obj
+      expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
+    end
+
+
+    it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
+      obj = BasicObject.new
+      def obj.inspect
+        nil
+      end
+      publisher.record_result :type, 1, obj
+      expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
+    end
+
+    it 'only calls inspect once' do
+      count, obj = 0, Object.new
+      obj.define_singleton_method :inspect do
+        count += 1
+        'a'
+      end
+      publisher.record_result :type, 1, obj
+      expect(count).to eq 1
+    end
+
     # Some examples, mostly for the purpose of running individually if things get confusing
     example 'Example: Simple' do
       publisher.record_result :type, 1, "a"

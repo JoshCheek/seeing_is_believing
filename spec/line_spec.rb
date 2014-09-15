@@ -6,31 +6,18 @@ describe SeeingIsBelieving::Line do
 
   def line_for(*args)
     line = Line.new
-    args.each { |a| line.record_result a }
+    args.each { |a| line.record_result a.inspect }
     line
   end
 
   it 'inspects prettily' do
-    expect(line_for(       ).inspect).to eq '#<SIB:Line[] (0, 0) no exception>'
-    expect(line_for("a"    ).inspect).to eq '#<SIB:Line["\"a\""] (1, 3) no exception>'
-    expect(line_for("a", 12).inspect).to eq '#<SIB:Line["\"a\"", "12"] (2, 5) no exception>'
+    expect(line_for(       ).inspect).to eq '#<SIB:Line[] no exception>'
+    expect(line_for("a"    ).inspect).to eq '#<SIB:Line["\"a\""] no exception>'
+    expect(line_for("a", 12).inspect).to eq '#<SIB:Line["\"a\"", "12"] no exception>'
 
     line = Line.new
     line.exception = RuntimeError.new("omg")
-    expect(line.inspect).to eq '#<SIB:Line[] (0, 0) RuntimeError:"omg">'
-  end
-
-  it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
-    obj = BasicObject.new
-    expect(line_for(obj).inspect).to eq '#<SIB:Line["#<no inspect available>"] (1, 23) no exception>'
-  end
-
-  it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
-    obj = BasicObject.new
-    def obj.inspect
-      nil
-    end
-    expect(line_for(obj).inspect).to eq '#<SIB:Line["#<no inspect available>"] (1, 23) no exception>'
+    expect(line.inspect).to eq '#<SIB:Line[] RuntimeError:"omg">'
   end
 
   it 'knows when it has an exception' do

@@ -54,10 +54,10 @@ class SeeingIsBelieving
       value
     end
 
-    def record_exception(line_number, exception)
-      recorded_exception = RecordedException.new exception.class.name,
-                                                 exception.message,
-                                                 exception.backtrace
+    def record_exception(line_number, exception_class, exception_message, exception_backtrace)
+      recorded_exception = RecordedException.new exception_class,
+                                                 exception_message,
+                                                 exception_backtrace
       self.exception = recorded_exception
       results_for(line_number).exception = recorded_exception
     end
@@ -98,7 +98,7 @@ class SeeingIsBelieving
     private
 
     def results_for(line_number)
-      results[line_number] ||= Line.new([], number_of_captures)
+      results[line_number] ||= Line.new
     end
 
     def results
