@@ -127,8 +127,8 @@ class SeeingIsBelieving
         event_consumer = Thread.new {
           EventStream::Consumer.new(process_stdout).each do |event|
             case event
-            when EventStream::Event::LineResult       then result.record_result(event.line_number, inspect_faker(event.inspected)) # TODO: Take type into consideration
-            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, inspect_faker('...'))           # TODO: Take type into consideration
+            when EventStream::Event::LineResult       then result.record_result(event.line_number, inspect_faker.new(event.inspected)) # TODO: Take type into consideration
+            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, inspect_faker.new('...'))           # TODO: Take type into consideration
             when EventStream::Event::Stdout           then result.stdout             = event.stdout
             when EventStream::Event::Stderr           then result.stderr             = event.stderr
             when EventStream::Event::BugInSiB         then result.bug_in_sib         = event.value
@@ -173,10 +173,12 @@ class SeeingIsBelieving
 
     def wrap_error(error)
       debugger.context "Program could not be evaluated" do
-        "Program: #{program.inspect.chomp}\n\n"\
-        "Stderr:  #{stderr.inspect.chomp}\n\n"\
-        "Status:  #{exitstatus.inspect.chomp}\n\n"\
-        "Result:  #{result.inspect.chomp}\n"
+        "Program:      #{program.inspect.chomp}\n\n"\
+        "Stderr:       #{stderr.inspect.chomp}\n\n"\
+        "Status:       #{exitstatus.inspect.chomp}\n\n"\
+        "Result:       #{result.inspect.chomp}\n\n"\
+        "Actual Error: #{error.inspect.chomp}\n"+
+        error.backtrace.map { |sf| "              #{sf}\n" }.join("")
       end
       BugInSib.new error
     end

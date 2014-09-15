@@ -48,9 +48,10 @@ class SeeingIsBelieving
     StringIO.new string_or_stream
   end
 
+  # TODO: would be nice to have before_all and after_all be callbacks, too
   def program_that_will_record_expressions
     WrapExpressions.call "#{@program}\n",
-                         before_all:  "begin; $SiB.number_of_captures = #{number_of_captures_as_str}; ",
+                         before_all:  "begin; $SiB.max_line_captures = #{number_of_captures_as_str}; ",
                          after_all:   ";rescue Exception;"\
                                         "lambda {"\
                                           "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\
@@ -59,7 +60,7 @@ class SeeingIsBelieving
                                           "$SiB.exitstatus = $!.status if $!.kind_of? SystemExit;"\
                                         "}.call;"\
                                       "end",
-                         before_each: -> line_number { "$SiB.record_result(#{line_number}, (" },
+                         before_each: -> line_number { "$SiB.record_result(:inspect, #{line_number}, (" },
                          after_each:  -> line_number { "))" }
   end
 
