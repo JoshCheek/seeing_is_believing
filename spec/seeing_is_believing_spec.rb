@@ -381,6 +381,10 @@ describe SeeingIsBelieving do
     expect(values_for "SeeingIsBelieving::VERSION").to eq [[SeeingIsBelieving::VERSION.inspect]]
   end
 
+  it 'does not change the number of lines in the file' do
+    expect(values_for "File.read(__FILE__).lines.size").to eq [['1']]
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
