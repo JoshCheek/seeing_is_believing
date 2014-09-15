@@ -74,13 +74,13 @@ class SeeingIsBelieving
 
       def body_with_everything_annotated
         alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
+        exception_lineno   = results.has_exception? ? results.exception.line_number : -1
         CommentLines.call body do |line, line_number|
           options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
           if line_number < start_line || end_line < line_number
             ''
-          elsif results[line_number].has_exception?
-            exception = results[line_number].exception
-            result    = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
+          elsif exception_lineno == line_number
+            result = sprintf "%s: %s", results.exception.class_name, results.exception.message.gsub("\n", '\n')
             CommentFormatter.call(line.size, EXCEPTION_MARKER, result, options)
           elsif results[line_number].any?
             result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')

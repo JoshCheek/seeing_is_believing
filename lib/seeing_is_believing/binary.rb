@@ -182,27 +182,17 @@ class SeeingIsBelieving
     end
 
     def result_as_data_structure
-      results = annotator.results
+      results   = annotator.results
+      exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
+                                              class_name:               results.exception.class_name,
+                                              message:                  results.exception.message,
+                                              backtrace:                results.exception.backtrace
+                                            }
       { stdout:      results.stdout,
         stderr:      results.stderr,
         exit_status: results.exitstatus,
-        exception:   (if results.has_exception?
-                       { line_number_in_this_file: results.each_with_line_number.find { |line_number, result| result.has_exception? }.first,
-                         class_name:               results.exception.class_name,
-                         message:                  results.exception.message,
-                         backtrace:                results.exception.backtrace,
-                       }
-                     end),
-        lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash|
-                       hash[line_number] = { results:   result.to_a,
-                                             exception: (if result.has_exception?
-                                                          { class_name:               results.exception.class_name,
-                                                            message:                  results.exception.message,
-                                                            backtrace:                results.exception.backtrace,
-                                                          }
-                                                        end)
-                       }
-                     },
+        exception:   exception,
+        lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash| hash[line_number] = result },
       }
     end
 

@@ -598,6 +598,7 @@ Feature: Using flags
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
     Then stdout is "123  # => /omg/"
 
+  @wip
   Scenario: --json
     Given the file "all_kinds_of_output.rb":
     """
@@ -609,22 +610,17 @@ Feature: Using flags
     raise "omg"
     """
     When I run "seeing_is_believing --json all_kinds_of_output.rb"
-    Then the exit status is 0
-    And stdout is the JSON:
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is the JSON:
     """
-      {
-        "lines": {
-          "1": { "exception": null, "results": ["3"] },
-          "2": { "exception": null, "results": ["\"0\"", "\"1\"", "\"2\""] },
-          "3": { "exception": null, "results": ["3"] },
-          "4": { "exception": null, "results": ["nil"] },
-          "5": { "exception": null, "results": ["nil"] },
-          "6": { "exception": { "class_name": "RuntimeError",
-                                "message":    "omg",
-                                "backtrace":  ["all_kinds_of_output.rb:6:in `<main>'"]
-                              },
-                 "results": []
-               }
+      { "lines": {
+          "1": { "inspect": ["3"] },
+          "2": { "inspect": ["\"0\"", "\"1\"", "\"2\""] },
+          "3": { "inspect": ["3"] },
+          "4": { "inspect": ["nil"] },
+          "5": { "inspect": ["nil"] },
+          "6": { "inspect": [] }
         },
         "exception": {
           "line_number_in_this_file": 6,

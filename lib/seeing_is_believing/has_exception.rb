@@ -1,5 +1,5 @@
 class SeeingIsBelieving
-  RecordedException = Struct.new :class_name, :message, :backtrace
+  RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
   module HasException
     attr_accessor :exception

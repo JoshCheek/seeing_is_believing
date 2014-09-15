@@ -24,7 +24,7 @@ class SeeingIsBelieving
     end
 
     def record_exception(line_number, exception_class, exception_message, exception_backtrace)
-      self.exception = RecordedException.new exception_class, exception_message, exception_backtrace
+      self.exception = RecordedException.new line_number, exception_class, exception_message, exception_backtrace
     end
 
     def [](line_number, type=:inspect)
@@ -36,10 +36,11 @@ class SeeingIsBelieving
       (1..max).each { |line_number| block.call self[line_number] }
     end
 
+    # TODO: There are no unit tests on this
     def each_with_line_number(&block)
       return to_enum :each_with_line_number unless block
-      max = esults.keys.max || 1
-      (1..max).each { |line_number| block.call line_number, results_for(line_number, :inspect) }
+      max = results.keys.max || 1
+      (1..max).each { |line_number| block.call line_number, results[line_number] }
     end
 
     def inspect
