@@ -166,15 +166,19 @@ class SeeingIsBelieving
         recorded_results[line_number][type] = count.next
         if count < max_line_captures
           begin
-            inspected = value.inspect.to_str
-          rescue NoMethodError
-            inspected = "#<no inspect available>"
+            if block_given?
+              inspected = yield(value).to_str
+            else
+              inspected = value.inspect.to_str
+            end
           rescue *StackErrors
             # this is necessary because SystemStackError won't show the backtrace of the method we tried to call
             # which means there won't be anything showing the user where this came from
             # so we need to re-raise the error to get a backtrace that shows where we came from
             # otherwise it looks like the bug is in SiB and not the user's program, see https://github.com/JoshCheek/seeing_is_believing/issues/37
             raise SystemStackError, "Calling inspect blew the stack (is it recursive w/o a base case?)"
+          rescue Exception
+            inspected = "#<no inspect available>"
           end
           queue << "result #{line_number} #{type} #{to_string_token inspected}"
         elsif count == max_line_captures

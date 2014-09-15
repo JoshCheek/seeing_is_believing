@@ -175,32 +175,6 @@ RSpec.describe SeeingIsBelieving::EventStream do
       expect(publisher.record_result :type, 123, o).to equal o
     end
 
-    it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
-      obj = BasicObject.new
-      publisher.record_result :type, 1, obj
-      expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
-    end
-
-
-    it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
-      obj = BasicObject.new
-      def obj.inspect
-        nil
-      end
-      publisher.record_result :type, 1, obj
-      expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
-    end
-
-    it 'only calls inspect once' do
-      count, obj = 0, Object.new
-      obj.define_singleton_method :inspect do
-        count += 1
-        'a'
-      end
-      publisher.record_result :type, 1, obj
-      expect(count).to eq 1
-    end
-
     # Some examples, mostly for the purpose of running individually if things get confusing
     example 'Example: Simple' do
       publisher.record_result :type, 1, "a"
@@ -216,6 +190,72 @@ RSpec.describe SeeingIsBelieving::EventStream do
       publisher.record_result :type, 1, str2
       expect(str2).to eq str1 # just making sure it doesn't mutate since this one is so complex
       expect(consumer.call).to eq Event::LineResult.new(:type, 1, str1.inspect)
+    end
+
+    context 'calls #inspect when no block is given' do
+      it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
+        obj = BasicObject.new
+        publisher.record_result :type, 1, obj
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
+      end
+
+
+      it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
+        obj = BasicObject.new
+        def obj.inspect
+          nil
+        end
+        publisher.record_result :type, 1, obj
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
+      end
+
+      it 'only calls inspect once' do
+        count, obj = 0, Object.new
+        obj.define_singleton_method :inspect do
+          count += 1
+          'a'
+        end
+        publisher.record_result :type, 1, obj
+        expect(count).to eq 1
+      end
+    end
+
+    context 'inspect performed by the block', t:true do
+      it 'yields the object to the block and uses the block\'s result as the inspect value instead of calling inspect' do
+        o = Object.new
+        def o.inspect()       'real-inspect'  end
+        def o.other_inspect() 'other-inspect' end
+        publisher.record_result(:type, 1, o) { |x| x.other_inspect }
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, 'other-inspect')
+      end
+
+      it 'doesn\'t blow up if the block raises' do
+        o = Object.new
+        publisher.record_result(:type, 1, o) { raise Exception, "zomg" }
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, '#<no inspect available>')
+      end
+
+      it 'doesn\'t blow up if the block returns a non-string' do
+        o = Object.new
+        publisher.record_result(:type, 1, o) { nil }
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, '#<no inspect available>')
+
+        stringish = Object.new
+        def stringish.to_str() 'actual string' end
+        publisher.record_result(:type, 1, o) { stringish }
+        expect(consumer.call).to eq Event::LineResult.new(:type, 1, 'actual string')
+      end
+
+      it 'invokes the block only once' do
+        o = Object.new
+        count = 0
+
+        publisher.record_result(:type, 1, o) { count += 1 }
+        expect(count).to eq 1
+
+        publisher.record_result(:type, 1, o) { count += 1; 'inspected-value' }
+        expect(count).to eq 2
+      end
     end
   end
 

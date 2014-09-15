@@ -24,8 +24,8 @@ describe SeeingIsBelieving do
     expect(invoke(input)[2]).to eq ['"22"']
   end
 
-  it 'only invokes inspect once' do
-    pending 'Need to make the producer smarter (ie call the block, rather than invoking inspect)'
+  xit 'only invokes inspect once' do
+    pending 'This won\'t pass until we move the overriding up to the binary and inject it into SiB'
     input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
