@@ -30,6 +30,15 @@ describe SeeingIsBelieving do
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
 
+  it 'allows uers to override WrapExpressions initialization keys' do
+    expect(invoke(':body', before_all: 'if true;',  after_all: ';end;')[1]).to eq [':body']
+    expect(invoke(':body', before_all: 'if false;', after_all: ';end;')[1]).to eq []
+
+    result = invoke ':body', before_each: -> line_number { "$SiB.record_result(:inspect, #{line_number*200}, (" },
+                             after_each:  -> line_number { ").to_s.upcase + #{line_number}.inspect)" }
+    expect(result[200, :inspect]).to eq ['"BODY1"']
+  end
+
   it 'remembers context of previous lines' do
     expect(values_for("a=12\na*2")).to eq [['12'], ['24']]
   end
