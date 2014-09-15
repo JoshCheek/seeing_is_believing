@@ -554,15 +554,11 @@ Feature: Using flags
     Given the file "fake_ruby":
     """
     #!/usr/bin/env ruby
-    # yes, this uses knowledge of where the proving grounds is
     $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib", __FILE__
-
-    require 'seeing_is_believing'
-    result = SeeingIsBelieving::Result.new
-    result.record_result(1, /omg/)
-
-    require 'json'
-    puts JSON.dump result.to_primitive
+    require 'seeing_is_believing/event_stream'
+    sib = SeeingIsBelieving::EventStream::Publisher.new($stdout)
+    sib.record_result(:inspect, 1, /omg/)
+    sib.finish!
     """
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
