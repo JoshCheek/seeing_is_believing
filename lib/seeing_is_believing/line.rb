@@ -14,33 +14,6 @@ class SeeingIsBelieving
       end
     end
 
-    def to_float(n)
-      return n unless n == Float::INFINITY
-      'FUCKING_INFINITY_AND_JESUS_FUCKING_CHRIST_JSON_AND_MARSHAL_AND_YAML_WHAT_THE_FUCK?'
-    end
-
-    def from_float(n)
-      return n if n.kind_of? Float
-      Float::INFINITY
-    end
-
-    def to_primitive
-      { 'array'                  => @array,
-        'max_number_of_captures' => to_float(@max_number_of_captures),
-        'num_results'            => @num_results,
-        'total_size'             => @total_size,
-        'exception'              => (exception && exception.to_primitive)
-      }
-    end
-
-    def from_primitive(primitive)
-      @array                  = primitive['array']
-      @max_number_of_captures = from_float primitive['max_number_of_captures']
-      @num_results            = primitive['num_results']
-      @total_size             = primitive['total_size']
-      @exception              = RecordedException.from_primitive primitive['exception']
-    end
-
     def to_a
       @array.dup
     end
