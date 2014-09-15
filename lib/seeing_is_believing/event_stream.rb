@@ -29,7 +29,7 @@ class SeeingIsBelieving
           line = @readstream.gets
           raise NoMoreInput if line.nil?
           event = event_for line
-          @finished = true if Finish === event
+          @finished = true if Event::Finish === event
           event
         end
         n == 1 ? events.first : events
@@ -45,7 +45,7 @@ class SeeingIsBelieving
         return to_enum :each unless block_given?
         loop do
           event = call
-          yield event unless Finish === event
+          yield event unless Event::Finish === event
         end
       rescue NoMoreInput
         return nil
@@ -133,6 +133,7 @@ class SeeingIsBelieving
         self.publisher_thread  = Thread.new do
           loop do
             to_publish = queue.shift
+            File.open('published', 'a') { |f| f << "#{resultstream}\n" }
             if to_publish == "finish".freeze
               resultstream << "finish\n"
               break
