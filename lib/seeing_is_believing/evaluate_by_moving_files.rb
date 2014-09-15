@@ -11,7 +11,6 @@
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
 
-require 'json'
 require 'open3'
 require 'timeout'
 require 'stringio'
@@ -20,6 +19,7 @@ require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
+require 'seeing_is_believing/event_stream'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
@@ -28,7 +28,7 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
+    attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger, :result
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -51,7 +51,8 @@ class SeeingIsBelieving
           write_program_to_file
           begin
             evaluate_file
-            deserialize_result.tap { |result| fail if result.bug_in_sib? }
+            fail if result.bug_in_sib?
+            result
           rescue Exception => error
             error = wrap_error error if error_implies_bug_in_sib? error
             raise error
@@ -102,17 +103,51 @@ class SeeingIsBelieving
 
     def evaluate_file
       Open3.popen3 ENV, *popen_args do |process_stdin, process_stdout, process_stderr, thread|
-        out_reader = Thread.new { process_stdout.read }
-        err_reader = Thread.new { process_stderr.read }
-        Thread.new do
+        # send stdin
+        Thread.new {
           input_stream.each_char { |char| process_stdin.write char }
           process_stdin.close
+        }
+
+        # shitty hacky adapter between events and result
+        # (b/c result still thinks of itself as being the one to do the recording)
+        # TODO: remove this
+        inspect_faker = Class.new do
+          def initialize(inspected)
+            @inspected = inspected
+          end
+
+          def inspect
+            @inspected
+          end
         end
+
+        # consume events
+        self.result = Result.new
+        event_consumer = Thread.new {
+          EventStream::Consumer.new(process_stdout).each do |event|
+            case event
+            when EventStream::Event::LineResult       then result.record_result(event.line_number, inspect_faker(event.inspected)) # TODO: Take type into consideration
+            when EventStream::Event::UnrecordedResult then result.record_result(event.line_number, inspect_faker('...'))           # TODO: Take type into consideration
+            when EventStream::Event::Stdout           then result.stdout             = event.stdout
+            when EventStream::Event::Stderr           then result.stderr             = event.stderr
+            when EventStream::Event::BugInSiB         then result.bug_in_sib         = event.value
+            when EventStream::Event::MaxLineCaptures  then result.number_of_captures = event.value
+            when EventStream::Event::Exitstatus       then result.exitstatus         = event.value
+            when EventStream::Event::Exception        then result.record_exception event.line_number, event
+            else raise "Unknown event: #{event.inspect}"
+            end
+          end
+        }
+
+        # process stderr
+        err_reader = Thread.new { process_stderr.read }
+
         begin
           Timeout::timeout timeout do
-            self.stdout     = out_reader.value
             self.stderr     = err_reader.value
             self.exitstatus = thread.value
+            event_consumer.join
           end
         rescue Timeout::Error
           Process.kill "TERM", thread.pid
@@ -136,16 +171,12 @@ class SeeingIsBelieving
       raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}"
     end
 
-    def deserialize_result
-      Result.from_primitive JSON.load stdout
-    end
-
     def wrap_error(error)
       debugger.context "Program could not be evaluated" do
         "Program: #{program.inspect.chomp}\n\n"\
-        "Stdout: #{stdout.inspect.chomp}\n\n"\
-        "Stderr: #{stderr.inspect.chomp}\n\n"\
-        "Status: #{exitstatus.inspect.chomp}\n"
+        "Stderr:  #{stderr.inspect.chomp}\n\n"\
+        "Status:  #{exitstatus.inspect.chomp}\n\n"\
+        "Result:  #{result.inspect.chomp}\n"
       end
       BugInSib.new error
     end
