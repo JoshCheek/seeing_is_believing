@@ -377,6 +377,10 @@ describe SeeingIsBelieving do
     expect(result[4].exception).to eq result.exception
   end
 
+  it 'makes the SeeingIsBelieving::VERSION available to the program' do
+    expect(values_for "SeeingIsBelieving::VERSION").to eq [[SeeingIsBelieving::VERSION.inspect]]
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
