@@ -527,7 +527,6 @@ Feature: Using flags
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
 
-
   Scenario: --xmpfilter-style
     Given the file "magic_comments.rb":
     """

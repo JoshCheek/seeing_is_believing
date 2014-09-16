@@ -194,7 +194,6 @@ Feature:
     # ~> koris_bug.rb:5:in `<main>'
     """
 
-  @wip
   Scenario: lambda-style fibonacci generator
     Given the file "lambda_style_fib_gen.rb":
     """

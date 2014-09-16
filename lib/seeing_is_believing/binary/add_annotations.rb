@@ -3,11 +3,15 @@ require 'seeing_is_believing/binary/comment_formatter'
 
 require 'seeing_is_believing/binary'
 require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/find_comments'
 require 'seeing_is_believing/binary/rewrite_comments'
 require 'seeing_is_believing/binary/comment_lines'
 
 class SeeingIsBelieving
   class Binary
+
+    # This is the worst fucking class in the entire library -.-
+    # yes, that includes WrapExpressions
     class AddAnnotations
 
       def self.method_from_options(*args)
@@ -24,16 +28,51 @@ class SeeingIsBelieving
       def initialize(uncleaned_body, options={}, &annotater)
         self.options = options
         self.body    = CleanBody.call uncleaned_body, !xmpfilter_style
-        self.results = SeeingIsBelieving.call body,
-                                              filename:           (options[:as] || options[:filename]),
-                                              require:            options[:require],
-                                              load_path:          options[:load_path],
-                                              encoding:           options[:encoding],
-                                              stdin:              options[:stdin],
-                                              timeout:            options[:timeout],
-                                              debugger:           debugger,
-                                              ruby_executable:    options[:shebang],
-                                              number_of_captures: options[:number_of_captures]
+
+        options = {
+          filename:           (options[:as] || options[:filename]),
+          require:            options[:require],
+          load_path:          options[:load_path],
+          encoding:           options[:encoding],
+          stdin:              options[:stdin],
+          timeout:            options[:timeout],
+          debugger:           debugger,
+          ruby_executable:    options[:shebang],
+          number_of_captures: options[:number_of_captures],
+        }
+
+        if xmpfilter_style
+          options[:require] << 'pp'
+          finder          = FindComments.new(body)
+          inspect_linenos = []
+          pp_linenos      = []
+
+          finder.comments.each { |c|
+            next unless c.comment[VALUE_REGEX]
+            if c.code.empty?
+              pp_linenos << c.line_number - 1
+            else
+              inspect_linenos << c.line_number
+            end
+          }
+
+          options[:after_each] = -> line_number {
+            should_inspect = inspect_linenos.include?(line_number)
+            should_pp      = pp_linenos.include?(line_number)
+            inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '' }"
+
+            if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
+            elsif should_inspect              then ").tap { |v| #{inspect} }"
+            elsif should_pp                   then ").tap { |v| #{pp} }"
+            else                                   ")"
+            end
+          }
+        end
+
+        # This should so obviously not go here >.<
+        # initializing this obj kicks off the entire lib!!
+        self.results = SeeingIsBelieving.call body, options
       end
 
       def call
@@ -61,7 +100,7 @@ class SeeingIsBelieving
           if !comment[VALUE_REGEX]
             [whitespace, comment]
           elsif line_to_whitespace.empty?
-            result = results[line_number-1].map { |result| result.gsub "\n", '\n' }.join(', ')
+            result = results[line_number-1, :pp].map { |result| result.chomp.gsub("\n", '\n') }.join(', ')
             [whitespace, CommentFormatter.call(whitespace.size, VALUE_MARKER, result, options)]
           else
             result = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
