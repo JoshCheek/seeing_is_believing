@@ -23,4 +23,5 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - Dependency on psych
+- Remove HasException module. The only thing using it now is Result, so just move it there
 

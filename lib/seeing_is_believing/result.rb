@@ -1,13 +1,11 @@
-require 'seeing_is_believing/line'
-require 'seeing_is_believing/has_exception'
-
 class SeeingIsBelieving
   class Result
-    include HasException
     include Enumerable
+    RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
-    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures
+    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures, :exception
 
+    alias has_exception? exception
     alias bug_in_sib? bug_in_sib
 
     def has_stdout?

@@ -1,5 +1,4 @@
 require 'stringio'
-require 'seeing_is_believing/has_exception'
 require 'seeing_is_believing/binary/comment_formatter'
 
 require 'seeing_is_believing/binary'
@@ -10,7 +9,6 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AddAnnotations
-      include HasException
 
       def self.method_from_options(*args)
         define_method(args.first) { options.fetch *args }
