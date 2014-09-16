@@ -20,8 +20,8 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
   Mostly this is for consistency since `before_each` and `after_each` are lambas,
   But also, because at some point I might want to provide an argument, and this will make it easier.
   And because it allows certain conveniences, such as setting local vars in the lambda.
+- Loosened version constraints on parser dependency
 
 ### Removed
 - Dependency on psych
-- Remove HasException module. The only thing using it now is Result, so just move it there
-
+- Remove HasException module. The only thing using it now is Result, so just relevant behaviour into there.
