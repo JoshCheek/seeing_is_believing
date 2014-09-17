@@ -23,6 +23,9 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
   But also, because at some point I might want to provide an argument, and this will make it easier.
   And because it allows certain conveniences, such as setting local vars in the lambda.
 - Loosened version constraints on parser dependency
+- When you iterate over the result, it iterates over a result for each line of the file
+  rather than the number of lines it actually captured.
+- The `--JSON` flag emits a different structure
 
 ### Removed
 - Dependency on psych
