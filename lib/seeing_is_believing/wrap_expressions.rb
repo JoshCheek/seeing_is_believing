@@ -42,7 +42,7 @@ class SeeingIsBelieving
           range = root.location.expression
         end
 
-        rewriter.insert_after root_range, after_all.call
+        rewriter.insert_after root_range, after_all_text
         rewriter.process
       end
     end
@@ -56,6 +56,18 @@ class SeeingIsBelieving
         root.location.expression
       else
         Parser::Source::Range.new buffer, 0, 0
+      end
+    end
+
+    def after_all_text
+      after_all_text         = after_all.call
+      data_segment_code      = "__END__\n"
+      code_after_end_of_file = buffer.source[root_range.end_pos, data_segment_code.size]
+      ends_in_data_segment   = code_after_end_of_file.chomp == data_segment_code.chomp
+      if ends_in_data_segment
+        "#{after_all_text}\n"
+      else
+        after_all_text
       end
     end
 

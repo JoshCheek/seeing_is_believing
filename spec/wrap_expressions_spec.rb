@@ -38,6 +38,15 @@ describe SeeingIsBelieving::WrapExpressions do
       expect(described_class.call("1# abc", options)).to eq "[<1>]# abc"
     end
 
+    # this changes the number of lines, annoyingly, though it shouldn't mess anything up,
+    # unless you were trying to reopen the file to read it, in which case, *surprise* the whole thing's been rewritten
+    it 'injects a newline if there is a data segment and the after block doesn\'t end in a newline' do
+      expect(described_class.call("__END__", options)).to eq "[]\n__END__"
+      expect(described_class.call("\n__END__", options)).to eq "[]\n__END__"
+      expect(described_class.call("\n\n__END__", options)).to eq "[]\n\n__END__"
+      expect(described_class.call("__END__!", options)).to eq "[<__END__!>]"
+    end
+
     it 'wraps bodies that are wrapped in parentheses' do
       expect(wrap('(1)')).to eq '<(1)>'
       expect(wrap("(\n<<doc\ndoc\n)")).to eq "<(\n<<<doc>\ndoc\n)>"
