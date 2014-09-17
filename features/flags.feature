@@ -597,7 +597,6 @@ Feature: Using flags
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
     Then stdout is "123  # => /omg/"
 
-  @wip
   Scenario: --json
     Given the file "all_kinds_of_output.rb":
     """
@@ -614,12 +613,12 @@ Feature: Using flags
     And  stdout is the JSON:
     """
       { "lines": {
-          "1": { "inspect": ["3"] },
-          "2": { "inspect": ["\"0\"", "\"1\"", "\"2\""] },
-          "3": { "inspect": ["3"] },
-          "4": { "inspect": ["nil"] },
-          "5": { "inspect": ["nil"] },
-          "6": { "inspect": [] }
+          "1": ["3"],
+          "2": ["\"0\"", "\"1\"", "\"2\""],
+          "3": ["3"],
+          "4": ["nil"],
+          "5": ["nil"],
+          "6": []
         },
         "exception": {
           "line_number_in_this_file": 6,

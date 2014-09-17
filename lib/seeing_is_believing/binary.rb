@@ -192,7 +192,7 @@ class SeeingIsBelieving
         stderr:      results.stderr,
         exit_status: results.exitstatus,
         exception:   exception,
-        lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash| hash[line_number] = result },
+        lines:       results.each.with_object(Hash.new).with_index(1) { |(result, hash), line_number| hash[line_number] = result },
       }
     end
 
