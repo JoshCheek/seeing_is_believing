@@ -8,6 +8,8 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
 ### Added
 - Issue for 3.0 is at https://github.com/JoshCheek/seeing_is_believing/issues/47
 - Added a [Changelog](Changelog.md) in accordance with [http://keepachangelog.com/](http://keepachangelog.com/)
+- `seeing_is_believing/version` is required by default,
+  you can now check your version by just typing `SeeingIsBelieving::VERSION` and running it.
 
 ### Changed
 - Communication between SiB and the process running the code is no longer done by
@@ -25,3 +27,4 @@ I do my best to follow [Semantic Versioning](http://semver.org/).
 ### Removed
 - Dependency on psych
 - Remove HasException module. The only thing using it now is Result, so just relevant behaviour into there.
+- SeeingIsBelieving::Line class
