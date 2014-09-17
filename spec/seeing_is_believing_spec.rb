@@ -413,7 +413,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not change the number of lines in the file' do
-    expect(values_for "File.read(__FILE__).lines.size").to eq [['1']]
+    expect(values_for "File.read(__FILE__).lines.count").to eq [['1']]
   end
 
   context 'when given a debugger' do
