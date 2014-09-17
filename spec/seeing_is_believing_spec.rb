@@ -347,21 +347,47 @@ describe SeeingIsBelieving do
     end
   end
 
-  it 'does not record BEGIN and END', not_implemented: true do
-    pending 'not implemented'
-    expect { invoke <<-CODE }.to_not raise_error
-      puts 1
-      BEGIN {
-        puts "begin code"
-        some_var = 2
-      }
-      puts 3
-      END {
-        puts "end code"
-        puts some_var
-      }
-      puts 4
-    CODE
+  describe 'BEGIN and END' do
+    it 'Executes in the appropriate order' do
+      pending 'not implemented'
+      expect(invoke <<-CODE).stdout.to eq "1\n2\n3\n4\n5\n6\n7\n8\n9\n"
+        p 3
+        END   { p 8 }
+        p 4
+        BEGIN { p 1 }
+        p 5
+        END   { p 9 }
+        p 6
+        BEGIN { p 2 }
+        p 7
+      CODE
+    end
+
+    it 'Maintains correct line numbers' do
+      pending 'not implemented'
+      expected_values = [
+        ['1'],
+        [],
+        ['3'],
+        [],
+        ['5'],
+        [],
+        ['7'],
+        [],
+        ['9'],
+      ]
+      expect(values_for <<-CODE).to eq expected_values
+        __LINE__
+        BEGIN {
+          __LINE__
+        }
+        __LINE__
+        END {
+          __LINE__
+        }
+        __LINE__
+      CODE
+    end
   end
 
   # For more info about this one
