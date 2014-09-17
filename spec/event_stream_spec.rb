@@ -60,7 +60,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
     it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
       publisher.finish!
-      consumer.call 4
+      consumer.call 5
       expect { consumer.call }.to raise_error NoMoreInputError
       expect(consumer).to be_finished
     end
@@ -220,7 +220,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
       end
     end
 
-    context 'inspect performed by the block', t:true do
+    context 'inspect performed by the block' do
       it 'yields the object to the block and uses the block\'s result as the inspect value instead of calling inspect' do
         o = Object.new
         def o.inspect()       'real-inspect'  end
@@ -311,7 +311,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
   describe 'finish!' do
     def final_event(publisher, consumer, event_class)
       publisher.finish!
-      consumer.call(4).find { |e| e.class == event_class }
+      consumer.call(5).find { |e| e.class == event_class }
     end
 
     describe 'bug_in_sib' do
@@ -346,6 +346,30 @@ RSpec.describe SeeingIsBelieving::EventStream do
       end
     end
 
+    describe 'num_lines' do
+      it 'interprets numbers' do
+        publisher.num_lines = 21
+        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 21
+      end
+
+      it 'is 0 by default' do
+        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 0
+      end
+
+      it 'updates its value if it sees a result from a line larger than its value' do
+        publisher.num_lines = 2
+        publisher.record_result :sometype, 5, :someval
+        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 5
+      end
+
+      it 'updates its value if it sees an exception from a line larger than its value' do
+        publisher.num_lines = 2
+        begin; raise; rescue; e = $!; end
+        publisher.record_exception 5, e
+        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 5
+      end
+    end
+
     describe 'exitstatus' do
       it 'is 0 by default' do
         expect(final_event(publisher, consumer, Event::Exitstatus).value).to eq 0
@@ -360,7 +384,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
     describe 'finish' do
       it 'is the last thing that will be read' do
         expect(final_event(publisher, consumer, Event::Finish)).to be_a_kind_of Event::Finish
-        expect { consumer.call }.to raise_error NoMoreInputError
+        expect { p consumer.call }.to raise_error NoMoreInputError
       end
     end
   end

@@ -116,11 +116,12 @@ class SeeingIsBelieving
             case event
             when EventStream::Event::LineResult       then result.record_result(event.type, event.line_number, event.inspected)
             when EventStream::Event::UnrecordedResult then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
-            when EventStream::Event::Stdout           then result.stdout             = event.stdout
-            when EventStream::Event::Stderr           then result.stderr             = event.stderr
+            when EventStream::Event::Stdout           then result.stdout             = event.stdout # TODO: rename to value like the others
+            when EventStream::Event::Stderr           then result.stderr             = event.stderr # TODO: rename to value like the others
             when EventStream::Event::BugInSiB         then result.bug_in_sib         = event.value
             when EventStream::Event::MaxLineCaptures  then result.number_of_captures = event.value
             when EventStream::Event::Exitstatus       then result.exitstatus         = event.value
+            when EventStream::Event::NumLines         then result.num_lines          = event.value
             when EventStream::Event::Exception        then result.record_exception event.line_number, event.class_name, event.message, event.backtrace
             else raise "Unknown event: #{event.inspect}"
             end

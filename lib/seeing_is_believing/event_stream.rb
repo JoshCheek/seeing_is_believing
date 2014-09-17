@@ -10,6 +10,7 @@ class SeeingIsBelieving
       Stderr           = Struct.new(:stderr) # TODO: rename to value
       BugInSiB         = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
+      NumLines         = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
       Exception        = Struct.new(:line_number, :class_name, :message, :backtrace)
       Finish           = Class.new
@@ -113,6 +114,8 @@ class SeeingIsBelieving
           Event::Exitstatus.new(extract_token(line).to_i)
         when :finish
           Event::Finish.new
+        when :num_lines
+          Event::NumLines.new(extract_token(line).to_i)
         else
           raise "IDK what #{event_name.inspect} is!"
         end
@@ -122,12 +125,13 @@ class SeeingIsBelieving
     require 'thread'
     # TODO: rename producer, don't forget about the one in the matrix
     class Publisher
-      attr_accessor :exitstatus, :bug_in_sib, :max_line_captures
+      attr_accessor :exitstatus, :bug_in_sib, :max_line_captures, :num_lines
 
       def initialize(resultstream)
         self.exitstatus        = 0
         self.bug_in_sib        = false
         self.max_line_captures = Float::INFINITY
+        self.num_lines         = 0
         self.recorded_results  = []
         self.queue             = Thread::Queue.new
         self.publisher_thread  = Thread.new do
@@ -161,6 +165,7 @@ class SeeingIsBelieving
       StackErrors = [SystemStackError]
       StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)
+        self.num_lines = line_number if num_lines < line_number
         counts = recorded_results[line_number] ||= Hash.new(0)
         count  = counts[type]
         recorded_results[line_number][type] = count.next
@@ -188,6 +193,7 @@ class SeeingIsBelieving
       end
 
       def record_exception(line_number, exception)
+        self.num_lines = line_number if num_lines < line_number
         queue << "exception"
         queue << "  line_number #{line_number}"
         queue << "  class_name  #{to_string_token exception.class.name}"
@@ -209,6 +215,7 @@ class SeeingIsBelieving
       def finish!
         queue << "bug_in_sib #{bug_in_sib}"
         queue << "max_line_captures #{max_line_captures}"
+        queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
         queue << "finish".freeze
         publisher_thread.join

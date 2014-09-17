@@ -29,7 +29,7 @@ class SeeingIsBelieving
     @number_of_captures         = options.fetch :number_of_captures, Float::INFINITY
 
     @wrap_expressions_callbacks = {}
-    @wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  -> { "begin; $SiB.max_line_captures = #{number_of_captures_as_str}; " }
+    @wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  -> { "begin; $SiB.max_line_captures = #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.size}; " }
     @wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   -> { ";rescue Exception;"\
                                                                                    "lambda {"\
                                                                                      "line_number = $!.backtrace.grep(/\#{__FILE__}/).first[/:\\d+/][1..-1].to_i;"\

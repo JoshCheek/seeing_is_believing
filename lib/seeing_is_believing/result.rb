@@ -3,7 +3,7 @@ class SeeingIsBelieving
     include Enumerable
     RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
-    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures, :exception
+    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures, :exception, :num_lines
 
     alias has_exception? exception
     alias bug_in_sib? bug_in_sib
