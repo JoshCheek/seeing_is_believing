@@ -30,15 +30,8 @@ class SeeingIsBelieving
     end
 
     def each(&block)
-      max = results.keys.max || 1
-      (1..max).each { |line_number| block.call self[line_number] }
-    end
-
-    # TODO: There are no unit tests on this
-    def each_with_line_number(&block)
-      return to_enum :each_with_line_number unless block
-      max = results.keys.max || 1
-      (1..max).each { |line_number| block.call line_number, results[line_number] }
+      return to_enum :each unless block
+      (1..num_lines).each { |line_number| block.call self[line_number] }
     end
 
     def inspect
@@ -62,7 +55,7 @@ class SeeingIsBelieving
     private
 
     def results_for(line_number, type)
-      line_results = results[line_number] ||= Hash.new { |h, k| h[k] = [] }
+      line_results = (results[line_number] ||= Hash.new { |h, k| h[k] = [] })
       line_results[type]
     end
 

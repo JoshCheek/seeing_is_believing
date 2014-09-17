@@ -64,8 +64,8 @@ describe SeeingIsBelieving do
   it 'evalutes to an empty array for lines that it cannot understand' do
     expect(values_for("[3].map \\\ndo |n|\n n*2\n end")).to eq [['[3]'], [], ['6'], ['[6]']]
     expect(values_for("'\n1\n'")).to eq [[], [], ['"\n1\n"']]
-    expect(values_for("<<HEREDOC\n\n1\nHEREDOC")).to eq  [[%Q'"\\n1\\n"']] # newlines escaped b/c lib inspects them
-    expect(values_for("<<-HEREDOC\n\n1\nHEREDOC")).to eq [[%Q'"\\n1\\n"']]
+    expect(values_for("<<HEREDOC\n\n1\nHEREDOC")).to eq  [[%Q'"\\n1\\n"'], [], [], []] # newlines escaped b/c lib inspects them
+    expect(values_for("<<-HEREDOC\n\n1\nHEREDOC")).to eq [[%Q'"\\n1\\n"'], [], [], []]
   end
 
   it 'records the targets of chained methods' do
@@ -78,8 +78,8 @@ describe SeeingIsBelieving do
   end
 
   it "records heredocs" do
-    expect(values_for("<<A\n1\nA")).to eq [[%'"1\\n"']]
-    expect(values_for("<<-A\n1\nA")).to eq [[%'"1\\n"']]
+    expect(values_for("<<A\n1\nA")).to  eq [[%'"1\\n"'], [], []]
+    expect(values_for("<<-A\n1\nA")).to eq [[%'"1\\n"'], [], []]
   end
 
   it 'does not insert code into the middle of heredocs' do
@@ -104,7 +104,7 @@ describe SeeingIsBelieving do
   end
 
   it 'has no output for empty lines' do
-    expect(values_for('')).to eq [[]]
+    expect(values_for('')).to eq []
     expect(values_for('  ')).to eq [[]]
     expect(values_for("  \n")).to eq [[]]
     expect(values_for("1\n\n2")).to eq [['1'],[],['2']]
@@ -238,7 +238,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not capture output from __END__ onward' do
-    expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"']] # <-- should this actually write a newline on the end?
+    expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"'], [], []] # <-- should this actually write a newline on the end?
   end
 
   it 'raises a SyntaxError when the whole program is invalid' do
@@ -260,7 +260,7 @@ describe SeeingIsBelieving do
   it 'can deal with methods that are invoked entirely on the next line' do
     expect(values_for("a = 1\n.even?\na")).to eq [['1'], ['false'], ['false']]
     expect(values_for("a = 1.\neven?\na")).to eq [['1'], ['false'], ['false']]
-    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false']]
+    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false'], []] # TODO: would be nice if we could consolidate this shit so we could find out things like __END__ without repeatedly parsing, I'd prefer if this did not imply there were results on this line -.-
   end
 
   it 'does not record leading comments' do
@@ -288,7 +288,7 @@ describe SeeingIsBelieving do
 
   it "doesn't fuck up when there are lines with magic comments in the middle of the app" do
     expect(values_for '1+1
-                       # encoding: wtf').to eq [['2']]
+                       # encoding: wtf').to eq [['2'], []]
   end
 
   it "doesn't remove multiple leading comments" do
