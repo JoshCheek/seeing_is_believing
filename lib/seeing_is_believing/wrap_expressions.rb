@@ -29,10 +29,9 @@ class SeeingIsBelieving
       @called ||= begin
         find_wrappings
 
+        rewriter.insert_before root_range, before_all.call
+
         if root # file may be empty
-          rewriter.insert_before root.location.expression, before_all.call
-
-
           wrappings.each do |line_num, (range, last_col, meta)|
             rewriter.insert_before range, before_each.call(line_num)
             if meta == :total_fucking_failure
@@ -40,11 +39,10 @@ class SeeingIsBelieving
             end
             rewriter.insert_after  range, after_each.call(line_num)
           end
-
           range = root.location.expression
-          rewriter.insert_after range, after_all.call
         end
 
+        rewriter.insert_after root_range, after_all.call
         rewriter.process
       end
     end
@@ -52,6 +50,14 @@ class SeeingIsBelieving
     private
 
     attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
+
+    def root_range
+      if root
+        root.location.expression
+      else
+        Parser::Source::Range.new buffer, 0, 0
+      end
+    end
 
     def add_to_wrappings(range_or_ast, meta=nil)
       range = range_or_ast

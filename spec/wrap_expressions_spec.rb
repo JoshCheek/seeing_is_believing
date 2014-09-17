@@ -26,8 +26,12 @@ describe SeeingIsBelieving::WrapExpressions do
       expect(described_class.call("#comment\nA\n__END__\n1", options)).to eq "#comment\n[<A>]\n__END__\n1"
     end
 
-    it 'does nothing when there are only comments' do
-      expect(described_class.call("# abc", options)).to eq "# abc"
+    it 'comes in on blank lines' do
+      expect(described_class.call('', options)).to eq '[]'
+    end
+
+    it 'comes in first when there are only comments' do
+      expect(described_class.call("# abc", options)).to eq "[]# abc"
     end
 
     it 'comes in before trailing comments' do
