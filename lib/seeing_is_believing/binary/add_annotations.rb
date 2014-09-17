@@ -60,7 +60,7 @@ class SeeingIsBelieving
             should_inspect = inspect_linenos.include?(line_number)
             should_pp      = pp_linenos.include?(line_number)
             inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '' }"
+            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
 
             if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
             elsif should_inspect              then ").tap { |v| #{inspect} }"
@@ -100,7 +100,7 @@ class SeeingIsBelieving
           if !comment[VALUE_REGEX]
             [whitespace, comment]
           elsif line_to_whitespace.empty?
-            result = results[line_number-1, :pp].map { |result| result.chomp.gsub("\n", '\n') }.join(', ')
+            result = results[line_number-1, :pp].map { |result| result.chomp }.join(', ') # TODO: CommentFormatter#initialize escapes newlines, need to be able to pass in that this shouldn't happen in this case
             [whitespace, CommentFormatter.call(whitespace.size, VALUE_MARKER, result, options)]
           else
             result = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
