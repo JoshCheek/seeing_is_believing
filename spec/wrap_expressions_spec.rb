@@ -849,7 +849,7 @@ describe SeeingIsBelieving::WrapExpressions do
   describe 'BEGIN/END' do
     # not implemented b/c we cannot wrap around these either.
     # So what does it mean to wrap around?
-    # mabe this?
+    # maybe this?
     #   1
     #   BEGIN {}
     #   2
