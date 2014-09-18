@@ -1,6 +1,7 @@
 # encoding: utf-8
 
-require 'seeing_is_believing/event_stream'
+require 'seeing_is_believing/event_stream/publisher'
+require 'seeing_is_believing/event_stream/consumer'
 
 RSpec.describe SeeingIsBelieving::EventStream do
   Event                   = SeeingIsBelieving::EventStream::Event

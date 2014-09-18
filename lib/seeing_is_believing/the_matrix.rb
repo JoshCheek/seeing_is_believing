@@ -6,7 +6,7 @@
 # (or if you want to understand why we do the pipe dance)
 
 require_relative 'version'
-require_relative 'event_stream'
+require_relative 'event_stream/publisher'
 
 stdout_real_obj = STDOUT      # the real Ruby object, fake file descriptor
 stdout_real_fd  = STDOUT.dup  # duped Ruby object,    real file descriptor

@@ -19,7 +19,7 @@ require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
-require 'seeing_is_believing/event_stream'
+require 'seeing_is_believing/event_stream/consumer'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles

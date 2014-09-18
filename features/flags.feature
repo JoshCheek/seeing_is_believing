@@ -588,7 +588,7 @@ Feature: Using flags
     """
     #!/usr/bin/env ruby
     $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib", __FILE__
-    require 'seeing_is_believing/event_stream'
+    require 'seeing_is_believing/event_stream/publisher'
     sib = SeeingIsBelieving::EventStream::Publisher.new($stdout)
     sib.record_result(:inspect, 1, /omg/)
     sib.finish!
