@@ -3,8 +3,8 @@ class SeeingIsBelieving
     module Events
       LineResult       = Struct.new(:type, :line_number, :inspected)
       UnrecordedResult = Struct.new(:type, :line_number)
-      Stdout           = Struct.new(:stdout) # TODO: rename to value
-      Stderr           = Struct.new(:stderr) # TODO: rename to value
+      Stdout           = Struct.new(:value)
+      Stderr           = Struct.new(:value)
       BugInSiB         = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
       NumLines         = Struct.new(:value)
