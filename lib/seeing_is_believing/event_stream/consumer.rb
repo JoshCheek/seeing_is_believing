@@ -16,7 +16,7 @@ class SeeingIsBelieving
           line = @readstream.gets
           raise NoMoreInput if line.nil?
           event = event_for line
-          @finished = true if Event::Finish === event
+          @finished = true if Events::Finish === event
           event
         end
         n == 1 ? events.first : events
@@ -32,7 +32,7 @@ class SeeingIsBelieving
         return to_enum :each unless block_given?
         loop do
           event = call
-          yield event unless Event::Finish === event
+          yield event unless Events::Finish === event
         end
       rescue NoMoreInput
         return nil
@@ -67,13 +67,13 @@ class SeeingIsBelieving
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
           inspected   = extract_string(line)
-          Event::LineResult.new(type, line_number, inspected)
+          Events::LineResult.new(type, line_number, inspected)
         when :maxed_result
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
-          Event::UnrecordedResult.new(type, line_number)
+          Events::UnrecordedResult.new(type, line_number)
         when :exception
-          Event::Exception.new(-1, '', '', []).tap do |exception|
+          Events::Exception.new(-1, '', '', []).tap do |exception|
             loop do
               line = @readstream.gets.chomp
               case extract_token(line).intern
@@ -86,22 +86,22 @@ class SeeingIsBelieving
             end
           end
         when :stdout
-          Event::Stdout.new(extract_string line)
+          Events::Stdout.new(extract_string line)
         when :stderr
-          Event::Stderr.new(extract_string line)
+          Events::Stderr.new(extract_string line)
         when :bug_in_sib
-          Event::BugInSiB.new(extract_token(line) == 'true')
+          Events::BugInSiB.new(extract_token(line) == 'true')
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
-          Event::MaxLineCaptures.new(value)
+          Events::MaxLineCaptures.new(value)
         when :exitstatus
           # TODO: Will this fuck it up if you run `exit true`?
-          Event::Exitstatus.new(extract_token(line).to_i)
+          Events::Exitstatus.new(extract_token(line).to_i)
         when :finish
-          Event::Finish.new
+          Events::Finish.new
         when :num_lines
-          Event::NumLines.new(extract_token(line).to_i)
+          Events::NumLines.new(extract_token(line).to_i)
         else
           raise "IDK what #{event_name.inspect} is!"
         end

@@ -1,6 +1,6 @@
 class SeeingIsBelieving
   module EventStream
-    module Event
+    module Events
       LineResult       = Struct.new(:type, :line_number, :inspected)
       UnrecordedResult = Struct.new(:type, :line_number)
       Stdout           = Struct.new(:stdout) # TODO: rename to value
