@@ -90,7 +90,11 @@ class SeeingIsBelieving
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line
         # no op
-      when :rescue, :ensure, :def, :return, :break, :next
+      when :defs
+        add_to_wrappings ast
+        child = ast.children.last
+        add_to_wrappings child if child
+      when :rescue, :ensure, :return, :break, :next
         add_children ast
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
@@ -103,7 +107,7 @@ class SeeingIsBelieving
           end
           add_children ast
         end
-      when :when, :pair, :defs, :class, :module, :sclass
+      when :when, :pair, :class, :module, :sclass
         find_wrappings ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children

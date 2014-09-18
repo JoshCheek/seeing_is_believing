@@ -29,11 +29,11 @@ Feature: Running the binary unsuccessfully
     """
     def first_defined
       second_defined
-    end
+    end                # => {{method_result :first_defined}}
 
     def second_defined
       require_relative 'raises_exception'  # ~> RuntimeError: ZOMG\n!!!!
-    end
+    end                                    # => {{method_result :second_defined}}
 
     first_defined
 

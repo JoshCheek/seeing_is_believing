@@ -153,7 +153,7 @@ class SeeingIsBelieving
 
       # TODO: delete?
       def bug_in_sib=(bool)
-        @bug_in_sib = !!bool
+        @bug_in_sib = (bool ? true : false)
       end
 
       # for a consideration of many different ways of doing this, see 5633064

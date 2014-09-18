@@ -65,7 +65,7 @@ Feature:
       if true     # => true
         return 1  # => 1
       end
-    end
+    end           # => {{method_result :m}}
     m             # => 1
     """
 
@@ -220,7 +220,7 @@ Feature:
     class Proc
       def inspect
         "<PROC>"   # => "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>"
-      end
+      end          # => {{method_result :inspect}}
     end
 
     generic_fib_gen = -> current, prev {
@@ -379,6 +379,6 @@ Feature:
     """
     class Object
       def !(a)
-      end
+      end         # => {{method_result :!}}
     end
     """

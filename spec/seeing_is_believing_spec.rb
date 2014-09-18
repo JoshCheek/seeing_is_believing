@@ -4,6 +4,17 @@ require 'seeing_is_believing'
 require 'stringio'
 
 describe SeeingIsBelieving do
+  def method_result(name)
+    @result = def __some_method__; end
+    if :__some_method__ == @result
+      name.inspect
+    elsif nil == @result
+      nil.inspect
+    else
+      raise "huh? #{@result.inspect}"
+    end
+  end
+
   def invoke(input, options={})
     if options[:debug]
       options.delete :debug
@@ -138,11 +149,11 @@ describe SeeingIsBelieving do
 
                         # comment
                         __LINE__')
-    ).to eq [['1'], ['2'], [], [], ['5'], [], ['5'], [], [], ['10']]
+    ).to eq [['1'], ['2'], [], [], ['5'], [method_result(:meth)], ['5'], [], [], ['10']]
   end
 
   it 'records return statements' do
-    expect(values_for("def meth \n return 1          \n end \n meth")).to eq [[], ['1'], [], ['1']]
+    expect(values_for("def meth \n return 1          \n end \n meth")).to eq [[], ['1'], [method_result(:meth)], ['1']]
     expect(values_for("-> {  \n return 1          \n }.call"        )).to eq [[], ['1'], ['1']]
     expect(values_for("-> { return 1 }.call"                        )).to eq [['1']]
 
@@ -159,7 +170,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword redo' do
-    expect(values_for(<<-DOC)).to eq [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [], ['0...3']]
+    expect(values_for(<<-DOC)).to eq [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [method_result(:meth)], ['0...3']]
       def meth
         n = 0
         for i in 0...3
@@ -172,7 +183,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword retry' do
-    expect(values_for(<<-DOC)).to eq [[], [], [], [], ['nil']]
+    expect(values_for(<<-DOC)).to eq [[], [], [], [method_result(:meth)], ['nil']]
       def meth
       rescue
         retry

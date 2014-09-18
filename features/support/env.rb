@@ -1,6 +1,22 @@
 require_relative '../../lib/seeing_is_believing/version'
 
 require 'haiti'
+
+module SiBHelpers
+  def method_result(name)
+    @result = def __some_method__; end
+    if :__some_method__ == @result
+      name.inspect
+    elsif nil == @result
+      nil.inspect
+    else
+      raise "huh? #{@result.inspect}"
+    end
+  end
+end
+
+World SiBHelpers
+
 Haiti.configure do |config|
   config.proving_grounds_dir = File.expand_path '../../../proving_grounds', __FILE__
   config.bin_dir             = File.expand_path '../../../bin',             __FILE__
