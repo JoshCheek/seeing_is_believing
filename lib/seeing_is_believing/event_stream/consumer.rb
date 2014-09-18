@@ -1,4 +1,5 @@
 require 'seeing_is_believing/event_stream/events'
+require 'seeing_is_believing/error'
 class SeeingIsBelieving
   module EventStream
     class Consumer

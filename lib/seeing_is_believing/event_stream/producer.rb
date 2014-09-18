@@ -3,7 +3,7 @@ class SeeingIsBelieving
   module EventStream
     require 'thread'
     # TODO: rename producer, don't forget about the one in the matrix
-    class Publisher
+    class Producer
       attr_accessor :exitstatus, :bug_in_sib, :max_line_captures, :num_lines
 
       def initialize(resultstream)
@@ -13,7 +13,7 @@ class SeeingIsBelieving
         self.num_lines         = 0
         self.recorded_results  = []
         self.queue             = Thread::Queue.new
-        self.publisher_thread  = Thread.new do
+        self.producer_thread   = Thread.new do
           begin
             loop do
               to_publish = queue.shift
@@ -97,12 +97,12 @@ class SeeingIsBelieving
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
         queue << "finish".freeze
-        publisher_thread.join
+        producer_thread.join
       end
 
       private
 
-      attr_accessor :resultstream, :queue, :publisher_thread, :recorded_results
+      attr_accessor :resultstream, :queue, :producer_thread, :recorded_results
     end
   end
 end

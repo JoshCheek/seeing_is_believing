@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'seeing_is_believing/event_stream/publisher'
+require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
 
 RSpec.describe SeeingIsBelieving::EventStream do
@@ -8,16 +8,16 @@ RSpec.describe SeeingIsBelieving::EventStream do
   NoMoreInputError        = SeeingIsBelieving::EventStream::Consumer::NoMoreInput
   WtfWhoClosedMyShitError = SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
 
-  attr_accessor :publisher, :consumer, :readstream, :writestream
+  attr_accessor :producer, :consumer, :readstream, :writestream
 
   before do
     self.readstream, self.writestream = IO.pipe
-    self.publisher = SeeingIsBelieving::EventStream::Publisher.new(writestream)
+    self.producer  = SeeingIsBelieving::EventStream::Producer.new(writestream)
     self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(readstream)
   end
 
   after {
-    publisher.finish!
+    producer.finish!
     readstream.close  unless readstream.closed?
     writestream.close unless writestream.closed?
   }
@@ -36,9 +36,9 @@ RSpec.describe SeeingIsBelieving::EventStream do
         num_results.times.map { |value| "#{line_num}|#{value.inspect}" }
       }
 
-      publisher_threads = num_threads.times.map { |line_num|
+      producer_threads = num_threads.times.map { |line_num|
         Thread.new {
-          num_results.times { |value| publisher.record_result :type, line_num, value }
+          num_results.times { |value| producer.record_result :type, line_num, value }
         }
       }
 
@@ -51,16 +51,16 @@ RSpec.describe SeeingIsBelieving::EventStream do
       end
 
       expect(line_nums_and_inspections).to eq []
-      expect(publisher_threads).to be_none(&:alive?)
+      expect(producer_threads).to be_none(&:alive?)
     end
 
     it 'raises NoMoreInput and marks itself finished if input is closed before it finishes reading the number of requested inputs' do
-      publisher.finish!
+      producer.finish!
       expect { consumer.call 10 }.to raise_error NoMoreInputError
     end
 
     it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
-      publisher.finish!
+      producer.finish!
       consumer.call 5
       expect { consumer.call }.to raise_error NoMoreInputError
       expect(consumer).to be_finished
@@ -81,8 +81,8 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
   describe 'each' do
     it 'loops through and yields all events except the finish event' do
-      publisher.record_result :inspect, 100, 2
-      publisher.finish!
+      producer.record_result :inspect, 100, 2
+      producer.finish!
 
       events = []
       consumer.each { |e| events << e }
@@ -100,12 +100,12 @@ RSpec.describe SeeingIsBelieving::EventStream do
     end
 
     it 'returns nil' do
-      publisher.finish!
+      producer.finish!
       expect(consumer.each { 1 }).to eq nil
     end
 
     it 'returns an enumerator if not given a block' do
-      publisher.finish!
+      producer.finish!
       expect(consumer.each.map &:class).to include Event::Exitstatus
     end
   end
@@ -113,15 +113,15 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
   describe 'record_results' do
     it 'emits a type, line_number, and escaped string' do
-      publisher.record_result :type1, 123, [*'a'..'z', *'A'..'Z', *'0'..'9'].join("")
-      publisher.record_result :type1, 123, '"'
-      publisher.record_result :type1, 123, '""'
-      publisher.record_result :type1, 123, "\n"
-      publisher.record_result :type1, 123, "\r"
-      publisher.record_result :type1, 123, "\n\r\n"
-      publisher.record_result :type1, 123, "\#{}"
-      publisher.record_result :type1, 123, [*0..127].map(&:chr).join("")
-      publisher.record_result :type1, 123, "Ω≈ç√∫˜µ≤≥"
+      producer.record_result :type1, 123, [*'a'..'z', *'A'..'Z', *'0'..'9'].join("")
+      producer.record_result :type1, 123, '"'
+      producer.record_result :type1, 123, '""'
+      producer.record_result :type1, 123, "\n"
+      producer.record_result :type1, 123, "\r"
+      producer.record_result :type1, 123, "\n\r\n"
+      producer.record_result :type1, 123, "\#{}"
+      producer.record_result :type1, 123, [*0..127].map(&:chr).join("")
+      producer.record_result :type1, 123, "Ω≈ç√∫˜µ≤≥"
 
       expect(consumer.call 9).to eq [
         Event::LineResult.new(:type1, 123, [*'a'..'z', *'A'..'Z', *'0'..'9'].join("").inspect),
@@ -137,30 +137,30 @@ RSpec.describe SeeingIsBelieving::EventStream do
     end
 
     it 'indicates that there are more results once it hits the max, but does not continue reporting them' do
-      publisher.max_line_captures = 2
+      producer.max_line_captures = 2
 
-      publisher.record_result :type1, 123, 1
+      producer.record_result :type1, 123, 1
       expect(consumer.call 1).to eq Event::LineResult.new(:type1, 123, '1')
 
-      publisher.record_result :type1, 123, 2
+      producer.record_result :type1, 123, 2
       expect(consumer.call 1).to eq Event::LineResult.new(:type1, 123, '2')
 
-      publisher.record_result :type1, 123, 3
-      publisher.record_result :type1, 123, 4
-      publisher.record_result :type2, 123, 1
+      producer.record_result :type1, 123, 3
+      producer.record_result :type1, 123, 4
+      producer.record_result :type2, 123, 1
       expect(consumer.call 2).to eq [Event::UnrecordedResult.new(:type1, 123),
                                      Event::LineResult.new(:type2, 123, '1')]
     end
 
     it 'scopes the max to a given type/line' do
-      publisher.max_line_captures = 1
+      producer.max_line_captures = 1
 
-      publisher.record_result :type1, 1, 1
-      publisher.record_result :type1, 1, 2
-      publisher.record_result :type1, 2, 3
-      publisher.record_result :type1, 2, 4
-      publisher.record_result :type2, 1, 5
-      publisher.record_result :type2, 1, 6
+      producer.record_result :type1, 1, 1
+      producer.record_result :type1, 1, 2
+      producer.record_result :type1, 2, 3
+      producer.record_result :type1, 2, 4
+      producer.record_result :type2, 1, 5
+      producer.record_result :type2, 1, 6
       expect(consumer.call 6).to eq [
         Event::LineResult.new(:type1, 1, '1'),
         Event::UnrecordedResult.new(:type1, 1),
@@ -173,22 +173,22 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
     it 'returns the value' do
       o = Object.new
-      expect(publisher.record_result :type, 123, o).to equal o
+      expect(producer.record_result :type, 123, o).to equal o
     end
 
     # Some examples, mostly for the purpose of running individually if things get confusing
     example 'Example: Simple' do
-      publisher.record_result :type, 1, "a"
+      producer.record_result :type, 1, "a"
       expect(consumer.call).to eq Event::LineResult.new(:type, 1, '"a"')
 
-      publisher.record_result :type, 1, 1
+      producer.record_result :type, 1, 1
       expect(consumer.call).to eq Event::LineResult.new(:type, 1, '1')
     end
 
     example 'Example: Complex' do
       str1 = (0...128).map(&:chr).join('') << "Ω≈ç√∫˜µ≤≥åß∂ƒ©˙∆˚¬…æœ∑´®†¥¨ˆøπ“‘¡™£¢ªº’”"
       str2 = str1.dup
-      publisher.record_result :type, 1, str2
+      producer.record_result :type, 1, str2
       expect(str2).to eq str1 # just making sure it doesn't mutate since this one is so complex
       expect(consumer.call).to eq Event::LineResult.new(:type, 1, str1.inspect)
     end
@@ -196,7 +196,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
     context 'calls #inspect when no block is given' do
       it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
         obj = BasicObject.new
-        publisher.record_result :type, 1, obj
+        producer.record_result :type, 1, obj
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
       end
 
@@ -206,7 +206,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
         def obj.inspect
           nil
         end
-        publisher.record_result :type, 1, obj
+        producer.record_result :type, 1, obj
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, "#<no inspect available>")
       end
 
@@ -216,7 +216,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
           count += 1
           'a'
         end
-        publisher.record_result :type, 1, obj
+        producer.record_result :type, 1, obj
         expect(count).to eq 1
       end
     end
@@ -226,24 +226,24 @@ RSpec.describe SeeingIsBelieving::EventStream do
         o = Object.new
         def o.inspect()       'real-inspect'  end
         def o.other_inspect() 'other-inspect' end
-        publisher.record_result(:type, 1, o) { |x| x.other_inspect }
+        producer.record_result(:type, 1, o) { |x| x.other_inspect }
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, 'other-inspect')
       end
 
       it 'doesn\'t blow up if the block raises' do
         o = Object.new
-        publisher.record_result(:type, 1, o) { raise Exception, "zomg" }
+        producer.record_result(:type, 1, o) { raise Exception, "zomg" }
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, '#<no inspect available>')
       end
 
       it 'doesn\'t blow up if the block returns a non-string' do
         o = Object.new
-        publisher.record_result(:type, 1, o) { nil }
+        producer.record_result(:type, 1, o) { nil }
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, '#<no inspect available>')
 
         stringish = Object.new
         def stringish.to_str() 'actual string' end
-        publisher.record_result(:type, 1, o) { stringish }
+        producer.record_result(:type, 1, o) { stringish }
         expect(consumer.call).to eq Event::LineResult.new(:type, 1, 'actual string')
       end
 
@@ -251,10 +251,10 @@ RSpec.describe SeeingIsBelieving::EventStream do
         o = Object.new
         count = 0
 
-        publisher.record_result(:type, 1, o) { count += 1 }
+        producer.record_result(:type, 1, o) { count += 1 }
         expect(count).to eq 1
 
-        publisher.record_result(:type, 1, o) { count += 1; 'inspected-value' }
+        producer.record_result(:type, 1, o) { count += 1; 'inspected-value' }
         expect(count).to eq 2
       end
     end
@@ -279,7 +279,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
       begin
         raise ZeroDivisionError, 'omg'
       rescue
-        publisher.record_exception 12, $!
+        producer.record_exception 12, $!
       end
       assert_exception consumer.call, 12, 'ZeroDivisionError', /\Aomg\Z/, 0, __LINE__-4
     end
@@ -288,7 +288,7 @@ RSpec.describe SeeingIsBelieving::EventStream do
       begin
         not_a_local_or_meth
       rescue
-        publisher.record_exception 99, $!
+        producer.record_exception 99, $!
       end
       backtrace_frame = 1 # b/c this one will get caught by method missing
       assert_exception consumer.call, 99, 'NameError', /\bnot_a_local_or_meth\b/, 1, __LINE__-5
@@ -297,94 +297,94 @@ RSpec.describe SeeingIsBelieving::EventStream do
 
   describe 'stdout' do
     it 'is an escaped string' do
-      publisher.record_stdout("this is the stdout¡")
+      producer.record_stdout("this is the stdout¡")
       expect(consumer.call).to eq Event::Stdout.new("this is the stdout¡")
     end
   end
 
   describe 'stderr' do
     it 'is an escaped string' do
-      publisher.record_stderr("this is the stderr¡")
+      producer.record_stderr("this is the stderr¡")
       expect(consumer.call).to eq Event::Stderr.new("this is the stderr¡")
     end
   end
 
   describe 'finish!' do
-    def final_event(publisher, consumer, event_class)
-      publisher.finish!
+    def final_event(producer, consumer, event_class)
+      producer.finish!
       consumer.call(5).find { |e| e.class == event_class }
     end
 
     describe 'bug_in_sib' do
       it 'truthy values are transated to true' do
-        publisher.bug_in_sib = 'a value'
-        expect(final_event(publisher, consumer, Event::BugInSiB).value).to equal true
+        producer.bug_in_sib = 'a value'
+        expect(final_event(producer, consumer, Event::BugInSiB).value).to equal true
       end
 
       it 'falsy values are translated to false' do
-        publisher.bug_in_sib = nil
-        expect(final_event(publisher, consumer, Event::BugInSiB).value).to equal false
+        producer.bug_in_sib = nil
+        expect(final_event(producer, consumer, Event::BugInSiB).value).to equal false
       end
 
       it 'is false by default, and is always emitted' do
-        expect(final_event(publisher, consumer, Event::BugInSiB).value).to equal false
+        expect(final_event(producer, consumer, Event::BugInSiB).value).to equal false
       end
     end
 
     describe 'max_line_captures' do
       it 'interprets numbers' do
-        publisher.max_line_captures = 12
-        expect(final_event(publisher, consumer, Event::MaxLineCaptures).value).to eq 12
+        producer.max_line_captures = 12
+        expect(final_event(producer, consumer, Event::MaxLineCaptures).value).to eq 12
       end
 
       it 'interprets infinity' do
-        publisher.max_line_captures = Float::INFINITY
-        expect(final_event(publisher, consumer, Event::MaxLineCaptures).value).to eq Float::INFINITY
+        producer.max_line_captures = Float::INFINITY
+        expect(final_event(producer, consumer, Event::MaxLineCaptures).value).to eq Float::INFINITY
       end
 
       it 'is infinity by default' do
-        expect(final_event(publisher, consumer, Event::MaxLineCaptures).value).to eq Float::INFINITY
+        expect(final_event(producer, consumer, Event::MaxLineCaptures).value).to eq Float::INFINITY
       end
     end
 
     describe 'num_lines' do
       it 'interprets numbers' do
-        publisher.num_lines = 21
-        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 21
+        producer.num_lines = 21
+        expect(final_event(producer, consumer, Event::NumLines).value).to eq 21
       end
 
       it 'is 0 by default' do
-        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 0
+        expect(final_event(producer, consumer, Event::NumLines).value).to eq 0
       end
 
       it 'updates its value if it sees a result from a line larger than its value' do
-        publisher.num_lines = 2
-        publisher.record_result :sometype, 5, :someval
-        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 5
+        producer.num_lines = 2
+        producer.record_result :sometype, 5, :someval
+        expect(final_event(producer, consumer, Event::NumLines).value).to eq 5
       end
 
       it 'updates its value if it sees an exception from a line larger than its value' do
-        publisher.num_lines = 2
+        producer.num_lines = 2
         begin; raise; rescue; e = $!; end
-        publisher.record_exception 5, e
-        expect(final_event(publisher, consumer, Event::NumLines).value).to eq 5
+        producer.record_exception 5, e
+        expect(final_event(producer, consumer, Event::NumLines).value).to eq 5
       end
     end
 
     describe 'exitstatus' do
       it 'is 0 by default' do
-        expect(final_event(publisher, consumer, Event::Exitstatus).value).to eq 0
+        expect(final_event(producer, consumer, Event::Exitstatus).value).to eq 0
       end
 
       it 'can be overridden' do
-        publisher.exitstatus = 74
-        expect(final_event(publisher, consumer, Event::Exitstatus).value).to eq 74
+        producer.exitstatus = 74
+        expect(final_event(producer, consumer, Event::Exitstatus).value).to eq 74
       end
     end
 
     describe 'finish' do
       it 'is the last thing that will be read' do
-        expect(final_event(publisher, consumer, Event::Finish)).to be_a_kind_of Event::Finish
+        expect(final_event(producer, consumer, Event::Finish)).to be_a_kind_of Event::Finish
         expect { p consumer.call }.to raise_error NoMoreInputError
       end
     end

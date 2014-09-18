@@ -6,7 +6,7 @@
 # (or if you want to understand why we do the pipe dance)
 
 require_relative 'version'
-require_relative 'event_stream/publisher'
+require_relative 'event_stream/producer'
 
 stdout_real_obj = STDOUT      # the real Ruby object, fake file descriptor
 stdout_real_fd  = STDOUT.dup  # duped Ruby object,    real file descriptor
@@ -18,7 +18,7 @@ stderr_real_fd  = STDERR.dup
 read_from_mock_err, write_to_mock_err = IO.pipe
 stderr_real_obj.reopen write_to_mock_err
 
-$SiB = SeeingIsBelieving::EventStream::Publisher.new(stdout_real_fd)
+$SiB = SeeingIsBelieving::EventStream::Producer.new(stdout_real_fd)
 
 at_exit do
   stdout_real_obj.reopen stdout_real_fd

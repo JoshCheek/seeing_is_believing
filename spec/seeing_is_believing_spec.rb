@@ -342,8 +342,8 @@ describe SeeingIsBelieving do
       File.write 'omg-ruby', "#!/usr/bin/env ruby
         $LOAD_PATH.unshift '#{File.expand_path '../../lib', __FILE__}'
 
-        require 'seeing_is_believing/event_stream/publisher'
-        sib = SeeingIsBelieving::EventStream::Publisher.new($stdout)
+        require 'seeing_is_believing/event_stream/producer'
+        sib = SeeingIsBelieving::EventStream::Producer.new($stdout)
         sib.record_result(:inspect, 1, /omg/)
         sib.finish!
       "
