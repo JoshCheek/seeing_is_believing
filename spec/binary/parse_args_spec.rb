@@ -27,6 +27,10 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     SeeingIsBelieving::Binary::ParseArgs.call args, outstream
   end
 
+  def matrix_file
+    'seeing_is_believing/the_matrix'
+  end
+
   shared_examples 'it requires a positive int argument' do |flags|
     it 'expects an integer argument' do
       flags.each do |flag|
@@ -65,7 +69,7 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   example 'example: multiple args' do
     options = parse(%w[filename -h -r torequire])
     expect(options[:filename]).to eq 'filename'
-    expect(options[:require]).to eq ['torequire']
+    expect(options[:require]).to include 'torequire'
     expect(options[:help]).to be_a_kind_of String
     expect(options[:errors]).to be_empty
   end
@@ -115,12 +119,12 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   describe :require do
-    it 'defaults to an empty array' do
-      expect(parse([])[:require]).to be_empty
+    it 'defaults to the matrix file array' do
+      expect(parse([])[:require]).to eq [matrix_file]
     end
 
     it '-r and --require sets each required file into the result array' do
-      expect(parse(%w[-r f1 --require f2])[:require]).to eq %w[f1 f2]
+      expect(parse(%w[-r f1 --require f2])[:require]).to eq [matrix_file, 'f1', 'f2']
     end
 
     it 'sets an error if not provided with a filename' do

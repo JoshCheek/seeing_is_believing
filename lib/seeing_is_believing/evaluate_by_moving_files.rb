@@ -14,7 +14,7 @@
 require 'open3'
 require 'timeout'
 require 'stringio'
-require 'fileutils'
+require 'fileutils' # DELETE?
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
@@ -28,14 +28,13 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger, :result
+    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger, :result
 
     def initialize(program, filename, options={})
       self.program         = program
       self.filename        = filename
       self.input_stream    = options.fetch :input_stream, StringIO.new('')
-      self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
-      self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
+      self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
       self.timeout         = options[:timeout]
@@ -149,7 +148,6 @@ class SeeingIsBelieving
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path
-         '-r', matrix_filename,                     # hijack the environment so it can be recorded
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]

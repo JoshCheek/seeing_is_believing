@@ -1,6 +1,5 @@
 require 'stringio'
 require 'tmpdir'
-require 'timeout'
 
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
@@ -17,10 +16,9 @@ class SeeingIsBelieving
 
   def initialize(program, options={})
     @program            = program
-    @matrix_filename    = options.fetch :matrix_filename, 'seeing_is_believing/the_matrix' # how to hijack the env
     @filename           = options[:filename]
     @stdin              = to_stream options.fetch(:stdin, '')
-    @require            = options.fetch :require,   []
+    @require            = options.fetch :require,   ['seeing_is_believing/the_matrix'] # TODO: this can be passed in the requires
     @load_path          = options.fetch :load_path, []
     @encoding           = options.fetch :encoding,  nil
     @timeout            = options[:timeout]
@@ -33,16 +31,14 @@ class SeeingIsBelieving
   def call
     @memoized_result ||= begin
       new_program = program_that_will_record_expressions
-      debugger.context("TRANSLATED PROGRAM") { new_program }
+      @debugger.context("TRANSLATED PROGRAM") { new_program }
       result = result_for new_program
-      debugger.context("RESULT") { result.inspect }
+      @debugger.context("RESULT") { result.inspect }
       result
     end
   end
 
   private
-
-  attr_reader :debugger
 
   def to_stream(string_or_stream)
     return string_or_stream if string_or_stream.respond_to? :gets

@@ -82,7 +82,7 @@ class SeeingIsBelieving
           number_of_captures:  Float::INFINITY,
           timeout:             0, # timeout lib treats this as infinity
           errors:              [],
-          require:             [],
+          require:             ['seeing_is_believing/the_matrix'],
           load_path:           [],
           alignment_strategy:  AlignChunk,
           shebang:             'ruby',
