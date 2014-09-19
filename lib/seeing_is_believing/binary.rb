@@ -1,6 +1,7 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/annotate_every_line'
+require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 require 'seeing_is_believing/binary/clean_body'
 require 'timeout'
 
@@ -151,7 +152,11 @@ class SeeingIsBelieving
     end
 
     def annotator
-      @annotator ||= AnnotateEveryLine.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+      @annotator ||= if flags[:xmpfilter_style]
+        AnnotateXmpfilterStyle.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+     else
+        AnnotateEveryLine.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+     end
     end
 
     def results
