@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'seeing_is_believing/debugger'
 require 'stringio'
 
-describe SeeingIsBelieving::Debugger do
+RSpec.describe SeeingIsBelieving::Debugger do
   let(:stream) { StringIO.new }
 
   specify 'is enabled when given a stream' do

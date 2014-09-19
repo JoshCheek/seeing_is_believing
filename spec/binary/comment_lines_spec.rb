@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/comment_lines'
 
-describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
+RSpec.describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
   def call(code, &block)
     described_class.call code, &block
   end

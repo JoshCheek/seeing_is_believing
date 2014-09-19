@@ -3,7 +3,7 @@ require 'spec_helper'
 require 'seeing_is_believing'
 require 'stringio'
 
-describe SeeingIsBelieving do
+RSpec.describe SeeingIsBelieving do
   def method_result(name)
     @result = def __some_method__; end
     if :__some_method__ == @result

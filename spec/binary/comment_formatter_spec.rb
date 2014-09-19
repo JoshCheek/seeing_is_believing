@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/comment_formatter'
 
-describe SeeingIsBelieving::Binary::CommentFormatter do
+RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
   def result_for(line, separator, result, options={})
     described_class.new(line, separator, result, options).call
   end

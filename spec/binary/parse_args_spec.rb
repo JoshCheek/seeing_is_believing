@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/parse_args'
 
-describe SeeingIsBelieving::Binary::ParseArgs do
+RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   RSpec::Matchers.define :have_error do |error_assertion|
     match do |options|
       options[:errors].find do |error|

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-describe SeeingIsBelieving::WrapExpressions do
+RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code)
     described_class.call code,
       before_each: -> * { '<' },

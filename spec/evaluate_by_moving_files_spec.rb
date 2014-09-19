@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'fileutils'
 
-describe SeeingIsBelieving::EvaluateByMovingFiles do
+RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   let(:filedir)  { File.expand_path '../../proving_grounds', __FILE__ }
   let(:filename) { File.join filedir, 'some_filename' }
 
