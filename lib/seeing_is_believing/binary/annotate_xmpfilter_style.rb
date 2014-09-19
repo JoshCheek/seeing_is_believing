@@ -11,59 +11,48 @@ class SeeingIsBelieving
   class Binary
     class AnnotateXmpfilterStyle
 
-      def self.method_from_options(*args)
-        define_method(args.first) { options.fetch *args }
-      end
-
-      method_from_options :filename, nil
-      method_from_options :xmpfilter_style
-      method_from_options :debugger
-
       attr_accessor :results, :body
       def initialize(uncleaned_body, options={}, &annotater)
         self.options = options
-        self.body    = RemoveAnnotations.call uncleaned_body, !xmpfilter_style
+        self.body    = RemoveAnnotations.call uncleaned_body, false
 
         options = {
           filename:           (options[:as] || options[:filename]),
-          require:            options[:require],
+          require:            (options[:require] << 'pp'),
           load_path:          options[:load_path],
           encoding:           options[:encoding],
           stdin:              options[:stdin],
           timeout:            options[:timeout],
-          debugger:           debugger,
+          debugger:           options[:debugger],
           ruby_executable:    options[:shebang],
           number_of_captures: options[:number_of_captures],
         }
 
-        if xmpfilter_style
-          options[:require] << 'pp'
-          finder          = FindComments.new(body)
-          inspect_linenos = []
-          pp_linenos      = []
+        finder          = FindComments.new(body)
+        inspect_linenos = []
+        pp_linenos      = []
 
-          finder.comments.each { |c|
-            next unless c.comment[VALUE_REGEX]
-            if c.code.empty?
-              pp_linenos << c.line_number - 1
-            else
-              inspect_linenos << c.line_number
-            end
-          }
+        finder.comments.each { |c|
+          next unless c.comment[VALUE_REGEX]
+          if c.code.empty?
+            pp_linenos << c.line_number - 1
+          else
+            inspect_linenos << c.line_number
+          end
+        }
 
-          options[:after_each] = -> line_number {
-            should_inspect = inspect_linenos.include?(line_number)
-            should_pp      = pp_linenos.include?(line_number)
-            inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
+        options[:after_each] = -> line_number {
+          should_inspect = inspect_linenos.include?(line_number)
+          should_pp      = pp_linenos.include?(line_number)
+          inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+          pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
 
-            if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
-            elsif should_inspect              then ").tap { |v| #{inspect} }"
-            elsif should_pp                   then ").tap { |v| #{pp} }"
-            else                                   ")"
-            end
-          }
-        end
+          if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
+          elsif should_inspect              then ").tap { |v| #{inspect} }"
+          elsif should_pp                   then ").tap { |v| #{pp} }"
+          else                                   ")"
+          end
+        }
 
         # This should so obviously not go here >.<
         # initializing this obj kicks off the entire lib!!
@@ -72,15 +61,11 @@ class SeeingIsBelieving
 
       def call
         @new_body ||= begin
-          new_body = if xmpfilter_style
-                       body_with_updated_annotations
-                     else
-                       body_with_everything_annotated
-                     end
+          new_body = body_with_updated_annotations
 
           add_stdout_stderr_and_exceptions_to new_body
 
-          debugger.context "OUTPUT"
+          options[:debugger].context "OUTPUT"
           new_body
         end
       end
@@ -100,23 +85,6 @@ class SeeingIsBelieving
           else
             result = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
             [whitespace, CommentFormatter.call(line_to_whitespace.size + whitespace.size, VALUE_MARKER, result, options)]
-          end
-        end
-      end
-
-      def body_with_everything_annotated
-        alignment_strategy = options[:alignment_strategy].new(body)
-        exception_lineno   = results.has_exception? ? results.exception.line_number : -1
-        CommentLines.call body do |line, line_number|
-          options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
-          if exception_lineno == line_number
-            result = sprintf "%s: %s", results.exception.class_name, results.exception.message.gsub("\n", '\n')
-            CommentFormatter.call(line.size, EXCEPTION_MARKER, result, options)
-          elsif results[line_number].any?
-            result  = results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-            CommentFormatter.call(line.size, VALUE_MARKER, result, options)
-          else
-            ''
           end
         end
       end
