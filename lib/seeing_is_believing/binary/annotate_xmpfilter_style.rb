@@ -1,21 +1,14 @@
-require 'stringio'
-require 'seeing_is_believing/binary/comment_formatter'
-
-require 'seeing_is_believing/binary'
-require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/binary/find_comments'
-require 'seeing_is_believing/binary/rewrite_comments'
-require 'seeing_is_believing/binary/comment_lines'
-
 class SeeingIsBelieving
   class Binary
     class AnnotateXmpfilterStyle
       def self.prepare_body(uncleaned_body)
+        require 'seeing_is_believing/binary/remove_annotations'
         RemoveAnnotations.call uncleaned_body, false
       end
 
       def self.expression_wrapper
         -> program, number_of_captures {
+          require 'seeing_is_believing/binary/find_comments'
           finder          = FindComments.new(program)
           inspect_linenos = []
           pp_linenos      = []
@@ -79,6 +72,9 @@ class SeeingIsBelieving
 
       # doesn't currently realign output markers, do we want to do that?
       def body_with_updated_annotations
+        require 'seeing_is_believing/binary' # defines the markers
+        require 'seeing_is_believing/binary/rewrite_comments'
+        require 'seeing_is_believing/binary/comment_formatter'
         RewriteComments.call body do |line_number, line_to_whitespace, whitespace, comment|
           if !comment[VALUE_REGEX]
             [whitespace, comment]

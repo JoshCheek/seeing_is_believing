@@ -1,16 +1,8 @@
-require 'stringio'
-require 'seeing_is_believing/binary/comment_formatter'
-
-require 'seeing_is_believing/binary'
-require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/binary/find_comments'
-require 'seeing_is_believing/binary/rewrite_comments'
-require 'seeing_is_believing/binary/comment_lines'
-
 class SeeingIsBelieving
   class Binary
     class AnnotateEveryLine
       def self.prepare_body(uncleaned_body)
+        require 'seeing_is_believing/binary/remove_annotations'
         RemoveAnnotations.call uncleaned_body, true
       end
 
@@ -42,6 +34,9 @@ class SeeingIsBelieving
       attr_accessor :results, :body, :options, :alignment_strategy
 
       def body_with_everything_annotated
+        require 'seeing_is_believing/binary/comment_lines'
+        require 'seeing_is_believing/binary/comment_formatter'
+        require 'seeing_is_believing/binary' # defines the markers
         alignment_strategy = options[:alignment_strategy].new(body)
         exception_lineno   = results.has_exception? ? results.exception.line_number : -1
         CommentLines.call body do |line, line_number|

@@ -1,12 +1,11 @@
 # encoding: utf-8
 
-require 'stringio'
-require 'seeing_is_believing/version'
-require 'seeing_is_believing/binary'
-require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/binary/align_file'
-require 'seeing_is_believing/binary/align_line'
-require 'seeing_is_believing/binary/align_chunk'
+require 'seeing_is_believing/version'             # We print the version in the output
+require 'seeing_is_believing/binary'              # For output markers
+require 'seeing_is_believing/debugger'            # Sets the debugger
+require 'seeing_is_believing/binary/align_file'   # Polymorphically decides which alignment strategy to use
+require 'seeing_is_believing/binary/align_line'   # Polymorphically decides which alignment strategy to use
+require 'seeing_is_believing/binary/align_chunk'  # Polymorphically decides which alignment strategy to use
 
 class SeeingIsBelieving
   class Binary

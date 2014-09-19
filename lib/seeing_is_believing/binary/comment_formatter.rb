@@ -1,7 +1,7 @@
 class SeeingIsBelieving
   class Binary
-    # not sure I like this name, it formats comments that
-    # show results e.g. "# => [1, 2, 3]"
+    # not sure I like this name, it formats comments that show results
+    # e.g. "# => [1, 2, 3]"
     #
     # line_length is the length of the line this comment is being appended to
     #

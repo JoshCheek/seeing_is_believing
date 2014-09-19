@@ -1,3 +1,6 @@
+require 'seeing_is_believing/binary' # defines the markers
+require 'seeing_is_believing/binary/comment_formatter'
+
 class SeeingIsBelieving
   class Binary
     module AnnotateEndOfFile
@@ -38,7 +41,6 @@ class SeeingIsBelieving
 
       def exception_output_for(results, options)
         return '' unless results.has_exception?
-        require 'seeing_is_believing/binary/comment_formatter'
         exception = results.exception
         output = "\n"
         output << CommentFormatter.new(0, EXCEPTION_MARKER, exception.class_name, options).call << "\n"

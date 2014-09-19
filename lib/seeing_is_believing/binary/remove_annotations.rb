@@ -1,10 +1,5 @@
-# CleaneBody
-#   takes a body
-#   removes annotations
-#   only removes "# =>" when should_clean_values is false
-
-require 'seeing_is_believing/binary'
-require 'seeing_is_believing/parser_helpers'
+require 'seeing_is_believing/binary'         # Defines the regexes to locate the markers
+require 'seeing_is_believing/parser_helpers' # We have to parse the file to find the comments
 
 class SeeingIsBelieving
   class Binary
