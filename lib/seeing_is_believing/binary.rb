@@ -1,6 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/add_annotations'
+require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/clean_body'
 require 'timeout'
 
@@ -151,7 +151,7 @@ class SeeingIsBelieving
     end
 
     def annotator
-      @annotator ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+      @annotator ||= AnnotateEveryLine.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
     end
 
     def results

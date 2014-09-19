@@ -9,10 +9,7 @@ require 'seeing_is_believing/binary/comment_lines'
 
 class SeeingIsBelieving
   class Binary
-
-    # This is the worst fucking class in the entire library -.-
-    # yes, that includes WrapExpressions
-    class AddAnnotations
+    class AnnotateEveryLine
 
       def self.method_from_options(*args)
         define_method(args.first) { options.fetch *args }
