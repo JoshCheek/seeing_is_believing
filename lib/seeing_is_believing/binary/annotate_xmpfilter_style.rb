@@ -10,8 +10,7 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AnnotateXmpfilterStyle
-      # TODO: rename to prepare_body
-      def self.clean(uncleaned_body)
+      def self.prepare_body(uncleaned_body)
         RemoveAnnotations.call uncleaned_body, false
       end
 
@@ -31,10 +30,10 @@ class SeeingIsBelieving
           }
 
 
-          # TODO: this is duplicated with the InspectExpressions class
           InspectExpressions.call program,
                                   number_of_captures,
                                   before_all: -> {
+                                    # TODO: this is duplicated with the InspectExpressions class
                                     number_of_captures_as_str = number_of_captures.inspect
                                     number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
                                     "begin; require 'pp'; $SiB.max_line_captures = #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "

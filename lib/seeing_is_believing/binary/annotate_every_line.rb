@@ -10,8 +10,7 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AnnotateEveryLine
-      # TODO: rename to prepare_body
-      def self.clean(uncleaned_body)
+      def self.prepare_body(uncleaned_body)
         RemoveAnnotations.call uncleaned_body, true
       end
 

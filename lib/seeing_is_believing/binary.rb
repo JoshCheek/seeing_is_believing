@@ -161,7 +161,7 @@ class SeeingIsBelieving
     end
 
     def prepared_body
-      @prepared_body ||= annotator_class.clean body
+      @prepared_body ||= annotator_class.prepare_body body
     end
 
     def annotator
