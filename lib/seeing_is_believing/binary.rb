@@ -152,11 +152,12 @@ class SeeingIsBelieving
     end
 
     def annotator
-      @annotator ||= if flags[:xmpfilter_style]
-        AnnotateXmpfilterStyle.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
-     else
-        AnnotateEveryLine.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
-     end
+      @annotator ||= begin
+                       # should move this switch into parser, like with the aligners
+                       annotator_class = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+                       clean_body = annotator_class.clean body
+                       annotator_class.new clean_body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
+                     end
     end
 
     def results

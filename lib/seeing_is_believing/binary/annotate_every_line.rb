@@ -10,11 +10,14 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AnnotateEveryLine
+      def self.clean(uncleaned_body)
+        RemoveAnnotations.call uncleaned_body, true
+      end
 
       attr_accessor :results, :body
-      def initialize(uncleaned_body, options={}, &annotater)
+      def initialize(body, options={}, &annotater)
         self.options = options
-        self.body    = RemoveAnnotations.call uncleaned_body, true
+        self.body    = body
 
         options = {
           filename:           (options[:as] || options[:filename]),
