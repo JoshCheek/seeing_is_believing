@@ -3,8 +3,8 @@ require 'seeing_is_believing/binary/commentable_lines'
 class SeeingIsBelieving
   class Binary
     class AlignChunk
-      def initialize(body, start_line, end_line)
-        self.body, self.start_line, self.end_line = body, start_line, end_line
+      def initialize(body)
+        self.body = body
       end
 
       # max line length of the the chunk (newline separated sections of code exempting comments) + 2 spaces for padding
@@ -14,7 +14,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :body, :start_line, :end_line
+      attr_accessor :body
 
       def line_lengths
         @line_lengths ||= begin
@@ -24,9 +24,7 @@ class SeeingIsBelieving
                  .sort
                  .slice_before { |line_number| line_num_to_indexes[line_number].last.zero? }
                  .map { |slice|
-                   max_chunk_length = 2 + slice.select { |line_num| start_line <= line_num && line_num <= end_line }
-                                               .map    { |line_num| line_num_to_indexes[line_num].last }
-                                               .max
+                   max_chunk_length = 2 + slice.map { |line_num| line_num_to_indexes[line_num].last }.max
                    slice.map { |line_number| [line_number, max_chunk_length] }
                  }
                  .flatten(1)

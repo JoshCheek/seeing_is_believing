@@ -1,10 +1,10 @@
 class SeeingIsBelieving
   class Binary
     class AlignLine
-      attr_accessor :body, :start_line, :end_line
+      attr_accessor :body
 
-      def initialize(body, start_line, end_line)
-        self.body, self.start_line, self.end_line = body, start_line, end_line
+      def initialize(body)
+        self.body = body
       end
 
       # length of the line + 2 spaces for padding

@@ -16,8 +16,6 @@ class SeeingIsBelieving
       end
 
       method_from_options :filename, nil
-      method_from_options :start_line # rename: line_to_begin_recording
-      method_from_options :end_line   # rename: line_to_end_recording
       method_from_options :xmpfilter_style
       method_from_options :debugger
 
@@ -107,13 +105,11 @@ class SeeingIsBelieving
       end
 
       def body_with_everything_annotated
-        alignment_strategy = options[:alignment_strategy].new body, start_line, end_line
+        alignment_strategy = options[:alignment_strategy].new(body)
         exception_lineno   = results.has_exception? ? results.exception.line_number : -1
         CommentLines.call body do |line, line_number|
           options = options().merge pad_to: alignment_strategy.line_length_for(line_number)
-          if line_number < start_line || end_line < line_number
-            ''
-          elsif exception_lineno == line_number
+          if exception_lineno == line_number
             result = sprintf "%s: %s", results.exception.class_name, results.exception.message.gsub("\n", '\n')
             CommentFormatter.call(line.size, EXCEPTION_MARKER, result, options)
           elsif results[line_number].any?

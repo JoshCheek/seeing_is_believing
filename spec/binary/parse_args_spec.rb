@@ -63,10 +63,8 @@ describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   example 'example: multiple args' do
-    options = parse(%w[filename -l 12 -L 20 -h -r torequire])
+    options = parse(%w[filename -h -r torequire])
     expect(options[:filename]).to eq 'filename'
-    expect(options[:start_line]).to eq 12
-    expect(options[:end_line]).to eq 20
     expect(options[:require]).to eq ['torequire']
     expect(options[:help]).to be_a_kind_of String
     expect(options[:errors]).to be_empty
@@ -88,37 +86,6 @@ describe SeeingIsBelieving::Binary::ParseArgs do
       expect(parse(['a'])).to_not have_error /Can only have one filename/
       expect(parse(['a', 'b'])).to have_error 'Can only have one filename, but had: "a", "b"'
     end
-  end
-
-  describe ':start_line' do
-    it 'defaults to 1' do
-      expect(parse([])[:start_line]).to equal 1
-    end
-
-    it 'is set with -l and --start-line' do
-      expect(parse(['-l', '1'])[:start_line]).to eq 1
-      expect(parse(['--start-line', '12'])[:start_line]).to eq 12
-    end
-
-    it_behaves_like 'it requires a positive int argument', ['-l', '--start-line']
-  end
-
-  describe ':end_line' do
-    it 'defaults to infinity' do
-      expect(parse([])[:end_line]).to equal Float::INFINITY
-    end
-
-    it 'is set with -L and --end-line' do
-      expect(parse(['-L', '1'])[:end_line]).to eq 1
-      expect(parse(['--end-line', '12'])[:end_line]).to eq 12
-    end
-
-    it_behaves_like 'it requires a positive int argument', ['-L', '--end-line']
-  end
-
-  it 'swaps start and end line around if they are out of order' do
-    expect(parse(%w[-l 2 -L 1])[:start_line]).to eq 1
-    expect(parse(%w[-l 2 -L 1])[:end_line]).to eq 2
   end
 
   describe ':result_length' do
