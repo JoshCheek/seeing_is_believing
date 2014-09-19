@@ -2,7 +2,6 @@ require 'seeing_is_believing/event_stream/events'
 class SeeingIsBelieving
   module EventStream
     require 'thread'
-    # TODO: rename producer, don't forget about the one in the matrix
     class Producer
       attr_accessor :exitstatus, :bug_in_sib, :max_line_captures, :num_lines
 
@@ -14,10 +13,11 @@ class SeeingIsBelieving
         self.recorded_results  = []
         self.queue             = Thread::Queue.new
         self.producer_thread   = Thread.new do
+          finish = "finish"
           begin
             loop do
               to_publish = queue.shift
-              if to_publish == "finish".freeze
+              if to_publish == finish
                 resultstream << "finish\n"
                 break
               else
@@ -25,12 +25,11 @@ class SeeingIsBelieving
               end
             end
           rescue IOError, Errno::EPIPE
-            queue.clear # TODO: should probably keep emptying it until finish event
+            loop { break if queue.shift == finish }
           end
         end
       end
 
-      # TODO: delete?
       def bug_in_sib=(bool)
         @bug_in_sib = (bool ? true : false)
       end
@@ -40,7 +39,6 @@ class SeeingIsBelieving
         [Marshal.dump(string.to_s)].pack('m0')
       end
 
-      # TODO: Use the type to inspect unless given a block
       StackErrors = [SystemStackError]
       StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)
