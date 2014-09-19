@@ -40,13 +40,14 @@ describe SeeingIsBelieving do
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
 
-  it 'allows uers to override WrapExpressions initialization keys' do
-    expect(invoke(':body', before_all: -> { 'if true;'  }, after_all: -> { ';end;' })[1]).to eq [':body']
-    expect(invoke(':body', before_all: -> { 'if false;' }, after_all: -> { ';end;' })[1]).to eq []
-
-    result = invoke ':body', before_each: -> line_number { "$SiB.record_result(:inspect, #{line_number*200}, (" },
-                             after_each:  -> line_number { ").to_s.upcase + #{line_number}.inspect)" }
-    expect(result[200, :inspect]).to eq ['"BODY1"']
+  it 'allows uers to pass in their own inspection recorder' do
+    wrapper = lambda { |program, num_captures|
+      SeeingIsBelieving::InspectExpressions.call \
+        program,
+        num_captures,
+        after_each: -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
+    }
+    expect(invoke(':body', record_expressions: wrapper)[1]).to eq ['"zomg"']
   end
 
   it 'remembers context of previous lines' do
@@ -115,7 +116,7 @@ describe SeeingIsBelieving do
   end
 
   it 'has no output for empty lines' do
-    expect(values_for('')).to eq []
+    expect(values_for('')).to eq [[]]
     expect(values_for('  ')).to eq [[]]
     expect(values_for("  \n")).to eq [[]]
     expect(values_for("1\n\n2")).to eq [['1'],[],['2']]

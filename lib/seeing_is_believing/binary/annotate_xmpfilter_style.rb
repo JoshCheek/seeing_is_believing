@@ -14,6 +14,36 @@ class SeeingIsBelieving
         RemoveAnnotations.call uncleaned_body, false
       end
 
+      def self.expression_wrapper
+        -> program, number_of_captures {
+          finder          = FindComments.new(program)
+          inspect_linenos = []
+          pp_linenos      = []
+
+          finder.comments.each { |c|
+            next unless c.comment[VALUE_REGEX]
+            if c.code.empty?
+              pp_linenos << c.line_number - 1
+            else
+              inspect_linenos << c.line_number
+            end
+          }
+
+          InspectExpressions.call program, number_of_captures, after_each: -> line_number {
+            should_inspect = inspect_linenos.include?(line_number)
+            should_pp      = pp_linenos.include?(line_number)
+            inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
+
+            if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
+            elsif should_inspect              then ").tap { |v| #{inspect} }"
+            elsif should_pp                   then ").tap { |v| #{pp} }"
+            else                                   ")"
+            end
+          }
+        }
+      end
+
       attr_accessor :results, :body
       def initialize(body, options={}, &annotater)
         self.options = options
@@ -29,32 +59,7 @@ class SeeingIsBelieving
           debugger:           options[:debugger],
           ruby_executable:    options[:shebang],
           number_of_captures: options[:number_of_captures],
-        }
-
-        finder          = FindComments.new(body)
-        inspect_linenos = []
-        pp_linenos      = []
-
-        finder.comments.each { |c|
-          next unless c.comment[VALUE_REGEX]
-          if c.code.empty?
-            pp_linenos << c.line_number - 1
-          else
-            inspect_linenos << c.line_number
-          end
-        }
-
-        options[:after_each] = -> line_number {
-          should_inspect = inspect_linenos.include?(line_number)
-          should_pp      = pp_linenos.include?(line_number)
-          inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-          pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
-
-          if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
-          elsif should_inspect              then ").tap { |v| #{inspect} }"
-          elsif should_pp                   then ").tap { |v| #{pp} }"
-          else                                   ")"
-          end
+          record_expressions: self.class.expression_wrapper,
         }
 
         # This should so obviously not go here >.<
