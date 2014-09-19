@@ -2,7 +2,7 @@ require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
-require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/remove_annotations'
 require 'timeout'
 
 
@@ -100,7 +100,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print CleanBody.call(body, true)
+      stdout.print RemoveAnnotations.call(body, true)
     end
 
     def invalid_syntax?

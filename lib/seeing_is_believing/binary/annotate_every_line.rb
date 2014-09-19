@@ -2,7 +2,7 @@ require 'stringio'
 require 'seeing_is_believing/binary/comment_formatter'
 
 require 'seeing_is_believing/binary'
-require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/remove_annotations'
 require 'seeing_is_believing/binary/find_comments'
 require 'seeing_is_believing/binary/rewrite_comments'
 require 'seeing_is_believing/binary/comment_lines'
@@ -22,7 +22,7 @@ class SeeingIsBelieving
       attr_accessor :results, :body
       def initialize(uncleaned_body, options={}, &annotater)
         self.options = options
-        self.body    = CleanBody.call uncleaned_body, !xmpfilter_style
+        self.body    = RemoveAnnotations.call uncleaned_body, !xmpfilter_style
 
         options = {
           filename:           (options[:as] || options[:filename]),

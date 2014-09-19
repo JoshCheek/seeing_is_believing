@@ -8,7 +8,7 @@ require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
   class Binary
-    class CleanBody
+    class RemoveAnnotations
       def self.call(code, should_clean_values)
         new(code, should_clean_values).call
       end

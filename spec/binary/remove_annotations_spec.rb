@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/remove_annotations'
 
-describe SeeingIsBelieving::Binary::CleanBody do
+describe SeeingIsBelieving::Binary::RemoveAnnotations do
   def call(code, should_clean_values=true)
     indentation = code[/\A */]
     code        = code.gsub /^#{indentation}/, ''
