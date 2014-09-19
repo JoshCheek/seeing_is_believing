@@ -10,30 +10,19 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AnnotateEveryLine
+      # TODO: rename to prepare_body
       def self.clean(uncleaned_body)
         RemoveAnnotations.call uncleaned_body, true
       end
 
-      attr_accessor :results, :body
-      def initialize(body, options={}, &annotater)
+      def self.expression_wrapper
+        InspectExpressions
+      end
+
+      def initialize(body, results, options={})
         self.options = options
         self.body    = body
-
-        options = {
-          filename:           (options[:as] || options[:filename]),
-          require:            options[:require],
-          load_path:          options[:load_path],
-          encoding:           options[:encoding],
-          stdin:              options[:stdin],
-          timeout:            options[:timeout],
-          debugger:           options[:debugger],
-          ruby_executable:    options[:shebang],
-          number_of_captures: options[:number_of_captures],
-        }
-
-        # This should so obviously not go here >.<
-        # initializing this obj kicks off the entire lib!!
-        self.results = SeeingIsBelieving.call body, options
+        self.results = results
       end
 
       def call
@@ -42,6 +31,7 @@ class SeeingIsBelieving
 
           add_stdout_stderr_and_exceptions_to new_body
 
+          # What's w/ this debugger? maybe this should move higher?
           options[:debugger].context "OUTPUT"
           new_body
         end
@@ -49,7 +39,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :body, :options, :alignment_strategy
+      attr_accessor :results, :body, :options, :alignment_strategy
 
       def body_with_everything_annotated
         alignment_strategy = options[:alignment_strategy].new(body)

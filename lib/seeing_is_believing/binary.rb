@@ -37,23 +37,26 @@ class SeeingIsBelieving
       @exitstatus ||= begin
         parse_flags
 
-        if    flags_have_errors?                    then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_print_help?                    then print_help             ; SUCCESS_STATUS
-        elsif should_print_version?                 then print_version          ; SUCCESS_STATUS
-        elsif has_filename? && file_dne?            then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_clean?                         then print_cleaned_program  ; SUCCESS_STATUS
-        elsif invalid_syntax?                       then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
-        elsif (evaluate_program; program_timedout?) then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
-        elsif something_blew_up?                    then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-        elsif output_as_json?                       then print_result_as_json   ; SUCCESS_STATUS
-        else                                             print_program          ; exit_status
+        if    flags_have_errors?         then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_print_help?         then print_help             ; SUCCESS_STATUS
+        elsif should_print_version?      then print_version          ; SUCCESS_STATUS
+        elsif has_filename? && file_dne? then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_clean?              then print_cleaned_program  ; SUCCESS_STATUS
+        elsif invalid_syntax?            then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+        else
+          evaluate_program
+          if    program_timedout?        then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
+          elsif something_blew_up?       then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+          elsif output_as_json?          then print_result_as_json   ; SUCCESS_STATUS
+          else                                print_program          ; exit_status
+          end
         end
       end
     end
 
     private
 
-    attr_accessor :flags, :interpolated_program
+    attr_accessor :flags, :results
 
     def parse_flags
       self.flags = ParseArgs.call argv, stdout
@@ -112,7 +115,12 @@ class SeeingIsBelieving
     end
 
     def evaluate_program
-      self.interpolated_program = annotator.call
+      self.results = SeeingIsBelieving.call prepared_body,
+                                            flags.merge(filename:           (flags[:as] || flags[:filename]),
+                                                        ruby_executable:    flags[:shebang],
+                                                        stdin:              (file_is_on_stdin? ? '' : stdin),
+                                                        record_expressions: annotator_class.expression_wrapper,
+                                                       )
     rescue Timeout::Error
       self.timeout_error = true
     rescue Exception
@@ -144,24 +152,24 @@ class SeeingIsBelieving
     end
 
     def print_program
-      stdout.print interpolated_program
+      stdout.print annotator.call
+    end
+
+   # should move this switch into parser, like with the aligners
+    def annotator_class
+      (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+    end
+
+    def prepared_body
+      @prepared_body ||= annotator_class.clean body
+    end
+
+    def annotator
+      @annotator ||= annotator_class.new prepared_body, results, flags
     end
 
     def body
       @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
-    end
-
-    def annotator
-      @annotator ||= begin
-                       # should move this switch into parser, like with the aligners
-                       annotator_class = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
-                       clean_body = annotator_class.clean body
-                       annotator_class.new clean_body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
-                     end
-    end
-
-    def results
-      annotator.results
     end
 
     def file_is_on_stdin?
@@ -188,7 +196,6 @@ class SeeingIsBelieving
     end
 
     def result_as_data_structure
-      results   = annotator.results
       exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
                                               class_name:               results.exception.class_name,
                                               message:                  results.exception.message,

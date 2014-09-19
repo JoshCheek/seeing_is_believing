@@ -10,6 +10,7 @@ require 'seeing_is_believing/binary/comment_lines'
 class SeeingIsBelieving
   class Binary
     class AnnotateXmpfilterStyle
+      # TODO: rename to prepare_body
       def self.clean(uncleaned_body)
         RemoveAnnotations.call uncleaned_body, false
       end
@@ -29,42 +30,35 @@ class SeeingIsBelieving
             end
           }
 
-          InspectExpressions.call program, number_of_captures, after_each: -> line_number {
-            should_inspect = inspect_linenos.include?(line_number)
-            should_pp      = pp_linenos.include?(line_number)
-            inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-            pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
 
-            if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
-            elsif should_inspect              then ").tap { |v| #{inspect} }"
-            elsif should_pp                   then ").tap { |v| #{pp} }"
-            else                                   ")"
-            end
-          }
+          # TODO: this is duplicated with the InspectExpressions class
+          InspectExpressions.call program,
+                                  number_of_captures,
+                                  before_all: -> {
+                                    number_of_captures_as_str = number_of_captures.inspect
+                                    number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
+                                    "begin; require 'pp'; $SiB.max_line_captures = #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
+                                  },
+                                  after_each: -> line_number {
+                                    should_inspect = inspect_linenos.include?(line_number)
+                                    should_pp      = pp_linenos.include?(line_number)
+                                    inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+                                    pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value?
+
+                                    if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
+                                    elsif should_inspect              then ").tap { |v| #{inspect} }"
+                                    elsif should_pp                   then ").tap { |v| #{pp} }"
+                                    else                                   ")"
+                                    end
+                                  }
         }
       end
 
       attr_accessor :results, :body
-      def initialize(body, options={}, &annotater)
+      def initialize(body, results, options={})
         self.options = options
         self.body    = body
-
-        options = {
-          filename:           (options[:as] || options[:filename]),
-          require:            (options[:require] << 'pp'),
-          load_path:          options[:load_path],
-          encoding:           options[:encoding],
-          stdin:              options[:stdin],
-          timeout:            options[:timeout],
-          debugger:           options[:debugger],
-          ruby_executable:    options[:shebang],
-          number_of_captures: options[:number_of_captures],
-          record_expressions: self.class.expression_wrapper,
-        }
-
-        # This should so obviously not go here >.<
-        # initializing this obj kicks off the entire lib!!
-        self.results = SeeingIsBelieving.call body, options
+        self.results = results
       end
 
       def call
@@ -73,6 +67,7 @@ class SeeingIsBelieving
 
           add_stdout_stderr_and_exceptions_to new_body
 
+          # What's w/ this debugger? maybe this should move higher?
           options[:debugger].context "OUTPUT"
           new_body
         end
