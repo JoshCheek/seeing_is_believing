@@ -7,8 +7,10 @@ class SeeingIsBelieving
         finder   = FindComments.new(code)
         rewriter = finder.rewriter
         finder.comments.each do |comment|
-          new_whitespace, new_comment = mapping.call \
-            comment.line_number, comment.code, comment.whitespace, comment.comment
+          new_whitespace, new_comment = mapping.call comment.line_number,
+                                                     comment.preceding_code,
+                                                     comment.whitespace,
+                                                     comment.comment
 
           rewriter.replace comment.whitespace_range, new_whitespace
           rewriter.replace comment.comment_range,    new_comment

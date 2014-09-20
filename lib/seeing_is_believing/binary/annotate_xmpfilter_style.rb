@@ -9,19 +9,13 @@ class SeeingIsBelieving
       def self.expression_wrapper
         -> program, number_of_captures {
           require 'seeing_is_believing/binary/find_comments'
-          finder          = FindComments.new(program)
           inspect_linenos = []
           pp_linenos      = []
-
-          finder.comments.each { |c|
-            next unless c.comment[VALUE_REGEX]
-            if c.code.empty?
-              pp_linenos << c.line_number - 1
-            else
-              inspect_linenos << c.line_number
-            end
-          }
-
+          FindComments.new(program).comments.each do |c|
+            next if c.comment !~ VALUE_REGEX
+            c.preceding_code.empty? ? pp_linenos      << c.line_number - 1
+                                    : inspect_linenos << c.line_number
+          end
 
           InspectExpressions.call program,
                                   number_of_captures,

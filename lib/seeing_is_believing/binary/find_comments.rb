@@ -3,7 +3,7 @@ require 'seeing_is_believing/parser_helpers'
 class SeeingIsBelieving
   class Binary
     class FindComments
-      Comment = Struct.new :line_number, :code, :whitespace, :comment, :whitespace_range, :comment_range
+      Comment = Struct.new :line_number, :preceding_code, :whitespace, :comment, :whitespace_range, :comment_range
 
       # Exposed so that comments found here can be rewritten
       # Not super stoked about this, though. Maybe this initialization should happen up higher,
@@ -22,19 +22,20 @@ class SeeingIsBelieving
           last_char                   = comment.location.expression.begin_pos
           first_char                  = last_char
           first_char -= 1 while first_char > 0 && buffer.source[first_char-1] =~ /[ \t]/
-          preceeding_whitespace       = buffer.source[first_char...last_char]
-          preceeding_whitespace_range = Parser::Source::Range.new buffer, first_char, last_char
+          preceding_whitespace        = buffer.source[first_char...last_char]
+          preceding_whitespace_range  = Parser::Source::Range.new buffer, first_char, last_char
 
           # find line
           last_char = first_char
           first_char -= 1 while first_char > 0 && buffer.source[first_char-1] !~ /[\r\n]/
           line = buffer.source[first_char...last_char]
 
+          # build comment
           Comment.new comment.location.line,
                       line,
-                      preceeding_whitespace,
+                      preceding_whitespace,
                       comment.text,
-                      preceeding_whitespace_range,
+                      preceding_whitespace_range,
                       comment.location.expression
         }
       end
