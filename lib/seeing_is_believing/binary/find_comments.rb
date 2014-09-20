@@ -13,36 +13,36 @@ class SeeingIsBelieving
       def initialize(code)
         @code = code
         @buffer, parser, @rewriter = ParserHelpers.initialize_parser code, 'finding_comments'
-        ast, @all_comments = parser.parse_with_comments buffer
+        ast, @parser_comments = parser.parse_with_comments buffer
+        @parser_comments.select! { |comment| comment.type == :inline }
       end
 
       def comments
-        @comments ||= @all_comments.select { |comment| comment.type == :inline }
-                                   .map { |comment|
-                                     # find whitespace
-                                     last_char                   = comment.location.expression.begin_pos
-                                     first_char                  = last_char
-                                     first_char -= 1 while first_char > 0 && buffer.source[first_char-1] =~ /[ \t]/
-                                     preceeding_whitespace       = buffer.source[first_char...last_char]
-                                     preceeding_whitespace_range = Parser::Source::Range.new buffer, first_char, last_char
+        @comments ||= @parser_comments.map { |comment|
+          # find whitespace
+          last_char                   = comment.location.expression.begin_pos
+          first_char                  = last_char
+          first_char -= 1 while first_char > 0 && buffer.source[first_char-1] =~ /[ \t]/
+          preceeding_whitespace       = buffer.source[first_char...last_char]
+          preceeding_whitespace_range = Parser::Source::Range.new buffer, first_char, last_char
 
-                                     # find line
-                                     last_char = first_char
-                                     first_char -= 1 while first_char > 0 && buffer.source[first_char-1] !~ /[\r\n]/
-                                     line = buffer.source[first_char...last_char]
+          # find line
+          last_char = first_char
+          first_char -= 1 while first_char > 0 && buffer.source[first_char-1] !~ /[\r\n]/
+          line = buffer.source[first_char...last_char]
 
-                                     Comment.new comment.location.line,
-                                                 line,
-                                                 preceeding_whitespace,
-                                                 comment.text,
-                                                 preceeding_whitespace_range,
-                                                 comment.location.expression
-                                   }
+          Comment.new comment.location.line,
+                      line,
+                      preceeding_whitespace,
+                      comment.text,
+                      preceeding_whitespace_range,
+                      comment.location.expression
+        }
       end
 
       private
 
-      attr_reader :code, :buffer, :all_comments
+      attr_reader :code, :buffer
     end
   end
 end
