@@ -3,7 +3,7 @@ Feature: Running the binary unsuccessfully
   Sometimes I mess up and use the program in a way that doesn't work.
   I'd like it to be helpful in these situations so I can fix my use.
 
-  # show that it displalys next to the first place in the file
+  # show that it displays next to the first place in the file
   # and should maybe print the stacktrace at the bottom
   Scenario: Raising exceptions
     Given the file "raises_exception.rb":
@@ -29,11 +29,11 @@ Feature: Running the binary unsuccessfully
     """
     def first_defined
       second_defined
-    end
+    end                # => {{method_result :first_defined}}
 
     def second_defined
       require_relative 'raises_exception'  # ~> RuntimeError: ZOMG\n!!!!
-    end
+    end                                    # => {{method_result :second_defined}}
 
     first_defined
 

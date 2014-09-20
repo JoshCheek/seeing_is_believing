@@ -70,7 +70,7 @@ Feature: Running the binary successfully
     # method and invocations
     def meth(n)
       n          # => "12", "34"
-    end
+    end          # => {{method_result :meth}}
 
     meth "12"  # => "12"
     meth "34"  # => "34"
@@ -100,11 +100,11 @@ Feature: Running the binary successfully
     class User
       def initialize(name)
         @name = name        # => "Josh", "Rick"
-      end
+      end                   # => {{method_result :initialize}}
 
       def name
         @name   # => "Josh", "Rick"
-      end
+      end       # => {{method_result :name}}
     end
 
     User.new("Josh").name  # => "Josh"

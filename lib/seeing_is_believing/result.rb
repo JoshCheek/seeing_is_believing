@@ -1,44 +1,11 @@
-require 'seeing_is_believing/line'
-require 'seeing_is_believing/has_exception'
-
 class SeeingIsBelieving
   class Result
-    include HasException
     include Enumerable
+    RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
-    def self.from_primitive(primitive)
-      new.from_primitive(primitive)
-    end
+    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures, :exception, :num_lines
 
-    def from_primitive(primitive)
-      self.exitstatus = primitive['exitstatus']
-      self.stdout     = primitive['stdout']
-      self.stderr     = primitive['stderr']
-      self.bug_in_sib = primitive['bug_in_sib']
-      self.exception  = RecordedException.from_primitive primitive['exception']
-      primitive['results'].each do |line_number, primitive_line|
-        results_for(line_number.to_i).from_primitive(primitive_line)
-      end
-      self
-    end
-
-    def to_primitive
-      primitive = {
-        'exitstatus' => exitstatus,
-        'stdout'     => stdout,
-        'stderr'     => stderr,
-        'bug_in_sib' => bug_in_sib,
-        'exception'  => (exception && exception.to_primitive),
-      }
-      primitive['results'] = results.each_with_object({}) do |(line_number, line), r|
-        r[line_number] = line.to_primitive
-      end
-      primitive
-    end
-
-
-    attr_accessor :stdout, :stderr, :exitstatus, :bug_in_sib, :number_of_captures
-
+    alias has_exception? exception
     alias bug_in_sib? bug_in_sib
 
     def has_stdout?
@@ -49,32 +16,22 @@ class SeeingIsBelieving
       stderr && !stderr.empty?
     end
 
-    def record_result(line_number, value)
-      results_for(line_number).record_result(value)
+    def record_result(type, line_number, value)
+      results_for(line_number, type) << value
       value
     end
 
-    def record_exception(line_number, exception)
-      recorded_exception = RecordedException.new exception.class.name,
-                                                 exception.message,
-                                                 exception.backtrace
-      self.exception = recorded_exception
-      results_for(line_number).exception = recorded_exception
+    def record_exception(line_number, exception_class, exception_message, exception_backtrace)
+      self.exception = RecordedException.new line_number, exception_class, exception_message, exception_backtrace
     end
 
-    def [](line_number)
-      results_for(line_number)
+    def [](line_number, type=:inspect)
+      results_for(line_number, type)
     end
 
     def each(&block)
-      max = results.keys.max || 1
-      (1..max).each { |line_number| block.call self[line_number] }
-    end
-
-    def each_with_line_number(&block)
-      return to_enum :each_with_line_number unless block
-      max = results.keys.max || 1
-      (1..max).each { |line_number| block.call line_number, results_for(line_number) }
+      return to_enum :each unless block
+      (1..num_lines).each { |line_number| block.call self[line_number] }
     end
 
     def inspect
@@ -97,8 +54,9 @@ class SeeingIsBelieving
 
     private
 
-    def results_for(line_number)
-      results[line_number] ||= Line.new([], number_of_captures)
+    def results_for(line_number, type)
+      line_results = (results[line_number] ||= Hash.new { |h, k| h[k] = [] })
+      line_results[type]
     end
 
     def results

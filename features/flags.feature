@@ -2,107 +2,6 @@ Feature: Using flags
 
   Sometimes you want more control over what comes out, for that we give you flags.
 
-
-  Scenario: --start-line
-    Given the file "start_line.rb":
-    """
-    1 + 1
-    2
-    3
-    """
-    When I run "seeing_is_believing -s file --start-line 2 start_line.rb"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    """
-    When I run "seeing_is_believing -s chunk --start-line 2 start_line.rb"
-    Then stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    """
-    When I run "seeing_is_believing -s line --start-line 2 start_line.rb"
-    Then stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    """
-
-
-  Scenario: --end-line
-    Given the file "end_line.rb":
-    """
-    1
-    2
-    3 + 3
-    """
-    When I run "seeing_is_believing -s file --end-line 2 end_line.rb"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is:
-    """
-    1  # => 1
-    2  # => 2
-    3 + 3
-    """
-    When I run "seeing_is_believing -s chunk --end-line 2 end_line.rb"
-    Then stdout is:
-    """
-    1  # => 1
-    2  # => 2
-    3 + 3
-    """
-    When I run "seeing_is_believing -s line --end-line 2 end_line.rb"
-    Then stdout is:
-    """
-    1  # => 1
-    2  # => 2
-    3 + 3
-    """
-
-
-  Scenario: --start-line and --end-line
-    Given the file "start_and_end_line.rb":
-    """
-    1 + 1
-    2
-    3
-    4 + 4
-    """
-    When I run "seeing_is_believing -s file --start-line 2 --end-line 3 start_and_end_line.rb"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    4 + 4
-    """
-    When I run "seeing_is_believing -s chunk --start-line 2 --end-line 3 start_and_end_line.rb"
-    Then stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    4 + 4
-    """
-    When I run "seeing_is_believing -s line --start-line 2 --end-line 3 start_and_end_line.rb"
-    Then stdout is:
-    """
-    1 + 1
-    2  # => 2
-    3  # => 3
-    4 + 4
-    """
-
-
   Scenario: --result-length sets the length of the portion including and after the # =>
     Given the file "result_lengths.rb":
     """
@@ -219,6 +118,38 @@ Feature: Using flags
     # => "1111111111...
     """
 
+  Scenario: --xmpfilter-style uses pp to inspect annotations whose value comes from the previous line (#44)
+  Given the file "xmpfilter-prev-line.rb":
+  """
+  { foo: 42,
+    bar: {
+      baz: 1,
+      buz: 2,
+      fuz: 3,
+    },
+    wibble: {
+      magic_word: "xyzzy",
+    }
+  } # =>
+  # =>
+  """
+  When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line.rb | seeing_is_believing --xmpfilter-style"
+  Then stdout is:
+  """
+  { foo: 42,
+    bar: {
+      baz: 1,
+      buz: 2,
+      fuz: 3,
+    },
+    wibble: {
+      magic_word: "xyzzy",
+    }
+  } # => {:foo=>42, :bar=>{:baz=>1, :buz=>2, :fuz=>3}, :wibble=>{:magic_word=>"xyzzy"}}
+  # => {:foo=>42,
+  #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+  #     :wibble=>{:magic_word=>"xyzzy"}}
+  """
 
   Scenario: --require
     Given the file "print_1.rb" "puts 1"
@@ -493,7 +424,6 @@ Feature: Using flags
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
 
-
   Scenario: --xmpfilter-style
     Given the file "magic_comments.rb":
     """
@@ -554,15 +484,11 @@ Feature: Using flags
     Given the file "fake_ruby":
     """
     #!/usr/bin/env ruby
-    # yes, this uses knowledge of where the proving grounds is
     $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib", __FILE__
-
-    require 'seeing_is_believing'
-    result = SeeingIsBelieving::Result.new
-    result.record_result(1, /omg/)
-
-    require 'json'
-    puts JSON.dump result.to_primitive
+    require 'seeing_is_believing/event_stream/producer'
+    sib = SeeingIsBelieving::EventStream::Producer.new($stdout)
+    sib.record_result(:inspect, 1, /omg/)
+    sib.finish!
     """
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
@@ -579,22 +505,17 @@ Feature: Using flags
     raise "omg"
     """
     When I run "seeing_is_believing --json all_kinds_of_output.rb"
-    Then the exit status is 0
-    And stdout is the JSON:
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is the JSON:
     """
-      {
-        "lines": {
-          "1": { "exception": null, "results": ["3"] },
-          "2": { "exception": null, "results": ["\"0\"", "\"1\"", "\"2\""] },
-          "3": { "exception": null, "results": ["3"] },
-          "4": { "exception": null, "results": ["nil"] },
-          "5": { "exception": null, "results": ["nil"] },
-          "6": { "exception": { "class_name": "RuntimeError",
-                                "message":    "omg",
-                                "backtrace":  ["all_kinds_of_output.rb:6:in `<main>'"]
-                              },
-                 "results": []
-               }
+      { "lines": {
+          "1": ["3"],
+          "2": ["\"0\"", "\"1\"", "\"2\""],
+          "3": ["3"],
+          "4": ["nil"],
+          "5": ["nil"],
+          "6": []
         },
         "exception": {
           "line_number_in_this_file": 6,

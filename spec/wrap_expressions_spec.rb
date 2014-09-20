@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-describe SeeingIsBelieving::WrapExpressions do
+RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code)
     described_class.call code,
       before_each: -> * { '<' },
@@ -17,21 +17,34 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'wrapping the body' do
-    let(:options) { { before_all: "[",
-                      after_all:  "]",
-                      before_each: -> * { '<' },
-                      after_each:  -> * { '>' } } }
+    let(:options) { { before_all: -> { "[".freeze },
+                      after_all:  -> { "]".freeze },
+                      before_each: -> * { '<'.freeze },
+                      after_each:  -> * { '>'.freeze } } }
 
     it 'wraps the entire body, ignoring leading comments and the data segment' do
       expect(described_class.call("#comment\nA\n__END__\n1", options)).to eq "#comment\n[<A>]\n__END__\n1"
     end
 
-    it 'does nothing when there are only comments' do
-      expect(described_class.call("# abc", options)).to eq "# abc"
+    it 'comes in on blank lines' do
+      expect(described_class.call('', options)).to eq '[]'
+    end
+
+    it 'comes in first when there are only comments' do
+      expect(described_class.call("# abc", options)).to eq "[]# abc"
     end
 
     it 'comes in before trailing comments' do
       expect(described_class.call("1# abc", options)).to eq "[<1>]# abc"
+    end
+
+    # this changes the number of lines, annoyingly, though it shouldn't mess anything up,
+    # unless you were trying to reopen the file to read it, in which case, *surprise* the whole thing's been rewritten
+    it 'injects a newline if there is a data segment and the after block doesn\'t end in a newline' do
+      expect(described_class.call("__END__", options)).to eq "[]\n__END__"
+      expect(described_class.call("\n__END__", options)).to eq "[]\n__END__"
+      expect(described_class.call("\n\n__END__", options)).to eq "[]\n\n__END__"
+      expect(described_class.call("__END__!", options)).to eq "[<__END__!>]"
     end
 
     it 'wraps bodies that are wrapped in parentheses' do
@@ -71,9 +84,9 @@ describe SeeingIsBelieving::WrapExpressions do
                                   "end",
                                   options)
             ).to eq "[<a>\n"\
-                    "def b\n"\
+                    "<def b\n"\
                     "  <c = 1>\n"\
-                    "end]"
+                    "end>]"
     end
   end
 
@@ -185,8 +198,8 @@ describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'does not wrap multiple expressions when they constitute a void value' do
-      expect(wrap("def a\n1\nreturn 2\nend")).to eq "def a\n<1>\nreturn <2>\nend"
-      expect(wrap("def a\nreturn 1\n2\nend")).to eq "def a\nreturn <1>\n<2>\nend"
+      expect(wrap("def a\n1\nreturn 2\nend")).to eq "<def a\n<1>\nreturn <2>\nend>"
+      expect(wrap("def a\nreturn 1\n2\nend")).to eq "<def a\nreturn <1>\n<2>\nend>"
     end
 
     it 'wraps nested expressions' do
@@ -519,19 +532,19 @@ describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'does not wrap if the last value in any portion is a void value expression' do
-      expect(wrap("def a\nif true\nreturn 1\nend\nend")).to eq "def a\nif <true>\nreturn <1>\nend\nend"
-      expect(wrap("def a\nif true\n1\nelse\nreturn 2\nend\nend")).to eq "def a\nif <true>\n<1>\nelse\nreturn <2>\nend\nend"
-      expect(wrap("def a\nif true\n1\nelsif true\n2\nelse\nreturn 3\nend\nend")).to eq "def a\nif <true>\n<1>\nelsif <true>\n<2>\nelse\nreturn <3>\nend\nend"
-      expect(wrap("def a\nif true\nif true\nreturn 1\nend\nend\nend")).to eq "def a\nif <true>\nif <true>\nreturn <1>\nend\nend\nend"
-      expect(wrap("def a\nunless true\nreturn 1\nend\nend")).to eq "def a\nunless <true>\nreturn <1>\nend\nend"
-      expect(wrap("def a\nunless true\n1\nelse\nreturn 2\nend\nend")).to eq "def a\nunless <true>\n<1>\nelse\nreturn <2>\nend\nend"
-      expect(wrap("def a\ntrue ?\n(return 1) :\n2\nend")).to eq "def a\n<true> ?\n(return <1>) :\n<2>\nend"
-      expect(wrap("def a\ntrue ?\n1 :\n(return 2)\nend")).to eq "def a\n<true> ?\n<1> :\n(return <2>)\nend"
+      expect(wrap("def a\nif true\nreturn 1\nend\nend")).to eq "<def a\nif <true>\nreturn <1>\nend\nend>"
+      expect(wrap("def a\nif true\n1\nelse\nreturn 2\nend\nend")).to eq "<def a\nif <true>\n<1>\nelse\nreturn <2>\nend\nend>"
+      expect(wrap("def a\nif true\n1\nelsif true\n2\nelse\nreturn 3\nend\nend")).to eq "<def a\nif <true>\n<1>\nelsif <true>\n<2>\nelse\nreturn <3>\nend\nend>"
+      expect(wrap("def a\nif true\nif true\nreturn 1\nend\nend\nend")).to eq "<def a\nif <true>\nif <true>\nreturn <1>\nend\nend\nend>"
+      expect(wrap("def a\nunless true\nreturn 1\nend\nend")).to eq "<def a\nunless <true>\nreturn <1>\nend\nend>"
+      expect(wrap("def a\nunless true\n1\nelse\nreturn 2\nend\nend")).to eq "<def a\nunless <true>\n<1>\nelse\nreturn <2>\nend\nend>"
+      expect(wrap("def a\ntrue ?\n(return 1) :\n2\nend")).to eq "<def a\n<true> ?\n(return <1>) :\n<2>\nend>"
+      expect(wrap("def a\ntrue ?\n1 :\n(return 2)\nend")).to eq "<def a\n<true> ?\n<1> :\n(return <2>)\nend>"
     end
 
     # not sure if I actually want this, or if it's just easier b/c it falls out of the current implementation
     it 'wraps the conditional from an inline if, when it cannot wrap the entire if' do
-      expect(wrap("def a\nreturn if 1\nend")).to eq "def a\nreturn if <1>\nend"
+      expect(wrap("def a\nreturn if 1\nend")).to eq "<def a\nreturn if <1>\nend>"
     end
 
     it 'does not wrap &&, and, ||, or, not' do
@@ -781,37 +794,37 @@ describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'method definitions' do
-    it 'does not wrap the definition or arguments' do
-      expect(wrap("def a(b,c=1,*d,&e)\nend")).to eq "def a(b,c=1,*d,&e)\nend"
+    it 'does wraps the definition, but not the arguments' do
+      expect(wrap("def a(b,c=1,*d,&e)\nend")).to eq "<def a(b,c=1,*d,&e)\nend>"
     end
 
     it 'wraps the body' do
-      expect(wrap("def a\n1\nend")).to eq "def a\n<1>\nend"
-      expect(wrap("def a()\n1\nend")).to eq "def a()\n<1>\nend"
+      expect(wrap("def a\n1\nend")).to eq "<def a\n<1>\nend>"
+      expect(wrap("def a()\n1\nend")).to eq "<def a()\n<1>\nend>"
     end
 
-    it 'does not try to wrap singleton method definitions' do
-      expect(wrap("def a.b\n1\nend")).to eq "def a.b\n<1>\nend"
-      expect(wrap("def a.b()\n1\nend")).to eq "def a.b()\n<1>\nend"
+    it 'wrap singleton method definitions' do
+      expect(wrap("def a.b\n1\nend")).to eq "<def a.b\n<1>\nend>"
+      # expect(wrap("def a.b()\n1\nend")).to eq "<def a.b()\n<1>\nend>"
     end
 
     it 'wraps calls to yield' do
-      expect(wrap("def a\nyield\nend")).to eq "def a\n<yield>\nend"
+      expect(wrap("def a\nyield\nend")).to eq "<def a\n<yield>\nend>"
     end
 
     it 'wraps calls to super' do
-      expect(wrap("def a\nsuper\nend")).to eq "def a\n<super>\nend"
-      expect(wrap("def a\nsuper 1\nend")).to eq "def a\n<super 1>\nend"
+      expect(wrap("def a\nsuper\nend")).to eq "<def a\n<super>\nend>"
+      expect(wrap("def a\nsuper 1\nend")).to eq "<def a\n<super 1>\nend>"
     end
 
     it 'wraps the bodies of returns' do
-      expect(wrap("def a\nreturn 1\nend")).to eq "def a\nreturn <1>\nend"
+      expect(wrap("def a\nreturn 1\nend")).to eq "<def a\nreturn <1>\nend>"
     end
 
     it 'wraps the rescue and ensure portion' do
-      expect(wrap("def a\n1\nrescue\n2\nend")).to eq "def a\n<1>\nrescue\n<2>\nend"
-      expect(wrap("def a\n1\nrescue\n2\nensure\n3\nend")).to eq "def a\n<1>\nrescue\n<2>\nensure\n<3>\nend"
-      expect(wrap("def a\n1\nensure\n2\nend")).to eq "def a\n<1>\nensure\n<2>\nend"
+      expect(wrap("def a\n1\nrescue\n2\nend")).to eq "<def a\n<1>\nrescue\n<2>\nend>"
+      expect(wrap("def a\n1\nrescue\n2\nensure\n3\nend")).to eq "<def a\n<1>\nrescue\n<2>\nensure\n<3>\nend>"
+      expect(wrap("def a\n1\nensure\n2\nend")).to eq "<def a\n<1>\nensure\n<2>\nend>"
     end
   end
 
@@ -836,7 +849,7 @@ describe SeeingIsBelieving::WrapExpressions do
   describe 'BEGIN/END' do
     # not implemented b/c we cannot wrap around these either.
     # So what does it mean to wrap around?
-    # mabe this?
+    # maybe this?
     #   1
     #   BEGIN {}
     #   2

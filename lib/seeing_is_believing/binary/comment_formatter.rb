@@ -1,7 +1,7 @@
 class SeeingIsBelieving
   class Binary
-    # not sure I like this name, it formats comments that
-    # show results e.g. "# => [1, 2, 3]"
+    # not sure I like this name, it formats comments that show results
+    # e.g. "# => [1, 2, 3]"
     #
     # line_length is the length of the line this comment is being appended to
     #
@@ -15,13 +15,14 @@ class SeeingIsBelieving
       def initialize(line_length, separator, result, options)
        self.line_length = line_length
        self.separator   = separator
-       self.result      = result.gsub "\n", '\n'
+       self.result      = result
        self.options     = options
       end
 
       def call
         @formatted ||= begin
-          formatted = truncate "#{separator}#{result}", max_result_length
+          formatted = escape_non_printable result, chars_not_to_escape
+          formatted = truncate "#{separator}#{formatted}", max_result_length
           formatted = "#{' '*padding_length}#{formatted}"
           formatted = truncate formatted, max_line_length
           formatted = '' unless formatted.sub(/^ */, '').start_with? separator
@@ -56,6 +57,19 @@ class SeeingIsBelieving
 
       def ellipsify(string)
         string.sub(/.{0,3}$/) { |last_chars| '.' * last_chars.size }
+      end
+
+      def chars_not_to_escape
+        options.fetch :dont_escape, []
+      end
+
+      def escape_non_printable(str, omissions)
+        str.each_char
+          .map { |char|
+            next char if 0x20 <= char.ord # above this has a printable representation
+            next char if omissions.include? char
+            char.inspect[1...-1]
+          }.join('')
       end
     end
   end

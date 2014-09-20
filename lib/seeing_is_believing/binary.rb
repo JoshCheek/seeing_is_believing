@@ -1,7 +1,8 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/add_annotations'
-require 'seeing_is_believing/binary/clean_body'
+require 'seeing_is_believing/binary/annotate_every_line'
+require 'seeing_is_believing/binary/annotate_xmpfilter_style'
+require 'seeing_is_believing/binary/remove_annotations'
 require 'timeout'
 
 
@@ -36,23 +37,26 @@ class SeeingIsBelieving
       @exitstatus ||= begin
         parse_flags
 
-        if    flags_have_errors?                    then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_print_help?                    then print_help             ; SUCCESS_STATUS
-        elsif should_print_version?                 then print_version          ; SUCCESS_STATUS
-        elsif has_filename? && file_dne?            then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_clean?                         then print_cleaned_program  ; SUCCESS_STATUS
-        elsif invalid_syntax?                       then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
-        elsif (evaluate_program; program_timedout?) then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
-        elsif something_blew_up?                    then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-        elsif output_as_json?                       then print_result_as_json   ; SUCCESS_STATUS
-        else                                             print_program          ; exit_status
+        if    flags_have_errors?         then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_print_help?         then print_help             ; SUCCESS_STATUS
+        elsif should_print_version?      then print_version          ; SUCCESS_STATUS
+        elsif has_filename? && file_dne? then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
+        elsif should_clean?              then print_cleaned_program  ; SUCCESS_STATUS
+        elsif invalid_syntax?            then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+        else
+          evaluate_program
+          if    program_timedout?        then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
+          elsif something_blew_up?       then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
+          elsif output_as_json?          then print_result_as_json   ; SUCCESS_STATUS
+          else                                print_program          ; exit_status
+          end
         end
       end
     end
 
     private
 
-    attr_accessor :flags, :interpolated_program
+    attr_accessor :flags, :results
 
     def parse_flags
       self.flags = ParseArgs.call argv, stdout
@@ -99,7 +103,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print CleanBody.call(body, true)
+      stdout.print RemoveAnnotations.call(body, true)
     end
 
     def invalid_syntax?
@@ -111,7 +115,13 @@ class SeeingIsBelieving
     end
 
     def evaluate_program
-      self.interpolated_program = printer.call
+      self.results = SeeingIsBelieving.call prepared_body,
+                                            flags.merge(filename:           (flags[:as] || flags[:filename]),
+                                                        ruby_executable:    flags[:shebang],
+                                                        stdin:              (file_is_on_stdin? ? '' : stdin),
+                                                        record_expressions: annotator_class.expression_wrapper,
+                                                        evaluate_with:      flags.fetch(:evaluator),
+                                                       )
     rescue Timeout::Error
       self.timeout_error = true
     rescue Exception
@@ -143,19 +153,24 @@ class SeeingIsBelieving
     end
 
     def print_program
-      stdout.print interpolated_program
+      stdout.print annotator.call
+    end
+
+   # should move this switch into parser, like with the aligners
+    def annotator_class
+      (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+    end
+
+    def prepared_body
+      @prepared_body ||= annotator_class.prepare_body body
+    end
+
+    def annotator
+      @annotator ||= annotator_class.new prepared_body, results, flags
     end
 
     def body
       @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
-    end
-
-    def printer
-      @printer ||= AddAnnotations.new body, flags.merge(stdin: (file_is_on_stdin? ? '' : stdin))
-    end
-
-    def results
-      printer.results
     end
 
     def file_is_on_stdin?
@@ -182,27 +197,16 @@ class SeeingIsBelieving
     end
 
     def result_as_data_structure
-      results = printer.results
+      exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
+                                              class_name:               results.exception.class_name,
+                                              message:                  results.exception.message,
+                                              backtrace:                results.exception.backtrace
+                                            }
       { stdout:      results.stdout,
         stderr:      results.stderr,
         exit_status: results.exitstatus,
-        exception:   (if results.has_exception?
-                       { line_number_in_this_file: results.each_with_line_number.find { |line_number, result| result.has_exception? }.first,
-                         class_name:               results.exception.class_name,
-                         message:                  results.exception.message,
-                         backtrace:                results.exception.backtrace,
-                       }
-                     end),
-        lines:       results.each_with_line_number.each_with_object(Hash.new) { |(line_number, result), hash|
-                       hash[line_number] = { results:   result.to_a,
-                                             exception: (if result.has_exception?
-                                                          { class_name:               results.exception.class_name,
-                                                            message:                  results.exception.message,
-                                                            backtrace:                results.exception.backtrace,
-                                                          }
-                                                        end)
-                       }
-                     },
+        exception:   exception,
+        lines:       results.each.with_object(Hash.new).with_index(1) { |(result, hash), line_number| hash[line_number] = result },
       }
     end
 

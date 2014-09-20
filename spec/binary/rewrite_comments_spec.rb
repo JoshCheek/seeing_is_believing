@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/rewrite_comments'
 
-describe SeeingIsBelieving::Binary::RewriteComments do
+RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
   def call(code, &block)
     described_class.call code, &block
   end

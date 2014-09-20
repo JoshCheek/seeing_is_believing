@@ -1,14 +1,13 @@
 # encoding: utf-8
 
-require 'stringio'
-require 'seeing_is_believing/version'
-require 'seeing_is_believing/binary'
-require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/binary/align_file'
-require 'seeing_is_believing/binary/align_line'
-require 'seeing_is_believing/binary/align_chunk'
-require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/evaluate_with_eval_in'
+require 'seeing_is_believing/version'                  # We print the version in the output
+require 'seeing_is_believing/binary'                   # For output markers
+require 'seeing_is_believing/debugger'                 # Sets the debugger
+require 'seeing_is_believing/binary/align_file'        # Polymorphically decides which alignment strategy to use
+require 'seeing_is_believing/binary/align_line'        # Polymorphically decides which alignment strategy to use
+require 'seeing_is_believing/binary/align_chunk'       # Polymorphically decides which alignment strategy to use
+require 'seeing_is_believing/evaluate_by_moving_files' # Default evaluator
+require 'seeing_is_believing/evaluate_with_eval_in'    # Evaluator for safe mode
 
 class SeeingIsBelieving
   class Binary
@@ -36,8 +35,6 @@ class SeeingIsBelieving
             when '-j',  '--json'                then options[:result_as_json]      = true
             when '-g',  '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
             when        '--safe'                then options[:evaluator]           = EvaluateWithEvalIn
-            when '-l',  '--start-line'          then extract_positive_int_for :start_line,         arg
-            when '-L',  '--end-line'            then extract_positive_int_for :end_line,           arg
             when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
             when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
             when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
@@ -72,10 +69,6 @@ class SeeingIsBelieving
         elsif filenames.any? && options[:program]
           options[:errors] << "You passed the program in an argument, but have also specified the filename #{filenames.first.inspect}"
         end
-
-        if options[:end_line] < options[:start_line]
-          options[:start_line], options[:end_line] = options[:end_line], options[:start_line]
-        end
       end
 
       def options
@@ -87,14 +80,12 @@ class SeeingIsBelieving
           inherit_exit_status: false,
           program:             nil,
           filename:            nil,
-          start_line:          1,
-          end_line:            Float::INFINITY,
           max_line_length:     Float::INFINITY,
           max_result_length:   Float::INFINITY,
           number_of_captures:  Float::INFINITY,
           timeout:             0, # timeout lib treats this as infinity
           errors:              [],
-          require:             [],
+          require:             ['seeing_is_believing/the_matrix'],
           load_path:           [],
           alignment_strategy:  AlignChunk,
           shebang:             'ruby',
@@ -152,8 +143,6 @@ Usage: seeing_is_believing [options] [filename]
 
   If no filename is provided, the binary will read the program from standard input.
 
-  -l,  --start-line n            # line number to begin showing results on
-  -L,  --end-line n              # line number to stop showing results on
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
   -D,  --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
   -n,  --number-of-captures n    # how many results to capture for a given line

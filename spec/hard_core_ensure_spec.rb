@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'ichannel'
 require 'seeing_is_believing/hard_core_ensure'
 
-describe SeeingIsBelieving::HardCoreEnsure do
+RSpec.describe SeeingIsBelieving::HardCoreEnsure do
   def call(options)
     described_class.new(options).call
   end

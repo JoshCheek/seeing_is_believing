@@ -14,8 +14,8 @@ class SeeingIsBelieving
 
     def initialize(program, wrappings)
       self.program     = program
-      self.before_all  = wrappings.fetch :before_all,  ''.freeze
-      self.after_all   = wrappings.fetch :after_all,   ''.freeze
+      self.before_all  = wrappings.fetch :before_all,  -> { ''.freeze }
+      self.after_all   = wrappings.fetch :after_all,   -> { ''.freeze }
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
       self.buffer, parser, self.rewriter = initialize_parser(program, 'program-without-annotations')
@@ -29,10 +29,9 @@ class SeeingIsBelieving
       @called ||= begin
         find_wrappings
 
+        rewriter.insert_before root_range, before_all.call
+
         if root # file may be empty
-          rewriter.insert_before root.location.expression, before_all
-
-
           wrappings.each do |line_num, (range, last_col, meta)|
             rewriter.insert_before range, before_each.call(line_num)
             if meta == :total_fucking_failure
@@ -40,11 +39,10 @@ class SeeingIsBelieving
             end
             rewriter.insert_after  range, after_each.call(line_num)
           end
-
           range = root.location.expression
-          rewriter.insert_after range, after_all
         end
 
+        rewriter.insert_after root_range, after_all_text
         rewriter.process
       end
     end
@@ -52,6 +50,26 @@ class SeeingIsBelieving
     private
 
     attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
+
+    def root_range
+      if root
+        root.location.expression
+      else
+        Parser::Source::Range.new buffer, 0, 0
+      end
+    end
+
+    def after_all_text
+      after_all_text         = after_all.call
+      data_segment_code      = "__END__\n"
+      code_after_end_of_file = buffer.source[root_range.end_pos, data_segment_code.size]
+      ends_in_data_segment   = code_after_end_of_file.chomp == data_segment_code.chomp
+      if ends_in_data_segment
+        "#{after_all_text}\n"
+      else
+        after_all_text
+      end
+    end
 
     def add_to_wrappings(range_or_ast, meta=nil)
       range = range_or_ast
@@ -72,7 +90,11 @@ class SeeingIsBelieving
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line
         # no op
-      when :rescue, :ensure, :def, :return, :break, :next
+      when :defs
+        add_to_wrappings ast
+        child = ast.children.last
+        add_to_wrappings child if child
+      when :rescue, :ensure, :return, :break, :next
         add_children ast
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
@@ -85,7 +107,7 @@ class SeeingIsBelieving
           end
           add_children ast
         end
-      when :when, :pair, :defs, :class, :module, :sclass
+      when :when, :pair, :class, :module, :sclass
         find_wrappings ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children

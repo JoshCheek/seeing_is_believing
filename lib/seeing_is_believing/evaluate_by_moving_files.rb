@@ -11,15 +11,15 @@
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
 
-require 'json'
 require 'open3'
 require 'timeout'
 require 'stringio'
-require 'fileutils'
+require 'fileutils' # DELETE?
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
+require 'seeing_is_believing/event_stream/consumer'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
@@ -28,14 +28,13 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :matrix_filename, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger
+    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger, :result
 
     def initialize(program, filename, options={})
       self.program         = program
       self.filename        = filename
       self.input_stream    = options.fetch :input_stream, StringIO.new('')
-      self.matrix_filename = options[:matrix_filename] || 'seeing_is_believing/the_matrix'
-      self.require_flags   = options.fetch(:require, []).map { |filename| ['-r', filename] }.flatten
+      self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
       self.timeout         = options[:timeout]
@@ -51,7 +50,8 @@ class SeeingIsBelieving
           write_program_to_file
           begin
             evaluate_file
-            deserialize_result.tap { |result| fail if result.bug_in_sib? }
+            fail if result.bug_in_sib?
+            result
           rescue Exception => error
             error = wrap_error error if error_implies_bug_in_sib? error
             raise error
@@ -102,17 +102,39 @@ class SeeingIsBelieving
 
     def evaluate_file
       Open3.popen3 ENV, *popen_args do |process_stdin, process_stdout, process_stderr, thread|
-        out_reader = Thread.new { process_stdout.read }
-        err_reader = Thread.new { process_stderr.read }
-        Thread.new do
+        # send stdin
+        Thread.new {
           input_stream.each_char { |char| process_stdin.write char }
           process_stdin.close
-        end
+        }
+
+        # consume events
+        self.result = Result.new
+        event_consumer = Thread.new {
+          EventStream::Consumer.new(process_stdout).each do |event|
+            case event
+            when EventStream::Events::LineResult       then result.record_result(event.type, event.line_number, event.inspected)
+            when EventStream::Events::UnrecordedResult then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
+            when EventStream::Events::Exception        then result.record_exception event.line_number, event.class_name, event.message, event.backtrace
+            when EventStream::Events::Stdout           then result.stdout             = event.value
+            when EventStream::Events::Stderr           then result.stderr             = event.value
+            when EventStream::Events::BugInSiB         then result.bug_in_sib         = event.value
+            when EventStream::Events::MaxLineCaptures  then result.number_of_captures = event.value
+            when EventStream::Events::Exitstatus       then result.exitstatus         = event.value
+            when EventStream::Events::NumLines         then result.num_lines          = event.value
+            else raise "Unknown event: #{event.inspect}"
+            end
+          end
+        }
+
+        # process stderr
+        err_reader = Thread.new { process_stderr.read }
+
         begin
           Timeout::timeout timeout do
-            self.stdout     = out_reader.value
             self.stderr     = err_reader.value
             self.exitstatus = thread.value
+            event_consumer.join
           end
         rescue Timeout::Error
           Process.kill "TERM", thread.pid
@@ -126,7 +148,6 @@ class SeeingIsBelieving
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path
-         '-r', matrix_filename,                     # hijack the environment so it can be recorded
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]
@@ -136,16 +157,14 @@ class SeeingIsBelieving
       raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}"
     end
 
-    def deserialize_result
-      Result.from_primitive JSON.load stdout
-    end
-
     def wrap_error(error)
       debugger.context "Program could not be evaluated" do
-        "Program: #{program.inspect.chomp}\n\n"\
-        "Stdout: #{stdout.inspect.chomp}\n\n"\
-        "Stderr: #{stderr.inspect.chomp}\n\n"\
-        "Status: #{exitstatus.inspect.chomp}\n"
+        "Program:      #{program.inspect.chomp}\n\n"\
+        "Stderr:       #{stderr.inspect.chomp}\n\n"\
+        "Status:       #{exitstatus.inspect.chomp}\n\n"\
+        "Result:       #{result.inspect.chomp}\n\n"\
+        "Actual Error: #{error.inspect.chomp}\n"+
+        error.backtrace.map { |sf| "              #{sf}\n" }.join("")
       end
       BugInSib.new error
     end

@@ -4,8 +4,23 @@ require 'stringio'
 require 'seeing_is_believing'
 require 'seeing_is_believing/evaluate_with_eval_in'
 
-describe SeeingIsBelieving do
+RSpec.describe SeeingIsBelieving do
+  def method_result(name)
+    @result = def __some_method__; end
+    if :__some_method__ == @result
+      name.inspect
+    elsif nil == @result
+      nil.inspect
+    else
+      raise "huh? #{@result.inspect}"
+    end
+  end
+
   def invoke(input, options={})
+    if options[:debug]
+      options.delete :debug
+      options[:debugger] = SeeingIsBelieving::Debugger.new(stream: $stderr, colour: true)
+    end
     described_class.new(input, options).call
   end
 
@@ -28,6 +43,16 @@ describe SeeingIsBelieving do
   it 'only invokes inspect once' do
     input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
     expect(invoke(input)[1]).to eq ['"NUM"']
+  end
+
+  it 'allows uers to pass in their own inspection recorder' do
+    wrapper = lambda { |program, num_captures|
+      SeeingIsBelieving::InspectExpressions.call \
+        program,
+        num_captures,
+        after_each: -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
+    }
+    expect(invoke(':body', record_expressions: wrapper)[1]).to eq ['"zomg"']
   end
 
   it 'remembers context of previous lines' do
@@ -56,8 +81,8 @@ describe SeeingIsBelieving do
   it 'evalutes to an empty array for lines that it cannot understand' do
     expect(values_for("[3].map \\\ndo |n|\n n*2\n end")).to eq [['[3]'], [], ['6'], ['[6]']]
     expect(values_for("'\n1\n'")).to eq [[], [], ['"\n1\n"']]
-    expect(values_for("<<HEREDOC\n\n1\nHEREDOC")).to eq  [[%Q'"\\n1\\n"']] # newlines escaped b/c lib inspects them
-    expect(values_for("<<-HEREDOC\n\n1\nHEREDOC")).to eq [[%Q'"\\n1\\n"']]
+    expect(values_for("<<HEREDOC\n\n1\nHEREDOC")).to eq  [[%Q'"\\n1\\n"'], [], [], []] # newlines escaped b/c lib inspects them
+    expect(values_for("<<-HEREDOC\n\n1\nHEREDOC")).to eq [[%Q'"\\n1\\n"'], [], [], []]
   end
 
   it 'records the targets of chained methods' do
@@ -70,8 +95,8 @@ describe SeeingIsBelieving do
   end
 
   it "records heredocs" do
-    expect(values_for("<<A\n1\nA")).to eq [[%'"1\\n"']]
-    expect(values_for("<<-A\n1\nA")).to eq [[%'"1\\n"']]
+    expect(values_for("<<A\n1\nA")).to  eq [[%'"1\\n"'], [], []]
+    expect(values_for("<<-A\n1\nA")).to eq [[%'"1\\n"'], [], []]
   end
 
   it 'does not insert code into the middle of heredocs' do
@@ -110,10 +135,7 @@ describe SeeingIsBelieving do
     expect(result.exception.message).to eq 'omg!'
 
     expect(result[1]).to eq ['12']
-
     expect(result[2]).to eq []
-    expect(result[2].exception).to eq result.exception
-
     expect(result[3]).to eq []
   end
 
@@ -133,11 +155,11 @@ describe SeeingIsBelieving do
 
                         # comment
                         __LINE__')
-    ).to eq [['1'], ['2'], [], [], ['5'], [], ['5'], [], [], ['10']]
+    ).to eq [['1'], ['2'], [], [], ['5'], [method_result(:meth)], ['5'], [], [], ['10']]
   end
 
   it 'records return statements' do
-    expect(values_for("def meth \n return 1          \n end \n meth")).to eq [[], ['1'], [], ['1']]
+    expect(values_for("def meth \n return 1          \n end \n meth")).to eq [[], ['1'], [method_result(:meth)], ['1']]
     expect(values_for("-> {  \n return 1          \n }.call"        )).to eq [[], ['1'], ['1']]
     expect(values_for("-> { return 1 }.call"                        )).to eq [['1']]
 
@@ -154,7 +176,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword redo' do
-    expect(values_for(<<-DOC)).to eq [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [], ['0...3']]
+    expect(values_for(<<-DOC)).to eq [[], ['0'], ['0...3'], ['1', '2', '3', '4'], ['false', 'true', 'false', 'false'], ['0...3'], [method_result(:meth)], ['0...3']]
       def meth
         n = 0
         for i in 0...3
@@ -167,7 +189,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not try to record the keyword retry' do
-    expect(values_for(<<-DOC)).to eq [[], [], [], [], ['nil']]
+    expect(values_for(<<-DOC)).to eq [[], [], [], [method_result(:meth)], ['nil']]
       def meth
       rescue
         retry
@@ -233,7 +255,7 @@ describe SeeingIsBelieving do
   end
 
   it 'does not capture output from __END__ onward' do
-    expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"']] # <-- should this actually write a newline on the end?
+    expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"'], [], []] # <-- should this actually write a newline on the end?
   end
 
   it 'raises a SyntaxError when the whole program is invalid' do
@@ -255,7 +277,7 @@ describe SeeingIsBelieving do
   it 'can deal with methods that are invoked entirely on the next line' do
     expect(values_for("a = 1\n.even?\na")).to eq [['1'], ['false'], ['false']]
     expect(values_for("a = 1.\neven?\na")).to eq [['1'], ['false'], ['false']]
-    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false']]
+    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false'], []] # TODO: would be nice if we could consolidate this shit so we could find out things like __END__ without repeatedly parsing, I'd prefer if this did not imply there were results on this line -.-
   end
 
   it 'does not record leading comments' do
@@ -283,7 +305,7 @@ describe SeeingIsBelieving do
 
   it "doesn't fuck up when there are lines with magic comments in the middle of the app" do
     expect(values_for '1+1
-                       # encoding: wtf').to eq [['2']]
+                       # encoding: wtf').to eq [['2'], []]
   end
 
   it "doesn't remove multiple leading comments" do
@@ -326,12 +348,10 @@ describe SeeingIsBelieving do
       File.write 'omg-ruby', "#!/usr/bin/env ruby
         $LOAD_PATH.unshift '#{File.expand_path '../../lib', __FILE__}'
 
-        require 'seeing_is_believing'
-        result = SeeingIsBelieving::Result.new
-        result.record_result(1, /omg/)
-
-        require 'json'
-        puts JSON.dump result.to_primitive
+        require 'seeing_is_believing/event_stream/producer'
+        sib = SeeingIsBelieving::EventStream::Producer.new($stdout)
+        sib.record_result(:inspect, 1, /omg/)
+        sib.finish!
       "
       File.chmod 0755, 'omg-ruby'
       old_path = ENV['PATH']
@@ -344,21 +364,47 @@ describe SeeingIsBelieving do
     end
   end
 
-  it 'does not record BEGIN and END', not_implemented: true do
-    pending 'not implemented'
-    expect { invoke <<-CODE }.to_not raise_error
-      puts 1
-      BEGIN {
-        puts "begin code"
-        some_var = 2
-      }
-      puts 3
-      END {
-        puts "end code"
-        puts some_var
-      }
-      puts 4
-    CODE
+  describe 'BEGIN and END' do
+    it 'Executes in the appropriate order' do
+      pending 'not implemented'
+      expect(invoke <<-CODE).stdout.to eq "1\n2\n3\n4\n5\n6\n7\n8\n9\n"
+        p 3
+        END   { p 8 }
+        p 4
+        BEGIN { p 1 }
+        p 5
+        END   { p 9 }
+        p 6
+        BEGIN { p 2 }
+        p 7
+      CODE
+    end
+
+    it 'Maintains correct line numbers' do
+      pending 'not implemented'
+      expected_values = [
+        ['1'],
+        [],
+        ['3'],
+        [],
+        ['5'],
+        [],
+        ['7'],
+        [],
+        ['9'],
+      ]
+      expect(values_for <<-CODE).to eq expected_values
+        __LINE__
+        BEGIN {
+          __LINE__
+        }
+        __LINE__
+        END {
+          __LINE__
+        }
+        __LINE__
+      CODE
+    end
   end
 
   # For more info about this one
@@ -372,12 +418,19 @@ describe SeeingIsBelieving do
     result = invoke(%[def self.inspect
                         self
                       end
-                      self], filename: 'blowsup.rb')
+                      self], filename: 'blowsup.rb') # TODO This actually writes the file into the root of SiB
     expect(result).to have_exception
     expect(result.exception.class_name).to eq 'SystemStackError'
     expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
     expect(result.exception.message).to match /recursive/i
-    expect(result[4].exception).to eq result.exception
+  end
+
+  it 'makes the SeeingIsBelieving::VERSION available to the program' do
+    expect(values_for "SeeingIsBelieving::VERSION").to eq [[SeeingIsBelieving::VERSION.inspect]]
+  end
+
+  it 'does not change the number of lines in the file' do
+    expect(values_for "File.read(__FILE__).lines.count").to eq [['1']]
   end
 
   context 'when given a debugger' do
@@ -397,7 +450,8 @@ describe SeeingIsBelieving do
     it 'prints the result' do
       call
       expect(stream.string).to include "RESULT:"
-      expect(stream.string).to include '1=>#<SIB:Line["1"] (1, 1) no exception>'
+      expect(stream.string).to include 'SIB::Result'
+      expect(stream.string).to include '@results={'
     end
     # should ProgramRewriter have some debug options?
   end
@@ -419,9 +473,9 @@ describe SeeingIsBelieving do
       api_redirect_url = redirect_url + '.json'
 
       result_from_eval_in = SeeingIsBelieving::Result.new
-      result_from_eval_in.record_result 1, "a"
-      result_from_eval_in.record_result 1, "b"
-      result_from_eval_in.record_result 2, "c"
+      result_from_eval_in.record_result :inspect, 1, "a"
+      result_from_eval_in.record_result :inspect, 1, "b"
+      result_from_eval_in.record_result :inspect, 2, "c"
 
       stub_request(:post, 'https://eval.in/')
         .to_return(status: 302, headers: {'Location' => redirect_url})
