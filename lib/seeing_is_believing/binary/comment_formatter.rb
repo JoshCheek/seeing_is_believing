@@ -21,7 +21,7 @@ class SeeingIsBelieving
 
       def call
         @formatted ||= begin
-          formatted = escape_str result, chars_not_to_escape
+          formatted = escape_non_printable result, chars_not_to_escape
           formatted = truncate "#{separator}#{formatted}", max_result_length
           formatted = "#{' '*padding_length}#{formatted}"
           formatted = truncate formatted, max_line_length
@@ -63,17 +63,13 @@ class SeeingIsBelieving
         options.fetch :dont_escape, []
       end
 
-      def escape_str(str, chars_not_to_escape)
+      def escape_non_printable(str, omissions)
         str.each_char
-          .map { |char| escape_char char, chars_not_to_escape }
-          .join('')
-      end
-
-      def escape_char(char, omissions)
-        return char if char.ord > 127
-        return char if omissions.include? char
-        return char if char.inspect.size == 3
-        char.inspect[1...-1]
+          .map { |char|
+            next char if 0x20 <= char.ord # above this has a printable representation
+            next char if omissions.include? char
+            char.inspect[1...-1]
+          }.join('')
       end
     end
   end

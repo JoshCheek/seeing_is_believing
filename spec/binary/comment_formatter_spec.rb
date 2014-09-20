@@ -4,8 +4,8 @@ require 'spec_helper'
 require 'seeing_is_believing/binary/comment_formatter'
 
 RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
-  def result_for(line, separator, result, options={})
-    described_class.new(line, separator, result, options).call
+  def result_for(line_length, separator, result, options={})
+    described_class.new(line_length, separator, result, options).call
   end
 
   specify 'it returns the consolidated result if there are no truncations' do
@@ -99,7 +99,7 @@ RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
     assert_printed  31.chr , "\\u001F"
     assert_printed  32.chr , " "
     assert_printed  33.chr , "!"
-    assert_printed  34.chr , '\\"'
+    assert_printed  34.chr , '"' # printable, thus not escaped
     assert_printed  35.chr , "#"
     assert_printed  36.chr , "$"
     assert_printed  37.chr , "%"
@@ -157,7 +157,7 @@ RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
     assert_printed  89.chr , "Y"
     assert_printed  90.chr , "Z"
     assert_printed  91.chr , "["
-    assert_printed  92.chr , "\\\\"
+    assert_printed  92.chr , "\\" # printable, thus not escaped
     assert_printed  93.chr , "]"
     assert_printed  94.chr , "^"
     assert_printed  95.chr , "_"
