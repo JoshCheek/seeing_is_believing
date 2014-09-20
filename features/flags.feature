@@ -1,6 +1,7 @@
 Feature: Using flags
 
   Sometimes you want more control over what comes out, for that we give you flags.
+  Note that some flags are significant enough to have their own file.
 
   Scenario: --result-length sets the length of the portion including and after the # =>
     Given the file "result_lengths.rb":
@@ -83,6 +84,7 @@ Feature: Using flags
     When I run "seeing_is_believing --line-length 14 line_lengths2.rb"
     Then stdout is "12345"
 
+
   Scenario: --number-of-captures determines how many times a line will be recorded
     Given the file "number_of_captures.rb":
     """
@@ -105,51 +107,6 @@ Feature: Using flags
     end             # => 5
     """
 
-  Scenario: --xmpfilter-style respects the line formatting (but not currently alignment strategies, it just preserves submitted alignment)
-    Given the file "line_lengths3.rb":
-    """
-    '1' * 30 # =>
-    # =>
-    """
-    When I run "seeing_is_believing --xmpfilter-style --line-length 19 line_lengths3.rb"
-    Then stdout is:
-    """
-    '1' * 30 # => "1...
-    # => "1111111111...
-    """
-
-  Scenario: --xmpfilter-style uses pp to inspect annotations whose value comes from the previous line (#44)
-  Given the file "xmpfilter-prev-line.rb":
-  """
-  { foo: 42,
-    bar: {
-      baz: 1,
-      buz: 2,
-      fuz: 3,
-    },
-    wibble: {
-      magic_word: "xyzzy",
-    }
-  } # =>
-  # =>
-  """
-  When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line.rb | seeing_is_believing --xmpfilter-style"
-  Then stdout is:
-  """
-  { foo: 42,
-    bar: {
-      baz: 1,
-      buz: 2,
-      fuz: 3,
-    },
-    wibble: {
-      magic_word: "xyzzy",
-    }
-  } # => {:foo=>42, :bar=>{:baz=>1, :buz=>2, :fuz=>3}, :wibble=>{:magic_word=>"xyzzy"}}
-  # => {:foo=>42,
-  #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
-  #     :wibble=>{:magic_word=>"xyzzy"}}
-  """
 
   Scenario: --require
     Given the file "print_1.rb" "puts 1"
@@ -424,39 +381,6 @@ Feature: Using flags
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
 
-  Scenario: --xmpfilter-style
-    Given the file "magic_comments.rb":
-    """
-    1+1# =>
-    2+2    # => 10
-    "a
-     b" # =>
-    /a
-     b/ # =>
-    1
-    "omg"
-    # =>
-    "omg2"
-    # => "not omg2"
-    """
-    When I run "seeing_is_believing --xmpfilter-style magic_comments.rb"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is:
-    """
-    1+1# => 2
-    2+2    # => 4
-    "a
-     b" # => "a\n b"
-    /a
-     b/ # => /a\n b/
-    1
-    "omg"
-    # => "omg"
-    "omg2"
-    # => "omg2"
-    """
-
 
   Scenario: --debug
     Given the file "simple_program.rb":
@@ -479,6 +403,7 @@ Feature: Using flags
     1# 123
     2  # => 2
     """
+
 
   Scenario: --shebang
     Given the file "fake_ruby":

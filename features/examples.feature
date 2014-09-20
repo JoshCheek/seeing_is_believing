@@ -1,10 +1,10 @@
 Feature: Running the binary successfully
 
   They say seeing is believing. So to believe that this works
-  I want to see that it works by making a binary to use the lib.
+  I want to execute the actual binary and look at actual results.
 
-  It should be approximately like xmpfilter, except that it should
-  run against every line.
+  It should generally record every line of code and display the results
+  adjacent to the line, with output and errors displayed at the end of the file.
 
   Scenario: Some basic functionality
     Given the file "basic_functionality.rb":
