@@ -469,27 +469,25 @@ RSpec.describe SeeingIsBelieving do
     end
 
     it 'can use EvaluateWithEvalIn' do
+      require 'seeing_is_believing/event_stream/producer'
       redirect_url     = 'https://example.com/whatever'
       api_redirect_url = redirect_url + '.json'
 
-      result_from_eval_in = SeeingIsBelieving::Result.new
-      result_from_eval_in.record_result :inspect, 1, "a"
-      result_from_eval_in.record_result :inspect, 1, "b"
-      result_from_eval_in.record_result :inspect, 2, "c"
+      stream   = StringIO.new
+      producer = SeeingIsBelieving::EventStream::Producer.new(stream)
+      producer.record_result :inspect, 1, "a"
+      producer.record_result :inspect, 1, "b"
+      producer.record_result :inspect, 2, "c"
+      producer.finish!
 
-      stub_request(:post, 'https://eval.in/')
-        .to_return(status: 302, headers: {'Location' => redirect_url})
+      response = { 'lang'          => 'whatever',
+                   'lang_friendly' => 'whatever',
+                   'code'          => 'whatever',
+                   'output'        => stream.string,
+                   'status'        => 'OK (0.012 sec real, 0.013 sec wall, 7 MB, 22 syscalls)'}
 
-      response = {
-        'lang'          => 'whatever',
-        'lang_friendly' => 'whatever',
-        'code'          => 'whatever',
-        'output'        => JSON.dump(result_from_eval_in.to_primitive),
-        'status'        => 'OK (0.012 sec real, 0.013 sec wall, 7 MB, 22 syscalls)',
-      }
-
-      stub_request(:get, api_redirect_url)
-        .to_return(status: 200, body: JSON.dump(response))
+      stub_request(:post, 'https://eval.in/').to_return(status: 302, headers: {'Location' => redirect_url})
+      stub_request(:get,    api_redirect_url).to_return(status: 200, body: JSON.dump(response))
 
       values = values_for "whatever", evaluator: SeeingIsBelieving::EvaluateWithEvalIn
       expect(values).to eq [['"a"', '"b"'], ['"c"']]

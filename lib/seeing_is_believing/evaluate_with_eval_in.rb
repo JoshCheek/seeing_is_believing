@@ -1,4 +1,5 @@
 require 'eval_in'
+require 'stringio'
 
 class SeeingIsBelieving
   class EvaluateWithEvalIn
@@ -17,7 +18,10 @@ class SeeingIsBelieving
 
     def call
       eval_in_result = ::EvalIn.call(program, language: 'ruby/mri-2.1')
-      Result.from_primitive(JSON.load eval_in_result.output)
+      result = Result.new
+      EventStream::Consumer.new(StringIO.new eval_in_result.output)
+                           .each { |event| EventStream::UpdateResult.call result, event }
+      result
     end
   end
 end

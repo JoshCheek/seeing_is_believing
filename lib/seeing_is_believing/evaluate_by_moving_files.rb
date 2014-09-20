@@ -20,6 +20,7 @@ require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
 require 'seeing_is_believing/event_stream/consumer'
+require 'seeing_is_believing/event_stream/update_result'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
@@ -110,22 +111,10 @@ class SeeingIsBelieving
 
         # consume events
         self.result = Result.new
-        event_consumer = Thread.new {
-          EventStream::Consumer.new(process_stdout).each do |event|
-            case event
-            when EventStream::Events::LineResult       then result.record_result(event.type, event.line_number, event.inspected)
-            when EventStream::Events::UnrecordedResult then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
-            when EventStream::Events::Exception        then result.record_exception event.line_number, event.class_name, event.message, event.backtrace
-            when EventStream::Events::Stdout           then result.stdout             = event.value
-            when EventStream::Events::Stderr           then result.stderr             = event.value
-            when EventStream::Events::BugInSiB         then result.bug_in_sib         = event.value
-            when EventStream::Events::MaxLineCaptures  then result.number_of_captures = event.value
-            when EventStream::Events::Exitstatus       then result.exitstatus         = event.value
-            when EventStream::Events::NumLines         then result.num_lines          = event.value
-            else raise "Unknown event: #{event.inspect}"
-            end
-          end
-        }
+        event_consumer = Thread.new do
+          EventStream::Consumer.new(process_stdout)
+                               .each { |event| EventStream::UpdateResult.call result, event }
+        end
 
         # process stderr
         err_reader = Thread.new { process_stderr.read }
