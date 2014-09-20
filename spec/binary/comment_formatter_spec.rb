@@ -10,35 +10,38 @@ RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
     expect(result_for 1, '=>', '12345').to eq '=>12345'
   end
 
-  specify 'result_length truncates a result to the specified length, using elipses up to that length if appropriate'  do
+  specify 'max_result_length truncates a result to the specified length, using elipses up to that length if appropriate'  do
     line_length = 1
     separator   = '=>'
     result      = '12345'
-    expect(result_for line_length, separator, result, max_result_length: Float::INFINITY).to eq '=>12345'
-    expect(result_for line_length, separator, result, max_result_length: 7              ).to eq '=>12345'
-    expect(result_for line_length, separator, result, max_result_length: 6              ).to eq '=>1...'
-    expect(result_for line_length, separator, result, max_result_length: 5              ).to eq '=>...'
-    expect(result_for line_length, separator, result, max_result_length: 4              ).to eq ''
-    expect(result_for line_length, separator, result, max_result_length: 0              ).to eq ''
+    expect(result_for line_length,   separator, result, max_result_length: Float::INFINITY).to eq '=>12345'
+    expect(result_for line_length,   separator, result, max_result_length: 7              ).to eq '=>12345'
+    expect(result_for line_length,   separator, result, max_result_length: 6              ).to eq '=>1...'
+    expect(result_for line_length+1, separator, result, max_result_length: 6              ).to eq '=>1...'
+    expect(result_for line_length,   separator, result, max_result_length: 5              ).to eq '=>...'
+    expect(result_for line_length,   separator, result, max_result_length: 4              ).to eq ''
+    expect(result_for line_length,   separator, result, max_result_length: 0              ).to eq ''
   end
 
-  specify 'line_length truncates a result to the specified length, minus the length of the line' do
+  specify 'max_line_length truncates a result to the specified length, minus the length of the line' do
     line_length = 1
     separator   = '=>'
     result      = '12345'
-    expect(result_for line_length, separator, result                                  ).to eq '=>12345'
-    expect(result_for line_length, separator, result, max_line_length: Float::INFINITY).to eq '=>12345'
-    expect(result_for line_length, separator, result, max_line_length: 8              ).to eq '=>12345'
-    expect(result_for line_length, separator, result, max_line_length: 7              ).to eq '=>1...'
-    expect(result_for line_length, separator, result, max_line_length: 6              ).to eq '=>...'
-    expect(result_for line_length, separator, result, max_line_length: 5              ).to eq ''
-    expect(result_for line_length, separator, result, max_line_length: 0              ).to eq ''
+    expect(result_for line_length,   separator, result                                  ).to eq '=>12345'
+    expect(result_for line_length,   separator, result, max_line_length: Float::INFINITY).to eq '=>12345'
+    expect(result_for line_length,   separator, result, max_line_length: 8              ).to eq '=>12345'
+    expect(result_for line_length,   separator, result, max_line_length: 7              ).to eq '=>1...'
+    expect(result_for line_length+1, separator, result, max_line_length: 7              ).to eq '=>...'
+    expect(result_for line_length,   separator, result, max_line_length: 6              ).to eq '=>...'
+    expect(result_for line_length,   separator, result, max_line_length: 5              ).to eq ''
+    expect(result_for line_length,   separator, result, max_line_length: 0              ).to eq ''
   end
 
   specify 'pad_to will pad the length that the line is displayed in' do
     expect(result_for 1, '=>', '2', pad_to: 0).to eq '=>2'
     expect(result_for 1, '=>', '2', pad_to: 1).to eq '=>2'
     expect(result_for 1, '=>', '2', pad_to: 2).to eq ' =>2'
+    expect(result_for 2, '=>', '2', pad_to: 2).to eq '=>2'
   end
 
   specify 'pad_to is ignored when separator/result will not be printed' do

@@ -15,7 +15,7 @@ class SeeingIsBelieving
       def initialize(line_length, separator, result, options)
        self.line_length = line_length
        self.separator   = separator
-       self.result      = result.gsub "\n", '\n'
+       self.result      = result
        self.options     = options
       end
 
