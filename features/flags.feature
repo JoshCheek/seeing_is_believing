@@ -118,8 +118,6 @@ Feature: Using flags
     # => "1111111111...
     """
 
-  # TODO: Look into how xmpfilter decides what length to give it, maybe should default the value to 80, unless a line length or result length are given
-  @wip
   Scenario: --xmpfilter-style uses pp to inspect annotations whose value comes from the previous line (#44)
   Given the file "xmpfilter-prev-line.rb":
   """

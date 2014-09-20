@@ -1,14 +1,41 @@
+require 'seeing_is_believing/binary/find_comments'
+
 class SeeingIsBelieving
   class Binary
     class AnnotateXmpfilterStyle
+      # TODO: Move markers into their own file so we don't have to make this a method (cyclical require statements)
+      # TODO: Do we actually even need VALUE_REGEX? If we are careful to use parsed values, its always the VALUE_MARKER at the beginning of the line, right?
+      # TODO: Should we even be using constants? Maybe these should be injected?
+      # TODO: Does it matter that running clean without xmpfilter style will leave these in the file?
+      #       (maybe higher-level cleaning just delegates to whichever annotator is selected, and then in each editor, pass xmpfilter style when removing?)
+      def self.pp_value_marker
+        @pp_value_marker ||= VALUE_MARKER.sub(/(?<=#).*$/) { |after_comment| ' ' * after_comment.size }
+      end
+
       def self.prepare_body(uncleaned_body)
+        # TODO: There's definitely a lot of overlap in responsibilities with invoking of parser
+        # and this is a conspicuous hack, since this functionality should really be provided by RemoveAnnotations
+        finder = FindComments.new(uncleaned_body)
+        finder.comments
+              .select       { |c|  c.preceding_code.empty? } # TODO: Would be nice to support indentation here
+              .slice_before { |c|  c.comment.start_with? VALUE_MARKER  }
+              .flat_map     { |cs|
+                consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
+                cs[1, consecutives.size]
+              }
+              .select { |c| c.comment.start_with? pp_value_marker }
+              .each { |c|
+                range_with_preceding_newline = Parser::Source::Range.new(finder.buffer, c.comment_range.begin_pos.pred, c.comment_range.end_pos)
+                finder.rewriter.remove range_with_preceding_newline
+              }
+        partially_cleaned_body = finder.rewriter.process
+
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, false
+        RemoveAnnotations.call partially_cleaned_body, false
       end
 
       def self.expression_wrapper
         -> program, number_of_captures {
-          require 'seeing_is_believing/binary/find_comments'
           inspect_linenos = []
           pp_linenos      = []
           FindComments.new(program).comments.each do |c|
@@ -59,13 +86,12 @@ class SeeingIsBelieving
               [whitespace, comment]
             elsif preceding_code.empty?
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
-              pp_value_marker = VALUE_MARKER.sub(/(?<=#).*$/) { |after_comment| ' ' * after_comment.size }
               result          = @results[line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
                   CommentFormatter.call(preceding_code.size, VALUE_MARKER, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(preceding_code.size, pp_value_marker, comment_line.chomp, @options)
+                  CommentFormatter.call(preceding_code.size, self.class.pp_value_marker, comment_line.chomp, @options)
                 end
               end
               [whitespace, comment_lines.join("\n")]
