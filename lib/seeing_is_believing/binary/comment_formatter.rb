@@ -15,7 +15,7 @@ class SeeingIsBelieving
       def initialize(line_length, separator, result, options)
        self.line_length = line_length
        self.separator   = separator
-       self.result      = result
+       self.result      = result.each_char.map { |char| translate char }.join('')
        self.options     = options
       end
 
@@ -56,6 +56,12 @@ class SeeingIsBelieving
 
       def ellipsify(string)
         string.sub(/.{0,3}$/) { |last_chars| '.' * last_chars.size }
+      end
+
+      def translate(char)
+        return char if char.ord > 127
+        return char if char.inspect.size == 3
+        char.inspect[1...-1]
       end
     end
   end
