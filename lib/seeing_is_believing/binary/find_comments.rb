@@ -8,10 +8,9 @@ class SeeingIsBelieving
       # Exposed so that comments found here can be rewritten
       # Not super stoked about this, though. Maybe this initialization should happen up higher,
       # and it should be passed into here as well as to the rewriter?
-      attr_reader :rewriter
+      attr_reader :rewriter, :buffer
 
       def initialize(code)
-        @code = code
         @buffer, parser, @rewriter = ParserHelpers.initialize_parser code, 'finding_comments'
         ast, @parser_comments = parser.parse_with_comments buffer
         @parser_comments.select! { |comment| comment.type == :inline }
@@ -39,10 +38,6 @@ class SeeingIsBelieving
                       comment.location.expression
         }
       end
-
-      private
-
-      attr_reader :code, :buffer
     end
   end
 end
