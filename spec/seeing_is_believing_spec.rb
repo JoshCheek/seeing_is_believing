@@ -413,7 +413,7 @@ RSpec.describe SeeingIsBelieving do
     result = invoke(%[def self.inspect
                         self
                       end
-                      self], filename: 'blowsup.rb')
+                      self], filename: 'blowsup.rb') # TODO This actually writes the file into the root of SiB
     expect(result).to have_exception
     expect(result.exception.class_name).to eq 'SystemStackError'
     expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
