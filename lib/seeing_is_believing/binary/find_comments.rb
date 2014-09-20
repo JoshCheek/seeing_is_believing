@@ -25,14 +25,14 @@ class SeeingIsBelieving
           preceding_whitespace        = buffer.source[first_char...last_char]
           preceding_whitespace_range  = Parser::Source::Range.new buffer, first_char, last_char
 
-          # find line
+          # find preceding code
           last_char = first_char
           first_char -= 1 while first_char > 0 && buffer.source[first_char-1] !~ /[\r\n]/
-          line = buffer.source[first_char...last_char]
+          preceding_code = buffer.source[first_char...last_char]
 
           # build comment
           Comment.new comment.location.line,
-                      line,
+                      preceding_code,
                       preceding_whitespace,
                       comment.text,
                       preceding_whitespace_range,
