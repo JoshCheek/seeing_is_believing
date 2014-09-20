@@ -193,4 +193,14 @@ RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
     assert_printed 125.chr , "}"
     assert_printed 126.chr , "~"
   end
+
+  it 'can be given a list of characters to not escape' do
+    expect(result_for 0, '', "\r\n", dont_escape: ["\n"]).to eq "\\r\n"
+    expect(result_for 0, '', "\r\n", dont_escape: ["\r"]).to eq "\r\\n"
+  end
+
+  it 'escapes them before running through the other calculations' do
+    expect(result_for 1, '=>', "\r\n", max_line_length: 7).to eq '=>\r\n'
+    expect(result_for 1, '=>', "\r\n", max_line_length: 6).to eq '=>...'
+  end
 end

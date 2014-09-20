@@ -15,13 +15,14 @@ class SeeingIsBelieving
       def initialize(line_length, separator, result, options)
        self.line_length = line_length
        self.separator   = separator
-       self.result      = result.each_char.map { |char| translate char }.join('')
+       self.result      = result
        self.options     = options
       end
 
       def call
         @formatted ||= begin
-          formatted = truncate "#{separator}#{result}", max_result_length
+          formatted = escape_str result, chars_not_to_escape
+          formatted = truncate "#{separator}#{formatted}", max_result_length
           formatted = "#{' '*padding_length}#{formatted}"
           formatted = truncate formatted, max_line_length
           formatted = '' unless formatted.sub(/^ */, '').start_with? separator
@@ -58,8 +59,19 @@ class SeeingIsBelieving
         string.sub(/.{0,3}$/) { |last_chars| '.' * last_chars.size }
       end
 
-      def translate(char)
+      def chars_not_to_escape
+        options.fetch :dont_escape, []
+      end
+
+      def escape_str(str, chars_not_to_escape)
+        str.each_char
+          .map { |char| escape_char char, chars_not_to_escape }
+          .join('')
+      end
+
+      def escape_char(char, omissions)
         return char if char.ord > 127
+        return char if omissions.include? char
         return char if char.inspect.size == 3
         char.inspect[1...-1]
       end
