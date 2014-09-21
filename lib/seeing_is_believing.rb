@@ -57,7 +57,6 @@ class SeeingIsBelieving
       @evaluator.call program,
                       filename,
                       input_stream:       @stdin,
-                      matrix_filename:    @matrix_filename,
                       require:            @require,
                       load_path:          @load_path,
                       encoding:           @encoding,
