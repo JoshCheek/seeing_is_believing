@@ -15,7 +15,7 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
     expect(seen).to eq []
   end
 
-  it 'yields the line_number, line upto the whitespace, whitespace, and comment' do
+  it 'yields the Code::InlineComment' do
     seen = []
     call("# c1\n"\
          "123 #   c2 # x\n"\
@@ -23,16 +23,16 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
          " \t # c3\n"\
          "%Q{\n"\
          " 1}#c4\n"\
-         "# c5") do |*args|
-      seen << args
-      args[-2..-1]
+         "# c5") do |comment|
+      seen << comment
+      ['', '']
     end
-    expect(seen).to eq [
-      [1,  "",     "",      "# c1"],
-      [2,  "123",  " ",     "#   c2 # x"],
-      [4,  "",     " \t ",  "# c3"],
-      [6,  " 1}",  "",      "#c4"],
-      [7,  "",     "",      "# c5"],
+    expect(seen.map(&:text)).to eq [
+      "# c1",
+      "#   c2 # x",
+      "# c3",
+      "#c4",
+      "# c5",
     ]
   end
 
@@ -42,8 +42,8 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
                      "n456\n"\
                      " \t # c3\n"\
                      "%Q{\n"\
-                     " 1}#c4") do |line_number, *|
-      ["NEW_WHITESPACE#{line_number}", "--COMMENT-#{line_number}--"]
+                     " 1}#c4") do |c|
+      ["NEW_WHITESPACE#{c.line_number}", "--COMMENT-#{c.line_number}--"]
     end
     expect(rewritten).to eq "NEW_WHITESPACE1--COMMENT-1--\n"\
                             "123NEW_WHITESPACE2--COMMENT-2--\n"\

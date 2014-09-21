@@ -1,4 +1,4 @@
-require 'seeing_is_believing/binary/find_comments'
+require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   class Binary
@@ -15,20 +15,20 @@ class SeeingIsBelieving
       def self.prepare_body(uncleaned_body)
         # TODO: There's definitely a lot of overlap in responsibilities with invoking of parser
         # and this is a conspicuous hack, since this functionality should really be provided by RemoveAnnotations
-        finder = FindComments.new(uncleaned_body)
-        finder.comments
-              .select       { |c|  c.preceding_code.empty? } # TODO: Would be nice to support indentation here
-              .slice_before { |c|  c.comment.start_with? VALUE_MARKER  }
-              .flat_map     { |cs|
-                consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
-                cs[1, consecutives.size]
-              }
-              .select { |c| c.comment.start_with? pp_value_marker }
-              .each { |c|
-                range_with_preceding_newline = Parser::Source::Range.new(finder.buffer, c.comment_range.begin_pos.pred, c.comment_range.end_pos)
-                finder.rewriter.remove range_with_preceding_newline
-              }
-        partially_cleaned_body = finder.rewriter.process
+        code = Code.new(uncleaned_body)
+        code.inline_comments
+            .select       { |c|  c.whitespace_range.column == 0 } # TODO: Would be nice to support indentation here
+            .slice_before { |c|  c.text.start_with? VALUE_MARKER  }
+            .flat_map     { |cs|
+              consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
+              cs[1, consecutives.size]
+            }
+            .select { |c| c.text.start_with? pp_value_marker }
+            .each { |c|
+              range_with_preceding_newline = code.range_for(c.comment_range.begin_pos.pred, c.comment_range.end_pos)
+              code.rewriter.remove range_with_preceding_newline
+            }
+        partially_cleaned_body = code.rewriter.process
 
         require 'seeing_is_believing/binary/remove_annotations'
         RemoveAnnotations.call partially_cleaned_body, false
@@ -38,10 +38,10 @@ class SeeingIsBelieving
         -> program, number_of_captures {
           inspect_linenos = []
           pp_linenos      = []
-          FindComments.new(program).comments.each do |c|
-            next if c.comment !~ VALUE_REGEX
-            c.preceding_code.empty? ? pp_linenos      << c.line_number - 1
-                                    : inspect_linenos << c.line_number
+          Code.new(program).inline_comments.each do |c|
+            next if c.text !~ VALUE_REGEX
+            c.whitespace_range.column == 0 ? pp_linenos      << c.line_number - 1
+                                           : inspect_linenos << c.line_number
           end
 
           InspectExpressions.call program,
@@ -81,23 +81,23 @@ class SeeingIsBelieving
           require 'seeing_is_believing/binary' # defines the markers
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/comment_formatter'
-          new_body = RewriteComments.call @body do |line_number, preceding_code, whitespace, comment|
-            if !comment[VALUE_REGEX]
-              [whitespace, comment]
-            elsif preceding_code.empty?
+          new_body = RewriteComments.call @body do |comment|
+            if !comment.text[VALUE_REGEX]
+              [comment.whitespace, comment.text]
+            elsif comment.whitespace_range.column == 0
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
-              result          = @results[line_number-1, :pp].map { |result| result.chomp }.join(', ')
+              result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
-                  CommentFormatter.call(preceding_code.size, VALUE_MARKER, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_range.column, VALUE_MARKER, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(preceding_code.size, self.class.pp_value_marker, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_range.column, self.class.pp_value_marker, comment_line.chomp, @options)
                 end
               end
-              [whitespace, comment_lines.join("\n")]
+              [comment.whitespace, comment_lines.join("\n")]
             else
-              result = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [whitespace, CommentFormatter.call(preceding_code.size + whitespace.size, VALUE_MARKER, result, @options)]
+              result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+              [comment.whitespace, CommentFormatter.call(comment.whitespace_range.column + comment.whitespace.size, VALUE_MARKER, result, @options)]
             end
           end
 
