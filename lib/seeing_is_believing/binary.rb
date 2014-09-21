@@ -45,9 +45,9 @@ class SeeingIsBelieving
                (file_is_on_stdin && stdin.read) ||
                File.read(flags[:filename])
              )
-      annotator_class = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
-      flags[:record_expressions] = annotator_class.expression_wrapper(flags[:markers])
-      prepared_body = annotator_class.prepare_body(body, flags[:markers])
+      annotator = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+      flags[:record_expressions] = annotator.expression_wrapper(flags[:markers])
+      prepared_body = annotator.prepare_body(body, flags[:markers])
       if flags[:clean]
         stdout.print RemoveAnnotations.call(prepared_body, true, flags[:markers])
         return SUCCESS_STATUS
@@ -84,9 +84,7 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      # TODO: implement .call on class
-      annotator = annotator_class.new prepared_body, results, flags
-      stdout.print annotator.call
+      stdout.print annotator.call prepared_body, results, flags
       if flags[:inherit_exit_status]
         results.exitstatus
       elsif results.has_exception?

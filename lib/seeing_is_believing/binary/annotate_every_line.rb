@@ -10,6 +10,10 @@ class SeeingIsBelieving
         InspectExpressions
       end
 
+      def self.call(body, results, options)
+        new(body, results, options).call
+      end
+
       def initialize(body, results, options={})
         @options = options
         @body    = body
