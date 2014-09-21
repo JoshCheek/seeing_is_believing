@@ -7,11 +7,11 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
     code        = code.gsub /^#{indentation}/, ''
     described_class.call(code,
                          should_clean_values,
-                         value:              '# => ',
-                         exception:          '# ~> ',
-                         stdout:             '# >> ',
-                         stderr:             '# !> ',
-                         xmpfilter_nextline: '#    ',
+                         value:     '# => ',
+                         exception: '# ~> ',
+                         stdout:    '# >> ',
+                         stderr:    '# !> ',
+                         nextline:  '#    ',
                         ).chomp
   end
 

@@ -12,11 +12,11 @@ class SeeingIsBelieving
   module Binary
     class ParseArgs
       def self.default_markers
-        { value:              '# => ',
-          exception:          '# ~> ',
-          stdout:             '# >> ',
-          stderr:             '# !> ',
-          xmpfilter_nextline: '#    ',
+        { value:     '# => ',
+          exception: '# ~> ',
+          stdout:    '# >> ',
+          stderr:    '# !> ',
+          nextline:  '#    ',
         }
       end
 
@@ -145,11 +145,11 @@ class SeeingIsBelieving
     end
 
     def ParseArgs.help_screen(include_examples, markers=default_markers)
-      value_marker              = markers.fetch(:value)
-      exception_marker          = markers.fetch(:exception)
-      stdout_marker             = markers.fetch(:stdout)
-      stderr_marker             = markers.fetch(:stderr)
-      xmpfilter_nextline_marker = markers.fetch(:xmpfilter_nextline)
+      value_marker     = markers.fetch(:value)
+      exception_marker = markers.fetch(:exception)
+      stdout_marker    = markers.fetch(:stdout)
+      stderr_marker    = markers.fetch(:stderr)
+      nextline_marker  = markers.fetch(:nextline)
 
 <<FLAGS + if include_examples then <<EXAMPLES else '' end
 Usage: seeing_is_believing [options] [filename]

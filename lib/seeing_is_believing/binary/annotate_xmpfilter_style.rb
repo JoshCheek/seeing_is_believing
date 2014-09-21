@@ -14,7 +14,7 @@ class SeeingIsBelieving
               consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
               cs[1, consecutives.size]
             }
-            .select { |c| c.text.start_with? markers[:xmpfilter_nextline] }
+            .select { |c| c.text.start_with? markers[:nextline] }
             .each { |c|
               range_with_preceding_newline = code.range_for(c.comment_range.begin_pos.pred, c.comment_range.end_pos)
               code.rewriter.remove range_with_preceding_newline
@@ -82,7 +82,7 @@ class SeeingIsBelieving
                 if result_offest == 0
                   CommentFormatter.call(comment.whitespace_col, value_marker, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(comment.whitespace_col, xmpfilter_nextline_marker, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_col, nextline_marker, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]
@@ -105,8 +105,8 @@ class SeeingIsBelieving
         @value_marker ||= @options[:markers][:value]
       end
 
-      def xmpfilter_nextline_marker
-        @xmpfilter_nextline_marker ||= @options[:markers][:xmpfilter_nextline]
+      def nextline_marker
+        @xnextline_marker ||= @options[:markers][:nextline]
       end
 
       def value_regex

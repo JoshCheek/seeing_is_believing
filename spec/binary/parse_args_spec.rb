@@ -382,26 +382,26 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   describe ':markers' do
-    it 'defaults to a hash with :value, :exception, :stdout, :stderr, and :xmpfilter_nextline' do
-      expect(parse([])[:markers].keys).to eq [:value, :exception, :stdout, :stderr, :xmpfilter_nextline]
+    it 'defaults to a hash with :value, :exception, :stdout, :stderr, and :nextline' do
+      expect(parse([])[:markers].keys).to eq [:value, :exception, :stdout, :stderr, :nextline]
     end
 
     def assert_default(marker_name, value)
       expect(parse([])[:markers][marker_name]).to eq value
     end
 
-    it('defaults :value              to "# => "') { assert_default :value              , "# => " }
-    it('defaults :exception          to "# ~> "') { assert_default :exception          , "# ~> " }
-    it('defaults :stdout             to "# >> "') { assert_default :stdout             , "# >> " }
-    it('defaults :stderr             to "# !> "') { assert_default :stderr             , "# !> " }
-    it('defaults :xmpfilter_nextline to "#    "') { assert_default :xmpfilter_nextline , "#    " }
+    it('defaults :value     to "# => "') { assert_default :value     , "# => " }
+    it('defaults :exception to "# ~> "') { assert_default :exception , "# ~> " }
+    it('defaults :stdout    to "# >> "') { assert_default :stdout    , "# >> " }
+    it('defaults :stderr    to "# !> "') { assert_default :stderr    , "# !> " }
+    it('defaults :nextline  to "#    "') { assert_default :nextline  , "#    " }
 
     # TODO: When things get a little more stable, don't feel like adding all the cukes to play with this right now
-    it 'overrides :value              with --value-marker'
-    it 'overrides :exception          with --exception-marker'
-    it 'overrides :stdout             with --stdout-marker'
-    it 'overrides :stderr             with --stderr-marker'
-    it 'overrides :xmpfilter_nextline with --xmpfilter-nextline-marker'
+    it 'overrides :value     with --value-marker'
+    it 'overrides :exception with --exception-marker'
+    it 'overrides :stdout    with --stdout-marker'
+    it 'overrides :stderr    with --stderr-marker'
+    it 'overrides :nextline  with --xmpfilter-nextline-marker'
   end
 end
 
