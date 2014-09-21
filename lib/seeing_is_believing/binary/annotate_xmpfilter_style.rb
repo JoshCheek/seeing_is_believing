@@ -3,27 +3,18 @@ require 'seeing_is_believing/code'
 class SeeingIsBelieving
   module Binary
     class AnnotateXmpfilterStyle
-      # TODO: Move markers into their own file so we don't have to make this a method (cyclical require statements)
-      # TODO: Do we actually even need VALUE_REGEX? If we are careful to use parsed values, its always the VALUE_MARKER at the beginning of the line, right?
-      # TODO: Should we even be using constants? Maybe these should be injected?
-      # TODO: Does it matter that running clean without xmpfilter style will leave these in the file?
-      #       (maybe higher-level cleaning just delegates to whichever annotator is selected, and then in each editor, pass xmpfilter style when removing?)
-      def self.pp_value_marker
-        @pp_value_marker ||= VALUE_MARKER.sub(/(?<=#).*$/) { |after_comment| ' ' * after_comment.size }
-      end
-
-      def self.prepare_body(uncleaned_body)
+      def self.prepare_body(uncleaned_body, markers)
         # TODO: There's definitely a lot of overlap in responsibilities with invoking of parser
         # and this is a conspicuous hack, since this functionality should really be provided by RemoveAnnotations
         code = Code.new(uncleaned_body)
         code.inline_comments
             .select       { |c|  c.whitespace_col == 0 } # TODO: Would be nice to support indentation here
-            .slice_before { |c|  c.text.start_with? VALUE_MARKER  }
+            .slice_before { |c|  c.text.start_with? markers[:value]  }
             .flat_map     { |cs|
               consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
               cs[1, consecutives.size]
             }
-            .select { |c| c.text.start_with? pp_value_marker }
+            .select { |c| c.text.start_with? markers[:xmpfilter_nextline] }
             .each { |c|
               range_with_preceding_newline = code.range_for(c.comment_range.begin_pos.pred, c.comment_range.end_pos)
               code.rewriter.remove range_with_preceding_newline
@@ -31,15 +22,15 @@ class SeeingIsBelieving
         partially_cleaned_body = code.rewriter.process
 
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call partially_cleaned_body, false
+        RemoveAnnotations.call partially_cleaned_body, false, markers
       end
 
-      def self.expression_wrapper
+      def self.expression_wrapper(markers)
         -> program, number_of_captures {
           inspect_linenos = []
           pp_linenos      = []
           Code.new(program).inline_comments.each do |c|
-            next if c.text !~ VALUE_REGEX
+            next unless c.text.start_with? markers[:value].sub(/\s+$/, '')
             c.whitespace_col == 0 ? pp_linenos      << c.line_number - 1
                                   : inspect_linenos << c.line_number
           end
@@ -82,22 +73,22 @@ class SeeingIsBelieving
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/comment_formatter'
           new_body = RewriteComments.call @body do |comment|
-            if !comment.text[VALUE_REGEX]
+            if !comment.text[value_regex]
               [comment.whitespace, comment.text]
             elsif comment.whitespace_col == 0
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
               result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
-                  CommentFormatter.call(comment.whitespace_col, VALUE_MARKER, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_col, value_marker, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(comment.whitespace_col, self.class.pp_value_marker, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_col, xmpfilter_nextline_marker, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]
             else
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, CommentFormatter.call(comment.text_col, VALUE_MARKER, result, @options)]
+              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, result, @options)]
             end
           end
 
@@ -108,6 +99,18 @@ class SeeingIsBelieving
           @options[:debugger].context "OUTPUT"
           new_body
         end
+      end
+
+      def value_marker
+        @value_marker ||= @options[:markers][:value]
+      end
+
+      def xmpfilter_nextline_marker
+        @xmpfilter_nextline_marker ||= @options[:markers][:xmpfilter_nextline]
+      end
+
+      def value_regex
+        @value_regex ||= /\A#{value_marker.sub(/\s+$/, '')}/
       end
     end
   end

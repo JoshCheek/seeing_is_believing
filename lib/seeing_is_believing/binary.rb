@@ -5,24 +5,13 @@ require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 require 'seeing_is_believing/binary/remove_annotations'
 require 'timeout'
 
+# TODO: Push markers into flags
 
 class SeeingIsBelieving
   module Binary
     SUCCESS_STATUS              = 0
     DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
-
-    VALUE_MARKER     = "# => "
-    EXCEPTION_MARKER = "# ~> "
-    STDOUT_MARKER    = "# >> "
-    STDERR_MARKER    = "# !> "
-
-    VALUE_REGEX      = /\A#\s*=>/
-    EXCEPTION_REGEX  = /\A#\s*~>/
-    STDOUT_REGEX     = /\A#\s*>>/
-    STDERR_REGEX     = /\A#\s*!>/
-
-
 
     attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error, :unexpected_exception
 
@@ -57,10 +46,10 @@ class SeeingIsBelieving
                File.read(flags[:filename])
              )
       annotator_class = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
-      flags[:record_expressions] = annotator_class.expression_wrapper
-      prepared_body = annotator_class.prepare_body(body)
+      flags[:record_expressions] = annotator_class.expression_wrapper(flags[:markers])
+      prepared_body = annotator_class.prepare_body(body, flags[:markers])
       if flags[:clean]
-        stdout.print RemoveAnnotations.call(prepared_body, true)
+        stdout.print RemoveAnnotations.call(prepared_body, true, flags[:markers])
         return SUCCESS_STATUS
       end
 

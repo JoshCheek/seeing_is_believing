@@ -1,12 +1,12 @@
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine
-      def self.prepare_body(uncleaned_body)
+      def self.prepare_body(uncleaned_body, markers)
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, true
+        RemoveAnnotations.call uncleaned_body, true, markers
       end
 
-      def self.expression_wrapper
+      def self.expression_wrapper(markers)
         InspectExpressions
       end
 
@@ -20,7 +20,6 @@ class SeeingIsBelieving
         @new_body ||= begin
           require 'seeing_is_believing/binary/comment_lines'
           require 'seeing_is_believing/binary/comment_formatter'
-          require 'seeing_is_believing/binary' # defines the markers
 
           alignment_strategy = @options[:alignment_strategy].new(@body)
           exception_lineno   = @results.has_exception? ? @results.exception.line_number : -1
@@ -28,10 +27,10 @@ class SeeingIsBelieving
             options = @options.merge pad_to: alignment_strategy.line_length_for(line_number)
             if exception_lineno == line_number
               result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              CommentFormatter.call(line.size, EXCEPTION_MARKER, result, options)
+              CommentFormatter.call(line.size, exception_marker, result, options)
             elsif @results[line_number].any?
               result  = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              CommentFormatter.call(line.size, VALUE_MARKER, result, options)
+              CommentFormatter.call(line.size, value_marker, result, options)
             else
               ''
             end
@@ -44,6 +43,16 @@ class SeeingIsBelieving
           @options[:debugger].context "OUTPUT"
           new_body
         end
+      end
+
+      private
+
+      def value_marker
+        @value_marker ||= @options[:markers][:value]
+      end
+
+      def exception_marker
+        @exception_marker ||= @options[:markers][:exception]
       end
     end
   end

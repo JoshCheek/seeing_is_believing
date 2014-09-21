@@ -4,13 +4,14 @@ require 'seeing_is_believing/parser_helpers' # We have to parse the file to find
 class SeeingIsBelieving
   module Binary
     class RemoveAnnotations
-      def self.call(code, should_clean_values)
-        new(code, should_clean_values).call
+      def self.call(code, should_clean_values, markers)
+        new(code, should_clean_values, markers).call
       end
 
-      def initialize(code, should_clean_values)
+      def initialize(code, should_clean_values, markers)
         self.should_clean_values = should_clean_values
         self.code                = code
+        self.markers             = markers
       end
 
       def call
@@ -21,18 +22,22 @@ class SeeingIsBelieving
         # should wipe out the full_range rather than just the comment_range
         code_obj.inline_comments.each do |comment|
           case comment.text
-          when VALUE_REGEX
+          when value_regex
             if should_clean_values
+              # puts "REMOVING VALUE: #{comment.text}"
               removed_comments[:result] << comment
               code_obj.rewriter.remove comment.comment_range
             end
-          when EXCEPTION_REGEX
+          when exception_regex
+              # puts "REMOVING EXCEPTION: #{comment.text}"
             removed_comments[:exception] << comment
             code_obj.rewriter.remove comment.comment_range
-          when STDOUT_REGEX
+          when stdout_regex
+              # puts "REMOVING STDOUT: #{comment.text}"
             removed_comments[:stdout] << comment
             code_obj.rewriter.remove comment.comment_range
-          when STDERR_REGEX
+          when stderr_regex
+              # puts "REMOVING STDERR: #{comment.text}"
             removed_comments[:stderr] << comment
             code_obj.rewriter.remove comment.comment_range
           end
@@ -44,7 +49,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :code, :should_clean_values, :buffer
+      attr_accessor :code, :should_clean_values, :buffer, :markers
 
       def remove_whitespace_preceding_comments(buffer, rewriter, removed_comments)
         removed_comments[:result].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, false }
@@ -64,6 +69,26 @@ class SeeingIsBelieving
         begin_pos -= 1 if code[begin_pos] == "\n" && remove_preceding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
+      end
+
+      def value_regex
+        @value_regex ||= marker_to_regex markers[:value]
+      end
+
+      def exception_regex
+        @exception_regex ||= marker_to_regex markers[:exception]
+      end
+
+      def stdout_regex
+        @stdout_regex ||= marker_to_regex markers[:stdout]
+      end
+
+      def stderr_regex
+        @stderr_regex ||= marker_to_regex markers[:stderr]
+      end
+
+      def marker_to_regex(marker)
+        /\A#{Regexp.escape marker.sub(/\s+$/, '')}/
       end
     end
   end

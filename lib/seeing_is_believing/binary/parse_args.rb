@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 require 'seeing_is_believing/version'                  # We print the version in the output
-require 'seeing_is_believing/binary'                   # For output markers
 require 'seeing_is_believing/debugger'                 # Sets the debugger
 require 'seeing_is_believing/binary/align_file'        # Polymorphically decides which alignment strategy to use
 require 'seeing_is_believing/binary/align_line'        # Polymorphically decides which alignment strategy to use
@@ -12,6 +11,15 @@ require 'seeing_is_believing/evaluate_with_eval_in'    # Evaluator for safe mode
 class SeeingIsBelieving
   module Binary
     class ParseArgs
+      def self.default_markers
+        { value:              '# => ',
+          exception:          '# ~> ',
+          stdout:             '# >> ',
+          stderr:             '# !> ',
+          xmpfilter_nextline: '#    ',
+        }
+      end
+
       def self.call(args, outstream)
         new(args, outstream).call
       end
@@ -91,6 +99,7 @@ class SeeingIsBelieving
           shebang:             'ruby',
           result_as_json:      false,
           evaluator:           EvaluateByMovingFiles,
+          markers:             self.class.default_markers,
         }
       end
 
@@ -135,7 +144,13 @@ class SeeingIsBelieving
 
     end
 
-    def ParseArgs.help_screen(include_examples)
+    def ParseArgs.help_screen(include_examples, markers=default_markers)
+      value_marker              = markers.fetch(:value)
+      exception_marker          = markers.fetch(:exception)
+      stdout_marker             = markers.fetch(:stdout)
+      stderr_marker             = markers.fetch(:stderr)
+      xmpfilter_nextline_marker = markers.fetch(:xmpfilter_nextline)
+
 <<FLAGS + if include_examples then <<EXAMPLES else '' end
 Usage: seeing_is_believing [options] [filename]
 
@@ -144,7 +159,7 @@ Usage: seeing_is_believing [options] [filename]
   If no filename is provided, the binary will read the program from standard input.
 
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
-  -D,  --result-length n         # max length of the portion after the "#{VALUE_MARKER}"
+  -D,  --result-length n         # max length of the portion after the "#{value_marker}"
   -n,  --number-of-captures n    # how many results to capture for a given line
                                    if you had 1 million results on a line, it could take a long time to record
                                    and serialize them, you might limit it to 1000 results as an optimization
@@ -173,53 +188,53 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Run the file f.rb
     $ echo __FILE__ > f.rb; seeing_is_believing f.rb
-    __FILE__  #{VALUE_MARKER}"f.rb"
+    __FILE__  #{value_marker}"f.rb"
 
   Aligning comments
     $ ruby -e 'puts "123\\n4\\n\\n567890"' > f.rb
 
 
     $ seeing_is_believing f.rb -s line
-    123  #{VALUE_MARKER}123
-    4  #{VALUE_MARKER}4
+    123  #{value_marker}123
+    4  #{value_marker}4
 
-    567890  #{VALUE_MARKER}567890
+    567890  #{value_marker}567890
 
 
     $ seeing_is_believing f.rb -s chunk
-    123  #{VALUE_MARKER}123
-    4    #{VALUE_MARKER}4
+    123  #{value_marker}123
+    4    #{value_marker}4
 
-    567890  #{VALUE_MARKER}567890
+    567890  #{value_marker}567890
 
 
     $ seeing_is_believing f.rb -s file
-    123     #{VALUE_MARKER}123
-    4       #{VALUE_MARKER}4
+    123     #{value_marker}123
+    4       #{value_marker}4
 
-    567890  #{VALUE_MARKER}567890
+    567890  #{value_marker}567890
 
   Run against standard input
     $ echo '3.times { |i| puts i }' | seeing_is_believing
-    2.times { |i| puts i }  #{VALUE_MARKER}2
+    2.times { |i| puts i }  #{value_marker}2
 
-    #{STDOUT_MARKER}0
-    #{STDOUT_MARKER}1
+    #{stdout_marker}0
+    #{stdout_marker}1
 
   Run against a library you're working on by fixing the load path
     $ seeing_is_believing -I lib f.rb
 
   Load up some library (can be used in tandem with -I)
     $ seeing_is_believing -r pp -e 'pp [[*1..15],[*15..30]]; nil'
-    pp [[*1..15],[*15..30]]; nil  #{VALUE_MARKER}nil
+    pp [[*1..15],[*15..30]]; nil  #{value_marker}nil
 
-    #{STDOUT_MARKER}[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-    #{STDOUT_MARKER} [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
+    #{stdout_marker}[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    #{stdout_marker} [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
 
   Only update the lines you've marked
     $ ruby -e 'puts "1\\n2 # =>\\n3"' | seeing_is_believing -x
     1
-    2 #{VALUE_MARKER}2
+    2 #{value_marker}2
     3
 
   Set a timeout (especially useful if running via an editor)
@@ -228,11 +243,11 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Set the encoding to utf-8
     $ seeing_is_believing -Ku -e '"⛄ "'
-    "⛄ "  #{VALUE_MARKER}"⛄ "
+    "⛄ "  #{value_marker}"⛄ "
 
   The exit status will be 1 if the error is displayable inline
     $ seeing_is_believing -e 'raise "omg"'; echo $?
-    raise "omg"  #{EXCEPTION_MARKER}RuntimeError: omg
+    raise "omg"  #{exception_marker}RuntimeError: omg
     1
 
   The exit status will be 2 if the error is not displayable
@@ -241,15 +256,15 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
     2
 
   Run with previous output
-    $ echo "1+1  #{VALUE_MARKER}old-value" | seeing_is_believing
-    1+1  #{VALUE_MARKER}2
+    $ echo "1+1  #{value_marker}old-value" | seeing_is_believing
+    1+1  #{value_marker}2
 
-    $ echo "1+1  #{VALUE_MARKER}old-value" | seeing_is_believing --clean
+    $ echo "1+1  #{value_marker}old-value" | seeing_is_believing --clean
     1+1
 
   If your Ruby binary is named something else (e.g. ruby2.0)
     $ ruby2.0 -S seeing_is_believing --shebang ruby2.0 -e '123'
-    123  #{VALUE_MARKER}123
+    123  #{value_marker}123
 EXAMPLES
     end
   end

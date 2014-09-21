@@ -25,7 +25,7 @@ class SeeingIsBelieving
         return '' unless results.has_stdout?
         output = "\n"
         results.stdout.each_line do |line|
-          output << CommentFormatter.call(0, STDOUT_MARKER, line.chomp, options) << "\n"
+          output << CommentFormatter.call(0, options[:markers][:stdout], line.chomp, options) << "\n"
         end
         output
       end
@@ -34,22 +34,23 @@ class SeeingIsBelieving
         return '' unless results.has_stderr?
         output = "\n"
         results.stderr.each_line do |line|
-          output << CommentFormatter.call(0, STDERR_MARKER, line.chomp, options) << "\n"
+          output << CommentFormatter.call(0, options[:markers][:stderr], line.chomp, options) << "\n"
         end
         output
       end
 
       def exception_output_for(results, options)
         return '' unless results.has_exception?
+        exception_marker = options[:markers][:exception]
         exception = results.exception
         output = "\n"
-        output << CommentFormatter.new(0, EXCEPTION_MARKER, exception.class_name, options).call << "\n"
+        output << CommentFormatter.new(0, exception_marker, exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
-          output << CommentFormatter.new(0, EXCEPTION_MARKER, line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, exception_marker, line.chomp, options).call << "\n"
         end
-        output << EXCEPTION_MARKER.sub(/\s+$/, '') << "\n"
+        output << exception_marker.sub(/\s+$/, '') << "\n"
         exception.backtrace.each do |line|
-          output << CommentFormatter.new(0, EXCEPTION_MARKER, line.chomp, options).call << "\n"
+          output << CommentFormatter.new(0, exception_marker, line.chomp, options).call << "\n"
         end
         output
       end
