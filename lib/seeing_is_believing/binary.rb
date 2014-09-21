@@ -103,7 +103,7 @@ class SeeingIsBelieving
     end
 
     def print_cleaned_program
-      stdout.print RemoveAnnotations.call(body, true)
+      stdout.print RemoveAnnotations.call(prepared_body, true)
     end
 
     def invalid_syntax?

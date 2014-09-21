@@ -90,14 +90,30 @@ Feature: Xmpfilter style
 
 
   Scenario: --xmpfilter-style respects the line formatting (but not currently alignment strategies, it just preserves submitted alignment)
-    Given the file "line_lengths3.rb":
+    Given the file "xmpfilter_line_lengths.rb":
     """
     '1' * 30 # =>
     # =>
     """
-    When I run "seeing_is_believing --xmpfilter-style --line-length 19 line_lengths3.rb"
+    When I run "seeing_is_believing --xmpfilter-style --line-length 19 xmpfilter_line_lengths.rb"
     Then stdout is:
     """
     '1' * 30 # => "1...
     # => "1111111111...
+    """
+
+  Scenario: Cleaning previous output
+    Given the file "xmpfilter_cleaning.rb":
+    """
+    1 # => "1...
+    # => "1111111111...
+    #    "1111111111...
+    # normal comment
+    # => 123
+    """
+    When I run "seeing_is_believing --xmpfilter-style --clean xmpfilter_cleaning.rb"
+    Then stdout is:
+    """
+    1
+    # normal comment
     """
