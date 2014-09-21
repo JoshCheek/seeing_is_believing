@@ -14,33 +14,32 @@ class SeeingIsBelieving
       end
 
       def call
-        buffer, parser, rewriter = ParserHelpers.initialize_parser code, 'strip_comments'
-        comments                 = ParserHelpers.comments_from parser, buffer
-        removed_comments         = { result: [], exception: [], stdout: [], stderr: [] }
+        code_obj         = Code.new(code, 'strip_comments')
+        removed_comments = { result: [], exception: [], stdout: [], stderr: [] }
 
-        comments.each do |comment|
+        # TODO: This is why you sometimes have to run it 2x to get it to correctly reset whitespace
+        # should wipe out the full_range rather than just the comment_range
+        code_obj.inline_comments.each do |comment|
           case comment.text
           when VALUE_REGEX
             if should_clean_values
               removed_comments[:result] << comment
-              rewriter.remove comment.location.expression
+              code_obj.rewriter.remove comment.comment_range
             end
           when EXCEPTION_REGEX
             removed_comments[:exception] << comment
-            rewriter.remove comment.location.expression
+            code_obj.rewriter.remove comment.comment_range
           when STDOUT_REGEX
             removed_comments[:stdout] << comment
-            rewriter.remove comment.location.expression
+            code_obj.rewriter.remove comment.comment_range
           when STDERR_REGEX
             removed_comments[:stderr] << comment
-            rewriter.remove comment.location.expression
+            code_obj.rewriter.remove comment.comment_range
           end
         end
 
-        remove_whitespace_preceding_comments(buffer, rewriter, removed_comments)
-        rewriter.process
-      rescue Parser::SyntaxError => e
-        raise SyntaxError, e.message
+        remove_whitespace_preceding_comments(code_obj.buffer, code_obj.rewriter, removed_comments)
+        code_obj.rewriter.process
       end
 
       private
@@ -48,10 +47,10 @@ class SeeingIsBelieving
       attr_accessor :code, :should_clean_values, :buffer
 
       def remove_whitespace_preceding_comments(buffer, rewriter, removed_comments)
-        removed_comments[:result].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, false }
-        removed_comments[:exception].each { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
-        removed_comments[:stdout].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
-        removed_comments[:stderr].each    { |comment| remove_whitespace_before comment.location.expression.begin_pos, buffer, rewriter, true  }
+        removed_comments[:result].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, false }
+        removed_comments[:exception].each { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
+        removed_comments[:stdout].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
+        removed_comments[:stderr].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
       end
 
       # any whitespace before the index (on the same line) will be removed
