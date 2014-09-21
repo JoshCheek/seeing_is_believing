@@ -35,168 +35,115 @@ class SeeingIsBelieving
 
     def call
       @exitstatus ||= begin
-        parse_flags
+        flags = ParseArgs.call argv, stdout
 
-        if    flags_have_errors?         then print_errors           ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_print_help?         then print_help             ; SUCCESS_STATUS
-        elsif should_print_version?      then print_version          ; SUCCESS_STATUS
-        elsif has_filename? && file_dne? then print_file_dne         ; NONDISPLAYABLE_ERROR_STATUS
-        elsif should_clean?              then print_cleaned_program  ; SUCCESS_STATUS
-        elsif invalid_syntax?            then print_syntax_error     ; NONDISPLAYABLE_ERROR_STATUS
+        if flags[:errors].any?
+          stderr.puts flags[:errors].join("\n")
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        if flags[:help]
+          stdout.puts flags[:help]
+          return SUCCESS_STATUS
+        end
+
+        if flags[:version]
+          stdout.puts SeeingIsBelieving::VERSION
+          return SUCCESS_STATUS
+        end
+
+        if flags[:filename] && !File.exist?(flags[:filename])
+          stderr.puts "#{flags[:filename]} does not exist!"
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        # TODO: would like to move most of this work into either the arg parser or some class that interprets args
+        file_is_on_stdin = !flags[:filename] && !flags[:program]
+        flags[:stdin] = (file_is_on_stdin ? '' : stdin)
+        body = ( flags[:program]                  ||
+                 (file_is_on_stdin && stdin.read) ||
+                 File.read(flags[:filename])
+               )
+        annotator_class = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+        flags[:record_expressions] = annotator_class.expression_wrapper
+        prepared_body = annotator_class.prepare_body(body)
+        if flags[:clean]
+          stdout.print RemoveAnnotations.call(prepared_body, true)
+          return SUCCESS_STATUS
+        end
+
+        syntax_error_notice = syntax_error_notice_for(body, flags[:shebang])
+        if syntax_error_notice
+          stderr.puts syntax_error_notice
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        results, program_timedout, unexpected_exception = evaluate_program(prepared_body, flags)
+        if program_timedout
+          stderr.puts "Timeout Error after #{flags[:timeout]} seconds!"
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        if unexpected_exception.kind_of? BugInSib
+          stderr.puts unexpected_exception.message
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        if unexpected_exception
+          stderr.puts unexpected_exception.class,
+                      unexpected_exception.message,
+                      "",
+                      unexpected_exception.backtrace
+          return NONDISPLAYABLE_ERROR_STATUS
+        end
+
+        if flags[:result_as_json]
+          require 'json'
+          stdout.puts JSON.dump(result_as_data_structure(results))
+          return SUCCESS_STATUS
+        end
+
+        # TODO: implement .call on class
+        annotator = annotator_class.new prepared_body, results, flags
+        stdout.print annotator.call
+        if flags[:inherit_exit_status]
+          results.exitstatus
+        elsif results.has_exception?
+          DISPLAYABLE_ERROR_STATUS
         else
-          evaluate_program
-          if    program_timedout?        then print_timeout_error    ; NONDISPLAYABLE_ERROR_STATUS
-          elsif something_blew_up?       then print_unexpected_error ; NONDISPLAYABLE_ERROR_STATUS
-          elsif output_as_json?          then print_result_as_json   ; SUCCESS_STATUS
-          else                                print_program          ; exit_status
-          end
+          SUCCESS_STATUS
         end
       end
     end
 
     private
 
-    attr_accessor :flags, :results
-
-    def parse_flags
-      self.flags = ParseArgs.call argv, stdout
-    end
-
-    def flags_have_errors?
-      flags[:errors].any?
-    end
-
-    def print_errors
-      stderr.puts flags[:errors].join("\n")
-    end
-
-    def should_print_help?
-      flags[:help]
-    end
-
-    def print_help
-      stdout.puts flags[:help]
-    end
-
-    def should_print_version?
-      flags[:version]
-    end
-
-    def print_version
-      stdout.puts SeeingIsBelieving::VERSION
-    end
-
-    def has_filename?
-      flags[:filename]
-    end
-
-    def file_dne?
-      !File.exist?(flags[:filename])
-    end
-
-    def print_file_dne
-      stderr.puts "#{flags[:filename]} does not exist!"
-    end
-
-    def should_clean?
-      flags[:clean]
-    end
-
-    def print_cleaned_program
-      stdout.print RemoveAnnotations.call(prepared_body, true)
-    end
-
-    def invalid_syntax?
-      !!syntax_error_notice
-    end
-
-    def print_syntax_error
-      stderr.puts syntax_error_notice
-    end
-
-    def evaluate_program
-      self.results = SeeingIsBelieving.call prepared_body,
-                                            flags.merge(filename:           (flags[:as] || flags[:filename]),
-                                                        ruby_executable:    flags[:shebang],
-                                                        stdin:              (file_is_on_stdin? ? '' : stdin),
-                                                        record_expressions: annotator_class.expression_wrapper,
-                                                        evaluate_with:      flags.fetch(:evaluator),
-                                                       )
-    rescue Timeout::Error
-      self.timeout_error = true
-    rescue Exception
-      self.unexpected_exception = $!
-    end
-
-    def program_timedout?
-      timeout_error
-    end
-
-    def print_timeout_error
-      stderr.puts "Timeout Error after #{@flags[:timeout]} seconds!"
-    end
-
-    def something_blew_up?
-      !!unexpected_exception
-    end
-
-    def print_unexpected_error
-      if unexpected_exception.kind_of? BugInSib
-        stderr.puts unexpected_exception.message
-      else
-        stderr.puts unexpected_exception.class, unexpected_exception.message, "", unexpected_exception.backtrace
-      end
-    end
-
-    def output_as_json?
-      flags[:result_as_json]
-    end
-
-    def print_program
-      stdout.print annotator.call
-    end
-
-   # should move this switch into parser, like with the aligners
-    def annotator_class
-      (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
-    end
-
-    def prepared_body
-      @prepared_body ||= annotator_class.prepare_body body
-    end
-
-    def annotator
-      @annotator ||= annotator_class.new prepared_body, results, flags
-    end
-
-    def body
-      @body ||= (flags[:program] || (file_is_on_stdin? && stdin.read) || File.read(flags[:filename]))
-    end
-
-    def file_is_on_stdin?
-      flags[:filename].nil? && flags[:program].nil?
-    end
-
-    def syntax_error_notice
-      @error_notice = begin
-        out, err, syntax_status = Open3.capture3 flags[:shebang], '-c', stdin_data: body
-        err unless syntax_status.success?
+    def syntax_error_notice_for(body, shebang)
+      out, err, syntax_status = Open3.capture3 shebang, '-c', stdin_data: body
+      return err unless syntax_status.success?
 
       # The stdin_data may still be getting written when the pipe closes
       # This is because Ruby will stop reading from stdin if everything left is in the DATA segment, and the data segment is not referenced.
       # In this case, the Syntax is fine
       # https://bugs.ruby-lang.org/issues/9583
-      rescue Errno::EPIPE
-        nil
-      end
+    rescue Errno::EPIPE
+      return nil
     end
 
-    def print_result_as_json
-      require 'json'
-      stdout.puts JSON.dump result_as_data_structure
+    def evaluate_program(body, flags)
+      results = SeeingIsBelieving.call body,
+                                       flags.merge(filename:           (flags[:as] || flags[:filename]),
+                                                   ruby_executable:    flags[:shebang],
+                                                   evaluate_with:      flags.fetch(:evaluator),
+                                                  )
+      return results, nil, nil
+    rescue Timeout::Error
+      return nil, true, nil
+    rescue Exception
+      return nil, false, $!
     end
 
-    def result_as_data_structure
+    def result_as_data_structure(results)
       exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
                                               class_name:               results.exception.class_name,
                                               message:                  results.exception.message,
@@ -209,16 +156,5 @@ class SeeingIsBelieving
         lines:       results.each.with_object(Hash.new).with_index(1) { |(result, hash), line_number| hash[line_number] = result },
       }
     end
-
-    def exit_status
-      if flags[:inherit_exit_status]
-        results.exitstatus
-      elsif results.has_exception?
-        DISPLAYABLE_ERROR_STATUS
-      else
-        SUCCESS_STATUS
-      end
-    end
-
   end
 end
