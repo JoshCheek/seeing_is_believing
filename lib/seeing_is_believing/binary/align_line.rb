@@ -1,5 +1,5 @@
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class AlignLine
       attr_accessor :body
 

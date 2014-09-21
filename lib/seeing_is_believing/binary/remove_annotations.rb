@@ -2,7 +2,7 @@ require 'seeing_is_believing/binary'         # Defines the regexes to locate the
 require 'seeing_is_believing/parser_helpers' # We have to parse the file to find the comments
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class RemoveAnnotations
       def self.call(code, should_clean_values)
         new(code, should_clean_values).call

@@ -1,7 +1,7 @@
 require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class AlignChunk
       def initialize(body)
         self.body = body

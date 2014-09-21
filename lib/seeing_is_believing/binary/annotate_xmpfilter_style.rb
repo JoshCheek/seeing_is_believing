@@ -1,7 +1,7 @@
 require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class AnnotateXmpfilterStyle
       # TODO: Move markers into their own file so we don't have to make this a method (cyclical require statements)
       # TODO: Do we actually even need VALUE_REGEX? If we are careful to use parsed values, its always the VALUE_MARKER at the beginning of the line, right?

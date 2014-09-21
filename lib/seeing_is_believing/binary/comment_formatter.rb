@@ -1,5 +1,5 @@
 class SeeingIsBelieving
-  class Binary
+  module Binary
     # not sure I like this name, it formats comments that show results
     # e.g. "# => [1, 2, 3]"
     #

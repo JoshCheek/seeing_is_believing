@@ -1,7 +1,7 @@
 require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     module RewriteComments
       def self.call(code, &mapping)
         code = Code.new(code)

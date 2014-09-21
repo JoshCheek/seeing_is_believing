@@ -1,7 +1,7 @@
 require 'seeing_is_believing/parser_helpers'
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
 
     # could possibly be sped up by just reflecting on the tokens instead of the whole ast
     #

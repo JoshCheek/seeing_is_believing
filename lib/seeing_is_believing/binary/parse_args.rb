@@ -10,7 +10,7 @@ require 'seeing_is_believing/evaluate_by_moving_files' # Default evaluator
 require 'seeing_is_believing/evaluate_with_eval_in'    # Evaluator for safe mode
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class ParseArgs
       def self.call(args, outstream)
         new(args, outstream).call

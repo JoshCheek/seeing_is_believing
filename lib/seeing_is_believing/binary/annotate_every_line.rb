@@ -1,5 +1,5 @@
 class SeeingIsBelieving
-  class Binary
+  module Binary
     class AnnotateEveryLine
       def self.prepare_body(uncleaned_body)
         require 'seeing_is_believing/binary/remove_annotations'

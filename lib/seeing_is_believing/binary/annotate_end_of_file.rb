@@ -2,7 +2,7 @@ require 'seeing_is_believing/binary' # defines the markers
 require 'seeing_is_believing/binary/comment_formatter'
 
 class SeeingIsBelieving
-  class Binary
+  module Binary
     module AnnotateEndOfFile
       extend self
 
