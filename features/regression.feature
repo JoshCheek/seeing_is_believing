@@ -153,6 +153,7 @@ Feature:
     'ç'  # => "ç"
     """
 
+
   Scenario: Some strings look like comments
     Given the file "strings_that_look_like_comments.rb":
     """
@@ -165,6 +166,7 @@ Feature:
     "1
      #{2}"  # => "1\n 2"
     """
+
 
   Scenario: Kori's bug (Issue #11)
     Given the file "koris_bug.rb":
@@ -193,6 +195,7 @@ Feature:
     # ~>
     # ~> koris_bug.rb:5:in `<main>'
     """
+
 
   Scenario: lambda-style fibonacci generator
     Given the file "lambda_style_fib_gen.rb":
@@ -235,6 +238,7 @@ Feature:
     n, fib_gen = fib_gen.()               # => [1, <PROC>]
     """
 
+
   Scenario: Repeated invocations
     When I run "echo 'puts 1' | seeing_is_believing | seeing_is_believing"
     Then stdout is:
@@ -243,6 +247,7 @@ Feature:
 
     # >> 1
     """
+
 
   Scenario: Heredoc at the end test
     Given the file "heredoc_at_the_end.rb":
@@ -260,6 +265,7 @@ Feature:
 
     # >> omg
     """
+
 
   Scenario: Long DATA segment in a valid file
     Given the file "long_valid_data_segment.rb":
@@ -288,6 +294,7 @@ Feature:
     And the exit status is 2
     And stdout is empty
 
+
   Scenario: A program using system
     Given the file "invoking_system.rb":
     """
@@ -306,6 +313,7 @@ Feature:
 
     # !> world
     """
+
 
   Scenario: A program overriding stdout/stderr
     Given the file "black_hole.rb":
@@ -363,6 +371,7 @@ Feature:
     # ~>
     # ~> incorrect_wrapping.rb:1:in `<main>'
     """
+
 
   Scenario: Can deal with hostile environments
     Given the file "bang_object.rb":

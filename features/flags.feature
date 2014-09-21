@@ -165,32 +165,36 @@ Feature: Using flags
 
 
   Scenario: --as and stdin
-    Given the file "example.rb" "1+1"
     Given the stdin content:
     """
-    1+1
     __FILE__
     """
-    When I run "seeing_is_believing --as example.rb"
+    When I run "seeing_is_believing --as as_and_stdin.rb"
     Then stderr is empty
     Then the exit status is 0
     And stdout is:
     """
-    1+1       # => 2
-    __FILE__  # => "example.rb"
+    __FILE__  # => "as_and_stdin.rb"
     """
 
 
   Scenario: --as and -e
-    Given the file "example.rb" "1+1"
-    When I run 'seeing_is_believing --as example.rb -e "__FILE__"'
+    When I run 'seeing_is_believing --as as_and_e.rb -e "__FILE__"'
     Then stderr is empty
     And the exit status is 0
-    And stdout is '__FILE__  # => "example.rb"'
+    And stdout is '__FILE__  # => "as_and_e.rb"'
+
+
+  Scenario: --as and filename
+    Given the file "as_and_filename.rb" "__FILE__"
+    When I run 'seeing_is_believing as_and_filename.rb --as not_as_and_filename.rb'
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is '__FILE__  # => "not_as_and_filename.rb"'
 
 
   Scenario: --clean
-    Given the file "example.rb":
+    Given the file "uncleaned.rb":
     """
     1 + 1  # => not 2
     2 + 2  # ~> Exception, something
@@ -202,7 +206,7 @@ Feature: Using flags
     __END__
     1
     """
-    When I run "seeing_is_believing --clean example.rb"
+    When I run "seeing_is_believing --clean uncleaned.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -245,16 +249,16 @@ Feature: Using flags
 
 
   Scenario: --timeout
-    Given the file "example.rb" "sleep 1"
-    When I run "seeing_is_believing --timeout 0.1 example.rb"
+    Given the file "will_timeout.rb" "sleep 1"
+    When I run "seeing_is_believing --timeout 0.1 will_timeout.rb"
     Then stdout is empty
     And the exit status is 2
     And stderr is "Timeout Error after 0.1 seconds!"
 
 
   Scenario: --timeout
-    Given the file "example.rb" "1 + 1"
-    When I run "seeing_is_believing --timeout 1.0 example.rb"
+    Given the file "will_not_timeout.rb" "1 + 1"
+    When I run "seeing_is_believing --timeout 1.0 will_not_timeout.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
