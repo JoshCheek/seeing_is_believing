@@ -17,7 +17,7 @@ class SeeingIsBelieving
         # and this is a conspicuous hack, since this functionality should really be provided by RemoveAnnotations
         code = Code.new(uncleaned_body)
         code.inline_comments
-            .select       { |c|  c.whitespace_range.column == 0 } # TODO: Would be nice to support indentation here
+            .select       { |c|  c.whitespace_col == 0 } # TODO: Would be nice to support indentation here
             .slice_before { |c|  c.text.start_with? VALUE_MARKER  }
             .flat_map     { |cs|
               consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
@@ -40,8 +40,8 @@ class SeeingIsBelieving
           pp_linenos      = []
           Code.new(program).inline_comments.each do |c|
             next if c.text !~ VALUE_REGEX
-            c.whitespace_range.column == 0 ? pp_linenos      << c.line_number - 1
-                                           : inspect_linenos << c.line_number
+            c.whitespace_col == 0 ? pp_linenos      << c.line_number - 1
+                                  : inspect_linenos << c.line_number
           end
 
           InspectExpressions.call program,
@@ -84,20 +84,20 @@ class SeeingIsBelieving
           new_body = RewriteComments.call @body do |comment|
             if !comment.text[VALUE_REGEX]
               [comment.whitespace, comment.text]
-            elsif comment.whitespace_range.column == 0
+            elsif comment.whitespace_col == 0
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
               result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
-                  CommentFormatter.call(comment.whitespace_range.column, VALUE_MARKER, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_col, VALUE_MARKER, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(comment.whitespace_range.column, self.class.pp_value_marker, comment_line.chomp, @options)
+                  CommentFormatter.call(comment.whitespace_col, self.class.pp_value_marker, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]
             else
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, CommentFormatter.call(comment.whitespace_range.column + comment.whitespace.size, VALUE_MARKER, result, @options)]
+              [comment.whitespace, CommentFormatter.call(comment.text_col, VALUE_MARKER, result, @options)]
             end
           end
 

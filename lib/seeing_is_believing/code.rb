@@ -2,9 +2,11 @@ require 'parser/current'
 class SeeingIsBelieving
   class Code
     InlineComment = Struct.new :line_number,
-                               :column_number,
+                               :whitespace_col,
                                :whitespace,
+                               :text_col,
                                :text,
+                               :full_range,
                                :whitespace_range,
                                :comment_range
 
@@ -58,9 +60,11 @@ class SeeingIsBelieving
       preceding_whitespace_range  = range_for first_char, last_char
 
       InlineComment.new comment.location.line,
-                        comment.location.column,
+                        preceding_whitespace_range.column,
                         preceding_whitespace,
+                        comment.location.column,
                         comment.text,
+                        range_for(first_char, comment.location.expression.end_pos),
                         preceding_whitespace_range,
                         comment.location.expression
     end
