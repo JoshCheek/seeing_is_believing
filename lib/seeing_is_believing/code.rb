@@ -10,12 +10,8 @@ class SeeingIsBelieving
                                :whitespace_range,
                                :comment_range
 
-    class NullDiagnostics < Parser::Diagnostic::Engine
-      def process(*)
-        # no op
-      end
-    end
-
+    # At prsent, it is expected that the syntax is validated before code arrives here
+    # or that its validity doesn't matter (e.g. extracting comments)
     def initialize(raw_ruby_code, name="SeeingIsBelieving")
       self.code = raw_ruby_code
       self.name = name
@@ -43,13 +39,44 @@ class SeeingIsBelieving
       @parser                             = Parser::CurrentRuby.new builder
       @rewriter                           = Parser::Source::Rewriter.new @buffer
 
-      # Should be valid if it got this far and its going to be used
-      # So NullDiagnostics doesn't matter (but we still want to be able to extract comments from syntactially invalid files)
-      # Setting the ivar seems risky, though
-      parser.instance_variable_set(:@diagnostics, NullDiagnostics.new)
+      can_parse_invalid_code(@parser)
+
       @root, all_comments, tokens = parser.tokenize(@buffer)
 
       @inline_comments = all_comments.select(&:inline?).map { |c| wrap_comment c }
+    end
+
+    def can_parse_invalid_code(parser)
+      # THIS IS SO WE CAN EXTRACT COMMENTS FROM INVALID FILES.
+
+      # We do it by telling Parser's diagnostic to not blow up.
+      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb
+
+      # However, this probably implies SiB won't work on Rbx/JRuby
+      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L129-134
+
+      # Ideally we could just do this
+      #   parser.diagnostics.all_errors_are_fatal = false
+      #   parser.diagnostics.ignore_warnings      = false
+
+      # But, the parser will still blow up on "fatal" errors (e.g. unterminated string) So we need to actually change it.
+      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb#L99
+
+      # We could make a NullDiagnostics like this:
+      #   class NullDiagnostics < Parser::Diagnostic::Engine
+      #     def process(*)
+      #       # no op
+      #     end
+      #   end
+
+      # But we don't control initialization of the variable, and the value gets passed around, at least into the lexer.
+      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L139
+      #   and since it's all private, it could change at any time (Parser is very state based),
+      #   so I think it's just generally safer to mutate that one object, as we do now.
+      diagnostics = parser.diagnostics
+      def diagnostics.process(*)
+        self
+      end
     end
 
     def wrap_comment(comment)
