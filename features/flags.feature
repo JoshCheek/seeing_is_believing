@@ -109,10 +109,10 @@ Feature: Using flags
 
 
   Scenario: --require
-    Given the file "print_1.rb" "puts 1"
-    Given the file "print_2.rb" "puts 2"
-    And the file "print_3.rb" "puts 3"
-    When I run "seeing_is_believing --require ./print_1 --require ./print_2 print_3.rb"
+    Given the file "r_print_1.rb" "puts 1"
+    Given the file "r_print_2.rb" "puts 2"
+    And the file "r_print_3.rb" "puts 3"
+    When I run "seeing_is_believing --require ./r_print_1 --require ./r_print_2 r_print_3.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -136,16 +136,16 @@ Feature: Using flags
 
 
   Scenario: --load-path
-    Given the file "print_1.rb" "puts 1"
-    And the file "some_dir/print_2.rb" "puts 2"
-    And the file "require_print_1.rb" "require 'print_1'"
-    When I run "seeing_is_believing require_print_1.rb"
+    Given the file "lp_print_1.rb" "puts 1"
+    And the file "some_dir/lp_print_2.rb" "puts 2"
+    And the file "require_lp_print_1.rb" "require 'lp_print_1'"
+    When I run "seeing_is_believing require_lp_print_1.rb"
     Then the exit status is 1
-    When I run "seeing_is_believing --load-path . -I ./some_dir -r print_2  require_print_1.rb"
+    When I run "seeing_is_believing --load-path . -I ./some_dir -r lp_print_2  require_lp_print_1.rb"
     Then stderr is empty
     And stdout is:
     """
-    require 'print_1'  # => true
+    require 'lp_print_1'  # => true
 
     # >> 2
     # >> 1
@@ -240,6 +240,7 @@ Feature: Using flags
     And stdout includes "Usage"
     And stdout does not include "Examples:"
 
+
   Scenario: --help+
     When I run "seeing_is_believing --help+"
     Then stderr is empty
@@ -291,6 +292,7 @@ Feature: Using flags
     1 + 1 + 1  # => 3
     """
 
+
   Scenario: --alignment-strategy chunk
     Given the file "chunk_alignments.rb":
     """
@@ -334,6 +336,7 @@ Feature: Using flags
     1 + 1          # => 2
     """
 
+
   Scenario: --alignment-strategy line
     Given the file "line_alignments.rb":
     """
@@ -360,6 +363,7 @@ Feature: Using flags
     1 + 1  # => 2
     1 + 1 + 1  # => 3
     """
+
 
   Scenario: --inherit-exit-status
     Given the file "exit_status.rb" "exit 123"
@@ -422,6 +426,7 @@ Feature: Using flags
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
     Then stdout is "123  # => /omg/"
+
 
   Scenario: --json
     Given the file "all_kinds_of_output.rb":
