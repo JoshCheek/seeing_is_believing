@@ -1,9 +1,18 @@
-require 'seeing_is_believing/debugger'                 # Sets the debugger
-require 'seeing_is_believing/binary/align_file'        # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/binary/align_line'        # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/binary/align_chunk'       # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/evaluate_by_moving_files' # Default evaluator
-require 'seeing_is_believing/evaluate_with_eval_in'    # Evaluator for safe mode
+# Debugger initialization happens here
+require 'seeing_is_believing/debugger'
+
+# Alignment decision happens here
+require 'seeing_is_believing/binary/align_file'
+require 'seeing_is_believing/binary/align_line'
+require 'seeing_is_believing/binary/align_chunk'
+
+# Evaluator decision happens here
+require 'seeing_is_believing/evaluate_by_moving_files'
+require 'seeing_is_believing/evaluate_with_eval_in'
+
+# Annotator decision happens here
+require 'seeing_is_believing/binary/annotate_every_line'
+require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 
 class SeeingIsBelieving
   module Binary
@@ -49,15 +58,16 @@ class SeeingIsBelieving
         attributes[:debugger]     = flags.fetch(:debug) ? Debugger.new(stream: stdout, colour: true) :
                                                           Debugger.new(stream: nil)
         attributes[:markers]      = flags.fetch(:markers) # TODO:Should probably object-ify these
+
+        # TODO: Do we need this at toplevel? seems like it might go in interpret_flags
         attributes[:timeout]      = flags.fetch(:timeout) # TODO: rename seconds_until_timeout
         attributes[:shebang]      = flags.fetch(:shebang)
         attributes[:filename]     = flags.fetch(:filename)
 
-        filenames = flags.fetch(:filenames)
-        if 1 < filenames.size
-          errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
-        elsif filenames.any? && flags.fetch(:program_from_args)
-          errors << "You passed the program in an argument, but have also specified the filename #{filenames.first.inspect}"
+        if 1 < flags.fetch(:filenames).size
+          errors << "Can only have one filename, but had: #{flags.fetch(:filenames).map(&:inspect).join ', '}"
+        elsif filename && flags.fetch(:program_from_args)
+          errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
 
         @predicates = {
@@ -66,7 +76,7 @@ class SeeingIsBelieving
           result_as_json:        flags.fetch(:result_as_json),
           print_help:            !!flags.fetch(:help),
           print_cleaned:         flags.fetch(:clean), # TODO: Better name on rhs
-          provided_filename_dne: (filename && !File.exist?(filename)),
+          provided_filename_dne: (filename && !File.exist?(filename)), # TODO: Should this just be an error in errors table?
           file_is_on_stdin:      (!filename && !flags.fetch(:program_from_args))
         }
 
@@ -83,8 +93,8 @@ class SeeingIsBelieving
           filename:           (flags.fetch(:as) || filename),
           ruby_executable:    shebang,
           stdin:              (file_is_on_stdin? ? '' : stdin),
-          require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require
-          load_path:          flags.fetch(:load_path),
+          require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
+          load_path:          ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),
           encoding:           flags.fetch(:encoding),
           timeout:            timeout,
           debugger:           debugger,
@@ -105,6 +115,7 @@ class SeeingIsBelieving
         attributes.fetch(*args)
       end
 
+      # TODO: delete
       def [](key)
         attributes[key]
       end
@@ -113,6 +124,7 @@ class SeeingIsBelieving
         errors.any?
       end
 
+      # TODO: deleteme
       def merge(other)
         other.each do |k, v|
           attributes[k] = v # TODO: This is just until we group attributes by the places that need them
@@ -135,7 +147,7 @@ class SeeingIsBelieving
         strategies = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
         if strategies[strategy_name]
           strategies[strategy_name]
-        elsif name
+        elsif strategy_name
           errors << "alignment-strategy does not know #{strategy_name}, only knows: #{strategies.keys.join(', ')}"
         else
           errors << "alignment-strategy expected an alignment strategy as the following argument but did not see one"

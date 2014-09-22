@@ -7,6 +7,7 @@ class SeeingIsBelieving
       end
 
       def self.expression_wrapper(markers)
+        require 'seeing_is_believing/inspect_expressions'
         InspectExpressions
       end
 
