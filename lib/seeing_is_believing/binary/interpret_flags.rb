@@ -17,41 +17,37 @@ require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 class SeeingIsBelieving
   module Binary
     class InterpretFlags
-      # def self.attr_predicate(*names)
-      #   names.each do |name|
-      #     define_method("#{name}?") { predicates.fetch name }
-      #   end
-      # end
-
-      # def self.attr_attribute(*names)
-      #   names.each do |name|
-      #     define_method(name) { fetch name }
-      #   end
-      # end
-
-      # TODO: once it stabilizes a bit, use the above methods instead
-      def method_missing(name, *)
-        if name.to_s.end_with?(??)
-          predicates.fetch(name.to_s[0...-1].intern) { |k|
-            raise "NO PREDICATE #{k.inspect} IN #{predicates.keys.inspect}"
-          }
-        else
-          attributes.fetch(name) { |k|
-            raise "NO ATTRIBUTE #{k.inspect} IN #{attributes.keys.inspect}"
-          }
-        end
+      def self.attr_predicate(name)
+        define_method("#{name}?") { predicates.fetch name }
       end
+      attr_predicate :print_version
+      attr_predicate :inherit_exit_status
+      attr_predicate :result_as_json
+      attr_predicate :print_help
+      attr_predicate :print_cleaned
+      attr_predicate :provided_filename_dne
+      attr_predicate :file_is_on_stdin
 
-      # TODO: Push everything to where it goes
-      # so we don't have this giant clusterfuck of attributes
-
-      # TODO: move everthing into attributes
-      # and define all methods to use them?
-      # if we do this, we can have a really nice inspect method
-      attr_reader :errors
+      def self.attr_attribute(name)
+        define_method(name) { attributes.fetch name }
+      end
+      attr_attribute :annotator
+      attr_attribute :help_screen
+      attr_attribute :debugger
+      attr_attribute :markers
+      attr_attribute :timeout
+      attr_attribute :shebang
+      attr_attribute :filename
+      attr_attribute :body
+      attr_attribute :annotator_options
+      attr_attribute :prepared_body
+      attr_attribute :lib_options
+      attr_attribute :errors
 
       def initialize(flags, stdin, stdout)
-        @errors    = flags.fetch(:errors) # TODO add this to attributes?
+        @attributes = {}
+
+        attributes[:errors]       = flags.fetch(:errors) # TODO add this to attributes?
         attributes[:annotator]    = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle : AnnotateEveryLine)
 
         attributes[:help_screen]  = flags.fetch(:help) == 'help' ? flags.fetch(:short_help_screen) : flags.fetch(:long_help_screen)
@@ -76,7 +72,7 @@ class SeeingIsBelieving
           result_as_json:        flags.fetch(:result_as_json),
           print_help:            !!flags.fetch(:help),
           print_cleaned:         flags.fetch(:clean), # TODO: Better name on rhs
-          provided_filename_dne: (filename && !File.exist?(filename)), # TODO: Should this just be an error in errors table?
+          provided_filename_dne: !!(filename && !File.exist?(filename)), # TODO: Should this just be an error in errors table?
           file_is_on_stdin:      (!filename && !flags.fetch(:program_from_args))
         }
 
@@ -111,37 +107,27 @@ class SeeingIsBelieving
         }
       end
 
-      def fetch(*args)
-        attributes.fetch(*args)
-      end
-
-      # TODO: delete
-      def [](key)
-        attributes[key]
-      end
-
       def print_errors?
         errors.any?
       end
 
-      # TODO: deleteme
-      def merge(other)
-        other.each do |k, v|
-          attributes[k] = v # TODO: This is just until we group attributes by the places that need them
+      def inspect
+        inspected = "#<#{self.class.name.inspect}\n"
+        inspected << "  --PREDICATES--\n"
+        predicates.each do |predicate, value|
+          inspected << inspect_line(sprintf "    %-25s %p", predicate.to_s+"?", value)
         end
+        inspected << "  --ATTRIBUTES--\n"
+        attributes.each do |predicate, value|
+          inspected << inspect_line(sprintf "    %-20s %p", predicate.to_s, value)
+        end
+        inspected << ">"
+        inspected
       end
 
       private
 
-      attr_accessor :predicates
-
-      def timeout # TODO: ugh
-        fetch(:timeout)
-      end
-
-      def attributes
-        @attributes ||= {}
-      end
+      attr_accessor :predicates, :attributes
 
       def extract_alignment_strategy(strategy_name, errors)
         strategies = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
@@ -151,6 +137,14 @@ class SeeingIsBelieving
           errors << "alignment-strategy does not know #{strategy_name}, only knows: #{strategies.keys.join(', ')}"
         else
           errors << "alignment-strategy expected an alignment strategy as the following argument but did not see one"
+        end
+      end
+
+      def inspect_line(line)
+        if line.size < 78
+          line << "\n"
+        else
+          line[0, 75] << "...\n"
         end
       end
     end

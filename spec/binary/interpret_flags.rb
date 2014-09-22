@@ -148,6 +148,7 @@ class SeeingIsBelieving
         it 'sets provided_filename_dne when there is a filename and that file does not exist' do
           expect(call(filename: nonexisting_filename).provided_filename_dne?).to eq true
           expect(call(filename: existing_filename).provided_filename_dne?).to eq false
+          expect(call(filename: nil).provided_filename_dne?).to eq false
         end
 
         it 'sets file_is_on_stdin when there is no filename and the program is not provided in the args' do
@@ -297,20 +298,14 @@ class SeeingIsBelieving
         end
       end
 
-      # TODO: Should I just delete everything below this line?
-      context 'fetch' do
-        it 'returns the requested key, when it has that attribute'
-        it 'raises an error when the attribute doesn\'t exist'
-      end
-
-      context 'accessors' do
-        specify 'they look up their value in the attributes array'
-        specify 'they blow up when asked for an unknown attribute'
-      end
-
-      context 'predicates' do
-        specify 'they reurn the predicate when it exists'
-        specify 'they return nil when it doesn\'t exist'
+      it 'has a fancy inspect that shows predicates and attributes on multiple lines' do
+        inspected = call.inspect
+        expect(inspected).to include "PREDICATES"
+        expect(inspected).to include "ATTRIBUTES"
+        expect(inspected.lines.size).to be > 1
+        inspected.lines.each do |line|
+          expect(line.size).to be < 80 # truncate output so it doesn't get spammy
+        end
       end
     end
   end

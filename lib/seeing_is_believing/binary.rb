@@ -32,12 +32,12 @@ class SeeingIsBelieving
       end
 
       if options.provided_filename_dne?
-        stderr.puts "#{options[:filename]} does not exist!"
+        stderr.puts "#{options.filename} does not exist!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
       if options.print_cleaned?
-        stdout.print RemoveAnnotations.call(options.prepared_body, true, options[:markers])
+        stdout.print RemoveAnnotations.call(options.prepared_body, true, options.markers)
         return SUCCESS_STATUS
       end
 
@@ -51,7 +51,7 @@ class SeeingIsBelieving
         evaluate_program(options.prepared_body, options.lib_options)
 
       if program_timedout
-        stderr.puts "Timeout Error after #{options[:timeout]} seconds!"
+        stderr.puts "Timeout Error after #{options.timeout} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
