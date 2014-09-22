@@ -6,6 +6,7 @@ class SeeingIsBelieving
     module AnnotateEndOfFile
       extend self
 
+      # TODO: Switch options to markers
       def add_stdout_stderr_and_exceptions_to(new_body, results, options)
         output = stdout_ouptut_for(results, options)    <<
                  stderr_ouptut_for(results, options)    <<

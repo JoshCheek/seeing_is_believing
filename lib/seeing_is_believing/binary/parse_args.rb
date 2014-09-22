@@ -1,12 +1,6 @@
 # encoding: utf-8
 
-require 'seeing_is_believing/version'                  # We print the version in the output
-require 'seeing_is_believing/debugger'                 # Sets the debugger
-require 'seeing_is_believing/binary/align_file'        # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/binary/align_line'        # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/binary/align_chunk'       # Polymorphically decides which alignment strategy to use
-require 'seeing_is_believing/evaluate_by_moving_files' # Default evaluator
-require 'seeing_is_believing/evaluate_with_eval_in'    # Evaluator for safe mode
+require 'seeing_is_believing/version' # We print the version in the output
 
 class SeeingIsBelieving
   module Binary
@@ -20,73 +14,68 @@ class SeeingIsBelieving
         }
       end
 
-      def self.call(args, outstream)
-        new(args, outstream).call
+      def self.call(args)
+        new(args).call
       end
 
-      def initialize(args, outstream)
-        self.args      = args
-        self.filenames = []
-        self.outstream = outstream
+      def initialize(args)
+        self.args = args # TODO: dup
       end
 
       def call
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h',  '--help'                then options[:help]                = self.class.help_screen(false)
-            when '-h+', '--help+'               then options[:help]                = self.class.help_screen(true)
+            when '-h',  '--help'                then options[:help]                = 'help'
+            when '-h+', '--help+'               then options[:help]                = 'help+'
             when '-c',  '--clean'               then options[:clean]               = true
             when '-v',  '--version'             then options[:version]             = true
             when '-x',  '--xmpfilter-style'     then options[:xmpfilter_style]     = true
             when '-i',  '--inherit-exit-status' then options[:inherit_exit_status] = true
             when '-j',  '--json'                then options[:result_as_json]      = true
-            when '-g',  '--debug'               then options[:debugger]            = Debugger.new(stream: outstream, colour: true)
-            when        '--safe'                then options[:evaluator]           = EvaluateWithEvalIn
+            when '-g',  '--debug'               then options[:debug]               = true
+            when        '--safe'                then options[:safe]                = true
             when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
             when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
             when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
             when '-t',  '--timeout'             then extract_non_negative_float_for :timeout,      arg
             when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
             when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
-            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program]   =  program }
+            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program_from_args] =  program }
             when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
             when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   =  executable }
-            when '-s',  '--alignment-strategy'  then extract_alignment_strategy
+            when '-s',  '--alignment-strategy'  then options[:alignment_strategy] = args.shift
             when /\A-K(.+)/                     then options[:encoding] = $1
             when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
             when /^-/                           then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             else
-              filenames << arg
+              options[:filenames] << arg
               options[:filename] = arg
             end
           end
-          normalize_and_validate
           options
         end
       end
 
+
+
       private
 
-      attr_accessor :filenames, :args, :outstream
+      attr_accessor :args
 
-
-      def normalize_and_validate
-        if 1 < filenames.size
-          options[:errors] << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
-        elsif filenames.any? && options[:program]
-          options[:errors] << "You passed the program in an argument, but have also specified the filename #{filenames.first.inspect}"
-        end
-      end
-
+      # TODO: rename options to something else, like "parsed" or "flags" or something
       def options
         @options ||= {
-          debugger:            Debugger.new(stream: nil),
+          as:                  nil,
+          filenames:           [],
+          help:                nil,
+          encoding:            nil,
+          debug:               false,
           version:             false,
           clean:               false,
           xmpfilter_style:     false,
           inherit_exit_status: false,
-          program:             nil,
+          program_from_args:   nil,
           filename:            nil,
           max_line_length:     Float::INFINITY,
           max_result_length:   Float::INFINITY,
@@ -95,29 +84,16 @@ class SeeingIsBelieving
           errors:              [],
           require:             ['seeing_is_believing/the_matrix'],
           load_path:           [],
-          alignment_strategy:  AlignChunk,
+          alignment_strategy:  'chunk',
           shebang:             'ruby',
           result_as_json:      false,
-          evaluator:           EvaluateByMovingFiles,
           markers:             self.class.default_markers,
+          short_help_screen:   self.class.help_screen(false),
+          long_help_screen:    self.class.help_screen(true),
+          safe:                false,
         }
       end
 
-
-      def extract_alignment_strategy
-        strategies = {
-          'file'  => AlignFile,
-          'chunk' => AlignChunk,
-          'line'  => AlignLine,
-        }
-        next_arg "alignment-strategy expected an alignment strategy as the following argument but did not see one" do |strategy_name|
-          if strategies[strategy_name]
-            options[:alignment_strategy] = strategies[strategy_name]
-          else
-            options[:errors] << "alignment-strategy does not know #{strategy_name}, only knows: #{strategies.keys.join(', ')}"
-          end
-        end
-      end
 
       def next_arg(error_message, &success_block)
         arg = args.shift
@@ -141,7 +117,6 @@ class SeeingIsBelieving
       rescue
         options[:errors] << "#{flag} expects a positive float or integer argument"
       end
-
     end
 
     def ParseArgs.help_screen(include_examples, markers=default_markers)

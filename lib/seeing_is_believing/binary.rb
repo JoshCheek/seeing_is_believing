@@ -1,11 +1,10 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
+require 'seeing_is_believing/binary/interpret_flags'
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 require 'seeing_is_believing/binary/remove_annotations'
 require 'timeout'
-
-# TODO: Push markers into flags
 
 class SeeingIsBelieving
   module Binary
@@ -16,57 +15,45 @@ class SeeingIsBelieving
     attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error, :unexpected_exception
 
     def self.call(argv, stdin, stdout, stderr)
-      flags = ParseArgs.call argv, stdout
+      flags   = ParseArgs.call(argv)
+      options = InterpretFlags.new(flags, stdin, stdout)
 
-      if flags[:errors].any?
-        stderr.puts flags[:errors].join("\n")
+      if options.print_errors?
+        stderr.puts options.errors.join("\n")
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if flags[:help]
-        stdout.puts flags[:help]
+      if options.print_help?  # TODO: Should this be first?
+        stdout.puts options.help_screen
         return SUCCESS_STATUS
       end
 
-      if flags[:version]
+      if options.print_version?
         stdout.puts SeeingIsBelieving::VERSION
         return SUCCESS_STATUS
       end
 
-      if flags[:filename] && !File.exist?(flags[:filename])
-        stderr.puts "#{flags[:filename]} does not exist!"
+      if options.provided_filename_dne?
+        stderr.puts "#{options[:filename]} does not exist!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # TODO: would like to move most of this work into either the arg parser or some class that interprets args
-      file_is_on_stdin = !flags[:filename] && !flags[:program]
-      flags[:stdin] = (file_is_on_stdin ? '' : stdin)
-      body = ( flags[:program]                  ||
-               (file_is_on_stdin && stdin.read) ||
-               File.read(flags[:filename])
-             )
-      annotator = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle : AnnotateEveryLine)
-      flags[:record_expressions] = annotator.expression_wrapper(flags[:markers])
-      prepared_body = annotator.prepare_body(body, flags[:markers])
-      if flags[:clean]
-        stdout.print RemoveAnnotations.call(prepared_body, true, flags[:markers])
+      if options.print_cleaned?
+        stdout.print RemoveAnnotations.call(options.prepared_body, true, options[:markers])
         return SUCCESS_STATUS
       end
 
-      syntax_error_notice = syntax_error_notice_for(body, flags[:shebang])
+      syntax_error_notice = syntax_error_notice_for(options.body, options.shebang)
       if syntax_error_notice
         stderr.puts syntax_error_notice
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # TODO: Move this up, too
-      options = flags.merge(filename:           (flags[:as] || flags[:filename]),
-                            ruby_executable:    flags[:shebang],
-                            evaluate_with:      flags.fetch(:evaluator),
-                           )
-      results, program_timedout, unexpected_exception = evaluate_program(prepared_body, options)
+      results, program_timedout, unexpected_exception =
+        evaluate_program(options.prepared_body, options.lib_options)
+
       if program_timedout
-        stderr.puts "Timeout Error after #{flags[:timeout]} seconds!"
+        stderr.puts "Timeout Error after #{options[:timeout]} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
@@ -83,14 +70,19 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if flags[:result_as_json]
+      if options.result_as_json?
         require 'json'
         stdout.puts JSON.dump(result_as_data_structure(results))
         return SUCCESS_STATUS
       end
 
-      stdout.print annotator.call prepared_body, results, flags
-      if flags[:inherit_exit_status]
+      # TODO: Annoying debugger stuff from annotators can move up to here
+      # or maybe debugging goes to stderr, and we still print this anyway?
+      stdout.print options.annotator.call(options.prepared_body,
+                                          results,
+                                          options.annotator_options)
+
+      if options.inherit_exit_status?
         results.exitstatus
       elsif results.has_exception?
         DISPLAYABLE_ERROR_STATUS
@@ -114,8 +106,7 @@ class SeeingIsBelieving
     end
 
     def self.evaluate_program(body, options)
-      results = SeeingIsBelieving.call body, options
-      return results, nil, nil
+      return SeeingIsBelieving.call(body, options), nil, nil
     rescue Timeout::Error
       return nil, true, nil
     rescue Exception

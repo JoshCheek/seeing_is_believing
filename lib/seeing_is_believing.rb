@@ -18,7 +18,7 @@ class SeeingIsBelieving
     @program            = program
     @filename           = options[:filename]
     @stdin              = to_stream options.fetch(:stdin, '')
-    @require            = options.fetch :require,   ['seeing_is_believing/the_matrix'] # TODO: this can be passed in the requires
+    @require            = options.fetch :require, ['seeing_is_believing/the_matrix']
     @load_path          = options.fetch :load_path, []
     @encoding           = options.fetch :encoding,  nil
     @timeout            = options[:timeout]
@@ -26,7 +26,7 @@ class SeeingIsBelieving
     @ruby_executable    = options.fetch :ruby_executable, 'ruby'
     @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
     @evaluator          = options.fetch :evaluator, EvaluateByMovingFiles
-    @record_expressions = options.fetch :record_expressions, InspectExpressions
+    @record_expressions = options.fetch :record_expressions, InspectExpressions # TODO: rename to wrap_expressions
   end
 
   def call

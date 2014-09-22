@@ -23,8 +23,8 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  def parse(args, outstream=nil)
-    SeeingIsBelieving::Binary::ParseArgs.call args, outstream
+  def parse(args)
+    SeeingIsBelieving::Binary::ParseArgs.call args
   end
 
   def matrix_file
@@ -85,10 +85,10 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
       expect(parse(['a', '-x'])[:filename]).to eq 'a'
     end
 
-    it 'sets an error if given multiple filenames' do
-      expect(parse([])).to_not have_error /name/
-      expect(parse(['a'])).to_not have_error /Can only have one filename/
-      expect(parse(['a', 'b'])).to have_error 'Can only have one filename, but had: "a", "b"'
+    it 'records all filenames it sees' do
+      expect(parse([])[:filenames]).to eq []
+      expect(parse(['a'])[:filenames]).to eq ['a']
+      expect(parse(['a', 'b'])[:filenames]).to eq ['a', 'b']
     end
   end
 
@@ -139,31 +139,37 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
       expect(parse([])[:help]).to be_nil
     end
 
-    it 'is set to the flag only help screen with -h and --help and -help' do
-      expect(parse(['-h'])[:help]).to include 'Usage:'
-      expect(parse(['--help'])[:help]).to include 'Usage:'
-
-      expect(parse(['-h'])[:help]).to_not include 'Examples:'
-      expect(parse(['--help'])[:help]).to_not include 'Examples:'
+    it 'is set to "help" with -h and --help and -help' do
+      expect(parse(['-h'])[:help]).to eq 'help'
+      expect(parse(['--help'])[:help]).to eq 'help'
     end
 
-    it 'is set to the flag with examples help screen with --help+ and -h+' do
-      expect(parse(['-h+'])[:help]).to include 'Usage:'
-      expect(parse(['--help+'])[:help]).to include 'Usage:'
-
-      expect(parse(['-h+'])[:help]).to include 'Examples:'
-      expect(parse(['--help+'])[:help]).to include 'Examples:'
+    it 'is set to "help+" with examples help screen with --help+ and -h+' do
+      expect(parse(['-h+'])[:help]).to eq 'help+'
+      expect(parse(['--help+'])[:help]).to eq 'help+'
     end
   end
 
-  describe ':program' do
+  describe 'short and long help_screen' do
+    specify 'they are the short and long help screens' do
+      short = parse([])[:short_help_screen]
+      long  = parse([])[:long_help_screen]
+      expect(short.length).to be < long.length
+      expect(short).to     include 'Usage'
+      expect(long).to      include 'Usage'
+      expect(short).to_not include 'Examples'
+      expect(long).to      include 'Examples'
+    end
+  end
+
+  describe ':program_from_args' do
     it 'defaults to nil' do
-      expect(parse([])[:program]).to be_nil
+      expect(parse([])[:program_from_args]).to be_nil
     end
 
     it 'is set with -e or --program, and takes the next arg' do
-      expect(parse(['-e', '1'])[:program]).to eq '1'
-      expect(parse(['--program', '1'])[:program]).to eq '1'
+      expect(parse(['-e', '1'])[:program_from_args]).to eq '1'
+      expect(parse(['--program', '1'])[:program_from_args]).to eq '1'
     end
 
     it 'sets an error if not given a program' do
@@ -171,11 +177,6 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
       expect(parse([])).to_not have_error /--program/
       expect(parse(['-e'])).to have_error /-e/
       expect(parse(['--program'])).to have_error /--program/
-    end
-
-    it 'sets an error if a filename is also give' do
-      expect(parse(['-e', '1'])).to_not have_error /-e/
-      expect(parse(['-e', '1', 'abc'])).to have_error /"abc"/
     end
   end
 
@@ -268,30 +269,24 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   describe ':alignment_strategy' do
-    AlignFile  = SeeingIsBelieving::Binary::AlignFile
-    AlignLine  = SeeingIsBelieving::Binary::AlignLine
-    AlignChunk = SeeingIsBelieving::Binary::AlignChunk
-
-    # maybe change the default?
-    it 'defaults to AlignChunk' do
-      expect(parse([])[:alignment_strategy]).to eq AlignChunk
+    # TODO: maybe change the default?
+    it 'defaults to "chunk"' do
+      expect(parse([])[:alignment_strategy]).to eq 'chunk'
     end
 
     specify '-s and --alignment-strategy sets the alignment strategy' do
-      expect(parse(['-s',                   'chunk'])[:alignment_strategy]).to eq AlignChunk
-      expect(parse(['--alignment-strategy', 'chunk'])[:alignment_strategy]).to eq AlignChunk
+      expect(parse(['-s',                   'chunk'])[:alignment_strategy]).to eq 'chunk'
+      expect(parse(['--alignment-strategy', 'chunk'])[:alignment_strategy]).to eq 'chunk'
     end
 
     it 'accepts values: file, line, chunk' do
-      expect(parse(['-s',  'file'])[:alignment_strategy]).to eq AlignFile
-      expect(parse(['-s',  'line'])[:alignment_strategy]).to eq AlignLine
-      expect(parse(['-s', 'chunk'])[:alignment_strategy]).to eq AlignChunk
+      expect(parse(['-s',  'file'])[:alignment_strategy]).to eq 'file'
+      expect(parse(['-s',  'line'])[:alignment_strategy]).to eq 'line'
+      expect(parse(['-s', 'chunk'])[:alignment_strategy]).to eq 'chunk'
     end
 
-    it 'sets an error if not provided with a strategy, or if provided with an unknown strategy' do
+    it 'sets an error if not provided with a strategy' do
       expect(parse(['-s', 'file'])).to_not have_error /alignment-strategy/
-      expect(parse(['-s',  'abc'])).to     have_error /alignment-strategy/
-      expect(parse(['-s'        ])).to     have_error /alignment-strategy/
     end
   end
 
@@ -317,18 +312,14 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  describe ':debugger' do
-    it 'defaults to a debugger that is disabled' do
-      expect(parse([], :fake_stream)[:debugger]).to_not be_enabled
+  describe ':debug' do
+    it 'defaults to a false' do
+      expect(parse([])[:debug]).to eq false
     end
 
     it 'can be enabled with --debug or -g' do
-      expect(parse(['--debug'], :fake_stream)[:debugger]).to be_enabled
-      expect(parse(['-g'], :fake_stream)[:debugger]).to be_enabled
-    end
-
-    it 'sets the stream to the one passed in' do
-      expect(parse(['-g'], :fake_stream)[:debugger].stream).to eq :fake_stream
+      expect(parse(['--debug'])[:debug]).to eq true
+      expect(parse(['-g'])[:debug]).to eq true
     end
   end
 
@@ -368,16 +359,6 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     it 'can be enabled with --json or -j' do
       expect(parse(['--json'])[:result_as_json]).to eq true
       expect(parse(['-j'])[:result_as_json]).to eq true
-    end
-  end
-
-  describe ':evaluator' do
-    it 'defaults to EvaluateByMovingFiles' do
-      expect(parse([])[:evaluator]).to eq SeeingIsBelieving::EvaluateByMovingFiles
-    end
-
-    specify '--safe sets it to EvaluateWithEvalIn' do
-      expect(parse(['--safe'])[:evaluator]).to eq SeeingIsBelieving::EvaluateWithEvalIn
     end
   end
 
