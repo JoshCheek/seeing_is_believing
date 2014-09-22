@@ -1,10 +1,7 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/interpret_flags'
-require 'seeing_is_believing/binary/annotate_every_line'
-require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 require 'seeing_is_believing/binary/remove_annotations'
-require 'timeout'
 
 class SeeingIsBelieving
   module Binary
