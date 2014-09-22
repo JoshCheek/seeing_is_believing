@@ -12,8 +12,6 @@ class SeeingIsBelieving
     DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
 
-    attr_accessor :argv, :stdin, :stdout, :stderr, :timeout_error, :unexpected_exception
-
     def self.call(argv, stdin, stdout, stderr)
       flags   = ParseArgs.call(argv)
       options = InterpretFlags.new(flags, stdin, stdout)
