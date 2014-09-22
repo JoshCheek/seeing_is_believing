@@ -26,35 +26,35 @@ class SeeingIsBelieving
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h',  '--help'                then options[:help]                = 'help'
-            when '-h+', '--help+'               then options[:help]                = 'help+'
-            when '-c',  '--clean'               then options[:clean]               = true
-            when '-v',  '--version'             then options[:version]             = true
-            when '-x',  '--xmpfilter-style'     then options[:xmpfilter_style]     = true
-            when '-i',  '--inherit-exit-status' then options[:inherit_exit_status] = true
-            when '-j',  '--json'                then options[:result_as_json]      = true
-            when '-g',  '--debug'               then options[:debug]               = true
-            when        '--safe'                then options[:safe]                = true
+            when '-h',  '--help'                then flags[:help]                = 'help'
+            when '-h+', '--help+'               then flags[:help]                = 'help+'
+            when '-c',  '--clean'               then flags[:clean]               = true
+            when '-v',  '--version'             then flags[:version]             = true
+            when '-x',  '--xmpfilter-style'     then flags[:xmpfilter_style]     = true
+            when '-i',  '--inherit-exit-status' then flags[:inherit_exit_status] = true
+            when '-j',  '--json'                then flags[:result_as_json]      = true
+            when '-g',  '--debug'               then flags[:debug]               = true
+            when        '--safe'                then flags[:safe]                = true
             when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
             when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
             when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
             when '-t',  '--timeout'             then extract_non_negative_float_for :timeout,      arg
-            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:require]   << filename }
-            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        options[:load_path] << dir }
-            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    options[:program_from_args] =  program }
-            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   options[:as]        =  filename }
-            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| options[:shebang]   =  executable }
-            when '-s',  '--alignment-strategy'  then options[:alignment_strategy] = args.shift
-            when /\A-K(.+)/                     then options[:encoding] = $1
-            when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
-            when /^(-.|--.*)$/                  then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   flags[:require]           << filename }
+            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        flags[:load_path]         << dir }
+            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    flags[:program_from_args] =  program }
+            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   flags[:as]                =  filename }
+            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| flags[:shebang]           =  executable }
+            when '-s',  '--alignment-strategy'  then flags[:alignment_strategy] = args.shift
+            when /\A-K(.+)/                     then flags[:encoding] = $1
+            when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| flags[:encoding] = encoding }
+            when /^(-.|--.*)$/                  then flags[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             when /^-[^-]/                       then args.unshift *normalize_shortflags(arg)
             else
-              options[:filenames] << arg
-              options[:filename] = arg
+              flags[:filenames] << arg
+              flags[:filename] = arg
             end
           end
-          options
+          flags
         end
       end
 
@@ -64,9 +64,8 @@ class SeeingIsBelieving
 
       attr_accessor :args
 
-      # TODO: rename options to something else, like "parsed" or "flags" or something
-      def options
-        @options ||= {
+      def flags
+        @flags ||= {
           as:                  nil,
           filenames:           [],
           help:                nil,
@@ -107,25 +106,25 @@ class SeeingIsBelieving
 
       def next_arg(error_message, &success_block)
         arg = args.shift
-        arg ? success_block.call(arg) : (options[:errors] << error_message)
+        arg ? success_block.call(arg) : (flags[:errors] << error_message)
       end
 
       def extract_positive_int_for(key, flag)
         string = args.shift
         int    = string.to_i
         if int.to_s == string && 0 < int
-          options[key] = int
+          flags[key] = int
         else
-          options[:errors] << "#{flag} expects a positive integer argument"
+          flags[:errors] << "#{flag} expects a positive integer argument"
         end
       end
 
       def extract_non_negative_float_for(key, flag)
         float = Float args.shift
         raise if float < 0
-        options[key] = float
+        flags[key] = float
       rescue
-        options[:errors] << "#{flag} expects a positive float or integer argument"
+        flags[:errors] << "#{flag} expects a positive float or integer argument"
       end
     end
 
