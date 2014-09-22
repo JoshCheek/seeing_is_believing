@@ -45,45 +45,38 @@ class SeeingIsBelieving
       attr_attribute :errors
 
       def initialize(flags, stdin, stdout)
-        @attributes = {}
+        # Some simple attributes
+        self.attributes = {}
+        attributes[:errors]   = flags.fetch(:errors)
+        attributes[:markers]  = flags.fetch(:markers) # TODO: Should probably object-ify these
+        attributes[:timeout]  = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
+        attributes[:shebang]  = flags.fetch(:shebang) # b/c binary uses this to validate syntax atm
+        attributes[:filename] = flags.fetch(:filename)
 
-        attributes[:errors]       = flags.fetch(:errors) # TODO add this to attributes?
-        attributes[:annotator]    = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle : AnnotateEveryLine)
+        # All predicates
+        self.predicates = {}
+        predicates[:print_version]         = flags.fetch(:version) # TODO: rename to show_version?
+        predicates[:inherit_exit_status]   = flags.fetch(:inherit_exit_status)
+        predicates[:result_as_json]        = flags.fetch(:result_as_json)
+        predicates[:print_help]            = !!flags.fetch(:help)
+        predicates[:print_cleaned]         = flags.fetch(:clean) # TODO: Better name on rhs
+        predicates[:provided_filename_dne] = !!(filename && !File.exist?(filename)) # TODO: Should this just be an error in errors table?
+        predicates[:file_is_on_stdin]      = (!filename && !flags.fetch(:program_from_args))
 
-        attributes[:help_screen]  = flags.fetch(:help) == 'help' ? flags.fetch(:short_help_screen) : flags.fetch(:long_help_screen)
-        attributes[:debugger]     = flags.fetch(:debug) ? Debugger.new(stream: stdout, colour: true) :
-                                                          Debugger.new(stream: nil)
-        attributes[:markers]      = flags.fetch(:markers) # TODO:Should probably object-ify these
+        # Polymorphism, y'all!
+        attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
+        attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
+        attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stdout, colour: true) : Debugger.new(stream: nil)
+        attributes[:body]        = ((print_version? || print_help?) && String.new)    ||
+                                   flags.fetch(:program_from_args)                    ||
+                                   (file_is_on_stdin? && stdin.read)                  ||
+                                   (File.read filename unless provided_filename_dne?) ||
+                                   String.new
 
-        # TODO: Do we need this at toplevel? seems like it might go in interpret_flags
-        attributes[:timeout]      = flags.fetch(:timeout) # TODO: rename seconds_until_timeout
-        attributes[:shebang]      = flags.fetch(:shebang)
-        attributes[:filename]     = flags.fetch(:filename)
-
-        if 1 < flags.fetch(:filenames).size
-          errors << "Can only have one filename, but had: #{flags.fetch(:filenames).map(&:inspect).join ', '}"
-        elsif filename && flags.fetch(:program_from_args)
-          errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
-        end
-
-        @predicates = {
-          print_version:         flags.fetch(:version), # TODO: rename to show_version?
-          inherit_exit_status:   flags.fetch(:inherit_exit_status),
-          result_as_json:        flags.fetch(:result_as_json),
-          print_help:            !!flags.fetch(:help),
-          print_cleaned:         flags.fetch(:clean), # TODO: Better name on rhs
-          provided_filename_dne: !!(filename && !File.exist?(filename)), # TODO: Should this just be an error in errors table?
-          file_is_on_stdin:      (!filename && !flags.fetch(:program_from_args))
-        }
-
-        attributes[:body] = ''
-        attributes[:body] = ((print_version? || print_help?) && '') ||
-                            flags.fetch(:program_from_args) ||
-                            (file_is_on_stdin? && stdin.read) ||
-                            (File.read filename unless provided_filename_dne?)
-
+        # Attributes that depend on predicates
         attributes[:prepared_body] = body && annotator.prepare_body(body, markers)
 
+        # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {
           evaluate_with:      (flags.fetch(:safe) ? EvaluateWithEvalIn : EvaluateByMovingFiles),
           filename:           (flags.fetch(:as) || filename),
@@ -98,6 +91,7 @@ class SeeingIsBelieving
           record_expressions: annotator.expression_wrapper(markers), # TODO: rename to wrap_expressions
         }
 
+        # The annotator's options (passed to annotator.call)
         attributes[:annotator_options] = {
           alignment_strategy: extract_alignment_strategy(flags.fetch(:alignment_strategy), errors),
           debugger:           debugger,
@@ -105,6 +99,13 @@ class SeeingIsBelieving
           max_line_length:    flags.fetch(:max_line_length),
           max_result_length:  flags.fetch(:max_result_length),
         }
+
+        # Some error checking
+        if 1 < flags.fetch(:filenames).size
+          errors << "Can only have one filename, but had: #{flags.fetch(:filenames).map(&:inspect).join ', '}"
+        elsif filename && flags.fetch(:program_from_args)
+          errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
+        end
       end
 
       def print_errors?

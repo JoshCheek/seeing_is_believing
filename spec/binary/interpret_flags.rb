@@ -184,6 +184,10 @@ class SeeingIsBelieving
         it 'is the file body if the filename is provded and exists' do
           expect(call(filename: existing_filename).body).to eq file_body
         end
+
+        it 'is an empty string if the provided filename dne' do
+          expect(call(filename: nonexisting_filename).body).to eq ""
+        end
       end
 
       context 'prepared_body' do
