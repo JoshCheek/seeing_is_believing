@@ -59,7 +59,12 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      results, program_timedout, unexpected_exception = evaluate_program(prepared_body, flags)
+      # TODO: Move this up, too
+      options = flags.merge(filename:           (flags[:as] || flags[:filename]),
+                            ruby_executable:    flags[:shebang],
+                            evaluate_with:      flags.fetch(:evaluator),
+                           )
+      results, program_timedout, unexpected_exception = evaluate_program(prepared_body, options)
       if program_timedout
         stderr.puts "Timeout Error after #{flags[:timeout]} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
@@ -108,12 +113,8 @@ class SeeingIsBelieving
       return nil
     end
 
-    def self.evaluate_program(body, flags)
-      results = SeeingIsBelieving.call body,
-                                       flags.merge(filename:           (flags[:as] || flags[:filename]),
-                                                   ruby_executable:    flags[:shebang],
-                                                   evaluate_with:      flags.fetch(:evaluator),
-                                                  )
+    def self.evaluate_program(body, options)
+      results = SeeingIsBelieving.call body, options
       return results, nil, nil
     rescue Timeout::Error
       return nil, true, nil
