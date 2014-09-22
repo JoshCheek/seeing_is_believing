@@ -47,7 +47,8 @@ class SeeingIsBelieving
             when '-s',  '--alignment-strategy'  then options[:alignment_strategy] = args.shift
             when /\A-K(.+)/                     then options[:encoding] = $1
             when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| options[:encoding] = encoding }
-            when /^-/                           then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when /^(-.|--.*)$/                  then options[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when /^-[^-]/                       then args.unshift *normalize_shortflags(arg)
             else
               options[:filenames] << arg
               options[:filename] = arg
@@ -94,6 +95,15 @@ class SeeingIsBelieving
         }
       end
 
+      def normalize_shortflags(consolidated_shortflag)
+        shortflags = consolidated_shortflag[1..-1].chars
+        plusidx    = shortflags.index('+') || 0
+        if 0 < plusidx
+          shortflags[plusidx-1] << '+'
+          shortflags.delete_at plusidx
+        end
+        shortflags.map { |flag| "-#{flag}" }
+      end
 
       def next_arg(error_message, &success_block)
         arg = args.shift

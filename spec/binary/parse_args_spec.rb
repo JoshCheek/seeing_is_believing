@@ -66,10 +66,21 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     expect(ary).to eq ['a']
   end
 
+  it 'can interpret conjoined short-flags' do
+    expect(parse(['-hjg'])).to eq parse(['-h', '-j', '-g'])
+  end
+
+  it 'can interpret conjoined short-flags where one of them is h+' do
+    expect(parse(['-h+jg'])).to eq parse(['-h+', '-j',  '-g'])
+    expect(parse(['-jh+g'])).to eq parse(['-j',  '-h+', '-g'])
+    expect(parse(['-jgh+'])).to eq parse(['-j',  '-g',  '-h+'])
+  end
+
   specify 'unknown options set an error' do
-    expect(parse(['--xyz'])).to have_error 'Unknown option: "--xyz"'
-    expect(parse(['-y'])).to have_error 'Unknown option: "-y"'
+    expect(parse(['--xyz'  ])).to have_error 'Unknown option: "--xyz"'
+    expect(parse(['-y'     ])).to have_error 'Unknown option: "-y"'
     expect(parse(['-y', 'b'])).to have_error 'Unknown option: "-y"'
+    expect(parse(['-+h'    ])).to have_error 'Unknown option: "-+"'
   end
 
   example 'example: multiple args' do
