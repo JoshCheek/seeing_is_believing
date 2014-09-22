@@ -60,6 +60,12 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
+  it 'does not mutate the input array' do
+    ary = ['a']
+    parse(ary)
+    expect(ary).to eq ['a']
+  end
+
   specify 'unknown options set an error' do
     expect(parse(['--xyz'])).to have_error 'Unknown option: "--xyz"'
     expect(parse(['-y'])).to have_error 'Unknown option: "-y"'

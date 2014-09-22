@@ -19,7 +19,7 @@ class SeeingIsBelieving
       end
 
       def initialize(args)
-        self.args = args # TODO: dup
+        self.args = args.dup
       end
 
       def call
