@@ -16,7 +16,7 @@ class SeeingIsBelieving
       flags   = ParseArgs.call(argv)
       options = InterpretFlags.new(flags, stdin, stdout)
 
-      if options.print_errors?
+      if options.errors.any?
         stderr.puts options.errors.join("\n")
         return NONDISPLAYABLE_ERROR_STATUS
       end

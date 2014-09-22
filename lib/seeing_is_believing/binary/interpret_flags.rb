@@ -55,7 +55,7 @@ class SeeingIsBelieving
 
         # All predicates
         self.predicates = {}
-        predicates[:print_version]         = flags.fetch(:version) # TODO: rename to show_version?
+        predicates[:print_version]         = flags.fetch(:version) # TODO: rename rhs to print_version ?
         predicates[:inherit_exit_status]   = flags.fetch(:inherit_exit_status)
         predicates[:result_as_json]        = flags.fetch(:result_as_json)
         predicates[:print_help]            = !!flags.fetch(:help)
@@ -106,10 +106,6 @@ class SeeingIsBelieving
         elsif filename && flags.fetch(:program_from_args)
           errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
-      end
-
-      def print_errors?
-        errors.any?
       end
 
       def inspect

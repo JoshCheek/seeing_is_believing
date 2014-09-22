@@ -156,15 +156,6 @@ class SeeingIsBelieving
           expect(call(filename: 'f', program_from_args: nil).file_is_on_stdin?).to eq false
           expect(call(filename: nil, program_from_args: 'p').file_is_on_stdin?).to eq false
         end
-
-        it 'sets print_errors? true when there are errors' do
-          expect(call.errors).to be_empty
-          expect(call.print_errors?).to eq false
-
-          options = call(alignment_strategy: 'wat')
-          expect(options.errors).to_not be_empty
-          expect(options.print_errors?).to eq true
-        end
       end
 
       context 'body' do
