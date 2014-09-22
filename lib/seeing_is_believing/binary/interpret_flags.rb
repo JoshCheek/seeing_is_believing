@@ -65,7 +65,7 @@ class SeeingIsBelieving
           inherit_exit_status:   flags.fetch(:inherit_exit_status),
           result_as_json:        flags.fetch(:result_as_json),
           print_help:            !!flags.fetch(:help),
-          print_cleaned:         flags.fetch(:clean),
+          print_cleaned:         flags.fetch(:clean), # TODO: Better name on rhs
           provided_filename_dne: (filename && !File.exist?(filename)),
           file_is_on_stdin:      (!filename && !flags.fetch(:program_from_args))
         }
@@ -83,7 +83,7 @@ class SeeingIsBelieving
           filename:           (flags.fetch(:as) || filename),
           ruby_executable:    shebang,
           stdin:              (file_is_on_stdin? ? '' : stdin),
-          require:            (flags.fetch(:require) + ['seeing_is_believing/the_matrix']), # TODO: rename requires: files_to_require
+          require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require
           load_path:          flags.fetch(:load_path),
           encoding:           flags.fetch(:encoding),
           timeout:            timeout,
