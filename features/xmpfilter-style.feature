@@ -4,7 +4,7 @@ Feature: Xmpfilter style
   so that people who use that lib can easily transition to SiB.
 
 
-  Scenario: --xmpfilter-style
+  Scenario: --xmpfilter-style Generic updating of marked lines
     Given the file "magic_comments.rb":
     """
     1+1# =>
@@ -39,7 +39,7 @@ Feature: Xmpfilter style
 
 
   Scenario: --xmpfilter-style uses pp to inspect annotations whose value comes from the previous line (#44)
-    Given the file "xmpfilter-prev-line.rb":
+    Given the file "xmpfilter-prev-line1.rb":
     """
     { foo: 42,
       bar: {
@@ -53,7 +53,7 @@ Feature: Xmpfilter style
     } # =>
     # =>
     """
-    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line.rb"
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line1.rb"
     Then stdout is:
     """
     { foo: 42,
@@ -70,19 +70,17 @@ Feature: Xmpfilter style
     #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
     #     :wibble=>{:magic_word=>"xyzzy"}}
     """
-    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line.rb | seeing_is_believing --xmpfilter-style"
+
+  Scenario: --xmpfilter-style overrides previous multiline results
+    Given the file "xmpfilter-prev-line2.rb":
+    """
+    {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
+    # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line2.rb | seeing_is_believing --xmpfilter-style"
     Then stdout is:
     """
-    { foo: 42,
-      bar: {
-        baz: 1,
-        buz: 2,
-        fuz: 3,
-      },
-      wibble: {
-        magic_word: "xyzzy",
-      }
-    } # => {:foo=>42, :bar=>{:baz=>1, :buz=>2, :fuz=>3}, :wibble=>{:magic_word=>"xyzzy"}}
+    {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
     # => {:foo=>42,
     #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
     #     :wibble=>{:magic_word=>"xyzzy"}}
