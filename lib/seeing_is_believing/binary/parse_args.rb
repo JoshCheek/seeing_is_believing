@@ -95,7 +95,7 @@ class SeeingIsBelieving
       end
 
       def normalize_shortflags(consolidated_shortflag)
-        shortflags = consolidated_shortflag[1..-1].chars
+        shortflags = consolidated_shortflag[1..-1].chars.to_a # to_a for 1.9.3 -.-
         plusidx    = shortflags.index('+') || 0
         if 0 < plusidx
           shortflags[plusidx-1] << '+'
