@@ -297,7 +297,7 @@ class SeeingIsBelieving
         inspected = call.inspect
         expect(inspected).to include "PREDICATES"
         expect(inspected).to include "ATTRIBUTES"
-        expect(inspected.lines.length).to be > 1
+        expect(inspected.lines.to_a.length).to be > 1
         inspected.lines.each do |line|
           expect(line.length).to be < 80 # truncate output so it doesn't get spammy
         end
