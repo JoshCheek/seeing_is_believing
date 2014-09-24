@@ -76,6 +76,7 @@ class SeeingIsBelieving
           require 'seeing_is_believing/binary' # defines the markers
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/comment_formatter'
+          exception_lineno  = @results.has_exception? ? @results.exception.line_number : -1
           new_body = RewriteComments.call @body do |comment|
             if !comment.text[value_regex]
               [comment.whitespace, comment.text]
@@ -95,6 +96,17 @@ class SeeingIsBelieving
               [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, result, @options)]
             end
           end
+
+          # if exception_lineno == line_number
+          #   if comment.text[value_regex] # has exception and comment
+          #     # '# => # ~> exception...'
+          #     [comment.whitespace, comment.text]
+          #   else # exception, no comment
+          #     # NORMAL EXCEPTION
+          #     # result  = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+          #     # CommentFormatter.call(line.size, value_marker, result, options)
+          #     # [comment.whitespace, comment.text]
+          #   end
 
           require 'seeing_is_believing/binary/annotate_end_of_file'
           AnnotateEndOfFile.add_stdout_stderr_and_exceptions_to new_body, @results, @options

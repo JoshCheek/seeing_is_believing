@@ -100,6 +100,45 @@ Feature: Xmpfilter style
     # => "1111111111...
     """
 
+
+    @josh1
+  Scenario: Errors on annotated lines
+    Given the file "xmpfilter_error_on_annotated_line.rb":
+    """
+    raise "omg" # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter_error_on_annotated_line.rb"
+    Then stderr is empty
+    And the exit status is 1
+    Then stdout is:
+    """
+    raise "omg" # => # ~> RuntimeError: ZOMG\n!!!!
+
+    # ~> RuntimeError
+    # ~> omg
+    # ~>
+    # ~> xmpfilter_error_on_annotated_line.rb:1:in `<main>'
+    """
+
+
+    @josh2
+  Scenario: Errors on unannotated lines
+    Given the file "xmpfilter_error_on_annotated_line.rb":
+    """
+    raise "omg"
+    """
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter_error_on_annotated_line.rb"
+    Then stderr is empty
+    And the exit status is 1
+    Then stdout is:
+    """
+    raise "omg" # =>
+    """
+
+
+  Scenario: pp output on line with exception
+
+
   Scenario: Cleaning previous output
     Given the file "xmpfilter_cleaning.rb":
     """
