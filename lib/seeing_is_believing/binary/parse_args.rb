@@ -96,7 +96,7 @@ class SeeingIsBelieving
           shebang:             'ruby',
           result_as_json:      false,
           markers:             self.class.default_markers,
-          marker_regexes:      self.class.default_markers,
+          marker_regexes:      self.class.marker_regexes,
           short_help_screen:   self.class.help_screen(false),
           long_help_screen:    self.class.help_screen(true),
           safe:                false,

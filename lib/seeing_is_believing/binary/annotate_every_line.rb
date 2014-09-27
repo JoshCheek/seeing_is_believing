@@ -1,12 +1,12 @@
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine
-      def self.prepare_body(uncleaned_body, markers)
+      def self.prepare_body(uncleaned_body, marker_regexes)
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, true, markers
+        RemoveAnnotations.call uncleaned_body, true, marker_regexes
       end
 
-      def self.expression_wrapper(markers)
+      def self.expression_wrapper(markers, marker_regexes)
         require 'seeing_is_believing/inspect_expressions'
         InspectExpressions
       end
@@ -45,7 +45,7 @@ class SeeingIsBelieving
           AnnotateEndOfFile.add_stdout_stderr_and_exceptions_to new_body, @results, @options
 
           # What's w/ this debugger? maybe this should move higher?
-          @options[:debugger].context "OUTPUT"
+          @options.fetch(:debugger).context "OUTPUT"
           new_body
         end
       end
@@ -53,11 +53,11 @@ class SeeingIsBelieving
       private
 
       def value_marker
-        @value_marker ||= @options[:markers][:value]
+        @value_marker ||= @options.fetch(:markers).fetch(:value)
       end
 
       def exception_marker
-        @exception_marker ||= @options[:markers][:exception]
+        @xnextline_marker ||= @options.fetch(:markers).fetch(:exception)
       end
     end
   end

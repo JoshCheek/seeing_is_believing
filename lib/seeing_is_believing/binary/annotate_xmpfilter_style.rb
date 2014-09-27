@@ -3,34 +3,17 @@ require 'seeing_is_believing/code'
 class SeeingIsBelieving
   module Binary
     class AnnotateXmpfilterStyle
-      def self.prepare_body(uncleaned_body, markers)
-        # TODO: There's definitely a lot of overlap in responsibilities with invoking of parser
-        # and this is a conspicuous hack, since this functionality should really be provided by RemoveAnnotations
-        code = Code.new(uncleaned_body)
-        code.inline_comments
-            .select       { |c|  c.whitespace_col == 0 } # TODO: Would be nice to support indentation here
-            .slice_before { |c|  c.text.start_with? markers[:value]  }
-            .flat_map     { |cs|
-              consecutives = cs.each_cons(2).take_while { |c1, c2| c1.line_number.next == c2.line_number }
-              cs[1, consecutives.size]
-            }
-            .select { |c| c.text.start_with? markers[:nextline] }
-            .each { |c|
-              range_with_preceding_newline = code.range_for(c.comment_range.begin_pos.pred, c.comment_range.end_pos)
-              code.rewriter.remove range_with_preceding_newline
-            }
-        partially_cleaned_body = code.rewriter.process
-
+      def self.prepare_body(uncleaned_body, marker_regexes)
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call partially_cleaned_body, false, markers
+        RemoveAnnotations.call uncleaned_body, false, marker_regexes
       end
 
-      def self.expression_wrapper(markers)
+      def self.expression_wrapper(markers, marker_regexes)
         -> program, number_of_captures {
           inspect_linenos = []
           pp_linenos      = []
           Code.new(program).inline_comments.each do |c|
-            next unless c.text.start_with? markers[:value].sub(/\s+$/, '')
+            next unless c.text[marker_regexes[:value]]
             c.whitespace_col == 0 ? pp_linenos      << c.line_number - 1
                                   : inspect_linenos << c.line_number
           end
@@ -112,21 +95,21 @@ class SeeingIsBelieving
           AnnotateEndOfFile.add_stdout_stderr_and_exceptions_to new_body, @results, @options
 
           # What's w/ this debugger? maybe this should move higher?
-          @options[:debugger].context "OUTPUT"
+          @options.fetch(:debugger).context "OUTPUT"
           new_body
         end
       end
 
       def value_marker
-        @value_marker ||= @options[:markers][:value]
+        @value_marker ||= @options.fetch(:markers).fetch(:value)
       end
 
       def nextline_marker
-        @xnextline_marker ||= @options[:markers][:nextline]
+        @xnextline_marker ||= ('#' + ' '*value_marker.size.pred)
       end
 
       def value_regex
-        @value_regex ||= /\A#{value_marker.sub(/\s+$/, '')}/
+        @value_regex ||= @options.fetch(:marker_regexes).fetch(:value)
       end
     end
   end

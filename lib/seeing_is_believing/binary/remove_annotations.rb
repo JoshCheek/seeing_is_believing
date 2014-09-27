@@ -3,6 +3,9 @@ require 'seeing_is_believing/parser_helpers' # We have to parse the file to find
 
 class SeeingIsBelieving
   module Binary
+    # TODO: might be here that we hit the issue where
+    # you sometimes have to run it 2x to get it to correctly reset whitespace
+    # should wipe out the full_range rather than just the comment_range
     class RemoveAnnotations
       def self.call(code, should_clean_values, markers)
         new(code, should_clean_values, markers).call
@@ -11,16 +14,35 @@ class SeeingIsBelieving
       def initialize(code, should_clean_values, markers)
         self.should_clean_values = should_clean_values
         self.code                = code
-        self.markers             = markers
+        self.markers             = markers # TECHNICALLY THESE ARE REGEXES RIGHT NOW
       end
 
       def call
         code_obj         = Code.new(code, 'strip_comments')
-        removed_comments = { result: [], exception: [], stdout: [], stderr: [] }
+        removed_comments = {result: [], exception: [], stdout: [], stderr: [], nextline: []}
 
-        # TODO: This is why you sometimes have to run it 2x to get it to correctly reset whitespace
-        # should wipe out the full_range rather than just the comment_range
-        code_obj.inline_comments.each do |comment|
+        comment_chunks = code_obj
+          .inline_comments
+          .map { |c|
+            annotation = c.text[value_regex] || c.text[exception_regex] || c.text[stdout_regex] || c.text[stderr_regex]
+            [annotation, c]
+          }
+          .slice_before { |annotation, comment| annotation }
+          .select       { |(annotation, start), *| annotation }
+          .map { |(annotation, start), *rest|
+            comment_offset = start.text_col
+            prev = start
+            [start, rest.map(&:last).take_while { |comment|
+              _prev = prev
+              prev  = comment
+              _prev.line_number.next == comment.line_number &&
+              start.text_col == comment.text_col &&
+                preceded_by_whitespace?(comment) &&
+                annotation.length <= comment.text[/#\s*/].length
+            }]
+          }
+
+        comment_chunks.each do |comment, rest|
           case comment.text
           when value_regex
             if should_clean_values
@@ -28,18 +50,36 @@ class SeeingIsBelieving
               removed_comments[:result] << comment
               code_obj.rewriter.remove comment.comment_range
             end
+            removed_comments[:nextline].concat rest
+            rest.each do |c|
+              code_obj.rewriter.remove c.comment_range
+            end
           when exception_regex
               # puts "REMOVING EXCEPTION: #{comment.text}"
             removed_comments[:exception] << comment
+            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
+              rest.each do |c|
+                code_obj.rewriter.remove c.comment_range
+              end
           when stdout_regex
               # puts "REMOVING STDOUT: #{comment.text}"
             removed_comments[:stdout] << comment
+            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
+              rest.each do |c|
+                code_obj.rewriter.remove c.comment_range
+              end
           when stderr_regex
               # puts "REMOVING STDERR: #{comment.text}"
             removed_comments[:stderr] << comment
+            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
+              rest.each do |c|
+                code_obj.rewriter.remove c.comment_range
+              end
+          else
+            raise "This should be impossible! Something must be broken in the comment section above"
           end
         end
 
@@ -56,6 +96,7 @@ class SeeingIsBelieving
         removed_comments[:exception].each { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
         removed_comments[:stdout].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
         removed_comments[:stderr].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
+        removed_comments[:nextline].each  { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
       end
 
       # any whitespace before the index (on the same line) will be removed
@@ -71,24 +112,28 @@ class SeeingIsBelieving
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
       end
 
+      def preceded_by_whitespace?(comment)
+        comment.whitespace_col.zero?
+      end
+
       def value_regex
-        @value_regex ||= marker_to_regex markers[:value]
+        markers.fetch(:value)
       end
 
       def exception_regex
-        @exception_regex ||= marker_to_regex markers[:exception]
+        markers.fetch(:exception)
       end
 
       def stdout_regex
-        @stdout_regex ||= marker_to_regex markers[:stdout]
+        markers.fetch(:stdout)
       end
 
       def stderr_regex
-        @stderr_regex ||= marker_to_regex markers[:stderr]
+        markers.fetch(:stderr)
       end
 
-      def marker_to_regex(marker)
-        /\A#{Regexp.escape marker.sub(/\s+$/, '')}/
+      def nextline_regex
+        markers.fetch(:nextline)
       end
     end
   end

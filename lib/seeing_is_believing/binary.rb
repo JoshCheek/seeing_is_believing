@@ -34,7 +34,7 @@ class SeeingIsBelieving
       end
 
       if options.print_cleaned?
-        stdout.print RemoveAnnotations.call(options.prepared_body, true, options.markers)
+        stdout.print RemoveAnnotations.call(options.prepared_body, true, options.marker_regexes)
         return SUCCESS_STATUS
       end
 

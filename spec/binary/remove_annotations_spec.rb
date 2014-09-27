@@ -1,18 +1,25 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/remove_annotations'
+require 'seeing_is_believing/binary/parse_args'  # for marker info
 
 RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   def call(code, should_clean_values=true)
     indentation = code[/\A */]
     code        = code.gsub /^#{indentation}/, ''
-    described_class.call(code,
-                         should_clean_values,
-                         value:     '# => ',
-                         exception: '# ~> ',
-                         stdout:    '# >> ',
-                         stderr:    '# !> ',
-                         nextline:  '#    ',
-                        ).chomp
+    described_class.call(code, should_clean_values, regexes).chomp
+  end
+
+  def regexes
+    SeeingIsBelieving::Binary::ParseArgs
+      .marker_regexes
+      .each_with_object({}) { |(name, str), rs| rs[name] = Regexp.new str }
+  end
+
+  context 'when there are no annotations' do
+    example { expect(call "1 # hello").to eq "1 # hello" }
+    example { expect(call "1 # hello\n"\
+                          "# world").to eq "1 # hello\n"\
+                                           "# world" }
   end
 
   context 'when told to clean out value annotations' do
@@ -46,6 +53,104 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
 
     example { expect(call "# >> 1").to eq "" }
     example { expect(call "# !> 1").to eq "" }
+  end
+
+  # TODO: "1 # not special\n"
+  #       "2 # => 3"
+  #
+  # TODO: "1 # => 2\n" ... "1\n"
+
+  context 'cleaning multiline results', t:true do
+    it 'cleans values whose hash and value locations exactly match the annotation on the line prior' do
+      expect(call "1# => 2\n"\
+                  " #    3").to eq "1"
+    end
+
+    it 'does not clean values where the comment appears at a different position' do
+      expect(call "1# => 2\n"\
+                  "#    3").to eq "1\n"\
+                                  "#    3"
+
+      expect(call "1# => 2\n"\
+                  "  #    3").to eq "1\n"\
+                                    "  #    3"
+
+      expect(call "1# => 2\n"\
+                  "#     3").to eq "1\n"\
+                                   "#     3"
+      expect(call "1# => 2\n"\
+                  "  #   3").to eq "1\n"\
+                                   "  #   3"
+
+    end
+
+    it 'does not clean values where the nextline value appears before the initial annotation value' do
+      expect(call "1# => 2\n"\
+                  " #    3").to eq "1"
+      expect(call "1# => 2\n"\
+                  " #     3").to eq "1"
+
+      expect(call "1# => 2\n"\
+                  " #  3 4").to eq "1\n"\
+                                   " #  3 4"
+      expect(call "1# => 2\n"\
+                  " #   3").to eq "1\n"\
+                                  " #   3"
+      expect(call "1# => 2\n"\
+                  " #  3").to eq "1\n"\
+                                 " #  3"
+    end
+
+    it 'does not clean values where there is content before the comment' do
+      expect(call "1# => 2\n"\
+                  "3#    4").to eq "1\n"\
+                                   "3#    4"
+    end
+
+    it 'cleans successive rows of these' do
+      expect(call "1# => 2\n"\
+                  " #    3\n"\
+                  " #    4" ).to eq "1"
+      expect(call "1# => 2\n"\
+                  " #    3\n"\
+                  " #    4\n"\
+                  "5# => 6\n"\
+                  " #    7\n"\
+                  " #    8" ).to eq "1\n5"
+    end
+
+    it 'does not clean values where there is non-annotation inbetween' do
+      expect(call "1# => 2\n"\
+                  "#    3\n"\
+                  " #    4").to eq "1\n"\
+                                   "#    3\n"\
+                                   " #    4"
+
+      expect(call "1# => 2\n"\
+                  "2      \n"\
+                  " #    4").to eq "1\n"\
+                                   "2      \n"\
+                                   " #    4"
+      expect(call "1# => 2\n"\
+                  "#    3\n"\
+                  " #    4").to eq "1\n"\
+                                   "#    3\n"\
+                                   " #    4"
+    end
+
+    it 'cleans multiline portion, regardless of whether cleaning values (this is soooooo xmpfilter specific)' do
+      expect(call "1# => 2\n"\
+                  " #    3").to eq "1"
+
+      expect(call "1# => 2\n"\
+                  " #    3",
+                  false).to eq "1# => 2"
+    end
+
+    it 'works on inline exceptions' do
+      expect(call "1# ~> 2\n"\
+                  " #    3").to eq "1"
+    end
   end
 
   context 'cleaning stdout annotations' do

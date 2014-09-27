@@ -43,6 +43,7 @@ class SeeingIsBelieving
       attr_attribute :help_screen
       attr_attribute :debugger
       attr_attribute :markers
+      attr_attribute :marker_regexes
       attr_attribute :timeout
       attr_attribute :shebang
       attr_attribute :filename
@@ -83,7 +84,7 @@ class SeeingIsBelieving
                                    String.new
 
         # Attributes that depend on predicates
-        attributes[:prepared_body] = body && annotator.prepare_body(body, markers)
+        attributes[:prepared_body] = body && annotator.prepare_body(body, marker_regexes)
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {
@@ -97,7 +98,7 @@ class SeeingIsBelieving
           timeout:            timeout,
           debugger:           debugger,
           number_of_captures: flags.fetch(:number_of_captures), # TODO: Rename to max_number_of_captures
-          record_expressions: annotator.expression_wrapper(markers), # TODO: rename to wrap_expressions
+          record_expressions: annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
         }
 
         # The annotator's options (passed to annotator.call)
@@ -105,6 +106,7 @@ class SeeingIsBelieving
           alignment_strategy: extract_alignment_strategy(flags.fetch(:alignment_strategy), errors),
           debugger:           debugger,
           markers:            markers,
+          marker_regexes:     marker_regexes,
           max_line_length:    flags.fetch(:max_line_length),
           max_result_length:  flags.fetch(:max_result_length),
         }
