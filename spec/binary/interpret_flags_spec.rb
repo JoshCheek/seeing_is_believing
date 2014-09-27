@@ -24,6 +24,45 @@ class SeeingIsBelieving
         InterpretFlags.new(flags.merge(overrides), stdin, stdout)
       end
 
+      describe '.to_regex' do
+        def call(input, regex)
+          expect(InterpretFlags.to_regex input).to eq regex
+        end
+
+        it 'converts strings into regexes' do
+          call '',    %r()
+          call 'a',   %r(a)
+        end
+
+        it 'ignores surrounding slashes' do
+          call '//',  %r()
+          call '/a/', %r(a)
+        end
+
+        it 'respects flags after the trailing slash in surrounding slashes' do
+          call '/a/',     %r(a)
+          call '/a//',    %r(a/)
+          call '//a/',    %r(/a)
+          call '/a/i',    %r(a)i
+          call '/a/im',   %r(a)im
+          call '/a/xim',  %r(a)xim
+          call '/a/mix',  %r(a)mix
+          call '/a/mixi', %r(a)mixi
+        end
+
+        it 'isn\'t fooled by strings that kinda look regexy' do
+          call '/a',  %r(/a)
+          call 'a/',  %r(a/)
+          call '/',   %r(/)
+          call '/i',  %r(/i)
+        end
+
+        it 'does not escape the content' do
+          call 'a\\s+',   %r(a\s+)
+          call '/a\\s+/', %r(a\s+)
+        end
+      end
+
       describe 'annotator' do
         it 'annotates every line by default' do
           expect(call.annotator).to eq AnnotateEveryLine

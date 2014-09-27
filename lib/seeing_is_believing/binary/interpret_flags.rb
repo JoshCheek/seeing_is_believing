@@ -17,6 +17,14 @@ require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 class SeeingIsBelieving
   module Binary
     class InterpretFlags
+      def self.to_regex(string)
+        flag_to_bit = {'i' => 0b001, 'x' => 0b010, 'm' => 0b100}
+        string =~ %r{\A/(.*)/([mxi]*)\Z}
+        Regexp.new ($1||string),
+                   ($2||"").each_char.inject(0) { |bits, flag| bits|flag_to_bit[flag] }
+      end
+
+
       def self.attr_predicate(name)
         define_method("#{name}?") { predicates.fetch name }
       end
@@ -47,11 +55,12 @@ class SeeingIsBelieving
       def initialize(flags, stdin, stdout)
         # Some simple attributes
         self.attributes = {}
-        attributes[:errors]   = flags.fetch(:errors)
-        attributes[:markers]  = flags.fetch(:markers) # TODO: Should probably object-ify these
-        attributes[:timeout]  = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
-        attributes[:shebang]  = flags.fetch(:shebang) # b/c binary uses this to validate syntax atm
-        attributes[:filename] = flags.fetch(:filename)
+        attributes[:errors]         = flags.fetch(:errors)
+        attributes[:markers]        = flags.fetch(:markers) # TODO: Should probably object-ify these
+        attributes[:marker_regexes] = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
+        attributes[:timeout]        = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
+        attributes[:shebang]        = flags.fetch(:shebang) # b/c binary uses this to validate syntax atm
+        attributes[:filename]       = flags.fetch(:filename)
 
         # All predicates
         self.predicates = {}
