@@ -92,8 +92,7 @@ class SeeingIsBelieving
         # no op
       when :defs
         add_to_wrappings ast
-        child = ast.children.last
-        add_to_wrappings child if child
+        add_children ast, true
       when :rescue, :ensure, :return, :break, :next
         add_children ast
       when :if

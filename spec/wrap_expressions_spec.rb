@@ -17,8 +17,8 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'wrapping the body' do
-    let(:options) { { before_all: -> { "[".freeze },
-                      after_all:  -> { "]".freeze },
+    let(:options) { { before_all:  ->   { "[".freeze },
+                      after_all:   ->   { "]".freeze },
                       before_each: -> * { '<'.freeze },
                       after_each:  -> * { '>'.freeze } } }
 
@@ -798,14 +798,16 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("def a(b,c=1,*d,&e)\nend")).to eq "<def a(b,c=1,*d,&e)\nend>"
     end
 
-    it 'wraps the body' do
+    it 'wraps the the body' do
       expect(wrap("def a\n1\nend")).to eq "<def a\n<1>\nend>"
       expect(wrap("def a()\n1\nend")).to eq "<def a()\n<1>\nend>"
+      expect(wrap("def a\n1\n2\nend")).to eq "<def a\n<1>\n<2>\nend>"
     end
 
-    it 'wrap singleton method definitions' do
+    it 'wraps singleton method definitions' do
       expect(wrap("def a.b\n1\nend")).to eq "<def a.b\n<1>\nend>"
-      # expect(wrap("def a.b()\n1\nend")).to eq "<def a.b()\n<1>\nend>"
+      expect(wrap("def a.b()\n1\nend")).to eq "<def a.b()\n<1>\nend>"
+      expect(wrap("def a.b\n1\n2\nend")).to eq "<def a.b\n<1>\n<2>\nend>" # <-- seems redundant, but this was a regression
     end
 
     it 'wraps calls to yield' do
