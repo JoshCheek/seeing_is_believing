@@ -19,65 +19,37 @@ class SeeingIsBelieving
       end
 
       def call
-        removed_comments = {result: [], exception: [], stdout: [], stderr: [], nextline: []}
-
-        comment_chunks = code
-          .inline_comments
-          .map { |c|
-            annotation = c.text[value_regex] || c.text[exception_regex] || c.text[stdout_regex] || c.text[stderr_regex]
-            [annotation, c]
+        annotation_chunks_in(code).each do |comment, rest|
+          rest.each { |comment|
+            code.rewriter.remove comment.comment_range
+            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, false
           }
-          .slice_before { |annotation, comment| annotation }
-          .select       { |(annotation, start), *| annotation }
-          .map { |(annotation, start), *rest|
-            prev = start
-            [start, rest.map(&:last).take_while { |comment|
-              _prev, prev = prev, comment
-              _prev.line_number.next == comment.line_number &&
-                start.text_col == comment.text_col          &&
-                comment.whitespace_col.zero?                &&
-                annotation.length <= comment.text[/#\s*/].length
-            }]
-          }
-
-        comment_chunks.each do |comment, rest|
-          removed_comments[:nextline].concat rest
-          rest.each { |c| code.rewriter.remove c.comment_range }
 
           case comment.text
           when value_regex
             next unless should_clean_values
-            removed_comments[:result] << comment
             code.rewriter.remove comment.comment_range
+            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, false
           when exception_regex
-            removed_comments[:exception] << comment
             code.rewriter.remove comment.comment_range
+            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, true
           when stdout_regex
-            removed_comments[:stdout] << comment
             code.rewriter.remove comment.comment_range
+            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, true
           when stderr_regex
-            removed_comments[:stderr] << comment
             code.rewriter.remove comment.comment_range
+            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, true
           else
             raise "This should be impossible! Something must be broken in the comment section above"
           end
         end
 
-        remove_whitespace_preceding_comments(code.buffer, code.rewriter, removed_comments)
         code.rewriter.process
       end
 
       private
 
-      attr_accessor :raw_code, :should_clean_values, :buffer, :markers, :code
-
-      def remove_whitespace_preceding_comments(buffer, rewriter, removed_comments)
-        removed_comments[:result].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, false }
-        removed_comments[:exception].each { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
-        removed_comments[:stdout].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
-        removed_comments[:stderr].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
-        removed_comments[:nextline].each  { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, true  }
-      end
+      attr_accessor :raw_code, :should_clean_values, :markers, :code
 
       # any whitespace before the index (on the same line) will be removed
       # if the preceding whitespace is at the beginning of the line, the newline will be removed
@@ -90,6 +62,32 @@ class SeeingIsBelieving
         begin_pos -= 1 if raw_code[begin_pos] == "\n" && remove_preceding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
+      end
+
+      def annotation_chunks_in(code)
+        code
+          .inline_comments
+          .map { |comment| [ (comment.text[value_regex]     ||     # associates each comment to its annotation
+                              comment.text[exception_regex] ||
+                              comment.text[stdout_regex]    ||
+                              comment.text[stderr_regex]
+                             ),
+                             comment]}
+          .slice_before { |annotation, comment| annotation }       # annotatios begin chunks
+          .select       { |(annotation, start), *| annotation }    # discard chunks not beginning with an annotation (probably can only happens on first comment)
+          .map { |(annotation, start), *rest|                      # end the chunk if the comment doesn't meet nextline criteria
+            nextline_comments = []
+            prev = start
+            rest.each { |_, potential_nextline|
+              break unless prev.line_number.next == potential_nextline.line_number &&
+                             start.text_col == potential_nextline.text_col         &&
+                             potential_nextline.whitespace_col.zero?               &&
+                             annotation.length <= potential_nextline.text[/#\s*/].length
+              prev = potential_nextline
+              nextline_comments << potential_nextline
+            }
+            [start, nextline_comments]
+          }
       end
 
       def value_regex
