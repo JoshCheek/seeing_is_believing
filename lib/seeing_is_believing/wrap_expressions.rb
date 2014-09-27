@@ -27,7 +27,7 @@ class SeeingIsBelieving
 
     def call
       @called ||= begin
-        find_wrappings
+        wrap_recursive
 
         rewriter.insert_before root_range, before_all.call
 
@@ -81,12 +81,13 @@ class SeeingIsBelieving
 
     def add_children(ast, omit_first = false)
       (omit_first ? ast.children.drop(1) : ast.children)
-        .each { |child| find_wrappings child }
+        .each { |child| wrap_recursive child }
     end
 
-    def find_wrappings(ast=root)
+    # todo: is this actually add_wrappings
+    #       and add_wrappings is actually add_wrapping?
+    def wrap_recursive(ast=root)
       return wrappings unless ast.kind_of? ::AST::Node
-
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line
         # no op
@@ -107,10 +108,10 @@ class SeeingIsBelieving
           add_children ast
         end
       when :when, :pair, :class, :module, :sclass
-        find_wrappings ast.children.last
+        wrap_recursive ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children
-        find_wrappings body
+        wrap_recursive body
       when :array
         add_to_wrappings ast
         the_begin = ast.location.begin
@@ -135,7 +136,7 @@ class SeeingIsBelieving
         # I can't think of anything other than a :send that could be the first child
         # but I'll check for it anyway.
         the_send = ast.children[0]
-        find_wrappings the_send.children.first if the_send.type == :send
+        wrap_recursive the_send.children.first if the_send.type == :send
         add_children ast, true
       when :masgn
         # we must look at RHS because [1,<<A] and 1,<<A are both allowed
