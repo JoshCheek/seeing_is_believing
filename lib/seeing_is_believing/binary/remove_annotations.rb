@@ -30,54 +30,34 @@ class SeeingIsBelieving
           .slice_before { |annotation, comment| annotation }
           .select       { |(annotation, start), *| annotation }
           .map { |(annotation, start), *rest|
-            comment_offset = start.text_col
             prev = start
             [start, rest.map(&:last).take_while { |comment|
-              _prev = prev
-              prev  = comment
+              _prev, prev = prev, comment
               _prev.line_number.next == comment.line_number &&
-              start.text_col == comment.text_col &&
-                preceded_by_whitespace?(comment) &&
+                start.text_col == comment.text_col          &&
+                comment.whitespace_col.zero?                &&
                 annotation.length <= comment.text[/#\s*/].length
             }]
           }
 
         comment_chunks.each do |comment, rest|
+          removed_comments[:nextline].concat rest
+          rest.each { |c| code_obj.rewriter.remove c.comment_range }
+
           case comment.text
           when value_regex
-            if should_clean_values
-              # puts "REMOVING VALUE: #{comment.text}"
-              removed_comments[:result] << comment
-              code_obj.rewriter.remove comment.comment_range
-            end
-            removed_comments[:nextline].concat rest
-            rest.each do |c|
-              code_obj.rewriter.remove c.comment_range
-            end
+            next unless should_clean_values
+            removed_comments[:result] << comment
+            code_obj.rewriter.remove comment.comment_range
           when exception_regex
-              # puts "REMOVING EXCEPTION: #{comment.text}"
             removed_comments[:exception] << comment
-            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
-              rest.each do |c|
-                code_obj.rewriter.remove c.comment_range
-              end
           when stdout_regex
-              # puts "REMOVING STDOUT: #{comment.text}"
             removed_comments[:stdout] << comment
-            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
-              rest.each do |c|
-                code_obj.rewriter.remove c.comment_range
-              end
           when stderr_regex
-              # puts "REMOVING STDERR: #{comment.text}"
             removed_comments[:stderr] << comment
-            removed_comments[:nextline].concat rest
             code_obj.rewriter.remove comment.comment_range
-              rest.each do |c|
-                code_obj.rewriter.remove c.comment_range
-              end
           else
             raise "This should be impossible! Something must be broken in the comment section above"
           end
@@ -110,10 +90,6 @@ class SeeingIsBelieving
         begin_pos -= 1 if code[begin_pos] == "\n" && remove_preceding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
-      end
-
-      def preceded_by_whitespace?(comment)
-        comment.whitespace_col.zero?
       end
 
       def value_regex

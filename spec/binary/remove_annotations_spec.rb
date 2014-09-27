@@ -15,52 +15,49 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
       .each_with_object({}) { |(name, str), rs| rs[name] = Regexp.new str }
   end
 
-  context 'when there are no annotations' do
+  context 'when there are lines that are just normal comments' do
     example { expect(call "1 # hello").to eq "1 # hello" }
     example { expect(call "1 # hello\n"\
                           "# world").to eq "1 # hello\n"\
                                            "# world" }
+    example { expect(call "1 # not special\n"\
+                          "2 # => 3").to eq "1 # not special\n2" }
   end
 
   context 'when told to clean out value annotations' do
-    example { expect(call "1# => 1",      true).to eq "1" }
-    example { expect(call "1 # => 1",     true).to eq "1" }
-    example { expect(call "1  # => 1",    true).to eq "1" }
-    example { expect(call "1  # => 1",   true).to eq "1" }
-    example { expect(call "1   # => 1",  true).to eq "1" }
-    example { expect(call "1  # =>  1",  true).to eq "1" }
+    example { expect(call "1# => 1",    true).to eq "1"   }
+    example { expect(call "1 # => 1",   true).to eq "1"   }
+    example { expect(call "1  # => 1",  true).to eq "1"   }
+    example { expect(call "1  # => 1",  true).to eq "1"   }
+    example { expect(call "1   # => 1", true).to eq "1"   }
+    example { expect(call "1  # =>  1", true).to eq "1"   }
     example { expect(call "\n1 # => 1", true).to eq "\n1" }
   end
 
   context 'when told not to clean out value annotations' do
-    example { expect(call "1# => 1",      false).to eq "1# => 1" }
-    example { expect(call "1 # => 1",     false).to eq "1 # => 1" }
-    example { expect(call "1  # => 1",    false).to eq "1  # => 1" }
-    example { expect(call "1  # => 1",   false).to eq "1  # => 1" }
-    example { expect(call "1   # => 1",  false).to eq "1   # => 1" }
-    example { expect(call "1  # =>  1",  false).to eq "1  # =>  1" }
+    example { expect(call "1# => 1",    false).to eq "1# => 1"    }
+    example { expect(call "1 # => 1",   false).to eq "1 # => 1"   }
+    example { expect(call "1  # => 1",  false).to eq "1  # => 1"  }
+    example { expect(call "1  # => 1",  false).to eq "1  # => 1"  }
+    example { expect(call "1   # => 1", false).to eq "1   # => 1" }
+    example { expect(call "1  # =>  1", false).to eq "1  # =>  1" }
     example { expect(call "\n1 # => 1", false).to eq "\n1 # => 1" }
   end
 
   context 'cleaning inline exception annotations' do
-    example { expect(call "1# ~> 1"     ).to eq "1" }
-    example { expect(call "1 # ~> 1"    ).to eq "1" }
-    example { expect(call "1  # ~> 1"   ).to eq "1" }
-    example { expect(call "1  # ~> 1"  ).to eq "1" }
-    example { expect(call "1   # ~> 1" ).to eq "1" }
-    example { expect(call "1  # ~>  1" ).to eq "1" }
+    example { expect(call "1# ~> 1"   ).to eq "1"   }
+    example { expect(call "1 # ~> 1"  ).to eq "1"   }
+    example { expect(call "1  # ~> 1" ).to eq "1"   }
+    example { expect(call "1  # ~> 1" ).to eq "1"   }
+    example { expect(call "1   # ~> 1").to eq "1"   }
+    example { expect(call "1  # ~>  1").to eq "1"   }
     example { expect(call "\n1 # ~> 1").to eq "\n1" }
 
-    example { expect(call "# >> 1").to eq "" }
-    example { expect(call "# !> 1").to eq "" }
+    example { expect(call "# >> 1").to eq ""        }
+    example { expect(call "# !> 1").to eq ""        }
   end
 
-  # TODO: "1 # not special\n"
-  #       "2 # => 3"
-  #
-  # TODO: "1 # => 2\n" ... "1\n"
-
-  context 'cleaning multiline results', t:true do
+  context 'cleaning multiline results' do
     it 'cleans values whose hash and value locations exactly match the annotation on the line prior' do
       expect(call "1# => 2\n"\
                   " #    3").to eq "1"
@@ -85,11 +82,13 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
     end
 
     it 'does not clean values where the nextline value appears before the initial annotation value' do
+      # does clean
       expect(call "1# => 2\n"\
                   " #    3").to eq "1"
       expect(call "1# => 2\n"\
                   " #     3").to eq "1"
 
+      # does not clean
       expect(call "1# => 2\n"\
                   " #  3 4").to eq "1\n"\
                                    " #  3 4"
@@ -127,9 +126,9 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
                                    " #    4"
 
       expect(call "1# => 2\n"\
-                  "2      \n"\
+                  "3      \n"\
                   " #    4").to eq "1\n"\
-                                   "2      \n"\
+                                   "3      \n"\
                                    " #    4"
       expect(call "1# => 2\n"\
                   "#    3\n"\
