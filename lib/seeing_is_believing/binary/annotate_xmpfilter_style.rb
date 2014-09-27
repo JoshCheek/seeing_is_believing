@@ -56,14 +56,33 @@ class SeeingIsBelieving
       def call
         @new_body ||= begin
           # TODO: doesn't currently realign output markers, do we want to do that?
-          require 'seeing_is_believing/binary' # defines the markers
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/comment_formatter'
-          exception_lineno  = @results.has_exception? ? @results.exception.line_number : -1
-          new_body = RewriteComments.call @body do |comment|
-            if !comment.text[value_regex]
-              [comment.whitespace, comment.text]
-            elsif comment.whitespace_col == 0
+          always_rewrite = []
+
+          if @results.has_exception?
+            exception_result  = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
+            exception_lineno  = @results.exception.line_number
+            always_rewrite << exception_lineno
+          end
+
+          new_body = RewriteComments.call @body, always_rewrite: always_rewrite do |comment|
+            exception_on_line  = exception_lineno == comment.line_number
+            annotate_this_line = comment.text[value_regex]
+            pp_annotation      = annotate_this_line && comment.whitespace_col.zero?
+            normal_annotation  = annotate_this_line && !pp_annotation
+            if exception_on_line && annotate_this_line
+              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, exception_result, @options)]
+            elsif exception_on_line
+              whitespace = comment.whitespace
+              whitespace = " " if whitespace.empty?
+              [whitespace, CommentFormatter.call(comment.line_number, exception_marker, exception_result, @options)]
+            elsif normal_annotation
+              result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, result, @options)]
+            elsif pp_annotation
+              # result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
+              # CommentFormatter.call(line.size, exception_marker, result, options)
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
               result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
@@ -75,21 +94,9 @@ class SeeingIsBelieving
               end
               [comment.whitespace, comment_lines.join("\n")]
             else
-              result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, result, @options)]
+              [comment.whitespace, comment.text]
             end
           end
-
-          # if exception_lineno == line_number
-          #   if comment.text[value_regex] # has exception and comment
-          #     # '# => # ~> exception...'
-          #     [comment.whitespace, comment.text]
-          #   else # exception, no comment
-          #     # NORMAL EXCEPTION
-          #     # result  = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-          #     # CommentFormatter.call(line.size, value_marker, result, options)
-          #     # [comment.whitespace, comment.text]
-          #   end
 
           require 'seeing_is_believing/binary/annotate_end_of_file'
           AnnotateEndOfFile.add_stdout_stderr_and_exceptions_to new_body, @results, @options
@@ -106,6 +113,10 @@ class SeeingIsBelieving
 
       def nextline_marker
         @xnextline_marker ||= ('#' + ' '*value_marker.size.pred)
+      end
+
+      def exception_marker
+        @exception_marker ||= @options.fetch(:markers).fetch(:exception)
       end
 
       def value_regex

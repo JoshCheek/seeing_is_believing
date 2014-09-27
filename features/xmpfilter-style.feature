@@ -3,6 +3,12 @@ Feature: Xmpfilter style
   Support the same (or highly similar) interface as xmpfilter,
   so that people who use that lib can easily transition to SiB.
 
+  TODO:
+  * multiple values on pp lines
+  * show that exceptions respect line-length restriction flags
+  * Scenario: pp output on line with exception
+  * when input has previously identified exception
+
 
   Scenario: --xmpfilter-style Generic updating of marked lines
     Given the file "magic_comments.rb":
@@ -103,42 +109,44 @@ Feature: Xmpfilter style
     """
 
 
-    @josh1
   Scenario: Errors on annotated lines
     Given the file "xmpfilter_error_on_annotated_line.rb":
     """
-    raise "omg" # =>
+    raise "ZOMG\n!!!!" # =>
     """
     When I run "seeing_is_believing --xmpfilter-style xmpfilter_error_on_annotated_line.rb"
     Then stderr is empty
     And the exit status is 1
     Then stdout is:
     """
-    raise "omg" # => # ~> RuntimeError: ZOMG\n!!!!
+    raise "ZOMG\n!!!!" # => RuntimeError: ZOMG\n!!!!
 
     # ~> RuntimeError
-    # ~> omg
+    # ~> ZOMG
+    # ~> !!!!
     # ~>
     # ~> xmpfilter_error_on_annotated_line.rb:1:in `<main>'
     """
 
 
-    @josh2
   Scenario: Errors on unannotated lines
-    Given the file "xmpfilter_error_on_annotated_line.rb":
+    Given the file "xmpfilter_error_on_unannotated_line.rb":
     """
-    raise "omg"
+    raise "ZOMG\n!!!!"
     """
-    When I run "seeing_is_believing --xmpfilter-style xmpfilter_error_on_annotated_line.rb"
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter_error_on_unannotated_line.rb"
     Then stderr is empty
     And the exit status is 1
     Then stdout is:
     """
-    raise "omg" # =>
+    raise "ZOMG\n!!!!" # ~> RuntimeError: ZOMG\n!!!!
+
+    # ~> RuntimeError
+    # ~> ZOMG
+    # ~> !!!!
+    # ~>
+    # ~> xmpfilter_error_on_unannotated_line.rb:1:in `<main>'
     """
-
-
-  Scenario: pp output on line with exception
 
 
   Scenario: Cleaning previous output
