@@ -18,6 +18,7 @@ Feature: Xmpfilter style
     # =>
     "omg2"
     # => "not omg2"
+    3+3#=>
     """
     When I run "seeing_is_believing --xmpfilter-style magic_comments.rb"
     Then stderr is empty
@@ -35,6 +36,7 @@ Feature: Xmpfilter style
     # => "omg"
     "omg2"
     # => "omg2"
+    3+3# => 6
     """
 
 
