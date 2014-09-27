@@ -10,7 +10,15 @@ class SeeingIsBelieving
           exception: '# ~> ',
           stdout:    '# >> ',
           stderr:    '# !> ',
-          nextline:  '#    ',
+        }
+      end
+
+      # TODO: rename to default_marker_regexes ...or turn into fkn objects
+      def self.marker_regexes
+        { value:     '#\s*=>\s*',
+          exception: '#\s*~>\s*',
+          stdout:    '#\s*>>\s*',
+          stderr:    '#\s*!>\s*',
         }
       end
 
@@ -88,6 +96,7 @@ class SeeingIsBelieving
           shebang:             'ruby',
           result_as_json:      false,
           markers:             self.class.default_markers,
+          marker_regexes:      self.class.default_markers,
           short_help_screen:   self.class.help_screen(false),
           long_help_screen:    self.class.help_screen(true),
           safe:                false,
@@ -133,7 +142,6 @@ class SeeingIsBelieving
       exception_marker = markers.fetch(:exception)
       stdout_marker    = markers.fetch(:stdout)
       stderr_marker    = markers.fetch(:stderr)
-      nextline_marker  = markers.fetch(:nextline)
 
 <<FLAGS + if include_examples then <<EXAMPLES else '' end
 Usage: seeing_is_believing [options] [filename]
