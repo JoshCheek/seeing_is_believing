@@ -7,21 +7,21 @@ class SeeingIsBelieving
     # you sometimes have to run it 2x to get it to correctly reset whitespace
     # should wipe out the full_range rather than just the comment_range
     class RemoveAnnotations
-      def self.call(code, should_clean_values, markers)
-        new(code, should_clean_values, markers).call
+      def self.call(raw_code, should_clean_values, markers)
+        new(raw_code, should_clean_values, markers).call
       end
 
-      def initialize(code, should_clean_values, markers)
+      def initialize(raw_code, should_clean_values, markers)
         self.should_clean_values = should_clean_values
-        self.code                = code
+        self.raw_code            = raw_code
         self.markers             = markers # TECHNICALLY THESE ARE REGEXES RIGHT NOW
+        self.code                = Code.new(raw_code, 'strip_comments')
       end
 
       def call
-        code_obj         = Code.new(code, 'strip_comments')
         removed_comments = {result: [], exception: [], stdout: [], stderr: [], nextline: []}
 
-        comment_chunks = code_obj
+        comment_chunks = code
           .inline_comments
           .map { |c|
             annotation = c.text[value_regex] || c.text[exception_regex] || c.text[stdout_regex] || c.text[stderr_regex]
@@ -42,34 +42,34 @@ class SeeingIsBelieving
 
         comment_chunks.each do |comment, rest|
           removed_comments[:nextline].concat rest
-          rest.each { |c| code_obj.rewriter.remove c.comment_range }
+          rest.each { |c| code.rewriter.remove c.comment_range }
 
           case comment.text
           when value_regex
             next unless should_clean_values
             removed_comments[:result] << comment
-            code_obj.rewriter.remove comment.comment_range
+            code.rewriter.remove comment.comment_range
           when exception_regex
             removed_comments[:exception] << comment
-            code_obj.rewriter.remove comment.comment_range
+            code.rewriter.remove comment.comment_range
           when stdout_regex
             removed_comments[:stdout] << comment
-            code_obj.rewriter.remove comment.comment_range
+            code.rewriter.remove comment.comment_range
           when stderr_regex
             removed_comments[:stderr] << comment
-            code_obj.rewriter.remove comment.comment_range
+            code.rewriter.remove comment.comment_range
           else
             raise "This should be impossible! Something must be broken in the comment section above"
           end
         end
 
-        remove_whitespace_preceding_comments(code_obj.buffer, code_obj.rewriter, removed_comments)
-        code_obj.rewriter.process
+        remove_whitespace_preceding_comments(code.buffer, code.rewriter, removed_comments)
+        code.rewriter.process
       end
 
       private
 
-      attr_accessor :code, :should_clean_values, :buffer, :markers
+      attr_accessor :raw_code, :should_clean_values, :buffer, :markers, :code
 
       def remove_whitespace_preceding_comments(buffer, rewriter, removed_comments)
         removed_comments[:result].each    { |comment| remove_whitespace_before comment.comment_range.begin_pos, buffer, rewriter, false }
@@ -85,9 +85,9 @@ class SeeingIsBelieving
       def remove_whitespace_before(index, buffer, rewriter, remove_preceding_newline)
         end_pos   = index
         begin_pos = end_pos - 1
-        begin_pos -= 1 while code[begin_pos] =~ /\s/ && code[begin_pos] != "\n"
-        begin_pos -= 1 if code[begin_pos] == "\n"
-        begin_pos -= 1 if code[begin_pos] == "\n" && remove_preceding_newline
+        begin_pos -= 1 while raw_code[begin_pos] =~ /\s/ && raw_code[begin_pos] != "\n"
+        begin_pos -= 1 if raw_code[begin_pos] == "\n"
+        begin_pos -= 1 if raw_code[begin_pos] == "\n" && remove_preceding_newline
         return if begin_pos.next == end_pos
         rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
       end
