@@ -15,6 +15,7 @@ class SeeingIsBelieving
         self.producer_thread   = Thread.new do
           finish = "finish"
           begin
+            resultstream.sync = true
             loop do
               to_publish = queue.shift
               if to_publish == finish
@@ -26,6 +27,8 @@ class SeeingIsBelieving
             end
           rescue IOError, Errno::EPIPE
             loop { break if queue.shift == finish }
+          ensure
+            resultstream.flush rescue nil
           end
         end
       end
