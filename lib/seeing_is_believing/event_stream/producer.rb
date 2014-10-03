@@ -69,6 +69,7 @@ class SeeingIsBelieving
       end
 
       def record_exception(line_number, exception)
+        self.exitstatus = exception.status if exception.kind_of? SystemExit
         if line_number
           self.num_lines = line_number if num_lines < line_number
         elsif filename
