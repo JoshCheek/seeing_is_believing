@@ -34,7 +34,6 @@ at_exit do
   $SiB.exitstatus ||= 0
   $SiB.exitstatus   = 1         if $!
   $SiB.exitstatus   = $!.status if $!.kind_of? SystemExit
-  $SiB.bug_in_sib   = $! && ! $!.kind_of?(SystemExit)
 
   $SiB.finish!
 end

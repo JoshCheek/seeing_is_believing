@@ -3,11 +3,11 @@ class SeeingIsBelieving
   module EventStream
     require 'thread'
     class Producer
-      attr_accessor :exitstatus, :bug_in_sib, :max_line_captures, :num_lines
+      attr_accessor :exitstatus, :max_line_captures, :num_lines, :filename
 
       def initialize(resultstream)
+        self.filename          = nil
         self.exitstatus        = 0
-        self.bug_in_sib        = false
         self.max_line_captures = Float::INFINITY
         self.num_lines         = 0
         self.recorded_results  = []
@@ -31,10 +31,6 @@ class SeeingIsBelieving
             resultstream.flush rescue nil
           end
         end
-      end
-
-      def bug_in_sib=(bool)
-        @bug_in_sib = (bool ? true : false)
       end
 
       # for a consideration of many different ways of doing this, see 5633064
@@ -73,7 +69,15 @@ class SeeingIsBelieving
       end
 
       def record_exception(line_number, exception)
-        self.num_lines = line_number if num_lines < line_number
+        if line_number
+          self.num_lines = line_number if num_lines < line_number
+        elsif filename
+          begin
+            line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
+          rescue Exception
+          end
+        end
+        line_number ||= -1
         queue << "exception"
         queue << "  line_number #{line_number}"
         queue << "  class_name  #{to_string_token exception.class.name}"
@@ -93,7 +97,6 @@ class SeeingIsBelieving
       end
 
       def finish!
-        queue << "bug_in_sib #{bug_in_sib}"
         queue << "max_line_captures #{max_line_captures}"
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"

@@ -24,7 +24,6 @@ require 'seeing_is_believing/event_stream/update_result'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-
     def self.call(*args)
       new(*args).call
     end
@@ -51,10 +50,9 @@ class SeeingIsBelieving
           write_program_to_file
           begin
             evaluate_file
-            fail if result.bug_in_sib?
             result
           rescue Exception => error
-            error = wrap_error error if error_implies_bug_in_sib? error
+            error = wrap_error error unless error.kind_of? Timeout::Error
             raise error
           end
         },
@@ -74,10 +72,6 @@ class SeeingIsBelieving
     private
 
     attr_accessor :stdout, :stderr, :exitstatus
-
-    def error_implies_bug_in_sib?(error)
-      not error.kind_of? Timeout::Error
-    end
 
     def we_will_not_overwrite_existing_tempfile!
       raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename
@@ -110,7 +104,7 @@ class SeeingIsBelieving
         }
 
         # consume events
-        self.result = Result.new
+        self.result = Result.new # set on self b/c if an error is raised, we still want to keep what we recorded
         event_consumer = Thread.new do
           EventStream::Consumer.new(process_stdout)
                                .each { |event| EventStream::UpdateResult.call result, event }

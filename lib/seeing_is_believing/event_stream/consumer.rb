@@ -89,8 +89,6 @@ class SeeingIsBelieving
           Events::Stdout.new(extract_string line)
         when :stderr
           Events::Stderr.new(extract_string line)
-        when :bug_in_sib
-          Events::BugInSiB.new(extract_token(line) == 'true')
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i

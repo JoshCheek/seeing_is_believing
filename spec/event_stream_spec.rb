@@ -58,7 +58,7 @@ module SeeingIsBelieving::EventStream
 
       it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
         producer.finish!
-        consumer.call 5
+        consumer.call 4
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         expect(consumer).to be_finished
       end
@@ -258,18 +258,18 @@ module SeeingIsBelieving::EventStream
     end
 
     describe 'exceptions' do
-      def assert_exception(recorded_exception, recorded_line_no, class_name, message_matcher, backtrace_index, backtrace_line)
+      def assert_exception(recorded_exception, options={})
         expect(recorded_exception).to be_a_kind_of Events::Exception
-        expect(recorded_exception.line_number).to eq recorded_line_no
-        expect(recorded_exception.class_name).to  eq class_name
-        expect(recorded_exception.message).to match message_matcher
+        expect(recorded_exception.line_number).to eq    options[:recorded_line_no]
+        expect(recorded_exception.class_name ).to match options[:class_name_matcher] if options[:class_name_matcher]
+        expect(recorded_exception.message    ).to match options[:message_matcher]    if options[:message_matcher]
 
         backtrace = recorded_exception.backtrace
         expect(backtrace).to be_a_kind_of Array
         expect(backtrace).to be_all { |frame| String === frame }
-        frame = backtrace[backtrace_index]
-        expect(frame).to match __FILE__
-        expect(frame).to match /\b#{backtrace_line}\b/
+        frame = backtrace[options[:backtrace_index]||0]
+        expect(frame).to match /(^|\b)#{options[:backtrace_filename]}(\b|$)/ if options[:backtrace_filename]
+        expect(frame).to match /(^|\b)#{options[:backtrace_line]}(\b|$)/     if options[:backtrace_line]
       end
 
       it 'emits the line_number, an escaped class_name, an escaped message, and escaped backtrace' do
@@ -278,7 +278,13 @@ module SeeingIsBelieving::EventStream
         rescue
           producer.record_exception 12, $!
         end
-        assert_exception consumer.call, 12, 'ZeroDivisionError', /\Aomg\Z/, 0, __LINE__-4
+        assert_exception consumer.call,
+                         recorded_line_no:   12,
+                         class_name_matcher: /^ZeroDivisionError$/,
+                         message_matcher:    /\Aomg\Z/,
+                         backtrace_index:    0,
+                         backtrace_line:     (__LINE__-9),
+                         backtrace_filename: __FILE__
       end
 
       example 'Example: Common edge case: name error' do
@@ -288,7 +294,61 @@ module SeeingIsBelieving::EventStream
           producer.record_exception 99, $!
         end
         backtrace_frame = 1 # b/c this one will get caught by method missing
-        assert_exception consumer.call, 99, 'NameError', /\bnot_a_local_or_meth\b/, 1, __LINE__-5
+        assert_exception consumer.call,
+                         recorded_line_no:   99,
+                         class_name_matcher: /^NameError$/,
+                         message_matcher:    /\bnot_a_local_or_meth\b/,
+                         backtrace_index:    1,
+                         backtrace_line:     (__LINE__-10),
+                         backtrace_filename: __FILE__
+      end
+
+
+      let(:exception) { begin; raise "zomg"; rescue; $!; end }
+      let(:linenum)   { __LINE__ - 1 }
+      it "uses provided line num        when: | line num is provided  | knows file        | exception comes from within file" do
+        producer.filename = __FILE__
+        producer.record_exception 12, exception
+        assert_exception consumer.call, recorded_line_no: 12
+      end
+      it "uses provided line num        when: | line num is provided  | knows file        | exception comes from elsewhere" do
+        exception.backtrace.replace ['otherfile.rb']
+        producer.record_exception 12, exception
+        producer.filename = __FILE__
+        assert_exception consumer.call, recorded_line_no: 12
+      end
+      it "uses provided line num        when: | line num is provided  | doesn't know file | exception comes from within file" do
+        producer.filename = nil
+        producer.record_exception 12, exception
+        assert_exception consumer.call, recorded_line_no: 12
+      end
+      it "uses provided line num        when: | line num is provided  | doesn't know file | exception comes from elsewhere" do
+        exception.backtrace.replace ['otherfile.rb']
+        producer.filename = nil
+        producer.record_exception 12, exception
+        assert_exception consumer.call, recorded_line_no: 12
+      end
+      it "finds line num from backtrace when: | line num not provided | knows file        | exception comes from within file" do
+        producer.filename = __FILE__
+        producer.record_exception nil, exception
+        assert_exception consumer.call, recorded_line_no: linenum
+      end
+      it "line num is -1                when: | line num not provided | knows file        | exception comes from elsewhere" do
+        exception.backtrace.replace ['otherfile.rb']
+        producer.filename = __FILE__
+        producer.record_exception nil, exception
+        assert_exception consumer.call, recorded_line_no: -1
+      end
+      it "line num is -1                when: | line num not provided | doesn't know file | exception comes from within file" do
+        producer.filename = nil
+        producer.record_exception nil, exception
+        assert_exception consumer.call, recorded_line_no: -1
+      end
+      it "line num is -1                when: | line num not provided | doesn't know file | exception comes from elsewhere" do
+        exception.backtrace.replace ['otherfile.rb']
+        producer.filename = nil
+        producer.record_exception nil, exception
+        assert_exception consumer.call, recorded_line_no: -1
       end
     end
 
@@ -309,23 +369,7 @@ module SeeingIsBelieving::EventStream
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
         producer.finish!
-        consumer.call(5).find { |e| e.class == event_class }
-      end
-
-      describe 'bug_in_sib' do
-        it 'truthy values are transated to true' do
-          producer.bug_in_sib = 'a value'
-          expect(final_event(producer, consumer, Events::BugInSiB).value).to equal true
-        end
-
-        it 'falsy values are translated to false' do
-          producer.bug_in_sib = nil
-          expect(final_event(producer, consumer, Events::BugInSiB).value).to equal false
-        end
-
-        it 'is false by default, and is always emitted' do
-          expect(final_event(producer, consumer, Events::BugInSiB).value).to equal false
-        end
+        consumer.call(4).find { |e| e.class == event_class }
       end
 
       describe 'max_line_captures' do
@@ -356,15 +400,15 @@ module SeeingIsBelieving::EventStream
 
         it 'updates its value if it sees a result from a line larger than its value' do
           producer.num_lines = 2
-          producer.record_result :sometype, 5, :someval
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 5
+          producer.record_result :sometype, 100, :someval
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
         end
 
         it 'updates its value if it sees an exception from a line larger than its value' do
           producer.num_lines = 2
           begin; raise; rescue; e = $!; end
-          producer.record_exception 5, e
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 5
+          producer.record_exception 100, e
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
         end
       end
 

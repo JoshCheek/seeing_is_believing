@@ -392,25 +392,21 @@ Feature:
     end
     """
 
-  @not-implemented
   Scenario: Is cool with exceptions raised in at_exit hooks
     Given the file "at_exit_exception_direct.rb" "at_exit { raise 'zomg' }"
     When I run "seeing_is_believing at_exit_exception_direct.rb"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "
-    """
-    at_exit { raise 'zomg' }
-    """
+    And stdout includes "at_exit { raise 'zomg' }  # =>"
+    And stdout includes "zomg (RuntimeError)"
+    And stdout includes "# !>"
 
-  @not-implemented
   Scenario: Is cool with exceptions raised in at_exit exceptions by code not in the running file (e.g. SimpleCov)
     Given the file "at_exit_exception_indirect1.rb" "at_exit { raise 'zomg' }"
     Given the file "at_exit_exception_indirect2.rb" "require_relative 'at_exit_exception_indirect1'"
     When I run "seeing_is_believing at_exit_exception_indirect2.rb"
     Then stderr is empty
     And the exit status is 0
-    And stdout is:
-    """
-    require_relative 'at_exit_exception_indirect1'
-    """
+    And stdout includes "require_relative 'at_exit_exception_indirect1'  # => true"
+    And stdout includes "zomg (RuntimeError)"
+    And stdout includes "# !>"
