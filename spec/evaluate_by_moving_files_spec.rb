@@ -101,7 +101,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(result.stdout).to eq "123\n"
   end
 
-  it 'will set the encoding' do
+  it 'can set the encoding' do
     test = -> { expect(invoke('print "ç"', encoding: 'u').stdout).to eq "ç" }
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
       pending "Rubinius doesn't seem to use -Kx, but rather -U"
@@ -111,11 +111,15 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     end
   end
 
-  it 'if it fails, it prints some debugging information and raises an error' do
+  it 'if it fails, it tells the debugger some information and raises an error' do
     error_stream = StringIO.new
     evaluator = described_class.new 'raise "omg"', filename, debugger: SeeingIsBelieving::Debugger.new(stream: error_stream)
     FileUtils.rm_f evaluator.temp_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib
     expect(error_stream.string).to include "Program could not be evaluated"
+  end
+
+  it 'does not blow up on exceptions raised in at_exit blocks', not_implemented: true do
+    expect { invoke 'at_exit { raise "zomg" }' }.to_not raise_error
   end
 end
