@@ -2,6 +2,7 @@ require 'seeing_is_believing/wrap_expressions'
 class SeeingIsBelieving
   module InspectExpressions
     def self.call(program, filename, number_of_captures, options={})
+      # TODO: much of this is duplicated in annotate_xmpfilter_stle
       number_of_captures_as_str = number_of_captures.inspect
       number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
 

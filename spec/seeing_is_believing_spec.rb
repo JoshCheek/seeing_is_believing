@@ -145,6 +145,32 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
+  it 'does not let Ruby print exception information to stderr (ie should look same as if exception was rescued)' do
+    result = invoke("$stderr.puts('Just this');\n raise Exception, 'Not this'")
+    expect(result.stderr).to eq "Just this\n"
+
+    result = invoke("$stderr.puts('Just this');\n at_exit { raise Exception, 'Not this' }")
+    expect(result.stderr).to eq "Just this\n"
+
+    result = invoke("$stderr.puts('Just this');\n Kernel.at_exit { raise Exception, 'Not this' }")
+    expect(result.stderr).to eq "Just this\n"
+  end
+
+  it 'does not include information about the_matrix in the exception backtraces' do
+    result1 = invoke("raise Exception, 'something'")
+    result2 = invoke("at_exit { raise Exception, 'something' }")
+    result1.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
+    result2.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
+  end
+
+  it 'can print in at_exit hooks' do
+    result = invoke("at_exit { $stderr.print 'err output'; $stdout.print 'out output' }")
+    expect(result.stderr).to eq 'err output'
+    expect(result.stdout).to eq 'out output'
+  end
+
+
+
   it 'does not fuck up __LINE__ macro' do
     expect(values_for( '__LINE__
                         __LINE__

@@ -8,29 +8,47 @@
 require_relative 'version'
 require_relative 'event_stream/producer'
 
-stdout_real_obj = STDOUT      # the real Ruby object, fake file descriptor
-stdout_real_fd  = STDOUT.dup  # duped Ruby object,    real file descriptor
-read_from_mock_out, write_to_mock_out = IO.pipe
-stdout_real_obj.reopen write_to_mock_out
+event_stream = STDOUT.dup  # duped Ruby object with the real file descriptor
+$SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 
-stderr_real_obj = STDERR
-stderr_real_fd  = STDERR.dup
-read_from_mock_err, write_to_mock_err = IO.pipe
-stderr_real_obj.reopen write_to_mock_err
+stdout = STDOUT # keep our own ref, b/c user could mess w/ constants and globals
+read_stdout, write_stdout = IO.pipe
+stdout.reopen(write_stdout)
 
-$SiB = SeeingIsBelieving::EventStream::Producer.new(stdout_real_fd)
+stderr = STDERR
+read_stderr, write_stderr = IO.pipe
+stderr.reopen(write_stderr)
 
 at_exit do
-  stdout_real_obj.reopen stdout_real_fd
-  write_to_mock_out.close unless write_to_mock_out.closed?
-  $SiB.record_stdout read_from_mock_out.read
-  read_from_mock_out.close
+  _, blackhole = IO.pipe
+  stdout.reopen(blackhole)
+  stderr.reopen(blackhole)
 
-  stderr_real_obj.reopen stderr_real_fd
-  write_to_mock_err.close unless write_to_mock_err.closed?
-  $SiB.record_stderr read_from_mock_err.read
-  read_from_mock_err.close
+  write_stdout.close unless write_stdout.closed?
+  $SiB.record_stdout read_stdout.read
+
+  write_stderr.close unless write_stderr.closed?
+  $SiB.record_stderr read_stderr.read
 
   $SiB.record_exception nil, $! if $!
   $SiB.finish!
+end
+
+
+# Wrap exceptions in at_exit hooks, b/c otherwise Ruby prints them to stderr before we get the opportunity to deal with them
+module Kernel
+  real_at_exit = Kernel.method(:at_exit)
+
+  define_method :at_exit do |&block|
+    real_at_exit.call do
+      begin
+        block.call
+      rescue Exception
+        $!.backtrace.reject! { |line| line.include? __FILE__ }
+        $SiB.record_exception nil, $!
+      end
+    end
+  end
+
+  module_function :at_exit
 end

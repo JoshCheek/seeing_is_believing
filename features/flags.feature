@@ -385,7 +385,7 @@ Feature: Using flags
   Scenario: --inherit-exit-status in an at_exit block
     Given the file "exit_status_in_at_exit_block.rb" "at_exit { exit 10 }"
     When I run "seeing_is_believing exit_status_in_at_exit_block.rb"
-    Then the exit status is 0
+    Then the exit status is 1
     When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
     Then the exit status is 10
 
