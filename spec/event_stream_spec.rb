@@ -258,6 +258,13 @@ module SeeingIsBelieving::EventStream
     end
 
     describe 'exceptions' do
+      def record_exception(linenum=nil, &raises_exception)
+        raises_exception.call
+      rescue Exception
+        producer.record_exception linenum, $!
+        return raises_exception.source_location.last
+      end
+
       def assert_exception(recorded_exception, options={})
         expect(recorded_exception).to be_a_kind_of Events::Exception
         expect(recorded_exception.line_number).to eq    options[:recorded_line_no]
@@ -273,100 +280,96 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'emits the line_number, an escaped class_name, an escaped message, and escaped backtrace' do
-        begin
-          raise ZeroDivisionError, 'omg'
-        rescue
-          producer.record_exception 12, $!
-        end
+        backtrace_line = record_exception(12) { raise ZeroDivisionError, 'omg' }
         assert_exception consumer.call,
                          recorded_line_no:   12,
                          class_name_matcher: /^ZeroDivisionError$/,
                          message_matcher:    /\Aomg\Z/,
                          backtrace_index:    0,
-                         backtrace_line:     (__LINE__-9),
+                         backtrace_line:     backtrace_line,
                          backtrace_filename: __FILE__
       end
 
       example 'Example: Common edge case: name error' do
-        begin
-          not_a_local_or_meth
-        rescue
-          producer.record_exception 99, $!
-        end
-        backtrace_frame = 1 # b/c this one will get caught by method missing
+        backtrace_line  = record_exception(99) { not_a_local_or_meth }
+        backtrace_frame = 1 # b/c this one will get caught by rspec's method missing
         assert_exception consumer.call,
                          recorded_line_no:   99,
                          class_name_matcher: /^NameError$/,
                          message_matcher:    /\bnot_a_local_or_meth\b/,
                          backtrace_index:    1,
-                         backtrace_line:     (__LINE__-10),
+                         backtrace_line:     backtrace_line,
                          backtrace_filename: __FILE__
       end
 
-      it 'sets the exit status if the exception is a SystemExit' do
-        begin
-          exit 22
-        rescue SystemExit
-          producer.record_exception 12, $!
+      context 'when the exception is a SystemExit' do
+        it 'sets the exit status to the one provided' do
+          record_exception { exit 22 }
+          expect(producer.exitstatus).to eq 22
         end
-        expect(producer.exitstatus).to eq 22
+
+        it 'sets the exit status to 0 or 1 if exited with true or false' do
+          expect(producer.exitstatus).to eq 0
+          record_exception { exit true }
+          expect(producer.exitstatus).to eq 0
+          record_exception { exit false }
+          expect(producer.exitstatus).to eq 1
+        end
+
+        it 'sets the exit status to 1 if the exception is not a SystemExit' do
+          expect(producer.exitstatus).to eq 0
+          record_exception { raise }
+          expect(producer.exitstatus).to eq 1
+        end
       end
 
-      it 'sets the exit status to 0 if the exception is not a SystemExit' do
-        expect(producer.exitstatus).to eq 0
-        begin
-          raise
-        rescue RuntimeError
-          producer.record_exception nil, $!
+      context 'recorded line number | line num is provided | it knows the file | exception comes from within file' do
+        let(:exception) { begin; raise "zomg"; rescue; $!; end }
+        let(:linenum)   { __LINE__ - 1 }
+        it "provided one       | true                 | true              | true" do
+          producer.filename = __FILE__
+          producer.record_exception 12, exception
+          assert_exception consumer.call, recorded_line_no: 12
         end
-        expect(producer.exitstatus).to eq 1
-      end
-
-      let(:exception) { begin; raise "zomg"; rescue; $!; end }
-      let(:linenum)   { __LINE__ - 1 }
-      it "uses provided line num        when: | line num is provided  | knows file        | exception comes from within file" do
-        producer.filename = __FILE__
-        producer.record_exception 12, exception
-        assert_exception consumer.call, recorded_line_no: 12
-      end
-      it "uses provided line num        when: | line num is provided  | knows file        | exception comes from elsewhere" do
-        exception.backtrace.replace ['otherfile.rb']
-        producer.record_exception 12, exception
-        producer.filename = __FILE__
-        assert_exception consumer.call, recorded_line_no: 12
-      end
-      it "uses provided line num        when: | line num is provided  | doesn't know file | exception comes from within file" do
-        producer.filename = nil
-        producer.record_exception 12, exception
-        assert_exception consumer.call, recorded_line_no: 12
-      end
-      it "uses provided line num        when: | line num is provided  | doesn't know file | exception comes from elsewhere" do
-        exception.backtrace.replace ['otherfile.rb']
-        producer.filename = nil
-        producer.record_exception 12, exception
-        assert_exception consumer.call, recorded_line_no: 12
-      end
-      it "finds line num from backtrace when: | line num not provided | knows file        | exception comes from within file" do
-        producer.filename = __FILE__
-        producer.record_exception nil, exception
-        assert_exception consumer.call, recorded_line_no: linenum
-      end
-      it "line num is -1                when: | line num not provided | knows file        | exception comes from elsewhere" do
-        exception.backtrace.replace ['otherfile.rb']
-        producer.filename = __FILE__
-        producer.record_exception nil, exception
-        assert_exception consumer.call, recorded_line_no: -1
-      end
-      it "line num is -1                when: | line num not provided | doesn't know file | exception comes from within file" do
-        producer.filename = nil
-        producer.record_exception nil, exception
-        assert_exception consumer.call, recorded_line_no: -1
-      end
-      it "line num is -1                when: | line num not provided | doesn't know file | exception comes from elsewhere" do
-        exception.backtrace.replace ['otherfile.rb']
-        producer.filename = nil
-        producer.record_exception nil, exception
-        assert_exception consumer.call, recorded_line_no: -1
+        it "provided one       | true                 | true              | false" do
+          exception.backtrace.replace ['otherfile.rb']
+          producer.record_exception 12, exception
+          producer.filename = __FILE__
+          assert_exception consumer.call, recorded_line_no: 12
+        end
+        it "provided one       | true                 | false             | true" do
+          producer.filename = nil
+          producer.record_exception 12, exception
+          assert_exception consumer.call, recorded_line_no: 12
+        end
+        it "provided one       | true                 | false             | false" do
+          exception.backtrace.replace ['otherfile.rb']
+          producer.filename = nil
+          producer.record_exception 12, exception
+          assert_exception consumer.call, recorded_line_no: 12
+        end
+        it "from backtrace     | false                | true              | true" do
+          producer.filename = __FILE__
+          producer.record_exception nil, exception
+          assert_exception consumer.call, recorded_line_no: linenum
+        end
+        it "-1                 | false                | true              | false" do
+          exception.backtrace.replace ['otherfile.rb']
+          producer.filename = __FILE__
+          producer.record_exception nil, exception
+          assert_exception consumer.call, recorded_line_no: -1
+        end
+        it "-1                 | false                | false             | true" do
+          producer.filename = nil
+          producer.record_exception nil, exception
+          assert_exception consumer.call, recorded_line_no: -1
+        end
+        it "-1                 | false                | false             | false" do
+          exception.backtrace.replace ['otherfile.rb']
+          producer.filename = nil
+          producer.record_exception nil, exception
+          assert_exception consumer.call, recorded_line_no: -1
+        end
       end
     end
 
