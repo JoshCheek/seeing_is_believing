@@ -30,31 +30,12 @@ class SeeingIsBelieving
   end
 
   def call
-    @memoized_result ||= begin
-      new_program = program_that_will_record_expressions
+    @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
+      filename    = @filename || File.join(dir, 'program.rb')
+      new_program = @record_expressions.call "#{@program.chomp}\n", filename, @number_of_captures
       @debugger.context("TRANSLATED PROGRAM") { new_program }
-      result = result_for new_program
-      @debugger.context("RESULT") { result.inspect }
-      result
-    end
-  end
 
-  private
-
-  def to_stream(string_or_stream)
-    return string_or_stream if string_or_stream.respond_to? :gets
-    StringIO.new string_or_stream
-  end
-
-  def program_that_will_record_expressions
-    @record_expressions.call "#{@program.chomp}\n", @number_of_captures
-  end
-
-  def result_for(program)
-    Dir.mktmpdir "seeing_is_believing_temp_dir" do |dir|
-      filename = @filename || File.join(dir, 'program.rb')
-
-      @evaluator.call program,
+      result = @evaluator.call new_program,
                       filename,
                       input_stream:       @stdin,
                       require:            @require,
@@ -63,6 +44,17 @@ class SeeingIsBelieving
                       timeout:            @timeout,
                       ruby_executable:    @ruby_executable,
                       debugger:           @debugger
-    end
+
+      @debugger.context("RESULT") { result.inspect }
+
+      result
+    }
+  end
+
+  private
+
+  def to_stream(string_or_stream)
+    return string_or_stream if string_or_stream.respond_to? :gets
+    StringIO.new string_or_stream
   end
 end

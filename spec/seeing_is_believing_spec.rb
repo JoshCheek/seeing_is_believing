@@ -46,9 +46,10 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'allows uers to pass in their own inspection recorder' do
-    wrapper = lambda { |program, num_captures|
+    wrapper = lambda { |program, filename, num_captures|
       SeeingIsBelieving::InspectExpressions.call \
         program,
+        filename,
         num_captures,
         after_each: -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
     }
@@ -444,7 +445,7 @@ RSpec.describe SeeingIsBelieving do
     it 'prints the pre-evaluated program' do
       call
       expect(stream.string).to include "TRANSLATED PROGRAM:"
-      expect(stream.string).to include "\nbegin;" # there is more, but we're just interested in showing that it wound up in the stream
+      expect(stream.string).to include "$SiB.num_lines" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
     it 'prints the result' do

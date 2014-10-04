@@ -303,13 +303,23 @@ module SeeingIsBelieving::EventStream
                          backtrace_filename: __FILE__
       end
 
-      it 'sets the exit status if the exception is an exit' do
+      it 'sets the exit status if the exception is a SystemExit' do
         begin
           exit 22
-        rescue Exception
+        rescue SystemExit
           producer.record_exception 12, $!
         end
         expect(producer.exitstatus).to eq 22
+      end
+
+      it 'sets the exit status to 0 if the exception is not a SystemExit' do
+        expect(producer.exitstatus).to eq 0
+        begin
+          raise
+        rescue RuntimeError
+          producer.record_exception nil, $!
+        end
+        expect(producer.exitstatus).to eq 1
       end
 
       let(:exception) { begin; raise "zomg"; rescue; $!; end }

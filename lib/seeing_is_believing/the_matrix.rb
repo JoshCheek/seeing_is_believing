@@ -31,9 +31,6 @@ at_exit do
   $SiB.record_stderr read_from_mock_err.read
   read_from_mock_err.close
 
-  $SiB.exitstatus ||= 0
-  $SiB.exitstatus   = 1         if $!
-  $SiB.exitstatus   = $!.status if $!.kind_of? SystemExit
-
+  $SiB.record_exception nil, $! if $!
   $SiB.finish!
 end
