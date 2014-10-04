@@ -33,22 +33,3 @@ at_exit do
   $SiB.record_exception nil, $! if $!
   $SiB.finish!
 end
-
-
-# Wrap exceptions in at_exit hooks, b/c otherwise Ruby prints them to stderr before we get the opportunity to deal with them
-module Kernel
-  real_at_exit = Kernel.method(:at_exit)
-
-  define_method :at_exit do |&block|
-    real_at_exit.call do
-      begin
-        block.call
-      rescue Exception
-        $!.backtrace.reject! { |line| line.include? __FILE__ }
-        $SiB.record_exception nil, $!
-      end
-    end
-  end
-
-  module_function :at_exit
-end

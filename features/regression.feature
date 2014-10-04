@@ -399,11 +399,10 @@ Feature:
     When I run "seeing_is_believing at_exit_exception_direct.rb"
     Then stderr is empty
     And the exit status is 1
-    And stdout includes "at_exit { raise 'zomg' }  # ~> RuntimeError: zomg"
-    And stdout includes "# ~> RuntimeError"
-    And stdout includes "# ~> zomg"
+    And stdout includes "at_exit { raise 'zomg' }  # ~>"
+    And stdout includes "RuntimeError"
+    And stdout includes "zomg"
     And stdout does not include "the_matrix"
-    And stdout does not include "# !>"
 
 
   Scenario: Is cool with exceptions raised in at_exit exceptions by code not in the running file (e.g. SimpleCov)
@@ -413,6 +412,5 @@ Feature:
     Then stderr is empty
     And the exit status is 1
     And stdout includes "require_relative 'at_exit_exception_indirect1'  # => true"
-    And stdout includes "# ~> RuntimeError"
-    And stdout includes "# ~> zomg"
-    And stdout does not include "# !>"
+    And stdout includes "RuntimeError"
+    And stdout includes "zomg"

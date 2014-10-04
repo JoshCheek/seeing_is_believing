@@ -145,28 +145,26 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
-  it 'does not let Ruby print exception information to stderr (ie should look same as if exception was rescued)' do
-    result = invoke("$stderr.puts('Just this');\n raise Exception, 'Not this'")
-    expect(result.stderr).to eq "Just this\n"
+  context 'exceptions in exit blocks', t:true do
+    # I'm punting on this because there is just no good way to stop that from happening without changing actual behaviour
+    # see https://github.com/JoshCheek/seeing_is_believing/issues/24
+    it 'does not include information about the_matrix in the exception backtraces' do
+      result1 = invoke("raise Exception, 'something'")
+      result2 = invoke("at_exit { raise Exception, 'something' }")
+      result1.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
+      result2.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
+    end
 
-    result = invoke("$stderr.puts('Just this');\n at_exit { raise Exception, 'Not this' }")
-    expect(result.stderr).to eq "Just this\n"
+    it 'can print in at_exit hooks' do
+      result = invoke("at_exit { $stderr.print 'err output'; $stdout.print 'out output' }")
+      expect(result.stderr).to eq 'err output'
+      expect(result.stdout).to eq 'out output'
+    end
 
-    result = invoke("$stderr.puts('Just this');\n Kernel.at_exit { raise Exception, 'Not this' }")
-    expect(result.stderr).to eq "Just this\n"
-  end
-
-  it 'does not include information about the_matrix in the exception backtraces' do
-    result1 = invoke("raise Exception, 'something'")
-    result2 = invoke("at_exit { raise Exception, 'something' }")
-    result1.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
-    result2.exception.backtrace.each { |line| expect(line).to_not match /the_matrix/ }
-  end
-
-  it 'can print in at_exit hooks' do
-    result = invoke("at_exit { $stderr.print 'err output'; $stdout.print 'out output' }")
-    expect(result.stderr).to eq 'err output'
-    expect(result.stdout).to eq 'out output'
+    it 'can see previous hooks exceptions' do
+      result = invoke("at_exit { puts $!.message.reverse}; at_exit { raise 'reverse this' }")
+      expect(result.stdout).to eq "siht esrever\n"
+    end
   end
 
 
