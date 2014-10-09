@@ -33,6 +33,14 @@ class SeeingIsBelieving
         end
       end
 
+      def version=(version)
+        @version = version
+        queue << "version #{to_string_token version}"
+      end
+      attr_reader :version
+      def ver() version end
+
+
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
         [Marshal.dump(string.to_s)].pack('m0')

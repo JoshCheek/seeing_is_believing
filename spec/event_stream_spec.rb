@@ -373,6 +373,23 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+    describe 'version', t:true do
+      describe 'setting the version' do
+        it 'emits the version info' do
+          producer.version = '1.2.3'
+          expect(consumer.call).to eq Events::Version.new("1.2.3")
+        end
+      end
+
+      it 'ver and version return the version, if it has been set' do
+        expect(producer.ver).to eq nil
+        expect(producer.version).to eq nil
+        producer.version = '4.5.6'
+        expect(producer.ver).to eq '4.5.6'
+        expect(producer.version).to eq '4.5.6'
+      end
+    end
+
     describe 'stdout' do
       it 'is an escaped string' do
         producer.record_stdout("this is the stdout¡")
