@@ -5,6 +5,11 @@ class SeeingIsBelieving
 
     attr_accessor :stdout, :stderr, :exitstatus, :number_of_captures, :exception, :num_lines, :sib_version, :ruby_version, :filename
 
+    def initialize
+      self.stdout = ''
+      self.stderr = ''
+    end
+
     alias has_exception? exception
 
     def has_stdout?

@@ -15,20 +15,36 @@ stdout = STDOUT # keep our own ref, b/c user could mess w/ constants and globals
 read_stdout, write_stdout = IO.pipe
 stdout.reopen(write_stdout)
 
+stdout_bridge = Thread.new do
+  while line = read_stdout.gets
+    $SiB.record_stdout line
+  end
+  read_stdout.close
+end
+
+
 stderr = STDERR
 read_stderr, write_stderr = IO.pipe
 stderr.reopen(write_stderr)
 
+stderr_bridge = Thread.new do
+  while line = read_stderr.gets
+    $SiB.record_stderr line
+  end
+  read_stderr.close
+end
+
 at_exit do
-  _, blackhole = IO.pipe
+  # idk if this matters or not
+  _, blackhole = IO.pipe # if it does, there should be something like File::NULL
   stdout.reopen(blackhole)
   stderr.reopen(blackhole)
 
   write_stdout.close unless write_stdout.closed?
-  $SiB.record_stdout read_stdout.read
-
   write_stderr.close unless write_stderr.closed?
-  $SiB.record_stderr read_stderr.read
+
+  stdout_bridge.join
+  stderr_bridge.join
 
   $SiB.record_exception nil, $! if $!
   $SiB.finish!
