@@ -166,10 +166,10 @@ Usage: seeing_is_believing [options] [filename]
   -K,  --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a,  --as filename             # run the program as if it was the specified filename
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
-  -g,  --debug                   # print debugging information (useful if program is fucking up, or if you want to brag)
+  -g,  --debug                   # print debugging information (useful if program is fucking up, or to better understand what SiB does)
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
-  -i,  --inherit-exit-status     # exit with the exit status of the program being eval
+  -i,  --inherit-exit-status     # exit with the exit status of the program being evaluated
        --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
   -v,  --version                 # print the version (#{VERSION})
   -h,  --help                    # help screen without examples
