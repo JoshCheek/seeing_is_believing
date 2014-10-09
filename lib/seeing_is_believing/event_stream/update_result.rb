@@ -12,7 +12,8 @@ class SeeingIsBelieving
          when EventStream::Events::MaxLineCaptures  then result.number_of_captures = event.value
          when EventStream::Events::Exitstatus       then result.exitstatus         = event.value
          when EventStream::Events::NumLines         then result.num_lines          = event.value
-         when EventStream::Events::Version          then result.sib_version        = event.value
+         when EventStream::Events::SiBVersion       then result.sib_version        = event.value
+         when EventStream::Events::RubyVersion      then result.ruby_version       = event.value
          when EventStream::Events::Finish           then result # No op
          else raise "Unknown event: #{event.inspect}"
          end

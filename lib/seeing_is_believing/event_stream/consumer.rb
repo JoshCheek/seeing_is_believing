@@ -100,8 +100,10 @@ class SeeingIsBelieving
           Events::Finish.new
         when :num_lines
           Events::NumLines.new(extract_token(line).to_i)
-        when :version
-          Events::Version.new(extract_string line)
+        when :sib_version
+          Events::SiBVersion.new(extract_string line)
+        when :ruby_version
+          Events::RubyVersion.new(extract_string line)
         else
           raise "IDK what #{event_name.inspect} is!"
         end

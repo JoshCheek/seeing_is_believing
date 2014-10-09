@@ -7,7 +7,8 @@ class SeeingIsBelieving
       Stderr           = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
       NumLines         = Struct.new(:value)
-      Version          = Struct.new(:value)
+      SiBVersion       = Struct.new(:value)
+      RubyVersion      = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
       Exception        = Struct.new(:line_number, :class_name, :message, :backtrace)
       Finish           = Class.new

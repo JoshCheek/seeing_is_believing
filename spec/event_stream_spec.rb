@@ -373,20 +373,27 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'version', t:true do
-      describe 'setting the version' do
+    describe 'seeing is believing version' do
+      describe 'recording the version' do
         it 'emits the version info' do
-          producer.version = '1.2.3'
-          expect(consumer.call).to eq Events::Version.new("1.2.3")
+          producer.record_sib_version '1.2.3'
+          expect(consumer.call).to eq Events::SiBVersion.new("1.2.3")
         end
       end
 
       it 'ver and version return the version, if it has been set' do
         expect(producer.ver).to eq nil
         expect(producer.version).to eq nil
-        producer.version = '4.5.6'
+        producer.record_sib_version '4.5.6'
         expect(producer.ver).to eq '4.5.6'
         expect(producer.version).to eq '4.5.6'
+      end
+    end
+
+    describe 'record_ruby_version' do
+      it 'emits the ruby version info' do
+        producer.record_ruby_version 'o.m.g.'
+        expect(consumer.call).to eq Events::RubyVersion.new('o.m.g.')
       end
     end
 

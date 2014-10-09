@@ -33,12 +33,16 @@ class SeeingIsBelieving
         end
       end
 
-      def version=(version)
-        @version = version
-        queue << "version #{to_string_token version}"
+      def record_sib_version(sib_version)
+        @version = sib_version
+        queue << "sib_version #{to_string_token sib_version}"
       end
       attr_reader :version
       def ver() version end
+
+      def record_ruby_version(ruby_version)
+        queue << "ruby_version #{to_string_token ruby_version}"
+      end
 
 
       # for a consideration of many different ways of doing this, see 5633064

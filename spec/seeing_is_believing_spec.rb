@@ -45,10 +45,14 @@ RSpec.describe SeeingIsBelieving do
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
 
-  it 'makes the version info available', t:true do
+  it 'makes the SiB version info available' do
     result = invoke '$SiB.ver'
     expect(result.sib_version).to eq SeeingIsBelieving::VERSION
     expect(result[1][0]).to eq SeeingIsBelieving::VERSION.inspect
+  end
+
+  it 'makes the Ruby versino info available' do
+    expect(invoke('').ruby_version).to eq RUBY_VERSION
   end
 
   it 'allows uers to pass in their own inspection recorder' do
@@ -151,7 +155,7 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
-  context 'exceptions in exit blocks', t:true do
+  context 'exceptions in exit blocks' do
     # I'm punting on this because there is just no good way to stop that from happening without changing actual behaviour
     # see https://github.com/JoshCheek/seeing_is_believing/issues/24
     it 'does not include information about the_matrix in the exception backtraces' do
