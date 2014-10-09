@@ -420,6 +420,17 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+    describe 'record_filename', t:true do
+      it 'sets the filename' do
+        producer.record_filename 'this-iz-mah-file.rb'
+        expect(producer.filename).to eq 'this-iz-mah-file.rb'
+      end
+      it 'emits the filename' do
+        producer.record_filename 'this-iz-mah-file.rb'
+        expect(consumer.call).to eq Events::Filename.new('this-iz-mah-file.rb')
+      end
+    end
+
     describe 'stdout' do
       it 'is an escaped string' do
         producer.record_stdout("this is the stdout¡")

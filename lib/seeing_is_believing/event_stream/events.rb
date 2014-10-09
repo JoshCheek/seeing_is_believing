@@ -6,6 +6,7 @@ class SeeingIsBelieving
       Stdout           = Struct.new(:value)
       Stderr           = Struct.new(:value)
       MaxLineCaptures  = Struct.new(:value)
+      Filename         = Struct.new(:value)
       NumLines         = Struct.new(:value)
       SiBVersion       = Struct.new(:value)
       RubyVersion      = Struct.new(:value)

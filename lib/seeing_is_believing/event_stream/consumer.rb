@@ -104,6 +104,8 @@ class SeeingIsBelieving
           Events::SiBVersion.new(extract_string line)
         when :ruby_version
           Events::RubyVersion.new(extract_string line)
+        when :filename
+          Events::Filename.new(extract_string line)
         else
           raise "IDK what #{event_name.inspect} is!"
         end

@@ -50,11 +50,12 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'records various useful information on the result' do
-    result = invoke '', number_of_captures: 10
+    result = invoke '', number_of_captures: 10, filename: 'abc.rb'
     expect(result.sib_version).to eq SeeingIsBelieving::VERSION
     expect(result.ruby_version).to eq RUBY_VERSION
     expect(result.number_of_captures).to eq 10 # TODO: rename to max_captures_per_line ?? (also max_line_captures would prob get renamed if we do this)
     expect(result.num_lines).to eq 1
+    expect(result.filename).to eq 'abc.rb'
   end
 
   it 'makes the Ruby versino info available' do

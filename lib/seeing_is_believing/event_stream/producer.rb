@@ -114,6 +114,11 @@ class SeeingIsBelieving
         queue << "stderr #{to_string_token stderr}"
       end
 
+      def record_filename(filename)
+        self.filename = filename
+        queue << "filename #{to_string_token filename}"
+      end
+
       def finish!
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
