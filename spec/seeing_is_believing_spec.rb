@@ -45,6 +45,12 @@ RSpec.describe SeeingIsBelieving do
     expect(invoke(input)[1]).to eq ['"NUM"']
   end
 
+  it 'makes the version info available', t:true do
+    result = invoke '$SiB.ver'
+    expect(result.sib_version).to eq SeeingIsBelieving::VERSION
+    expect(result[1][0]).to eq SeeingIsBelieving::VERSION.inspect
+  end
+
   it 'allows uers to pass in their own inspection recorder' do
     wrapper = lambda { |program, filename, num_captures|
       SeeingIsBelieving::InspectExpressions.call \
