@@ -59,8 +59,10 @@ class SeeingIsBelieving
         line.split(' ')
       end
 
-      def event_for(line)
-        line.chomp!
+      attr_accessor :rest_is_stderr
+      def event_for(original_line)
+        return Events::Stdout.new(original_line) if rest_is_stderr
+        line       = original_line.chomp
         event_name = extract_token(line).intern
         case event_name
         when :result
@@ -107,7 +109,10 @@ class SeeingIsBelieving
         when :filename
           Events::Filename.new(extract_string line)
         else
-          raise "IDK what #{event_name.inspect} is!"
+          # this shouldn't really happen, maybe the process got `exec` or something
+          # at this point, stop trying to make sense of the stream, assume it's all just output
+          self.rest_is_stderr = true
+          Events::Stdout.new(original_line)
         end
       end
     end

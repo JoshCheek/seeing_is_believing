@@ -420,7 +420,7 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'record_filename', t:true do
+    describe 'record_filename' do
       it 'sets the filename' do
         producer.record_filename 'this-iz-mah-file.rb'
         expect(producer.filename).to eq 'this-iz-mah-file.rb'
@@ -436,12 +436,24 @@ module SeeingIsBelieving::EventStream
         producer.record_stdout("this is the stdout¡")
         expect(consumer.call).to eq Events::Stdout.new("this is the stdout¡")
       end
+      it 'may be emitted multiple times' do
+        producer.record_stdout("first")
+        producer.record_stdout("second")
+        expect(consumer.call).to eq Events::Stdout.new("first")
+        expect(consumer.call).to eq Events::Stdout.new("second")
+      end
     end
 
     describe 'stderr' do
       it 'is an escaped string' do
         producer.record_stderr("this is the stderr¡")
         expect(consumer.call).to eq Events::Stderr.new("this is the stderr¡")
+      end
+      it 'may be emitted multiple times' do
+        producer.record_stderr("first")
+        producer.record_stderr("second")
+        expect(consumer.call).to eq Events::Stderr.new("first")
+        expect(consumer.call).to eq Events::Stderr.new("second")
       end
     end
 
@@ -492,6 +504,13 @@ module SeeingIsBelieving::EventStream
           expect { p consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         end
       end
+    end
+
+    specify 'if an incomprehensible event is received, and all further events are treated as stdout' do
+      writestream.puts "this is nonsense!"
+      producer.finish!
+      expect(consumer.call).to eq Events::Stdout.new("this is nonsense!\n")
+      expect(consumer.call).to be_a_kind_of Events::Stdout # as opposed to some finish event
     end
   end
 end
