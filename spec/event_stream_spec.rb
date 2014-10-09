@@ -58,7 +58,7 @@ module SeeingIsBelieving::EventStream
 
       it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
         producer.finish!
-        consumer.call 4
+        consumer.call 3
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         expect(consumer).to be_finished
       end
@@ -257,6 +257,29 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+    describe 'max_line_captures (value and recording)' do
+      it 'is infinity by default' do
+        expect(producer.max_line_captures).to eq Float::INFINITY
+      end
+
+      it 'emits the event and sets the max_line_captures' do
+        producer.record_max_line_captures 123
+        expect(producer.max_line_captures).to eq 123
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(123)
+      end
+
+      it 'interprets numbers' do
+        producer.record_max_line_captures 12
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(12)
+      end
+
+      it 'interprets infinity' do
+        producer.record_max_line_captures Float::INFINITY
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(Float::INFINITY)
+      end
+    end
+
+
     describe 'exceptions' do
       def record_exception(linenum=nil, &raises_exception)
         raises_exception.call
@@ -414,23 +437,7 @@ module SeeingIsBelieving::EventStream
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
         producer.finish!
-        consumer.call(4).find { |e| e.class == event_class }
-      end
-
-      describe 'max_line_captures' do
-        it 'interprets numbers' do
-          producer.max_line_captures = 12
-          expect(final_event(producer, consumer, Events::MaxLineCaptures).value).to eq 12
-        end
-
-        it 'interprets infinity' do
-          producer.max_line_captures = Float::INFINITY
-          expect(final_event(producer, consumer, Events::MaxLineCaptures).value).to eq Float::INFINITY
-        end
-
-        it 'is infinity by default' do
-          expect(final_event(producer, consumer, Events::MaxLineCaptures).value).to eq Float::INFINITY
-        end
+        consumer.call(3).find { |e| e.class == event_class }
       end
 
       describe 'num_lines' do

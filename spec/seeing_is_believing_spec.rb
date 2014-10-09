@@ -46,9 +46,15 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'makes the SiB version info available' do
-    result = invoke '$SiB.ver'
+    expect(invoke('$SiB.ver')[1][0]).to eq SeeingIsBelieving::VERSION.inspect
+  end
+
+  it 'records various useful information on the result' do
+    result = invoke '', number_of_captures: 10
     expect(result.sib_version).to eq SeeingIsBelieving::VERSION
-    expect(result[1][0]).to eq SeeingIsBelieving::VERSION.inspect
+    expect(result.ruby_version).to eq RUBY_VERSION
+    expect(result.number_of_captures).to eq 10 # TODO: rename to max_captures_per_line ?? (also max_line_captures would prob get renamed if we do this)
+    expect(result.num_lines).to eq 1
   end
 
   it 'makes the Ruby versino info available' do

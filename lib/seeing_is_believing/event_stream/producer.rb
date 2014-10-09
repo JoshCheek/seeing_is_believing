@@ -44,6 +44,11 @@ class SeeingIsBelieving
         queue << "ruby_version #{to_string_token ruby_version}"
       end
 
+      def record_max_line_captures(max_line_captures)
+        self.max_line_captures = max_line_captures
+        queue << "max_line_captures #{max_line_captures}"
+      end
+
 
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
@@ -110,7 +115,6 @@ class SeeingIsBelieving
       end
 
       def finish!
-        queue << "max_line_captures #{max_line_captures}"
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
         queue << "finish".freeze
