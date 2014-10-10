@@ -13,20 +13,21 @@ class SeeingIsBelieving
         self.recorded_results  = []
         self.queue             = Thread::Queue.new
         self.producer_thread   = Thread.new do
-          finish = "finish"
           begin
             resultstream.sync = true
             loop do
               to_publish = queue.shift
-              if to_publish == finish
+              if to_publish == :finish
                 resultstream << "finish\n"
+                break
+              elsif to_publish == :end_without_finish
                 break
               else
                 resultstream << (to_publish << "\n")
               end
             end
           rescue IOError, Errno::EPIPE
-            loop { break if queue.shift == finish }
+            queue.clear
           ensure
             resultstream.flush rescue nil
           end
@@ -119,11 +120,16 @@ class SeeingIsBelieving
         queue << "filename #{to_string_token filename}"
       end
 
+      def send_remaining_events
+        queue << :end_without_finish
+        producer_thread.join
+      end
+
       def finish!
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
-        queue << "finish".freeze
-        producer_thread.join
+        queue << :finish
+        send_remaining_events
       end
 
       private

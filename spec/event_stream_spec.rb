@@ -506,6 +506,17 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+    specify 'send_remaining_events waits for all events to be sent (implies other end of stream is closed)' do
+      producer.record_stdout "a"
+      producer.send_remaining_events
+      producer.record_stdout "b"
+      writestream.close # ehh, this is iffy, what if b hasn't been written by this time? Could maybe pass a block, if deques a block, then it executes it, which means could close the stream at the right point in time
+      events = consumer.each.map { |e| e }
+      expect(events).to     be_any { |e| e == Events::Stdout.new("a") }
+      expect(events).to_not be_any { |e| e == Events::Stdout.new("b") }
+      expect(events).to_not be_any { |e| e == Events::Finish.new }
+    end
+
     specify 'if an incomprehensible event is received, and all further events are treated as stdout' do
       writestream.puts "this is nonsense!"
       producer.finish!
