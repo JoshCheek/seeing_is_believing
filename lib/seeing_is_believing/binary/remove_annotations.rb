@@ -73,7 +73,7 @@ class SeeingIsBelieving
                               comment.text[stderr_regex]
                              ),
                              comment]}
-          .slice_before { |annotation, comment| annotation }       # annotatios begin chunks
+          .slice_before { |annotation, comment| annotation }       # annotations begin chunks
           .select       { |(annotation, start), *| annotation }    # discard chunks not beginning with an annotation (probably can only happens on first comment)
           .map { |(annotation, start), *rest|                      # end the chunk if the comment doesn't meet nextline criteria
             nextline_comments = []

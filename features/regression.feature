@@ -414,3 +414,15 @@ Feature:
     And stdout includes "require_relative 'at_exit_exception_indirect1'  # => true"
     And stdout includes "RuntimeError"
     And stdout includes "zomg"
+
+
+  Scenario: Comments with makers elsewhere in them
+    Given the file "comments_with_markers_elsewhere.rb":
+    """
+    # a # => a
+    """
+    When I run "seeing_is_believing comments_with_markers_elsewhere.rb"
+    Then stdout is:
+    """
+    # a # => a
+    """

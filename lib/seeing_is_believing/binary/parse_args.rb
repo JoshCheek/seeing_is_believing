@@ -15,10 +15,10 @@ class SeeingIsBelieving
 
       # TODO: rename to default_marker_regexes ...or turn into fkn objects
       def self.marker_regexes
-        { value:     '#\s*=>\s*',
-          exception: '#\s*~>\s*',
-          stdout:    '#\s*>>\s*',
-          stderr:    '#\s*!>\s*',
+        { value:     '^#\s*=>\s*',
+          exception: '^#\s*~>\s*',
+          stdout:    '^#\s*>>\s*',
+          stderr:    '^#\s*!>\s*',
         }
       end
 

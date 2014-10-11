@@ -5,7 +5,6 @@ Feature: Running in safe-mode
   I wrote https://github.com/JoshCheek/eval_in to use the https://eval.in
   website to run code safely. SiB just needs to use it.
 
-  @wip
   Scenario: Running normal code
     Given the file 'safe-example1.rb' 'print "hello, #{gets}"'
     And the stdin content "world"
