@@ -1,5 +1,37 @@
 # encoding: utf-8
 
+# # Example Tina came up with, uses Mutexes and a read to guarantee some ordering
+# require 'stringio'
+#
+# read_stream, write_stream = IO.pipe
+# queue = Thread::Queue.new
+# safe_to_close = Mutex.new
+#
+# thread = Thread.new do
+#   safe_to_close.lock
+#   write_stream.sync = true
+#   loop do
+#     val = queue.shift
+#     break if val == :finish
+#     write_stream << val << "\n"
+#   end
+#   safe_to_close.unlock
+# end
+#
+# # tmpfile is necessary b/c the read deprioritizes this thread so that it goes into the other thread
+# require 'tempfile'
+# f = Tempfile.new 'thread_example'
+# f.puts "a", "b", "c"
+# f.rewind
+# f.read.each_line { |line| queue << line.chomp }
+# sleep 1
+# queue << :finish
+#
+# safe_to_close.lock
+# write_stream.close
+#
+# puts read_stream.read
+
 require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
 
@@ -510,7 +542,7 @@ module SeeingIsBelieving::EventStream
       producer.record_stdout "a"
       producer.send_remaining_events
       producer.record_stdout "b"
-      writestream.close # ehh, this is iffy, what if b hasn't been written by this time? Could maybe pass a block, if deques a block, then it executes it, which means could close the stream at the right point in time
+      writestream.close
       events = consumer.each.map { |e| e }
       expect(events).to     be_any { |e| e == Events::Stdout.new("a") }
       expect(events).to_not be_any { |e| e == Events::Stdout.new("b") }
