@@ -1,4 +1,3 @@
-require 'parser/current'
 require 'seeing_is_believing/parser_helpers'
 
 # comprehensive list of syntaxes that can come up
