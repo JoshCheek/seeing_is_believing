@@ -1,4 +1,14 @@
-require 'parser/current'
+module Parser
+  class << self
+    # With new versioning, there's lots of small versions
+    # we don't need it to complain that we're on 2.1.1 and its parsing 2.1.5
+    # https://github.com/whitequark/parser/blob/e2249d7051b1adb6979139928e14a81bc62f566e/lib/parser/current.rb#L3
+    def warn(*) end
+    require 'parser/current'
+    remove_method :warn
+  end
+end
+
 class SeeingIsBelieving
   module ParserHelpers
 
