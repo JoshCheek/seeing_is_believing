@@ -8,7 +8,6 @@ require 'seeing_is_believing/binary/align_chunk'
 
 # Evaluator decision happens here
 require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/evaluate_with_eval_in'
 
 # Annotator decision happens here
 require 'seeing_is_believing/binary/annotate_every_line'
@@ -86,7 +85,7 @@ class SeeingIsBelieving
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {
-          evaluate_with:      (flags.fetch(:safe) ? EvaluateWithEvalIn : EvaluateByMovingFiles),
+          evaluate_with:      EvaluateByMovingFiles,
           filename:           (flags.fetch(:as) || filename),
           stdin:              (file_is_on_stdin? ? '' : stdin),
           require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require

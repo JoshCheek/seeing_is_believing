@@ -30,10 +30,6 @@ RSpec.describe SeeingIsBelieving do
 
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
 
-  it 'evaluates with EvaluateByMovingFiles by default' do
-    expect(values_for "`echo 1`").to eq [['"1\n"']] # shows we're not using the only other option (EvaluateWithEvalIn)
-  end
-
   it 'takes a string and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "10+10\n'2'+'2'"
     expect(invoke(input)[1]).to eq ["20"]
@@ -488,44 +484,5 @@ RSpec.describe SeeingIsBelieving do
     nums = (1..1000).map { |n| "#{n}\n" }.join('')
     expect(result.stdout).to eq "#{nums}out from exec\n"
     expect(result.stderr).to eq "#{nums}err from exec\n"
-  end
-
-  context 'when :evaluator option is set' do
-    require 'webmock'
-    WebMock.disable_net_connect!
-
-    include WebMock::API
-    before { WebMock.reset! }
-
-    it 'can use EvaluateByMovingFiles' do
-      # shows we're not using the only other option (EvaluateWithEvalIn)
-      expect(values_for "`echo 1`", evaluator: SeeingIsBelieving::EvaluateByMovingFiles).to eq [['"1\n"']]
-    end
-
-    it 'can use EvaluateWithEvalIn' do
-      pending 'need to delete this, it won\'t ever be able to do this, it needs 3 file descriptors'
-      require 'seeing_is_believing/event_stream/producer'
-      redirect_url     = 'https://example.com/whatever'
-      api_redirect_url = redirect_url + '.json'
-
-      stream   = StringIO.new
-      producer = SeeingIsBelieving::EventStream::Producer.new(stream)
-      producer.record_result :inspect, 1, "a"
-      producer.record_result :inspect, 1, "b"
-      producer.record_result :inspect, 2, "c"
-      producer.finish!
-
-      response = { 'lang'          => 'whatever',
-                   'lang_friendly' => 'whatever',
-                   'code'          => 'whatever',
-                   'output'        => stream.string,
-                   'status'        => 'OK (0.012 sec real, 0.013 sec wall, 7 MB, 22 syscalls)'}
-
-      stub_request(:post, 'https://eval.in/').to_return(status: 302, headers: {'Location' => redirect_url})
-      stub_request(:get,    api_redirect_url).to_return(status: 200, body: JSON.dump(response))
-
-      values = values_for "whatever", evaluator: SeeingIsBelieving::EvaluateWithEvalIn
-      expect(values).to eq [['"a"', '"b"'], ['"c"']]
-    end
   end
 end
