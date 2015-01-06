@@ -24,6 +24,46 @@ require 'seeing_is_believing/event_stream/update_result'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
+
+    # *sigh* have to do this b/c can't use Open3, b/c keywords don't work right when the keys are not symbols, and I'm passing a file descriptor
+    # https://github.com/ruby/ruby/pull/808    my pr
+    # https://bugs.ruby-lang.org/issues/10699  they opened an issue
+    # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
+    module Spawn
+      extend self
+      def popen(*cmd)
+        opts = {}
+        opts = cmd.pop if cmd.last.kind_of? Hash
+
+        in_r, in_w = IO.pipe
+        opts[:in] = in_r
+        in_w.sync = true
+
+        out_r, out_w = IO.pipe
+        opts[:out] = out_w
+
+        err_r, err_w = IO.pipe
+        opts[:err] = err_w
+
+        pid       = spawn(*cmd, opts)
+        wait_thr  = Process.detach(pid)
+
+        in_r.close
+        out_w.close
+        err_w.close
+
+        begin
+          yield in_w, out_r, err_r, wait_thr
+          in_w.close unless in_w.closed?
+          wait_thr.value
+        ensure
+          [in_w, out_r, err_r].each { |io| io.close unless io.closed? }
+          wait_thr.join
+        end
+      end
+    end
+
+
     def self.call(*args)
       new(*args).call
     end
@@ -96,7 +136,15 @@ class SeeingIsBelieving
     end
 
     def evaluate_file
-      Open3.popen3 ENV, *popen_args do |process_stdin, process_stdout, process_stderr, thread|
+      # the event stream
+      es_read, es_write = IO.pipe
+      es_fd = es_write.to_i.to_s
+
+      # invoke the process
+      Spawn.popen ENV, *popen_args, es_fd, es_write => es_write do |process_stdin, process_stdout, process_stderr, thread|
+        # child writes here, we close b/c won't get EOF until all fds are closed
+        es_write.close
+
         # send stdin
         Thread.new {
           input_stream.each_char { |char| process_stdin.write char }
@@ -106,24 +154,26 @@ class SeeingIsBelieving
         # consume events
         self.result = Result.new # set on self b/c if an error is raised, we still want to keep what we recorded
         event_consumer = Thread.new do
-          EventStream::Consumer.new(process_stdout)
-                               .each { |event| EventStream::UpdateResult.call result, event }
+          EventStream::Consumer
+            .new(events: es_read, stdout: process_stdout, stderr: process_stderr)
+            .each { |event| EventStream::UpdateResult.call result, event }
         end
-
-        # process stderr
-        err_reader = Thread.new { process_stderr.read }
 
         begin
           Timeout::timeout timeout do
-            self.stderr     = err_reader.value
-            self.exitstatus = thread.value
             event_consumer.join
+            # TODO: seems like these belong entirely on result, not as ivars of this class
+            self.exitstatus = thread.value
+            self.stderr     = result.stderr
           end
         rescue Timeout::Error
           Process.kill "TERM", thread.pid
           raise $!
         end
       end
+    ensure
+      es_read.close  unless es_read.closed?
+      es_write.close unless es_write.closed?
     end
 
     def popen_args
