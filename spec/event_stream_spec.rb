@@ -498,28 +498,28 @@ module SeeingIsBelieving::EventStream
     describe 'stdout' do
       it 'is emitted along with the events from the event stream' do
         stdout_producer.puts "this is the stdout¡"
-        expect(consumer.call).to eq Events::Stdout.new("this is the stdout¡")
+        expect(consumer.call).to eq Events::Stdout.new("this is the stdout¡\n")
       end
-      it 'each line is emitted as an event' do
+      specify 'each line is emitted as an event' do
         stdout_producer.puts "first"
         stdout_producer.puts "second\nthird"
-        expect(consumer.call).to eq Events::Stdout.new("first")
-        expect(consumer.call).to eq Events::Stdout.new("second")
-        expect(consumer.call).to eq Events::Stdout.new("third")
+        expect(consumer.call).to eq Events::Stdout.new("first\n")
+        expect(consumer.call).to eq Events::Stdout.new("second\n")
+        expect(consumer.call).to eq Events::Stdout.new("third\n")
       end
     end
 
     describe 'stderr' do
       it 'is emitted along with the events from the event stream' do
         stderr_producer.puts "this is the stderr¡"
-        expect(consumer.call).to eq Events::Stderr.new("this is the stderr¡")
+        expect(consumer.call).to eq Events::Stderr.new("this is the stderr¡\n")
       end
-      it 'each line is emitted as an event' do
+      specify 'each line is emitted as an event' do
         stderr_producer.puts "first"
         stderr_producer.puts "second\nthird"
-        expect(consumer.call).to eq Events::Stderr.new("first")
-        expect(consumer.call).to eq Events::Stderr.new("second")
-        expect(consumer.call).to eq Events::Stderr.new("third")
+        expect(consumer.call).to eq Events::Stderr.new("first\n")
+        expect(consumer.call).to eq Events::Stderr.new("second\n")
+        expect(consumer.call).to eq Events::Stderr.new("third\n")
       end
     end
 

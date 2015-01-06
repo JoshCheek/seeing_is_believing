@@ -24,6 +24,7 @@ class SeeingIsBelieving
             queue.clear
           ensure
             resultstream.flush rescue nil
+            # TODO: could swap it with a null queue at this point
           end
         end
       end

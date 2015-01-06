@@ -7,9 +7,7 @@ class SeeingIsBelieving
     class Consumer
       NoMoreInput        = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
-
-      # FIXME: make this private
-      attr_accessor :event_thread, :stdout_thread, :stderr_thread
+      UnknownEvent       = Class.new SeeingIsBelievingError
 
       def initialize(streams)
         self.event_stream      = streams.fetch :events
@@ -19,14 +17,14 @@ class SeeingIsBelieving
 
         self.stdout_thread = Thread.new do
           stdout_stream.each_line do |line|
-            queue << Events::Stdout.new(line.chomp)
+            queue << Events::Stdout.new(line)
           end
           queue << :stdout_thread_finished
         end
 
         self.stderr_thread = Thread.new do
           stderr_stream.each_line do |line|
-            queue << Events::Stderr.new(line.chomp)
+            queue << Events::Stderr.new(line)
           end
           queue << :stderr_thread_finished
         end
@@ -41,11 +39,8 @@ class SeeingIsBelieving
             end
           rescue IOError # TODO: does this still happen?
             queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
-          # rescue NoMoreInput
-          #   raise
-          #   # TODO: does this still happen?
-          #   # Well, it needs to if it doesn't...
-          #   # how about each thread pushes an event in saying they are done, and if it sees all three, it marks it finished
+          rescue Exception
+            queue << $!
           end
           queue << :event_thread_finished
         end
@@ -71,12 +66,14 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :event_stream, :stdout_stream, :stderr_stream
       attr_accessor :queue
+      attr_accessor :event_thread, :stdout_thread, :stderr_thread
+      attr_accessor :event_stream, :stdout_stream, :stderr_stream
 
       def next_event
         @finished_threads ||= [] # TODO: move me to initialize / attr_accessor
         event = queue.shift
+        # puts "EVENT: #{event.inspect}"
         case event
         when Symbol
           @finished_threads << event
@@ -108,9 +105,7 @@ class SeeingIsBelieving
         line.split(' ')
       end
 
-      attr_accessor :rest_is_stderr
       def event_for(original_line)
-        return Events::Stdout.new(original_line) if rest_is_stderr
         line       = original_line.chomp
         event_name = extract_token(line).intern
         case event_name
@@ -136,10 +131,13 @@ class SeeingIsBelieving
               end
             end
           end
-        when :stdout
-          Events::Stdout.new(extract_string line)
-        when :stderr
-          Events::Stderr.new(extract_string line)
+        # TODO: delete these, see if theres any others we can delete
+        # TODO: delete them from the producer, too
+        #
+        # when :stdout
+        #   Events::Stdout.new(extract_string line)
+        # when :stderr
+        #   Events::Stderr.new(extract_string line)
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
@@ -158,10 +156,7 @@ class SeeingIsBelieving
         when :filename
           Events::Filename.new(extract_string line)
         else
-          # this shouldn't really happen, maybe the process got `exec` or something
-          # at this point, stop trying to make sense of the stream, assume it's all just output
-          self.rest_is_stderr = true
-          Events::Stdout.new(original_line)
+          raise UnknownEvent, original_line.inspect
         end
       end
     end
