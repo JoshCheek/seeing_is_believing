@@ -19,7 +19,7 @@ class SeeingIsBelieving
         self.max_line_captures = Float::INFINITY
         self.num_lines         = 0
         self.recorded_results  = []
-        self.queue             = Thread::Queue.new
+        self.queue             = Queue.new
         self.producer_thread   = Thread.new do
           begin
             resultstream.sync = true

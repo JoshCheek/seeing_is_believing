@@ -11,7 +11,7 @@ class SeeingIsBelieving
 
       def initialize(streams)
         self.finished_threads = []
-        self.queue            = Thread::Queue.new
+        self.queue            = Queue.new
         self.event_stream     = streams.fetch :events
         stdout_stream         = streams.fetch :stdout
         stderr_stream         = streams.fetch :stderr
