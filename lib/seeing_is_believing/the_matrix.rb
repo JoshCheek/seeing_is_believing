@@ -31,4 +31,5 @@ end
 at_exit do
   $SiB.record_exception nil, $! if $!
   finish.call
+  Kernel.exit! 0 # clear the exception so it doesn't print to stderr and change the processes actual exit status (we recorded what it should be)
 end

@@ -413,15 +413,18 @@ Feature: Using flags
     """
 
 
+  @wip
   Scenario: --shebang
     Given the file "fake_ruby":
     """
     #!/usr/bin/env ruby
-    $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib", __FILE__
+    $LOAD_PATH.unshift File.expand_path "{{Haiti.config.proving_grounds_dir}}/../lib"
     require 'seeing_is_believing/event_stream/producer'
-    sib = SeeingIsBelieving::EventStream::Producer.new($stdout)
+    event_stream = IO.open(ARGV.pop.to_i, 'w')
+    sib = SeeingIsBelieving::EventStream::Producer.new(event_stream)
     sib.record_result(:inspect, 1, /omg/)
     sib.finish!
+    event_stream.close
     """
     When I run "chmod +x fake_ruby"
     When I run "seeing_is_believing -e 123 --shebang ./fake_ruby"
