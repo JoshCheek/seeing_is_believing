@@ -10,79 +10,60 @@ class SeeingIsBelieving
       UnknownEvent       = Class.new SeeingIsBelievingError
 
       def initialize(streams)
-        self.event_stream      = streams.fetch :events
-        self.stdout_stream     = streams.fetch :stdout
-        self.stderr_stream     = streams.fetch :stderr
-        self.queue             = Thread::Queue.new
+        self.finished_threads = []
+        self.queue            = Thread::Queue.new
+        self.event_stream     = streams.fetch :events
+        stdout_stream         = streams.fetch :stdout
+        stderr_stream         = streams.fetch :stderr
 
         self.stdout_thread = Thread.new do
-          stdout_stream.each_line do |line|
-            queue << Events::Stdout.new(line)
-          end
+          stdout_stream.each_line { |line| queue << Events::Stdout.new(line) }
           queue << :stdout_thread_finished
         end
 
         self.stderr_thread = Thread.new do
-          stderr_stream.each_line do |line|
-            queue << Events::Stderr.new(line)
-          end
+          stderr_stream.each_line { |line| queue << Events::Stderr.new(line) }
           queue << :stderr_thread_finished
         end
 
         self.event_thread = Thread.new do
-          begin
-            loop do
-              break unless line = event_stream.gets
-              event = event_for line
-              queue << event
-              break if Events::Finish === event
-            end
-          rescue IOError # TODO: does this still happen?
-            queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
-          rescue Exception
-            queue << $!
+          begin loop do
+                   break unless line = event_stream.gets
+                   event = event_for line
+                   queue << event
+                   break if Events::Finish === event
+                 end
+          rescue IOError; queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
+          rescue SeeingIsBelievingError; queue << $!
+          ensure queue << :event_thread_finished
           end
-          queue << :event_thread_finished
         end
       end
 
       def call(n=1)
-        return next_event if n == 1
-        n.times.map { next_event }
+        n == 1 ? next_event : Array.new(n) { next_event }
       end
 
+      # TODO: Should it actually yield thie finish event?
+      # TODO: Is there a point to the finish event anymore?
       def each
         return to_enum :each unless block_given?
-        until finished?
-          event = call
-          yield event unless Events::Finish === event
+        loop do
+          call(1).tap { |event| yield event unless Events::Finish === event }
         end
       rescue NoMoreInput
       end
 
-      def finished?
-        @finished
-      end
-
       private
 
-      attr_accessor :queue
+      attr_accessor :queue, :event_stream, :finished_threads
       attr_accessor :event_thread, :stdout_thread, :stderr_thread
-      attr_accessor :event_stream, :stdout_stream, :stderr_stream
 
       def next_event
-        @finished_threads ||= [] # TODO: move me to initialize / attr_accessor
-        event = queue.shift
-        # puts "EVENT: #{event.inspect}"
-        case event
+        case event = queue.shift
         when Symbol
-          @finished_threads << event
-          if @finished_threads.size == 3
-            @finished = true
-            raise NoMoreInput
-          else
-            next_event
-          end
+          raise NoMoreInput if finished_threads.push(event).size == 3
+          next_event
         when SeeingIsBelievingError
           raise event
         else
@@ -131,13 +112,6 @@ class SeeingIsBelieving
               end
             end
           end
-        # TODO: delete these, see if theres any others we can delete
-        # TODO: delete them from the producer, too
-        #
-        # when :stdout
-        #   Events::Stdout.new(extract_string line)
-        # when :stderr
-        #   Events::Stderr.new(extract_string line)
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i

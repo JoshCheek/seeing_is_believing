@@ -1,7 +1,8 @@
 require 'seeing_is_believing/event_stream/events'
+require 'thread'
+
 class SeeingIsBelieving
   module EventStream
-    require 'thread'
     class Producer
       attr_accessor :exitstatus, :max_line_captures, :num_lines, :filename
 
@@ -29,12 +30,12 @@ class SeeingIsBelieving
         end
       end
 
+      attr_reader :version
+      alias ver version
       def record_sib_version(sib_version)
         @version = sib_version
         queue << "sib_version #{to_string_token sib_version}"
       end
-      attr_reader :version
-      def ver() version end
 
       def record_ruby_version(ruby_version)
         queue << "ruby_version #{to_string_token ruby_version}"
@@ -43,12 +44,6 @@ class SeeingIsBelieving
       def record_max_line_captures(max_line_captures)
         self.max_line_captures = max_line_captures
         queue << "max_line_captures #{max_line_captures}"
-      end
-
-
-      # for a consideration of many different ways of doing this, see 5633064
-      def to_string_token(string)
-        [Marshal.dump(string.to_s)].pack('m0')
       end
 
       StackErrors = [SystemStackError]
@@ -102,34 +97,27 @@ class SeeingIsBelieving
         queue << "end"
       end
 
-      def record_stdout(stdout)
-        queue << "stdout #{to_string_token stdout}"
-      end
-
-      def record_stderr(stderr)
-        queue << "stderr #{to_string_token stderr}"
-      end
-
       def record_filename(filename)
         self.filename = filename
         queue << "filename #{to_string_token filename}"
-      end
-
-      def send_remaining_events
-        queue << :break
-        producer_thread.join
       end
 
       def finish!
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
         queue << "finish"
-        send_remaining_events
+        queue << :break
+        producer_thread.join
       end
 
       private
 
       attr_accessor :resultstream, :queue, :producer_thread, :recorded_results
+
+      # for a consideration of many different ways of doing this, see 5633064
+      def to_string_token(string)
+        [Marshal.dump(string.to_s)].pack('m0')
+      end
     end
   end
 end

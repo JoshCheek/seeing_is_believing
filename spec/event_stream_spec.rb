@@ -1,85 +1,58 @@
 # encoding: utf-8
 
-# # Example Tina came up with, uses Mutexes and a read to guarantee some ordering
-# require 'stringio'
-#
-# read_stream, write_stream = IO.pipe
-# queue = Thread::Queue.new
-# safe_to_close = Mutex.new
-#
-# thread = Thread.new do
-#   safe_to_close.lock
-#   write_stream.sync = true
-#   loop do
-#     val = queue.shift
-#     break if val == :finish
-#     write_stream << val << "\n"
-#   end
-#   safe_to_close.unlock
-# end
-#
-# # tmpfile is necessary b/c the read deprioritizes this thread so that it goes into the other thread
-# require 'tempfile'
-# f = Tempfile.new 'thread_example'
-# f.puts "a", "b", "c"
-# f.rewind
-# f.read.each_line { |line| queue << line.chomp }
-# sleep 1
-# queue << :finish
-#
-# safe_to_close.lock
-# write_stream.close
-#
-# puts read_stream.read
-
 require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
 
 module SeeingIsBelieving::EventStream
   RSpec.describe SeeingIsBelieving::EventStream do
     attr_accessor :producer, :consumer
-    attr_accessor :readstream, :writestream # TODO: rename, these are event streams for consumer and producer
+    attr_accessor :eventstream_consumer, :eventstream_producer
     attr_accessor :stdout_consumer, :stdout_producer
     attr_accessor :stderr_consumer, :stderr_producer
-
-    # TODO: cleanup -- it kills its threads and streams if told to cleanup
-    # TODO: no more assuming the rest is stderr or something when nonsense is printed
-
-    before do
-      self.readstream,      self.writestream     = IO.pipe
-      self.stdout_consumer, self.stdout_producer = IO.pipe
-      self.stderr_consumer, self.stderr_producer = IO.pipe
-
-      self.producer  = SeeingIsBelieving::EventStream::Producer.new(writestream)
-      self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(
-        events: readstream,
-        stdout: stdout_consumer,
-        stderr: stderr_consumer
-      )
-    end
 
     def close_streams(*streams)
       streams.each { |fd| fd.close unless fd.closed? }
     end
 
-    after do
-      finish!
-      close_streams readstream, stdout_consumer, stderr_consumer
-    end
-
     def finish!
       producer.finish!
-      close_streams writestream, stdout_producer, stderr_producer
+      close_streams eventstream_producer, stdout_producer, stderr_producer
+    end
+
+    before do
+      self.eventstream_consumer, self.eventstream_producer = IO.pipe
+      self.stdout_consumer,      self.stdout_producer      = IO.pipe
+      self.stderr_consumer,      self.stderr_producer      = IO.pipe
+
+      self.producer = SeeingIsBelieving::EventStream::Producer.new eventstream_producer
+      self.consumer = SeeingIsBelieving::EventStream::Consumer.new \
+        events: eventstream_consumer,
+        stdout: stdout_consumer,
+        stderr: stderr_consumer
+    end
+
+    after do
+      finish!
+      close_streams eventstream_consumer, stdout_consumer, stderr_consumer
     end
 
     describe 'emitting an event' do
-      # TODO: could not fucking figure out how to ask the goddam thing if it has data
-      # read docs for over an hour -.0
-      it 'writes a line to stdout'
+      def has_message?(io)
+        io.read_nonblock(1)  # ~> IO::EAGAINWaitReadable: Resource temporarily unavailable - read would block
+      rescue Errno::EAGAIN
+        return false
+      end
 
-      # This test is irrelevant on MRI b/c of the GIL,
-      # but I ran it on Rbx to make sure it works
-      it 'is wrapped in a mutex to prevent multiple values from writing at the same time' do
+      it 'writes its events to the event stream' do
+        read, write = IO.pipe
+        producer = SeeingIsBelieving::EventStream::Producer.new(write)
+        expect(has_message? read).to eq false
+        producer.record_filename "whatever.rb"
+        expect(read.gets).to start_with 'filename'
+      end
+
+      # This test is irrelevant on MRI b/c of the GIL, but I ran it on Rbx to make sure it works
+      it 'is threadsafe as multiple events can occur at once' do
         num_threads = 10
         num_results = 600
         line_nums_and_inspections = num_threads.times.flat_map { |line_num|
@@ -104,36 +77,27 @@ module SeeingIsBelieving::EventStream
         expect(producer_threads).to be_none(&:alive?)
       end
 
-      # TODO: make sure it reads everything out of the streams, after receiving finished event
-      it 'raises NoMoreInput and marks itself finished if input is closed before it finishes reading the number of requested inputs' do
+      it 'raises NoMoreInput if input is closed before it finishes reading the number of requested inputs' do
         finish!
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
-      it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
-        finish!
+      it 'raises NoMoreInput once it receives the finish event and all its streams are closed' do
+        producer.finish!
+        close_streams stdout_producer, stderr_producer
         consumer.call 3
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
-        expect(consumer).to be_finished
       end
 
-      it 'raises NoMoreInput and marks itself finished once the all its streams are closed' do
-        close_streams writestream, stdout_producer, stderr_producer
+      it 'raises NoMoreInput if its end of the stream is closed and there is no more stdout/stderr' do
+        close_streams eventstream_consumer, stdout_producer, stderr_producer
+        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
-        expect(consumer).to be_finished
       end
 
       it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
-        close_streams readstream, stdout_producer, stderr_producer
+        close_streams eventstream_consumer, stdout_producer, stderr_producer
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
-      end
-
-      it 'is finished if its end of the stream is closed and there is no more stdout/stderr' do
-        close_streams readstream, stdout_producer, stderr_producer
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
-        expect(consumer).to_not be_finished
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
-        expect(consumer).to be_finished
       end
     end
 
@@ -413,45 +377,45 @@ module SeeingIsBelieving::EventStream
       context 'recorded line number | line num is provided | it knows the file | exception comes from within file' do
         let(:exception) { begin; raise "zomg"; rescue; $!; end }
         let(:linenum)   { __LINE__ - 1 }
-        it "provided one       | true                 | true              | true" do
+        example "provided one       | true                 | true              | true" do
           producer.filename = __FILE__
           producer.record_exception 12, exception
           assert_exception consumer.call, recorded_line_no: 12
         end
-        it "provided one       | true                 | true              | false" do
+        example "provided one       | true                 | true              | false" do
           exception.backtrace.replace ['otherfile.rb']
           producer.record_exception 12, exception
           producer.filename = __FILE__
           assert_exception consumer.call, recorded_line_no: 12
         end
-        it "provided one       | true                 | false             | true" do
+        example "provided one       | true                 | false             | true" do
           producer.filename = nil
           producer.record_exception 12, exception
           assert_exception consumer.call, recorded_line_no: 12
         end
-        it "provided one       | true                 | false             | false" do
+        example "provided one       | true                 | false             | false" do
           exception.backtrace.replace ['otherfile.rb']
           producer.filename = nil
           producer.record_exception 12, exception
           assert_exception consumer.call, recorded_line_no: 12
         end
-        it "from backtrace     | false                | true              | true" do
+        example "from backtrace     | false                | true              | true" do
           producer.filename = __FILE__
           producer.record_exception nil, exception
           assert_exception consumer.call, recorded_line_no: linenum
         end
-        it "-1                 | false                | true              | false" do
+        example "-1                 | false                | true              | false" do
           exception.backtrace.replace ['otherfile.rb']
           producer.filename = __FILE__
           producer.record_exception nil, exception
           assert_exception consumer.call, recorded_line_no: -1
         end
-        it "-1                 | false                | false             | true" do
+        example "-1                 | false                | false             | true" do
           producer.filename = nil
           producer.record_exception nil, exception
           assert_exception consumer.call, recorded_line_no: -1
         end
-        it "-1                 | false                | false             | false" do
+        example "-1                 | false                | false             | false" do
           exception.backtrace.replace ['otherfile.rb']
           producer.filename = nil
           producer.record_exception nil, exception
@@ -468,11 +432,9 @@ module SeeingIsBelieving::EventStream
         end
       end
 
-      it 'ver and version return the version, if it has been set' do
-        expect(producer.ver).to eq nil
+      specify 'version return the version, if it has been set' do
         expect(producer.version).to eq nil
         producer.record_sib_version '4.5.6'
-        expect(producer.ver).to eq '4.5.6'
         expect(producer.version).to eq '4.5.6'
       end
     end
@@ -523,12 +485,6 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    xit 'can take an additional stderr stream, which it treats like the sterr event', t2:true do
-      err_readstream, err_writestream = IO.pipe
-      self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(readstream, err_readstream)
-      err_writestream.puts "this is also the stderr"
-      expect(consumer.call).to eq Events::Stderr.new("message")
-    end
 
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
@@ -579,23 +535,9 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    specify 'send_remaining_events waits for all events to be sent (implies other end of stream is closed)' do
-      pending "TODO: WHAT IS RIGHT THING TO DO WITH THIS REQ?"
-
-      fail "NOT SURE WHAT TO DO"
-      producer.record_stdout "a"
-      producer.send_remaining_events
-      producer.record_stdout "b"
-      writestream.close
-      events = consumer.each.map { |e| e }
-      expect(events).to     be_any { |e| e == Events::Stdout.new("a") }
-      expect(events).to_not be_any { |e| e == Events::Stdout.new("b") }
-      expect(events).to_not be_any { |e| e == Events::Finish.new }
-    end
-
     specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
-      writestream.puts "this is nonsense!"
-      writestream.close
+      eventstream_producer.puts "this is nonsense!"
+      eventstream_producer.close
       expect{ consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::UnknownEvent, /nonsense/
     end
   end
