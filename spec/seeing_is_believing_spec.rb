@@ -2,7 +2,6 @@
 require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
-require 'seeing_is_believing/evaluate_with_eval_in'
 
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
