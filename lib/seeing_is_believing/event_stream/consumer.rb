@@ -1,41 +1,68 @@
 require 'seeing_is_believing/event_stream/events'
 require 'seeing_is_believing/error'
+require 'thread'
+
 class SeeingIsBelieving
   module EventStream
     class Consumer
       NoMoreInput        = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
 
-      def initialize(readstream)
-        @readstream = readstream
+      # FIXME: make this private
+      attr_accessor :event_thread, :stdout_thread, :stderr_thread
+
+      def initialize(streams)
+        self.event_stream      = streams.fetch :events
+        self.stdout_stream     = streams.fetch :stdout
+        self.stderr_stream     = streams.fetch :stderr
+        self.queue             = Thread::Queue.new
+
+        self.stdout_thread = Thread.new do
+          stdout_stream.each_line do |line|
+            queue << Events::Stdout.new(line.chomp)
+          end
+          queue << :stdout_thread_finished
+        end
+
+        self.stderr_thread = Thread.new do
+          stderr_stream.each_line do |line|
+            queue << Events::Stderr.new(line.chomp)
+          end
+          queue << :stderr_thread_finished
+        end
+
+        self.event_thread = Thread.new do
+          begin
+            loop do
+              break unless line = event_stream.gets
+              event = event_for line
+              queue << event
+              break if Events::Finish === event
+            end
+          rescue IOError # TODO: does this still happen?
+            queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
+          # rescue NoMoreInput
+          #   raise
+          #   # TODO: does this still happen?
+          #   # Well, it needs to if it doesn't...
+          #   # how about each thread pushes an event in saying they are done, and if it sees all three, it marks it finished
+          end
+          queue << :event_thread_finished
+        end
       end
 
       def call(n=1)
-        events = n.times.map do
-          raise NoMoreInput if finished?
-          line = @readstream.gets
-          raise NoMoreInput if line.nil?
-          event = event_for line
-          @finished = true if Events::Finish === event
-          event
-        end
-        n == 1 ? events.first : events
-      rescue IOError
-        @finished = true
-        raise WtfWhoClosedMyShit, "Our end of the pipe was closed!"
-      rescue NoMoreInput
-        @finished = true
-        raise
+        return next_event if n == 1
+        n.times.map { next_event }
       end
 
       def each
         return to_enum :each unless block_given?
-        loop do
+        until finished?
           event = call
           yield event unless Events::Finish === event
         end
       rescue NoMoreInput
-        return nil
       end
 
       def finished?
@@ -43,6 +70,28 @@ class SeeingIsBelieving
       end
 
       private
+
+      attr_accessor :event_stream, :stdout_stream, :stderr_stream
+      attr_accessor :queue
+
+      def next_event
+        @finished_threads ||= [] # TODO: move me to initialize / attr_accessor
+        event = queue.shift
+        case event
+        when Symbol
+          @finished_threads << event
+          if @finished_threads.size == 3
+            @finished = true
+            raise NoMoreInput
+          else
+            next_event
+          end
+        when SeeingIsBelievingError
+          raise event
+        else
+          event
+        end
+      end
 
       def extract_token(line)
         event_name = line[/[^ ]+/]
@@ -77,7 +126,7 @@ class SeeingIsBelieving
         when :exception
           Events::Exception.new(-1, '', '', []).tap do |exception|
             loop do
-              line = @readstream.gets.chomp
+              line = event_stream.gets.chomp
               case extract_token(line).intern
               when :line_number   then exception.line_number = extract_token(line).to_i
               when :class_name    then exception.class_name  = extract_string(line)

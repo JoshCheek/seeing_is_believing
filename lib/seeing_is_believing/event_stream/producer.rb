@@ -17,14 +17,8 @@ class SeeingIsBelieving
             resultstream.sync = true
             loop do
               to_publish = queue.shift
-              if to_publish == :finish
-                resultstream << "finish\n"
-                break
-              elsif to_publish == :end_without_finish
-                break
-              else
-                resultstream << (to_publish << "\n")
-              end
+              break if to_publish == :break
+              resultstream << (to_publish << "\n")
             end
           rescue IOError, Errno::EPIPE
             queue.clear
@@ -121,14 +115,14 @@ class SeeingIsBelieving
       end
 
       def send_remaining_events
-        queue << :end_without_finish
+        queue << :break
         producer_thread.join
       end
 
       def finish!
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
-        queue << :finish
+        queue << "finish"
         send_remaining_events
       end
 

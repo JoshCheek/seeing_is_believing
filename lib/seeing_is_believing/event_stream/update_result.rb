@@ -1,6 +1,7 @@
 require 'seeing_is_believing/event_stream/events'
 class SeeingIsBelieving
   module EventStream
+    # Adapter between EventStream and Result
     module UpdateResult
       def self.call(result, event)
          case event

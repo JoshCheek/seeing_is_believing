@@ -37,19 +37,40 @@ require 'seeing_is_believing/event_stream/consumer'
 
 module SeeingIsBelieving::EventStream
   RSpec.describe SeeingIsBelieving::EventStream do
-    attr_accessor :producer, :consumer, :readstream, :writestream
+    attr_accessor :producer, :consumer
+    attr_accessor :readstream, :writestream # TODO: rename, these are event streams for consumer and producer
+    attr_accessor :stdout_consumer, :stdout_producer
+    attr_accessor :stderr_consumer, :stderr_producer
+
+    # TODO: cleanup -- it kills its threads and streams if told to cleanup
+    # TODO: no more assuming the rest is stderr or something when nonsense is printed
 
     before do
-      self.readstream, self.writestream = IO.pipe
+      self.readstream,      self.writestream     = IO.pipe
+      self.stdout_consumer, self.stdout_producer = IO.pipe
+      self.stderr_consumer, self.stderr_producer = IO.pipe
+
       self.producer  = SeeingIsBelieving::EventStream::Producer.new(writestream)
-      self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(readstream)
+      self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(
+        events: readstream,
+        stdout: stdout_consumer,
+        stderr: stderr_consumer
+      )
     end
 
-    after {
+    def close_streams(*streams)
+      streams.each { |fd| fd.close unless fd.closed? }
+    end
+
+    after do
+      finish!
+      close_streams readstream, stdout_consumer, stderr_consumer
+    end
+
+    def finish!
       producer.finish!
-      readstream.close  unless readstream.closed?
-      writestream.close unless writestream.closed?
-    }
+      close_streams writestream, stdout_producer, stderr_producer
+    end
 
     describe 'emitting an event' do
       # TODO: could not fucking figure out how to ask the goddam thing if it has data
@@ -83,27 +104,35 @@ module SeeingIsBelieving::EventStream
         expect(producer_threads).to be_none(&:alive?)
       end
 
+      # TODO: make sure it reads everything out of the streams, after receiving finished event
       it 'raises NoMoreInput and marks itself finished if input is closed before it finishes reading the number of requested inputs' do
-        producer.finish!
+        finish!
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
       it 'raises NoMoreInput and marks itself finished once it receives the finish event' do
-        producer.finish!
+        finish!
         consumer.call 3
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         expect(consumer).to be_finished
       end
 
-      it 'raises NoMoreInput and marks itself finished once the other end of the stream is closed' do
-        writestream.close
+      it 'raises NoMoreInput and marks itself finished once the all its streams are closed' do
+        close_streams writestream, stdout_producer, stderr_producer
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         expect(consumer).to be_finished
       end
 
-      it 'raises WtfWhoClosedMyShit and marks itself finished if its end of the stream is closed' do
-        readstream.close
+      it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
+        close_streams readstream, stdout_producer, stderr_producer
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
+      end
+
+      it 'is finished if its end of the stream is closed and there is no more stdout/stderr' do
+        close_streams readstream, stdout_producer, stderr_producer
+        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
+        expect(consumer).to_not be_finished
+        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         expect(consumer).to be_finished
       end
     end
@@ -111,7 +140,7 @@ module SeeingIsBelieving::EventStream
     describe 'each' do
       it 'loops through and yields all events except the finish event' do
         producer.record_result :inspect, 100, 2
-        producer.finish!
+        finish!
 
         events = []
         consumer.each { |e| events << e }
@@ -124,17 +153,20 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'stops looping if there is no more input' do
-        writestream.close
-        expect(consumer.each.map { |e| e }).to eq []
+        finish!
+        expect(consumer.each.map { |e| e }).to eq [
+          Events::NumLines.new(0),
+          Events::Exitstatus.new(0),
+        ]
       end
 
       it 'returns nil' do
-        producer.finish!
+        finish!
         expect(consumer.each { 1 }).to eq nil
       end
 
       it 'returns an enumerator if not given a block' do
-        producer.finish!
+        finish!
         expect(consumer.each.map &:class).to include Events::Exitstatus
       end
     end
@@ -464,34 +496,43 @@ module SeeingIsBelieving::EventStream
     end
 
     describe 'stdout' do
-      it 'is an escaped string' do
-        producer.record_stdout("this is the stdout¡")
+      it 'is emitted along with the events from the event stream' do
+        stdout_producer.puts "this is the stdout¡"
         expect(consumer.call).to eq Events::Stdout.new("this is the stdout¡")
       end
-      it 'may be emitted multiple times' do
-        producer.record_stdout("first")
-        producer.record_stdout("second")
+      it 'each line is emitted as an event' do
+        stdout_producer.puts "first"
+        stdout_producer.puts "second\nthird"
         expect(consumer.call).to eq Events::Stdout.new("first")
         expect(consumer.call).to eq Events::Stdout.new("second")
+        expect(consumer.call).to eq Events::Stdout.new("third")
       end
     end
 
     describe 'stderr' do
-      it 'is an escaped string' do
-        producer.record_stderr("this is the stderr¡")
+      it 'is emitted along with the events from the event stream' do
+        stderr_producer.puts "this is the stderr¡"
         expect(consumer.call).to eq Events::Stderr.new("this is the stderr¡")
       end
-      it 'may be emitted multiple times' do
-        producer.record_stderr("first")
-        producer.record_stderr("second")
+      it 'each line is emitted as an event' do
+        stderr_producer.puts "first"
+        stderr_producer.puts "second\nthird"
         expect(consumer.call).to eq Events::Stderr.new("first")
         expect(consumer.call).to eq Events::Stderr.new("second")
+        expect(consumer.call).to eq Events::Stderr.new("third")
       end
+    end
+
+    xit 'can take an additional stderr stream, which it treats like the sterr event', t2:true do
+      err_readstream, err_writestream = IO.pipe
+      self.consumer  = SeeingIsBelieving::EventStream::Consumer.new(readstream, err_readstream)
+      err_writestream.puts "this is also the stderr"
+      expect(consumer.call).to eq Events::Stderr.new("message")
     end
 
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
-        producer.finish!
+        finish!
         consumer.call(3).find { |e| e.class == event_class }
       end
 
@@ -539,6 +580,9 @@ module SeeingIsBelieving::EventStream
     end
 
     specify 'send_remaining_events waits for all events to be sent (implies other end of stream is closed)' do
+      pending "TODO: WHAT IS RIGHT THING TO DO WITH THIS REQ?"
+
+      fail "NOT SURE WHAT TO DO"
       producer.record_stdout "a"
       producer.send_remaining_events
       producer.record_stdout "b"
@@ -549,11 +593,10 @@ module SeeingIsBelieving::EventStream
       expect(events).to_not be_any { |e| e == Events::Finish.new }
     end
 
-    specify 'if an incomprehensible event is received, and all further events are treated as stdout' do
+    specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
       writestream.puts "this is nonsense!"
-      producer.finish!
-      expect(consumer.call).to eq Events::Stdout.new("this is nonsense!\n")
-      expect(consumer.call).to be_a_kind_of Events::Stdout # as opposed to some finish event
+      writestream.close
+      expect{ consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::UnknownEvent, /nonsense/
     end
   end
 end
