@@ -435,19 +435,13 @@ Feature:
     Thread.new { Queue.new.shift }.join
     """
     When I run "seeing_is_believing deadlocked.rb"
-    Then stdout is:
+    Then stdout includes:
     """
     require 'thread'                     # => false
-    Thread.new { Queue.new.shift }.join  # ~> fatal: No live threads left. Deadlock?
-
-    # ~> fatal
-    # ~> No live threads left. Deadlock?
-    # ~>
-    # ~> deadlocked.rb:2:in `join'
-    # ~> deadlocked.rb:2:in `<main>'
+    Thread.new { Queue.new.shift }.join  # ~> fatal
     """
 
-    @wip
+  @wip
   Scenario: Xmpfilter does not write the error messages inside of strings
     Given the file "error_within_string.rb":
     """
