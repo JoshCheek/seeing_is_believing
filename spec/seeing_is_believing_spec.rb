@@ -391,9 +391,11 @@ RSpec.describe SeeingIsBelieving do
         $LOAD_PATH.unshift '#{File.expand_path '../../lib', __FILE__}'
 
         require 'seeing_is_believing/event_stream/producer'
-        sib = SeeingIsBelieving::EventStream::Producer.new($stdout)
+        event_stream = IO.open(ARGV.pop.to_i, 'w')
+        sib = SeeingIsBelieving::EventStream::Producer.new(event_stream)
         sib.record_result(:inspect, 1, /omg/)
         sib.finish!
+        event_stream.close
       "
       File.chmod 0755, 'omg-ruby'
       old_path = ENV['PATH']
@@ -511,6 +513,7 @@ RSpec.describe SeeingIsBelieving do
     end
 
     it 'can use EvaluateWithEvalIn' do
+      pending 'need to delete this, it won\'t ever be able to do this, it needs 3 file descriptors'
       require 'seeing_is_believing/event_stream/producer'
       redirect_url     = 'https://example.com/whatever'
       api_redirect_url = redirect_url + '.json'
