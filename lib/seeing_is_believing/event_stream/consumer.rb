@@ -31,7 +31,6 @@ class SeeingIsBelieving
                    break unless line = event_stream.gets
                    event = event_for line
                    queue << event
-                   break if Events::Finish === event
                  end
           rescue IOError; queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
           rescue SeeingIsBelievingError; queue << $!
@@ -41,16 +40,13 @@ class SeeingIsBelieving
       end
 
       def call(n=1)
-        n == 1 ? next_event : Array.new(n) { next_event }
+        return next_event if n == 1
+        Array.new(n) { next_event }
       end
 
-      # TODO: Should it actually yield thie finish event?
-      # TODO: Is there a point to the finish event anymore?
       def each
         return to_enum :each unless block_given?
-        loop do
-          call(1).tap { |event| yield event unless Events::Finish === event }
-        end
+        loop { yield call(1) }
       rescue NoMoreInput
       end
 
@@ -60,9 +56,11 @@ class SeeingIsBelieving
       attr_accessor :event_thread, :stdout_thread, :stderr_thread
 
       def next_event
+        raise NoMoreInput if @no_more_input
+
         case event = queue.shift
         when Symbol
-          raise NoMoreInput if finished_threads.push(event).size == 3
+          @no_more_input = true if finished_threads.push(event).size == 3
           next_event
         when SeeingIsBelievingError
           raise event
@@ -117,10 +115,7 @@ class SeeingIsBelieving
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
           Events::MaxLineCaptures.new(value)
         when :exitstatus
-          # TODO: Will this fuck it up if you run `exit true`?
           Events::Exitstatus.new(extract_token(line).to_i)
-        when :finish
-          Events::Finish.new
         when :num_lines
           Events::NumLines.new(extract_token(line).to_i)
         when :sib_version

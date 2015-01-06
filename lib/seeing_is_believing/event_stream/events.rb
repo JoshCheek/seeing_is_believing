@@ -12,7 +12,6 @@ class SeeingIsBelieving
       RubyVersion      = Struct.new(:value)
       Exitstatus       = Struct.new(:value)
       Exception        = Struct.new(:line_number, :class_name, :message, :backtrace)
-      Finish           = Class.new
     end
   end
 end

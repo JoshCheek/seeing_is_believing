@@ -82,10 +82,10 @@ module SeeingIsBelieving::EventStream
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
-      it 'raises NoMoreInput once it receives the finish event and all its streams are closed' do
+      it 'raises NoMoreInput once it its input streams are all closed' do
         producer.finish!
-        close_streams stdout_producer, stderr_producer
-        consumer.call 3
+        close_streams eventstream_producer, stdout_producer, stderr_producer
+        consumer.call 2
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
@@ -102,16 +102,14 @@ module SeeingIsBelieving::EventStream
     end
 
     describe 'each' do
-      it 'loops through and yields all events except the finish event' do
+      it 'loops through and yields all events' do
         producer.record_result :inspect, 100, 2
         finish!
 
         events = []
         consumer.each { |e| events << e }
-        finish_event = events.find { |e| e.kind_of? Events::Finish }
         line_result  = events.find { |e| e.kind_of? Events::LineResult }
         exitstatus   = events.find { |e| e.kind_of? Events::Exitstatus }
-        expect(finish_event).to be_nil
         expect(line_result.line_number).to eq 100
         expect(exitstatus.value).to eq 0
       end
@@ -489,7 +487,18 @@ module SeeingIsBelieving::EventStream
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
         finish!
-        consumer.call(3).find { |e| e.class == event_class }
+        consumer.call(2).find { |e| e.class == event_class }
+      end
+
+      it 'stops the producer from producing' do
+        read, write = IO.pipe
+        producer = SeeingIsBelieving::EventStream::Producer.new write
+        producer.finish!
+        read.gets
+        read.gets
+        producer.record_filename("zomg")
+        write.close
+        expect(read.gets).to eq nil
       end
 
       describe 'num_lines' do
@@ -524,13 +533,6 @@ module SeeingIsBelieving::EventStream
         it 'can be overridden' do
           producer.exitstatus = 74
           expect(final_event(producer, consumer, Events::Exitstatus).value).to eq 74
-        end
-      end
-
-      describe 'finish' do
-        it 'is the last thing that will be read' do
-          expect(final_event(producer, consumer, Events::Finish)).to be_a_kind_of Events::Finish
-          expect { p consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
         end
       end
     end

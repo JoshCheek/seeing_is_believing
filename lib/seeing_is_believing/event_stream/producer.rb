@@ -4,6 +4,13 @@ require 'thread'
 class SeeingIsBelieving
   module EventStream
     class Producer
+
+      module NullQueue
+        extend self
+        def <<(*)   end
+        def shift() end
+      end
+
       attr_accessor :exitstatus, :max_line_captures, :num_lines, :filename
 
       def initialize(resultstream)
@@ -25,8 +32,8 @@ class SeeingIsBelieving
             queue.clear
           ensure
             resultstream.flush rescue nil
-            # TODO: could swap it with a null queue at this point
           end
+          self.queue = NullQueue
         end
       end
 
@@ -102,10 +109,10 @@ class SeeingIsBelieving
         queue << "filename #{to_string_token filename}"
       end
 
+      # note that producer will continue reading until stream is closed
       def finish!
         queue << "num_lines #{num_lines}"
         queue << "exitstatus #{exitstatus}"
-        queue << "finish"
         queue << :break
         producer_thread.join
       end
