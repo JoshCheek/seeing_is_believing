@@ -68,7 +68,7 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :ruby_executable, :debugger, :result
+    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :debugger, :result
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -78,7 +78,6 @@ class SeeingIsBelieving
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
       self.timeout         = options[:timeout]
-      self.ruby_executable = options.fetch :ruby_executable, 'ruby'
       self.debugger        = options.fetch :debugger, Debugger.new(stream: nil)
     end
 
@@ -177,7 +176,7 @@ class SeeingIsBelieving
     end
 
     def popen_args
-      [ruby_executable,
+      [RbConfig.ruby,
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
          '-I', File.expand_path('../..', __FILE__), # add lib to the load path

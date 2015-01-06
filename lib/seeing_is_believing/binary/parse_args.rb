@@ -47,14 +47,14 @@ class SeeingIsBelieving
             when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
             when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
             when '-t',  '--timeout'             then extract_non_negative_float_for :timeout,      arg
-            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   flags[:require]           << filename }
-            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one")      { |dir|        flags[:load_path]         << dir }
-            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")        { |program|    flags[:program_from_args] =  program }
-            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")       { |filename|   flags[:as]                =  filename }
-            when        '--shebang'             then next_arg("#{arg} expects a ruby executable as the following argument but did not see one") { |executable| flags[:shebang]           =  executable }
+            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:require]           << filename }
+            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|        flags[:load_path]         << dir }
+            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|    flags[:program_from_args] =  program }
+            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:as]                =  filename }
             when '-s',  '--alignment-strategy'  then flags[:alignment_strategy] = args.shift
             when /\A-K(.+)/                     then flags[:encoding] = $1
             when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| flags[:encoding] = encoding }
+            when        '--shebang'             then next_arg("#{arg} is deprecated, SiB now uses the Ruby it was invoked with")           { |executable| flags[:deprecated_flags] << '--shebang' << executable }
             when /^(-.|--.*)$/                  then flags[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             when /^-[^-]/                       then args.unshift *normalize_shortflags(arg)
             else
@@ -93,13 +93,13 @@ class SeeingIsBelieving
           require:             ['seeing_is_believing/the_matrix'],
           load_path:           [],
           alignment_strategy:  'chunk',
-          shebang:             'ruby',
           result_as_json:      false,
           markers:             self.class.default_markers,
           marker_regexes:      self.class.marker_regexes,
           short_help_screen:   self.class.help_screen(false),
           long_help_screen:    self.class.help_screen(true),
           safe:                false,
+          deprecated_flags:    [],
         }
       end
 

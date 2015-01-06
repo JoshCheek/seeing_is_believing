@@ -385,29 +385,6 @@ RSpec.describe SeeingIsBelieving do
           ['2']]
   end
 
-  it 'can evaluate under a different ruby executable' do
-    Dir.chdir proving_grounds_dir do
-      File.write 'omg-ruby', "#!/usr/bin/env ruby
-        $LOAD_PATH.unshift '#{File.expand_path '../../lib', __FILE__}'
-
-        require 'seeing_is_believing/event_stream/producer'
-        event_stream = IO.open(ARGV.pop.to_i, 'w')
-        sib = SeeingIsBelieving::EventStream::Producer.new(event_stream)
-        sib.record_result(:inspect, 1, /omg/)
-        sib.finish!
-        event_stream.close
-      "
-      File.chmod 0755, 'omg-ruby'
-      old_path = ENV['PATH']
-      ENV['PATH'] = "#{proving_grounds_dir}:#{old_path}"
-      begin
-        expect(values_for("1", ruby_executable: 'omg-ruby')).to eq [["/omg/"]]
-      ensure
-        ENV['PATH'] = old_path
-      end
-    end
-  end
-
   describe 'BEGIN and END' do
     it 'Executes in the appropriate order' do
       pending 'not implemented'

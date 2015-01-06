@@ -23,7 +23,6 @@ class SeeingIsBelieving
     @encoding           = options.fetch :encoding,  nil
     @timeout            = options[:timeout]
     @debugger           = options.fetch :debugger, Debugger.new(stream: nil)
-    @ruby_executable    = options.fetch :ruby_executable, 'ruby'
     @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
     @evaluator          = options.fetch :evaluator, EvaluateByMovingFiles
     @record_expressions = options.fetch :record_expressions, InspectExpressions # TODO: rename to wrap_expressions
@@ -42,7 +41,6 @@ class SeeingIsBelieving
                       load_path:          @load_path,
                       encoding:           @encoding,
                       timeout:            @timeout,
-                      ruby_executable:    @ruby_executable,
                       debugger:           @debugger
 
       @debugger.context("RESULT") { result.inspect }

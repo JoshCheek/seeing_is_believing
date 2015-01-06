@@ -131,12 +131,6 @@ class SeeingIsBelieving
         end
       end
 
-      context 'shebang' do
-        it 'sets shebang to the value' do
-          expect(call(shebang: 'whatevz').shebang).to eq 'whatevz'
-        end
-      end
-
       context 'filename' do
         it 'sets this as the filename' do
           expect(call(filename: 'somefilename').filename).to eq 'somefilename'
@@ -247,10 +241,6 @@ class SeeingIsBelieving
           expect(call(filename: 'from_fn')[:filename]).to eq 'from_fn'
           expect(call(as: 'from_as')[:filename]).to eq 'from_as'
           expect(call(as: 'from_as', filename: 'from_fn')[:filename]).to eq 'from_as'
-        end
-
-        specify 'ruby_executable is the shebang' do
-          expect(call(shebang: 'shebangprog')[:ruby_executable]).to eq 'shebangprog'
         end
 
         specify 'stdin is empty when the program is on stdin, and is stdin otherwise' do

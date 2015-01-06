@@ -29,4 +29,3 @@ Feature: Running in safe-mode
     --load-path dir           # a dir that should be added to the $LOAD_PATH
     --require file            # additional files to be required before running the program
     --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
-    --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path

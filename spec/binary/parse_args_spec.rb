@@ -341,12 +341,11 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   describe ':shebang' do
-    it 'defaults to "ruby"' do
-      expect(parse([])[:shebang]).to eq 'ruby'
-    end
-
-    it 'can be enabled with --shebang' do
-      expect(parse(['--shebang', 'not_ruby'])[:shebang]).to eq 'not_ruby'
+    it 'is added to the list of deprecated flags' do
+      expect(parse([])[:deprecated_flags]).to eq []
+      parsed = parse(['--shebang', 'not_ruby', 'other'])
+      expect(parsed[:shebang]).to eq nil
+      expect(parsed[:deprecated_flags]).to eq ['--shebang', 'not_ruby']
     end
 
     it 'sets an error if not given a next arg to execute' do

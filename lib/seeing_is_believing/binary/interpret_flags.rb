@@ -45,7 +45,6 @@ class SeeingIsBelieving
       attr_attribute :markers
       attr_attribute :marker_regexes
       attr_attribute :timeout
-      attr_attribute :shebang
       attr_attribute :filename
       attr_attribute :body
       attr_attribute :annotator_options
@@ -60,7 +59,6 @@ class SeeingIsBelieving
         attributes[:markers]        = flags.fetch(:markers) # TODO: Should probably object-ify these
         attributes[:marker_regexes] = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
         attributes[:timeout]        = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
-        attributes[:shebang]        = flags.fetch(:shebang) # b/c binary uses this to validate syntax atm
         attributes[:filename]       = flags.fetch(:filename)
 
         # All predicates
@@ -90,7 +88,6 @@ class SeeingIsBelieving
         attributes[:lib_options] = {
           evaluate_with:      (flags.fetch(:safe) ? EvaluateWithEvalIn : EvaluateByMovingFiles),
           filename:           (flags.fetch(:as) || filename),
-          ruby_executable:    shebang,
           stdin:              (file_is_on_stdin? ? '' : stdin),
           require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
           load_path:          ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),

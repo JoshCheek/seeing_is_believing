@@ -38,7 +38,7 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      syntax_error_notice = syntax_error_notice_for(options.body, options.shebang)
+      syntax_error_notice = syntax_error_notice_for(options.body)
       if syntax_error_notice
         stderr.puts syntax_error_notice
         return NONDISPLAYABLE_ERROR_STATUS
@@ -88,8 +88,8 @@ class SeeingIsBelieving
 
     private
 
-    def self.syntax_error_notice_for(body, shebang)
-      out, err, syntax_status = Open3.capture3 shebang, '-c', stdin_data: body
+    def self.syntax_error_notice_for(body)
+      out, err, syntax_status = Open3.capture3 RbConfig.ruby, '-c', stdin_data: body
       return err unless syntax_status.success?
 
       # The stdin_data may still be getting written when the pipe closes
