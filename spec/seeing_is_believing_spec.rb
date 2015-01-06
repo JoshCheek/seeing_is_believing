@@ -500,6 +500,19 @@ RSpec.describe SeeingIsBelieving do
     # should ProgramRewriter have some debug options?
   end
 
+  it 'can deal with exec' do
+    result = invoke \
+      "1+1\n"\
+      "$stdout.puts *1..1000\n"\
+      "$stderr.puts *1..1000\n"\
+      "exec %(ruby -e '$stdout.puts %[out from exec];
+                       $stderr.puts %[err from exec]')"
+    expect(result[1]).to eq ['2']
+    nums = (1..1000).map { |n| "#{n}\n" }.join('')
+    expect(result.stdout).to eq "#{nums}out from exec\n"
+    expect(result.stderr).to eq "#{nums}err from exec\n"
+  end
+
   context 'when :evaluator option is set' do
     require 'webmock'
     WebMock.disable_net_connect!

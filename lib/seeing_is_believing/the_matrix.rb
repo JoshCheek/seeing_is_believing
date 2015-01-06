@@ -11,9 +11,12 @@ require_relative 'event_stream/producer'
 event_stream = IO.open(ARGV.shift.to_i, "w")
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 
+stdout, stderr = STDOUT, STDERR
 finish = lambda do
   $SiB.finish!
   event_stream.close
+  stdout.flush
+  stderr.flush
 end
 
 real_exec = method :exec
