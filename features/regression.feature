@@ -426,3 +426,43 @@ Feature:
     """
     # a # => a
     """
+
+
+  Scenario: Deadlocked
+    Given the file "deadlocked.rb":
+    """
+    require 'thread'
+    Thread.new { Queue.new.shift }.join
+    """
+    When I run "seeing_is_believing deadlocked.rb"
+    Then stdout is:
+    """
+    require 'thread'                     # => false
+    Thread.new { Queue.new.shift }.join  # ~> fatal: No live threads left. Deadlock?
+
+    # ~> fatal
+    # ~> No live threads left. Deadlock?
+    # ~>
+    # ~> deadlocked.rb:2:in `join'
+    # ~> deadlocked.rb:2:in `<main>'
+    """
+
+    @wip
+  Scenario: Xmpfilter does not write the error messages inside of strings
+    Given the file "error_within_string.rb":
+    """
+    raise(ArgumentError, "line1
+          line2")
+    """
+    When I run "seeing_is_believing --xmpfilter-style error_within_string.rb"
+    Then stdout is:
+    """
+    raise(ArgumentError, "line1
+          line2")                # ~> ArgumentError: line1\n      line2
+
+    # ~> ArgumentError
+    # ~> line1
+    # ~>       line2
+    # ~>
+    # ~> f4.rb:1:in `<main>'
+    """

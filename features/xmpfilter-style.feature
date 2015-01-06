@@ -152,6 +152,7 @@ Feature: Xmpfilter style
   Scenario: Cleaning previous output
     Given the file "xmpfilter_cleaning.rb":
     """
+    # commented out # => previous annotation
     1 # => "1...
     # => "1111111111...
     #    "1111111111...
@@ -161,6 +162,60 @@ Feature: Xmpfilter style
     When I run "seeing_is_believing --xmpfilter-style --clean xmpfilter_cleaning.rb"
     Then stdout is:
     """
+    # commented out # => previous annotation
     1
     # normal comment
+    """
+
+
+  @wip
+  Scenario: Correctly cleans/rewrites when the First line of inspection is indented more than its children
+    Given the file "indented_inspection.rb":
+    """
+    obj = Object.new
+    def obj.inspect
+      " 1 \n2 2\n"
+    end
+    obj
+    # =>
+    """
+    When I run "seeing_is_believing -x indented_inspection.rb | seeing_is_believing -x"
+    Then stdout is:
+    """
+    obj = Object.new
+    def obj.inspect
+      " 1 \n2 2\n"
+    end
+    obj
+    # =>  1
+    #    2 2
+    """
+
+  # this one needs a bit more thought put into it, but I'm kinda fading now
+  @wip
+  Scenario: Error raised on an annotated line does not wipe it out
+    Given the file "error_on_annotated_line.rb":
+    """
+    a # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style error_on_annotated_line.rb"
+    Then I stdout is:
+    """
+    idk, but we need to be able to fix the thing and run it again
+    without losing the annotation
+    """
+
+
+  @not-implemented
+  Scenario: It can record values even when method is overridden
+    Given the file "pretty_inspect_with_method_overridden.rb":
+    """
+    def method()end; self # =>
+    # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style pretty_inspect_with_method_overridden.rb"
+    Then stdout is:
+    """
+    def method()end; self # => main
+    # => main
     """

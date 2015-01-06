@@ -196,6 +196,7 @@ Feature: Using flags
   Scenario: --clean
     Given the file "uncleaned.rb":
     """
+    # comment # => still a comment
     1 + 1  # => not 2
     2 + 2  # ~> Exception, something
 
@@ -211,6 +212,7 @@ Feature: Using flags
     And the exit status is 0
     And stdout is:
     """
+    # comment # => still a comment
     1 + 1
     2 + 2
 
