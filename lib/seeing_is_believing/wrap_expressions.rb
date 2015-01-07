@@ -72,7 +72,15 @@ class SeeingIsBelieving
 
     def add_to_wrappings(range_or_ast, meta=nil)
       range = range_or_ast
-      range = range_or_ast.location.expression if range.kind_of? ::AST::Node
+      if range.kind_of? ::AST::Node
+        location = range_or_ast.location
+        # __ENCODING__ becomes:  (const (const nil :Encoding) :UTF_8)
+        # Where the inner const doesn't have a location because it doesn't correspond to a real token.
+        # There is not currently a way to turn this off, but it would be nice to have one like __LINE__ does
+        # https://github.com/whitequark/parser/blob/e2249d7051b1adb6979139928e14a81bc62f566e/lib/parser/builders/default.rb#L333-343
+        return unless location.respond_to? :expression
+        range = location.expression
+      end
       line, col = buffer.decompose_position range.end_pos
       _, prev_col, _ = wrappings[line]
       wrappings[line] = (!wrappings[line] || prev_col < col ? [range, col, meta] : wrappings[line] )

@@ -268,10 +268,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps macros' do
-      # should this actually replace __FILE__ and __LINE__ so as to avoid fucking up values with the rewrite?
       # there is also __dir__, but it's only 2.0
       expect(wrap("__FILE__")).to eq "<__FILE__>"
       expect(wrap("__LINE__")).to eq "<__LINE__>"
+      expect(wrap("__ENCODING__")).to eq "<__ENCODING__>"
       expect(wrap("defined? a")).to eq "<defined? a>"
     end
 

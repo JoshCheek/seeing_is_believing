@@ -168,6 +168,7 @@ Feature: Running the binary successfully
     """
     __FILE__
     __LINE__
+    __ENCODING__
     $stdout.puts "omg"
     $stderr.puts "hi"
     DATA.read
@@ -183,10 +184,11 @@ Feature: Running the binary successfully
     """
     __FILE__            # => "some_dir/uses_macros.rb"
     __LINE__            # => 2
+    __ENCODING__        # => #<Encoding:UTF-8>
     $stdout.puts "omg"  # => nil
     $stderr.puts "hi"   # => nil
     DATA.read           # => "1\n2\n"
-    __LINE__            # => 6
+    __LINE__            # => 7
 
     # >> omg
 

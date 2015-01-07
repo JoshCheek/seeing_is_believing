@@ -179,7 +179,12 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
-
+  it 'does not fuck up the __ENCODING__ macro' do
+    expect(values_for("# encoding: utf-8
+                      __ENCODING__")).to eq [[], ["#<Encoding:UTF-8>"]]
+    expect(values_for("# encoding: ascii-8bit
+                      __ENCODING__")).to eq [[], ["#<Encoding:ASCII-8BIT>"]]
+  end
 
   it 'does not fuck up __LINE__ macro' do
     expect(values_for( '__LINE__
