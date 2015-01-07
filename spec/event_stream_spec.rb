@@ -77,6 +77,28 @@ module SeeingIsBelieving::EventStream
         expect(producer_threads).to be_none(&:alive?)
       end
 
+      it 'transcodes any received messages to UTF8' do
+        utf8  = "こんにちは" # from https://github.com/svenfuchs/i18n/blob/ee7fef8e9b9ee2f7d16e6c36d669ee7fb24ec613/lib/i18n/tests/interpolation.rb#L72
+        eucjp = utf8.encode(Encoding::EUCJP)
+        producer.record_sib_version(eucjp)
+        version = consumer.call.value
+        expect(version).to eq utf8
+        expect(version).to_not eq eucjp          # general sanity checks to make
+        expect(utf8.bytes).to_not eq eucjp.bytes # sure I don't accidentally pass
+      end
+
+      it 'force encodes the message to UTF8 when it can\'t validly transcode' do
+        producer.record_sib_version("åß∂ƒ".b)
+        version = consumer.call.value
+        expect(version).to eq "åß∂ƒ"
+        expect(version).to_not eq "åß∂ƒ".b
+      end
+
+      it 'scrubs any invalid bytes to "�" when the force encoding isn\'t valid' do
+        producer.record_sib_version("a\xFF å".b)  # unicode bytes can't begin with
+        expect(consumer.call.value).to eq "a� å"  # space just so its easier to see
+      end
+
       it 'raises NoMoreInput if input is closed before it finishes reading the number of requested inputs' do
         finish!
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
@@ -98,6 +120,12 @@ module SeeingIsBelieving::EventStream
       it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
         close_streams eventstream_consumer, stdout_producer, stderr_producer
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
+      end
+
+      specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
+        eventstream_producer.puts "this is nonsense!"
+        eventstream_producer.close
+        expect{ consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::UnknownEvent, /nonsense/
       end
     end
 
@@ -535,12 +563,6 @@ module SeeingIsBelieving::EventStream
           expect(final_event(producer, consumer, Events::Exitstatus).value).to eq 74
         end
       end
-    end
-
-    specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
-      eventstream_producer.puts "this is nonsense!"
-      eventstream_producer.close
-      expect{ consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::UnknownEvent, /nonsense/
     end
   end
 end

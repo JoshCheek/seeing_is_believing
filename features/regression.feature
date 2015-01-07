@@ -460,3 +460,21 @@ Feature:
     # ~>
     # ~> f4.rb:1:in `<main>'
     """
+
+
+  # not going to get too detailed on what it prints, b/c that message seems pretty fragile,
+  # but just generally that it doesn't fkn blow up
+  Scenario: https://github.com/JoshCheek/seeing_is_believing/issues/46
+    Given the file "json_and_encodings.rb":
+    """
+    require 'json'
+    JSON.parse JSON.dump("√")
+    """
+    When I run "seeing_is_believing json_and_encodings.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout includes:
+    """
+    require 'json'             # => true
+    JSON.parse JSON.dump("√")
+    """

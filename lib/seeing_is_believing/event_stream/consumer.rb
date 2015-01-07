@@ -75,9 +75,13 @@ class SeeingIsBelieving
         event_name
       end
 
-      # for a consideration of many different ways of doing this, see 5633064
+      # for a consideration of many different ways of passing the message, see 5633064
+      # for an explanation of the encoding thing, see https://github.com/JoshCheek/seeing_is_believing/issues/46
       def extract_string(line)
-        Marshal.load extract_token(line).unpack('m0').first
+        str = Marshal.load extract_token(line).unpack('m0').first
+        str.encode! Encoding::UTF_8
+      rescue EncodingError
+        return str.force_encoding(Encoding::UTF_8).scrub('�')
       end
 
       def tokenize(line)
