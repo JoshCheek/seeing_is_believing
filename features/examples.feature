@@ -166,6 +166,7 @@ Feature: Running the binary successfully
   Scenario: Respects macros
     Given the file "some_dir/uses_macros.rb":
     """
+    # encoding: utf-8
     __FILE__
     __LINE__
     __ENCODING__
@@ -182,13 +183,14 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is:
     """
+    # encoding: utf-8
     __FILE__            # => "some_dir/uses_macros.rb"
-    __LINE__            # => 2
+    __LINE__            # => 3
     __ENCODING__        # => #<Encoding:UTF-8>
     $stdout.puts "omg"  # => nil
     $stderr.puts "hi"   # => nil
     DATA.read           # => "1\n2\n"
-    __LINE__            # => 7
+    __LINE__            # => 8
 
     # >> omg
 

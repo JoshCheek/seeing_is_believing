@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'seeing_is_believing/event_stream/events'
 require 'seeing_is_believing/error'
 require 'thread'
@@ -8,6 +10,22 @@ class SeeingIsBelieving
       NoMoreInput        = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
       UnknownEvent       = Class.new SeeingIsBelievingError
+
+      # https://github.com/JoshCheek/seeing_is_believing/issues/46
+      def self.fix_encoding(str)
+        str.encode! Encoding::UTF_8
+      rescue EncodingError
+        str = str.force_encoding(Encoding::UTF_8)
+        return str.scrub('�') if str.respond_to? :scrub # not implemented on 1.9.3
+        str.each_char.inject("") do |new_str, char|
+          if char.valid_encoding?
+            new_str << char
+          else
+            new_str << '�'
+          end
+        end
+      end
+
 
       def initialize(streams)
         self.finished_threads = []
@@ -75,13 +93,10 @@ class SeeingIsBelieving
         event_name
       end
 
-      # for a consideration of many different ways of passing the message, see 5633064
-      # for an explanation of the encoding thing, see https://github.com/JoshCheek/seeing_is_believing/issues/46
+      # For a consideration of many different ways of passing the message, see 5633064
       def extract_string(line)
         str = Marshal.load extract_token(line).unpack('m0').first
-        str.encode! Encoding::UTF_8
-      rescue EncodingError
-        return str.force_encoding(Encoding::UTF_8).scrub('�')
+        Consumer.fix_encoding(str)
       end
 
       def tokenize(line)

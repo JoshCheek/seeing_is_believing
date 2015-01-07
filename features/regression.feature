@@ -467,6 +467,7 @@ Feature:
   Scenario: https://github.com/JoshCheek/seeing_is_believing/issues/46
     Given the file "json_and_encodings.rb":
     """
+    # encoding: utf-8
     require 'json'
     JSON.parse JSON.dump("√")
     """

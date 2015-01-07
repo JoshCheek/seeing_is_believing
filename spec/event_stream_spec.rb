@@ -87,16 +87,20 @@ module SeeingIsBelieving::EventStream
         expect(utf8.bytes).to_not eq eucjp.bytes # sure I don't accidentally pass
       end
 
+      def ascii8bit(str)
+        str.force_encoding Encoding::ASCII_8BIT
+      end
+
       it 'force encodes the message to UTF8 when it can\'t validly transcode' do
-        producer.record_sib_version("åß∂ƒ".b)
+        producer.record_sib_version(ascii8bit("åß∂ƒ"))
         version = consumer.call.value
         expect(version).to eq "åß∂ƒ"
-        expect(version).to_not eq "åß∂ƒ".b
+        expect(version).to_not eq ascii8bit("åß∂ƒ")
       end
 
       it 'scrubs any invalid bytes to "�" when the force encoding isn\'t valid' do
-        producer.record_sib_version("a\xFF å".b)  # unicode bytes can't begin with
-        expect(consumer.call.value).to eq "a� å"  # space just so its easier to see
+        producer.record_sib_version(ascii8bit "a\xFF å")  # unicode bytes can't begin with
+        expect(consumer.call.value).to eq "a� å"          # space just so its easier to see
       end
 
       it 'raises NoMoreInput if input is closed before it finishes reading the number of requested inputs' do
