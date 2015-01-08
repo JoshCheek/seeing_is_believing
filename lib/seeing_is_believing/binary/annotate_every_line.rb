@@ -7,8 +7,8 @@ class SeeingIsBelieving
       end
 
       def self.expression_wrapper(markers, marker_regexes)
-        require 'seeing_is_believing/inspect_expressions'
-        InspectExpressions
+        require 'seeing_is_believing/annotate'
+        Annotate
       end
 
       def self.call(body, results, options)

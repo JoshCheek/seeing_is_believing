@@ -4,7 +4,7 @@ require 'tmpdir'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/inspect_expressions'
+require 'seeing_is_believing/annotate'
 require 'seeing_is_believing/evaluate_by_moving_files'
 
 class SeeingIsBelieving
@@ -14,6 +14,7 @@ class SeeingIsBelieving
     new(*args).call
   end
 
+  # TODO: die if given extra args
   def initialize(program, options={})
     @program            = program
     @stdin              = to_stream options.fetch(:stdin, '')
@@ -25,13 +26,13 @@ class SeeingIsBelieving
     @debugger           = options.fetch :debugger,           Debugger.new(stream: nil)
     @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
     @evaluator          = options.fetch :evaluator,          EvaluateByMovingFiles
-    @record_expressions = options.fetch :record_expressions, InspectExpressions # TODO: rename to wrap_expressions
+    @annotate           = options.fetch :annotate,           Annotate
   end
 
   def call
     @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
       filename    = @filename || File.join(dir, 'program.rb')
-      new_program = @record_expressions.call "#{@program.chomp}\n", filename, @number_of_captures
+      new_program = @annotate.call "#{@program.chomp}\n", filename, @number_of_captures
       @debugger.context("TRANSLATED PROGRAM") { new_program }
 
       result = @evaluator.call new_program,

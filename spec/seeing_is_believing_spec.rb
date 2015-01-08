@@ -59,13 +59,13 @@ RSpec.describe SeeingIsBelieving do
 
   it 'allows uers to pass in their own inspection recorder' do
     wrapper = lambda { |program, filename, num_captures|
-      SeeingIsBelieving::InspectExpressions.call \
+      SeeingIsBelieving::Annotate.call \
         program,
         filename,
         num_captures,
         after_each: -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
     }
-    expect(invoke(':body', record_expressions: wrapper)[1]).to eq ['"zomg"']
+    expect(invoke(':body', annotate: wrapper)[1]).to eq ['"zomg"']
   end
 
   it 'remembers context of previous lines' do

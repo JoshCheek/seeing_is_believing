@@ -94,7 +94,7 @@ class SeeingIsBelieving
           timeout:            timeout,
           debugger:           debugger,
           number_of_captures: flags.fetch(:number_of_captures), # TODO: Rename to max_number_of_captures
-          record_expressions: annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
+          annotate:           annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
         }
 
         # The annotator's options (passed to annotator.call)

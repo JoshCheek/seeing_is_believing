@@ -274,9 +274,9 @@ class SeeingIsBelieving
           expect(call(number_of_captures: 12345)[:number_of_captures]).to eq 12345
         end
 
-        specify 'record_expressions is the annotator\'s expression wrapper' do
-          expect(call[:record_expressions]).to eq InspectExpressions
-          expect(call(xmpfilter_style: true)[:record_expressions]).to be_a_kind_of Proc
+        specify 'annotate is the annotator\'s expression wrapper' do
+          expect(call[:annotate]).to eq Annotate
+          expect(call(xmpfilter_style: true)[:annotate]).to be_a_kind_of Proc
         end
       end
 
