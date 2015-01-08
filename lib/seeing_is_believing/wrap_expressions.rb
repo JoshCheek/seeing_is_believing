@@ -52,7 +52,6 @@ class SeeingIsBelieving
     def rewriter()        code.rewriter          end
     def heredoc?(ast)     code.heredoc?(ast)     end
     def void_value?(ast)  code.void_value?(ast)  end
-    def heredoc_hack(ast) code.heredoc_hack(ast) end
 
     def root_range
       if root
@@ -166,7 +165,7 @@ class SeeingIsBelieving
           add_children ast, true
         else
           begin_pos = ast.location.expression.begin_pos
-          end_pos   = heredoc_hack(array.children.last).location.expression.end_pos
+          end_pos   = array.children.last.location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
           add_children ast.children.last
@@ -184,7 +183,7 @@ class SeeingIsBelieving
         # we must hack around this
         if ast.children.last.kind_of? ::AST::Node
           begin_pos = ast.location.expression.begin_pos
-          end_pos   = heredoc_hack(ast.children.last).location.expression.end_pos
+          end_pos   = ast.children.last.location.expression.end_pos
           range     = Parser::Source::Range.new buffer, begin_pos, end_pos
           add_to_wrappings range
           add_children ast, true
@@ -205,7 +204,7 @@ class SeeingIsBelieving
 
         # last arg is a heredoc, use the closing paren, or the end of the first line of the heredoc
         if heredoc? last_arg
-          end_pos = heredoc_hack(last_arg).location.expression.end_pos
+          end_pos = last_arg.location.expression.end_pos
           if buffer.source[ast.location.selector.end_pos] == '('
             end_pos += 1 until buffer.source[end_pos] == ')'
             end_pos += 1
@@ -262,13 +261,13 @@ class SeeingIsBelieving
           if heredoc? last_child
             range = Parser::Source::Range.new buffer,
                                               ast.location.expression.begin_pos,
-                                              heredoc_hack(last_child).location.expression.end_pos
+                                              last_child.location.expression.end_pos
             add_to_wrappings range unless void_value? ast.children.last
           end
         end
         add_children ast
       when :str, :dstr, :xstr, :regexp
-        add_to_wrappings heredoc_hack ast
+        add_to_wrappings ast
 
       when :hash
         # method arguments might not have braces around them

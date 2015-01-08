@@ -76,14 +76,6 @@ class SeeingIsBelieving
       end
     end
 
-    def heredoc_hack(ast)
-      return ast
-      return ast unless heredoc? ast
-      Parser::AST::Node.new :str,
-                            [],
-                            location: Parser::Source::Map.new(ast.location.begin)
-    end
-
     private
 
     def extract_comments(builder, buffer)
