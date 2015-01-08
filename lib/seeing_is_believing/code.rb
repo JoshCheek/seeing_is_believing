@@ -1,4 +1,14 @@
-require 'parser_helpers' # b/c they silence warnings when requiring parser
+module Parser
+  class << self
+    # With new versioning, there's lots of small versions
+    # we don't need it to complain that we're on 2.1.1 and its parsing 2.1.5
+    # https://github.com/whitequark/parser/blob/e2249d7051b1adb6979139928e14a81bc62f566e/lib/parser/current.rb#L3
+    def warn(*) end
+    require 'parser/current'
+    remove_method :warn
+  end
+end
+
 
 class SeeingIsBelieving
   class Code
@@ -11,73 +21,101 @@ class SeeingIsBelieving
                                :whitespace_range,
                                :comment_range
 
-    # At prsent, it is expected that the syntax is validated before code arrives here
-    # or that its validity doesn't matter (e.g. extracting comments)
-    def initialize(raw_ruby_code, name="SeeingIsBelieving")
-      self.code = raw_ruby_code
-      self.name = name
+    Syntax = Struct.new :error_message do
+      def valid?
+        !error_message
+      end
     end
 
-    def buffer()          @buffer   ||= (parse && @buffer         ) end
-    def parser()          @parser   ||= (parse && @parser         ) end
-    def rewriter()        @rewriter ||= (parse && @rewriter       ) end
-    def inline_comments() @comments ||= (parse && @inline_comments) end
-    def root()            @root     ||= (parse && @root           ) end
+    attr_reader :code, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
+
+    def initialize(raw_ruby_code, name="SeeingIsBelieving")
+      @code            = raw_ruby_code
+      @buffer          = Parser::Source::Buffer.new(name)
+      @buffer.source   = code
+      builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
+      @rewriter        = Parser::Source::Rewriter.new @buffer
+      @raw_comments    = extract_comments(builder, @buffer)
+      @parser          = Parser::CurrentRuby.new builder
+      @inline_comments = @raw_comments.select(&:inline?).map { |c| wrap_comment c }
+      @syntax          = Syntax.new
+      begin
+        @root          = parser.parse(@buffer)
+      rescue Parser::SyntaxError
+        @syntax.error_message = $!.message
+      end
+    end
 
     def range_for(start_index, end_index)
       Parser::Source::Range.new buffer, start_index, end_index
     end
 
-    private
-
-    attr_accessor :code, :name
-
-    def parse
-      @buffer                             = Parser::Source::Buffer.new(name)
-      @buffer.source                      = code
-      builder                             = Parser::Builders::Default.new
-      builder.emit_file_line_as_literals  = false # should be injectible?
-      @parser                             = Parser::CurrentRuby.new builder
-      @rewriter                           = Parser::Source::Rewriter.new @buffer
-
-      can_parse_invalid_code(@parser)
-
-      @root, all_comments, tokens = parser.tokenize(@buffer)
-
-      @inline_comments = all_comments.select(&:inline?).map { |c| wrap_comment c }
+    # this is the scardest fucking method I think I've ever written.
+    # *anything* can go wrong!
+    def heredoc?(ast)
+      # some strings are fucking weird.
+      # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
+      # and `__FILE__` is a string whose location is a Parser::Source::Map instead of a Parser::Source::Map::Collection,
+      # so it has no #begin
+      ast.kind_of?(Parser::AST::Node)           &&
+        (ast.type == :dstr || ast.type == :str) &&
+        (location  = ast.location)              &&
+        (ast.location.kind_of? Parser::Source::Map::Heredoc)
     end
 
-    def can_parse_invalid_code(parser)
-      # THIS IS SO WE CAN EXTRACT COMMENTS FROM INVALID FILES.
+    def void_value?(ast)
+      case ast && ast.type
+      when :begin, :kwbegin, :resbody
+        void_value?(ast.children[-1])
+      when :rescue, :ensure
+        ast.children.any? { |child| void_value? child }
+      when :if
+        void_value?(ast.children[1]) || void_value?(ast.children[2])
+      when :return, :next, :redo, :retry, :break
+        true
+      else
+        false
+      end
+    end
 
+    def heredoc_hack(ast)
+      return ast
+      return ast unless heredoc? ast
+      Parser::AST::Node.new :str,
+                            [],
+                            location: Parser::Source::Map.new(ast.location.begin)
+    end
+
+    private
+
+    def extract_comments(builder, buffer)
+      # THIS IS SO WE CAN EXTRACT COMMENTS FROM INVALID FILES.
       # We do it by telling Parser's diagnostic to not blow up.
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb
-
       # However, this probably implies SiB won't work on Rbx/JRuby
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L129-134
-
       # Ideally we could just do this
       #   parser.diagnostics.all_errors_are_fatal = false
       #   parser.diagnostics.ignore_warnings      = false
-
       # But, the parser will still blow up on "fatal" errors (e.g. unterminated string) So we need to actually change it.
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb#L99
-
       # We could make a NullDiagnostics like this:
       #   class NullDiagnostics < Parser::Diagnostic::Engine
       #     def process(*)
       #       # no op
       #     end
       #   end
-
       # But we don't control initialization of the variable, and the value gets passed around, at least into the lexer.
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L139
       #   and since it's all private, it could change at any time (Parser is very state based),
       #   so I think it's just generally safer to mutate that one object, as we do now.
+      parser      = Parser::CurrentRuby.new builder
       diagnostics = parser.diagnostics
       def diagnostics.process(*)
         self
       end
+      _, all_comments, _ = parser.tokenize(@buffer)
+      all_comments
     end
 
     def wrap_comment(comment)

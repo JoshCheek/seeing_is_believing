@@ -1,11 +1,9 @@
-require 'seeing_is_believing/parser_helpers'
+require 'seeing_is_believing/code'
 
 # comprehensive list of syntaxes that can come up
 # https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
 class SeeingIsBelieving
   class WrapExpressions
-
-    include ParserHelpers
 
     def self.call(program, wrappings)
       new(program, wrappings).call
@@ -17,11 +15,9 @@ class SeeingIsBelieving
       self.after_all   = wrappings.fetch :after_all,   -> { ''.freeze }
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
-      self.buffer, parser, self.rewriter = initialize_parser(program, 'program-without-annotations')
-      self.root        = parser.parse buffer
       self.wrappings   = {}
-    rescue Parser::SyntaxError => e
-      raise ::SyntaxError, e.message
+      self.code        = Code.new(program, 'program-without-annotations')
+      code.syntax.valid? || raise(::SyntaxError, code.syntax.error_message)
     end
 
     def call
@@ -48,7 +44,15 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :program, :before_all, :after_all, :before_each, :after_each, :buffer, :root, :rewriter, :wrappings
+    attr_accessor :program, :before_all, :after_all, :before_each, :after_each
+    attr_accessor :code, :wrappings
+
+    def root()            code.root              end
+    def buffer()          code.buffer            end
+    def rewriter()        code.rewriter          end
+    def heredoc?(ast)     code.heredoc?(ast)     end
+    def void_value?(ast)  code.void_value?(ast)  end
+    def heredoc_hack(ast) code.heredoc_hack(ast) end
 
     def root_range
       if root

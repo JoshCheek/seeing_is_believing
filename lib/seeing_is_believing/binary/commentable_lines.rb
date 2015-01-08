@@ -1,4 +1,4 @@
-require 'seeing_is_believing/parser_helpers'
+require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   module Binary
@@ -9,16 +9,13 @@ class SeeingIsBelieving
     # because it was extracted from that class
     class CommentableLines
 
-      include ParserHelpers
-
       def self.call(code)
         new(code).call
       end
 
       def initialize(code)
         self.code = code
-        self.buffer, self.parser, self.rewriter = initialize_parser(code, 'finding_commentable_lines')
-        self.root, self.comments = parser.parse_with_comments(buffer)
+        self.code_obj = Code.new(code, 'finding_commentable_lines')
       end
 
       def call
@@ -26,18 +23,28 @@ class SeeingIsBelieving
           line_num_to_location = line_nums_to_last_index_and_col(buffer)
           remove_lines_after_data_segment           line_num_to_location
           remove_lines_whose_newline_is_escaped     line_num_to_location
-          remove_lines_ending_in_comments           line_num_to_location, comments
+          remove_lines_ending_in_comments           line_num_to_location, code_obj.raw_comments
           remove_lines_inside_of_strings_and_things line_num_to_location, root
           line_num_to_location
         end
       end
 
-      attr_reader :buffer, :rewriter
+      def buffer
+        code_obj.buffer
+      end
+
+      def rewriter
+        code_obj.rewriter
+      end
 
       private
 
       attr_writer :buffer, :rewriter
-      attr_accessor :code, :parser, :root, :comments
+      attr_accessor :code, :code_obj
+
+      def root
+        code_obj.root
+      end
 
       def line_nums_to_last_index_and_col(buffer)
         line_num_to_location = code.each_char
@@ -83,7 +90,7 @@ class SeeingIsBelieving
 
       def ranges_of_atomic_expressions(ast, found_ranges)
         return found_ranges unless ast.kind_of? ::AST::Node
-        if no_comment_zone?(ast) && heredoc?(ast)
+        if no_comment_zone?(ast) && code_obj.heredoc?(ast)
           begin_pos = ast.location.heredoc_body.begin_pos
           end_pos   = ast.location.heredoc_end.end_pos.next
           found_ranges << (begin_pos...end_pos)
