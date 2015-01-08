@@ -24,7 +24,7 @@ class SeeingIsBelieving
       def call
         @new_body ||= begin
           require 'seeing_is_believing/binary/comment_lines'
-          require 'seeing_is_believing/binary/comment_formatter'
+          require 'seeing_is_believing/binary/format_comment'
 
           alignment_strategy = @options[:alignment_strategy].new(@body)
           exception_lineno   = @results.has_exception? ? @results.exception.line_number : -1
@@ -32,10 +32,10 @@ class SeeingIsBelieving
             options = @options.merge pad_to: alignment_strategy.line_length_for(line_number)
             if exception_lineno == line_number
               result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              CommentFormatter.call(line.size, exception_marker, result, options)
+              FormatComment.call(line.size, exception_marker, result, options)
             elsif @results[line_number].any?
               result  = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              CommentFormatter.call(line.size, value_marker, result, options)
+              FormatComment.call(line.size, value_marker, result, options)
             else
               ''
             end

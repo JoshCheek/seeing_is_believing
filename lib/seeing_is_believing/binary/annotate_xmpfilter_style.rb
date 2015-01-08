@@ -25,7 +25,7 @@ class SeeingIsBelieving
                                     # TODO: this is duplicated with the InspectExpressions class
                                     number_of_captures_as_str = number_of_captures.inspect
                                     number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
-                                    "require 'pp'; $SiB.filename = #{filename.inspect}; $SiB.max_line_captures = #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
+                                    "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
                                   },
                                   after_each: -> line_number {
                                     should_inspect = inspect_linenos.include?(line_number)
@@ -58,7 +58,7 @@ class SeeingIsBelieving
         @new_body ||= begin
           # TODO: doesn't currently realign output markers, do we want to do that?
           require 'seeing_is_believing/binary/rewrite_comments'
-          require 'seeing_is_believing/binary/comment_formatter'
+          require 'seeing_is_believing/binary/format_comment'
           always_rewrite = []
 
           if @results.has_exception?
@@ -73,14 +73,14 @@ class SeeingIsBelieving
             pp_annotation      = annotate_this_line && comment.whitespace_col.zero?
             normal_annotation  = annotate_this_line && !pp_annotation
             if exception_on_line && annotate_this_line
-              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, exception_result, @options)]
+              [comment.whitespace, FormatComment.call(comment.text_col, value_marker, exception_result, @options)]
             elsif exception_on_line
               whitespace = comment.whitespace
               whitespace = " " if whitespace.empty?
-              [whitespace, CommentFormatter.call(comment.line_number, exception_marker, exception_result, @options)]
+              [whitespace, FormatComment.call(comment.line_number, exception_marker, exception_result, @options)]
             elsif normal_annotation
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, CommentFormatter.call(comment.text_col, value_marker, result, @options)]
+              [comment.whitespace, FormatComment.call(comment.text_col, value_marker, result, @options)]
             elsif pp_annotation
               # result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
               # CommentFormatter.call(line.size, exception_marker, result, options)
@@ -88,9 +88,9 @@ class SeeingIsBelieving
               result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
-                  CommentFormatter.call(comment.whitespace_col, value_marker, comment_line.chomp, @options)
+                  FormatComment.call(comment.whitespace_col, value_marker, comment_line.chomp, @options)
                 else
-                  CommentFormatter.call(comment.whitespace_col, nextline_marker, comment_line.chomp, @options)
+                  FormatComment.call(comment.whitespace_col, nextline_marker, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]

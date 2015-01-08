@@ -1,9 +1,9 @@
 # encoding: utf-8
 
 require 'spec_helper'
-require 'seeing_is_believing/binary/comment_formatter'
+require 'seeing_is_believing/binary/format_comment'
 
-RSpec.describe SeeingIsBelieving::Binary::CommentFormatter do
+RSpec.describe SeeingIsBelieving::Binary::FormatComment do
   def result_for(line_length, separator, result, options={})
     described_class.new(line_length, separator, result, options).call
   end

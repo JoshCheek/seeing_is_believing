@@ -1,5 +1,5 @@
 require 'seeing_is_believing/binary' # defines the markers
-require 'seeing_is_believing/binary/comment_formatter'
+require 'seeing_is_believing/binary/format_comment'
 
 class SeeingIsBelieving
   module Binary
@@ -26,7 +26,7 @@ class SeeingIsBelieving
         return '' unless results.has_stdout?
         output = "\n"
         results.stdout.each_line do |line|
-          output << CommentFormatter.call(0, options[:markers][:stdout], line.chomp, options) << "\n"
+          output << FormatComment.call(0, options[:markers][:stdout], line.chomp, options) << "\n"
         end
         output
       end
@@ -35,7 +35,7 @@ class SeeingIsBelieving
         return '' unless results.has_stderr?
         output = "\n"
         results.stderr.each_line do |line|
-          output << CommentFormatter.call(0, options[:markers][:stderr], line.chomp, options) << "\n"
+          output << FormatComment.call(0, options[:markers][:stderr], line.chomp, options) << "\n"
         end
         output
       end
@@ -45,13 +45,13 @@ class SeeingIsBelieving
         exception_marker = options[:markers][:exception]
         exception = results.exception
         output = "\n"
-        output << CommentFormatter.new(0, exception_marker, exception.class_name, options).call << "\n"
+        output << FormatComment.new(0, exception_marker, exception.class_name, options).call << "\n"
         exception.message.each_line do |line|
-          output << CommentFormatter.new(0, exception_marker, line.chomp, options).call << "\n"
+          output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
         end
         output << exception_marker.sub(/\s+$/, '') << "\n"
         exception.backtrace.each do |line|
-          output << CommentFormatter.new(0, exception_marker, line.chomp, options).call << "\n"
+          output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
         end
         output
       end

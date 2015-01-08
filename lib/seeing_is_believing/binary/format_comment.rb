@@ -6,8 +6,8 @@ class SeeingIsBelieving
     # line_length is the length of the line this comment is being appended to
     #
     # For examples of what the options are, and how they all fit together, see
-    # spec/binary/comment_formatter_spec.rb
-    class CommentFormatter
+    # spec/binary/format_comment.rb
+    class FormatComment
       def self.call(*args)
         new(*args).call
       end
