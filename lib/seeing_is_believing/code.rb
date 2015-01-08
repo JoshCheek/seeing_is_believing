@@ -1,4 +1,5 @@
-require 'parser/current'
+require 'parser_helpers' # b/c they silence warnings when requiring parser
+
 class SeeingIsBelieving
   class Code
     InlineComment = Struct.new :line_number,
