@@ -445,20 +445,18 @@ Feature:
   Scenario: Xmpfilter does not write the error messages inside of strings
     Given the file "error_within_string.rb":
     """
-    raise(ArgumentError, "line1
-          line2")
+    1.send "a
+    b"
     """
     When I run "seeing_is_believing --xmpfilter-style error_within_string.rb"
-    Then stdout is:
+    Then stdout includes:
     """
-    raise(ArgumentError, "line1
-          line2")                # ~> ArgumentError: line1\n      line2
+    1.send "a
+    b"        # ~> NoMethodError: undefined method `a\nb' for 1:Fixnum
 
-    # ~> ArgumentError
-    # ~> line1
-    # ~>       line2
-    # ~>
-    # ~> f4.rb:1:in `<main>'
+    # ~> NoMethodError
+    # ~> undefined method `a
+    # ~> b' for 1:Fixnum
     """
 
 
