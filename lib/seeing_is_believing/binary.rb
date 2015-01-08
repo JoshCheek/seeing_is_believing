@@ -6,8 +6,8 @@ require 'seeing_is_believing/binary/remove_annotations'
 class SeeingIsBelieving
   module Binary
     SUCCESS_STATUS              = 0
-    DISPLAYABLE_ERROR_STATUS    = 1 # e.g. there was an error, but the output is legit (we can display exceptions)
-    NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. an error like incorrect invocation or syntax that can't be displayed in the input program
+    DISPLAYABLE_ERROR_STATUS    = 1 # e.g. user code raises an exception (we can display this in the output)
+    NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
       flags   = ParseArgs.call(argv)
@@ -101,7 +101,7 @@ class SeeingIsBelieving
     end
 
     def self.evaluate_program(body, options)
-      return SeeingIsBelieving.call(body, options), nil, nil
+      return SeeingIsBelieving.call(body, options), false, nil
     rescue Timeout::Error
       return nil, true, nil
     rescue Exception
@@ -112,7 +112,7 @@ class SeeingIsBelieving
       exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
                                               class_name:               results.exception.class_name,
                                               message:                  results.exception.message,
-                                              backtrace:                results.exception.backtrace
+                                              backtrace:                results.exception.backtrace,
                                             }
       { stdout:      results.stdout,
         stderr:      results.stderr,

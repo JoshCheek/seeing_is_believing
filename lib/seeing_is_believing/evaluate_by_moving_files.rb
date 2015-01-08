@@ -77,7 +77,7 @@ class SeeingIsBelieving
       self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
-      self.timeout         = options[:timeout]
+      self.timeout         = options.fetch :timeout, 0 # default: none
       self.debugger        = options.fetch :debugger, Debugger.new(stream: nil)
     end
 
@@ -90,9 +90,8 @@ class SeeingIsBelieving
           begin
             evaluate_file
             result
-          rescue Exception => error
-            error = wrap_error error unless error.kind_of? Timeout::Error
-            raise error
+          rescue Timeout::Error; raise
+          rescue Exception;      raise wrap_error $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
           end
         },
         ensure: -> {
@@ -123,11 +122,9 @@ class SeeingIsBelieving
     end
 
     def set_back_to_initial_conditions
-      if @was_backed_up
-        FileUtils.mv temp_filename, filename
-      else
-        FileUtils.rm filename
-      end
+      @was_backed_up ?
+        FileUtils.mv(temp_filename, filename) :
+        FileUtils.rm(filename)
     end
 
     def write_program_to_file
@@ -159,7 +156,7 @@ class SeeingIsBelieving
         end
 
         begin
-          Timeout::timeout timeout do
+          Timeout.timeout timeout do
             event_consumer.join
             # TODO: seems like these belong entirely on result, not as ivars of this class
             self.exitstatus = thread.value
