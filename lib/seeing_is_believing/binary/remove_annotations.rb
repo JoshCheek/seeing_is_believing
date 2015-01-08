@@ -1,5 +1,5 @@
-require 'seeing_is_believing/binary'         # Defines the regexes to locate the markers
-require 'seeing_is_believing/parser_helpers' # We have to parse the file to find the comments
+require 'seeing_is_believing/binary' # Defines the regexes to locate the markers
+require 'seeing_is_believing/code'   # We have to parse the file to find the comments
 
 class SeeingIsBelieving
   module Binary

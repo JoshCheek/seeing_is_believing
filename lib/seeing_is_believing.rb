@@ -14,19 +14,20 @@ class SeeingIsBelieving
     new(*args).call
   end
 
-  # TODO: die if given extra args
   def initialize(program, options={})
+    options             = options.dup
     @program            = program
-    @stdin              = to_stream options.fetch(:stdin, '')
-    @timeout            = options.fetch :timeout,            0
-    @load_path          = options.fetch :load_path,          []
-    @encoding           = options.fetch :encoding,           nil
-    @filename           = options.fetch :filename,           nil
-    @require            = options.fetch :require,            ['seeing_is_believing/the_matrix']
-    @debugger           = options.fetch :debugger,           Debugger.new(stream: nil)
-    @number_of_captures = options.fetch :number_of_captures, Float::INFINITY
-    @evaluator          = options.fetch :evaluator,          EvaluateByMovingFiles
-    @annotate           = options.fetch :annotate,           Annotate
+    @stdin              = to_stream(options.delete(:stdin) || '')
+    @timeout            = options.delete(:timeout)            || 0
+    @load_path          = options.delete(:load_path)          || []
+    @encoding           = options.delete(:encoding)           || nil
+    @filename           = options.delete(:filename)           || nil
+    @require            = options.delete(:require)            || ['seeing_is_believing/the_matrix']
+    @debugger           = options.delete(:debugger)           || Debugger.new(stream: nil)
+    @number_of_captures = options.delete(:number_of_captures) || Float::INFINITY
+    @evaluator          = options.delete(:evaluator)          || EvaluateByMovingFiles
+    @annotate           = options.delete(:annotate)           || Annotate
+    options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
   end
 
   def call

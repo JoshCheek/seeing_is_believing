@@ -35,6 +35,10 @@ RSpec.describe SeeingIsBelieving do
     expect(invoke(input)[2]).to eq ['"22"']
   end
 
+  it 'blows up if given unknown options' do
+    expect { invoke '', not_an_option: 123 }.to raise_error ArgumentError, /not_an_option/
+  end
+
   it 'only invokes inspect once' do
     input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
     expect(invoke(input)[1]).to eq ['"NUM"']

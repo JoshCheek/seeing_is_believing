@@ -229,10 +229,6 @@ class SeeingIsBelieving
           expect(call).to be_a_kind_of Hash
         end
 
-        specify 'evaluate_with is EvaluateByMovingFiles by default' do
-          expect(call[:evaluate_with]).to eq EvaluateByMovingFiles
-        end
-
         specify 'filename is the as option or the provided filename' do
           expect(call(filename: 'from_fn')[:filename]).to eq 'from_fn'
           expect(call(as: 'from_as')[:filename]).to eq 'from_as'
