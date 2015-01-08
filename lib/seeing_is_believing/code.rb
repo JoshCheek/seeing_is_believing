@@ -36,11 +36,11 @@ class SeeingIsBelieving
       @raw_comments    = extract_comments(builder, @buffer)
       @parser          = Parser::CurrentRuby.new builder
       @inline_comments = @raw_comments.select(&:inline?).map { |c| wrap_comment c }
-      @syntax          = Syntax.new
       begin
         @root          = parser.parse(@buffer)
+        @syntax        = Syntax.new
       rescue Parser::SyntaxError
-        @syntax.error_message = $!.message
+        @syntax        = Syntax.new $!.message
       end
     end
 
