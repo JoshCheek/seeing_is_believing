@@ -223,18 +223,16 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
 
+    @josh
   Scenario: Can exec another process, it records as many lines get exec'd, passes file descriptors, records exec'd output data
-    # Print tons of x's b/c it reads more data in than it needs.
-    # No obvious way to turn it off, but doesn't matter,
-    # we just want to show that the file descriptors make it through the execs
-    Given the stdin content "{{['x']*10_000*"\n"}}"
+    Given the stdin content "pass this through"
     And the file "calls_exec.rb":
     """
-    $stdout.puts "Line 1: #{gets.inspect}"
-    $stderr.puts "calls_exec to stderr"
+    $stdout.puts "First program to stdout"
+    $stderr.puts "First program to stderr"
     exec 'ruby', '-e', '
-      $stdout.puts "Line 2: #{gets.inspect}"
-      $stderr.puts "exec\'d file to stderr"
+      $stdout.puts "Stdin passed to second program: #{gets.inspect}"
+      $stderr.puts "Exec\'d file to stderr"
       $stdout.flush
       exec "ruby", "-v"
     '
@@ -243,20 +241,20 @@ Feature: Running the binary successfully
     Then stderr is empty
     And stdout is:
     """
-    $stdout.puts "Line 1: #{gets.inspect}"  # => nil
-    $stderr.puts "calls_exec to stderr"     # => nil
+    $stdout.puts "First program to stdout"  # => nil
+    $stderr.puts "First program to stderr"  # => nil
     exec 'ruby', '-e', '
-      $stdout.puts "Line 2: #{gets.inspect}"
-      $stderr.puts "exec\'d file to stderr"
+      $stdout.puts "Stdin passed to second program: #{gets.inspect}"
+      $stderr.puts "Exec\'d file to stderr"
       $stdout.flush
       exec "ruby", "-v"
     '
 
-    # >> Line 1: "x\n"
-    # >> Line 2: "x\n"
+    # >> First program to stdout
+    # >> Stdin passed to second program: "pass this through"
     # >> {{`ruby -v`.chomp}}
 
-    # !> calls_exec to stderr
-    # !> exec'd file to stderr
+    # !> First program to stderr
+    # !> Exec'd file to stderr
     """
     And the exit status is 0

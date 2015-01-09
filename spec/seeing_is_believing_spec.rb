@@ -519,6 +519,12 @@ RSpec.describe SeeingIsBelieving do
       expect(result.stderr).to eq "#{nums}err from exec\n"
     end
 
+    it 'works for Kernel#exec, Kernel.exec, Process.exec' do
+      expect(invoke('exec "ruby", "-e", "puts %(hello)"').stdout).to eq "hello\n"
+      expect(invoke('Kernel.exec "ruby", "-e", "puts %(hello)"').stdout).to eq "hello\n"
+      expect(invoke('Process.exec "ruby", "-e", "puts %(hello)"').stdout).to eq "hello\n"
+    end
+
     it 'gets the exit status off of the child process' do
       expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5
     end

@@ -19,8 +19,6 @@ finish = lambda do
   stderr.flush
 end
 
-# TODO: Process.exec and Kernel.exec
-# TODO: exec / exit! invoked incorrectly
 real_exec      = method :exec
 real_exit_bang = method :exit!
 Kernel.module_eval do
@@ -36,7 +34,6 @@ Kernel.module_eval do
     finish.call
     real_exit_bang.call(status)
   end
-  module_function :exit!
 end
 
 at_exit do
