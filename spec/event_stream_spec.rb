@@ -106,7 +106,7 @@ module SeeingIsBelieving::EventStream
 
       it 'raises NoMoreEvents if input is closed before it finishes reading the number of requested inputs' do
         finish!
-        expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreEvents
+        expect { consumer.call 10 }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
       it 'raises NoMoreEvents once it its input streams are all closed and its seen the exit status' do
@@ -114,18 +114,18 @@ module SeeingIsBelieving::EventStream
         producer.finish!
         consumer.process_exitstatus 0
         consumer.call
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreEvents
+        expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
       it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
         close_streams eventstream_consumer, stdout_producer, stderr_producer
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
+        expect { consumer.call }.to raise_error SeeingIsBelieving::WtfWhoClosedMyShit
       end
 
       specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
         eventstream_producer.puts "this is nonsense!"
         eventstream_producer.close
-        expect{ consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::UnknownEvent, /nonsense/
+        expect{ consumer.call }.to raise_error SeeingIsBelieving::UnknownEvent, /nonsense/
       end
     end
 

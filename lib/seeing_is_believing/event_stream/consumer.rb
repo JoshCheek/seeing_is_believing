@@ -7,10 +7,6 @@ require 'thread'
 class SeeingIsBelieving
   module EventStream
     class Consumer
-      NoMoreEvents       = Class.new SeeingIsBelievingError
-      WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
-      UnknownEvent       = Class.new SeeingIsBelievingError
-
       class FinishCriteria
         CRITERIA = [
           :event_thread_finished!,
@@ -66,7 +62,7 @@ class SeeingIsBelieving
 
         Thread.new do
           begin  event_stream.each_line { |line| queue << event_for(line) }
-          rescue IOError;        queue << lambda { raise WtfWhoClosedMyShit.new("Our end of the pipe was closed!") }
+          rescue IOError;        queue << lambda { raise WtfWhoClosedMyShit }
           rescue Exception => e; queue << lambda { raise e }
           ensure                 queue << lambda { finish_criteria.event_thread_finished! }
           end
