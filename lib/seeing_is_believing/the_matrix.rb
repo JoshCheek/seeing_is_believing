@@ -19,17 +19,30 @@ finish = lambda do
   stderr.flush
 end
 
-real_exec = method :exec
+# TODO: Process.exec and Kernel.exec
+# TODO: exec / exit! invoked incorrectly
+real_exec      = method :exec
+real_exit_bang = method :exit!
 Kernel.module_eval do
   private
-  define_method :exec do |*args, &block| # TODO: Add an event for exec?
+
+  define_method :exec do |*args, &block|
+    # $SiB.record_exec(args)
     finish.call
     real_exec.call(*args, &block)
   end
+
+  define_method :exit! do |status=false|
+    $SiB.record_exitstatus status
+    finish.call
+    real_exit_bang.call(0)
+  end
+  module_function :exit!
 end
 
 at_exit do
-  $SiB.record_exception nil, $! if $!
+  exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
+  $SiB.record_exitstatus exitstatus
   finish.call
-  Kernel.exit! 0 # clear the exception so it doesn't print to stderr and change the processes actual exit status (we recorded what it should be)
+  real_exit_bang.call(0) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)
 end

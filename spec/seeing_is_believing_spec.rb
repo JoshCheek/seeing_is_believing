@@ -338,10 +338,30 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'records the exit status' do
-    expect(invoke('raise "omg"').exitstatus).to eq 1
-    expect(invoke('exit 123').exitstatus).to eq 123
-    expect(invoke('at_exit { exit 121 }').exitstatus).to eq 121
+    expect(invoke(""                    ).exitstatus).to eq 0   # happy path: no exceptions
+    expect(invoke('raise "omg"'         ).exitstatus).to eq 1   # exceptions: status is 1
+    expect(invoke('exit'                ).exitstatus).to eq 0   # call exit, but with no args
+    expect(invoke('exit 0'              ).exitstatus).to eq 0   # set numeric status with exit
+    expect(invoke('exit 123'            ).exitstatus).to eq 123
+    expect(invoke('exit true'           ).exitstatus).to eq 0   # set boolean status with exit
+    expect(invoke('exit false'          ).exitstatus).to eq 1
+    expect(invoke('at_exit { exit 121 }').exitstatus).to eq 121 # when status is set in an at_exit hook
+
+    # setting status with exit!
+    # since we might be overriding this (a questionable decision) we make sure it behaves as expected (no at_exit hooks are called)
+    result = invoke 'at_exit { puts "omg" }; exit!'
+    expect([result.exitstatus, result.stdout, result.stderr]).to eq [1, '', '']
+
+    result = invoke 'at_exit { puts "omg" }; exit! 123'
+    expect([result.exitstatus, result.stdout]).to eq [123, '']
+
+    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 456'
+    expect([result.exitstatus, result.stdout]).to eq [456, '']
+
+    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 789'
+    expect([result.exitstatus, result.stdout]).to eq [789, '']
   end
+
 
   it 'records lines that have comments on them' do
     expect(values_for('1+1 # comment uno
@@ -481,16 +501,24 @@ RSpec.describe SeeingIsBelieving do
     # should ProgramRewriter have some debug options?
   end
 
-  it 'can deal with exec' do
-    result = invoke \
-      "1+1\n"\
-      "$stdout.puts *1..1000\n"\
-      "$stderr.puts *1..1000\n"\
-      "exec %(ruby -e '$stdout.puts %[out from exec];
-                       $stderr.puts %[err from exec]')"
-    expect(result[1]).to eq ['2']
-    nums = (1..1000).map { |n| "#{n}\n" }.join('')
-    expect(result.stdout).to eq "#{nums}out from exec\n"
-    expect(result.stderr).to eq "#{nums}err from exec\n"
+  describe 'exec' do
+    it 'passes stdin, stdout, stderr, and actually does exec the process' do
+      result = invoke \
+        "1+1\n"\
+        "$stdout.puts *1..1000\n"\
+        "$stderr.puts *1..1000\n"\
+        "exec %(ruby -e '$stdout.puts %[out from exec];
+                         $stderr.puts %[err from exec]')\n"\
+        "$stdout.puts 'this will never be executed'"
+      expect(result[1]).to eq ['2']
+      nums = (1..1000).map { |n| "#{n}\n" }.join('')
+      expect(result.stdout).to eq "#{nums}out from exec\n"
+      expect(result.stderr).to eq "#{nums}err from exec\n"
+    end
+
+    it 'gets the exit status off of the child process' do
+      pending 'We don\'t yet support recording the exit status off the exec'
+      expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5   # status comes from an exec'd process
+    end
   end
 end

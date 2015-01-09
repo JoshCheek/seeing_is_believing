@@ -223,7 +223,7 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
 
-  Scenario: Execing another process
+  Scenario: Can exec another process, it records as many lines get exec'd, passes file descriptors, records exec'd output data
     # Print tons of x's b/c it reads more data in than it needs.
     # No obvious way to turn it off, but doesn't matter,
     # we just want to show that the file descriptors make it through the execs

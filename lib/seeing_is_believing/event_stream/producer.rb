@@ -11,11 +11,10 @@ class SeeingIsBelieving
         def shift() end
       end
 
-      attr_accessor :exitstatus, :max_line_captures, :num_lines, :filename
+      attr_accessor :max_line_captures, :num_lines, :filename
 
       def initialize(resultstream)
         self.filename          = nil
-        self.exitstatus        = 0
         self.max_line_captures = Float::INFINITY
         self.num_lines         = 0
         self.recorded_results  = []
@@ -83,8 +82,8 @@ class SeeingIsBelieving
         value
       end
 
+      # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
-        self.exitstatus = (exception.kind_of?(SystemExit) ? exception.status : 1)
         if line_number
           self.num_lines = line_number if num_lines < line_number
         elsif filename
@@ -102,6 +101,7 @@ class SeeingIsBelieving
           queue << "  backtrace   #{to_string_token line}"
         }
         queue << "end"
+        exception.kind_of?(SystemExit) ? exception.status : 1
       end
 
       def record_filename(filename)
@@ -109,10 +109,16 @@ class SeeingIsBelieving
         queue << "filename #{to_string_token filename}"
       end
 
+      def record_exitstatus(status)
+        exit status
+      rescue SystemExit
+        queue << "exitstatus #{$!.status}"
+      end
+
+      # TODO: do we even want to bother with the number of lines?
       # note that producer will continue reading until stream is closed
       def finish!
         queue << "num_lines #{num_lines}"
-        queue << "exitstatus #{exitstatus}"
         queue << :break
         producer_thread.join
       end

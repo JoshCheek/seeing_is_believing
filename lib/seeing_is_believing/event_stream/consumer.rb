@@ -34,6 +34,8 @@ class SeeingIsBelieving
         stdout_stream         = streams.fetch :stdout
         stderr_stream         = streams.fetch :stderr
 
+        # TODO: push all processing/extraction into main thread so that it blows up when incorrect?
+        # would then also give us a way to declare extra stdout/stderr events at it
         self.stdout_thread = Thread.new do
           stdout_stream.each_line { |line| queue << Events::Stdout.new(line) }
           queue << :stdout_thread_finished

@@ -367,12 +367,39 @@ Feature: Using flags
     """
 
 
-  Scenario: --inherit-exit-status
+  Scenario: --inherit-exit-status causes SiB to exit with the status of the evaluated file
     Given the file "exit_status.rb" "exit 123"
     When I run "seeing_is_believing exit_status.rb"
     Then the exit status is 1
     When I run "seeing_is_believing --inherit-exit-status exit_status.rb"
     Then the exit status is 123
+
+
+    @josh
+  Scenario: --inherit-exit-status works with exit!
+    Given the file "exit_bang.rb":
+    """
+    :hello
+    exit! 100
+    """
+
+    When I run "seeing_is_believing exit_bang.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    :hello     # => :hello
+    exit! 100
+    """
+
+    When I run "seeing_is_believing --inherit-exit-status exit_bang.rb"
+    Then stderr is empty
+    And the exit status is 100
+    And stdout is:
+    """
+    :hello     # => :hello
+    exit! 100
+    """
 
 
   # Show that Ruby exceptions exit with 1, and --inherit-exit-status does as well

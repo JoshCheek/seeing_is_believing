@@ -111,7 +111,7 @@ module SeeingIsBelieving::EventStream
       it 'raises NoMoreInput once it its input streams are all closed' do
         producer.finish!
         close_streams eventstream_producer, stdout_producer, stderr_producer
-        consumer.call 2
+        consumer.call
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
@@ -135,23 +135,32 @@ module SeeingIsBelieving::EventStream
 
     describe 'each' do
       it 'loops through and yields all events' do
+        # declare 2 events
         producer.record_result :inspect, 100, 2
+        producer.record_sib_version('some ver')
+
+        # close streams so that it won't block waiting for more events
         finish!
 
+        # record events
         events = []
         consumer.each { |e| events << e }
-        line_result  = events.find { |e| e.kind_of? Events::LineResult }
-        exitstatus   = events.find { |e| e.kind_of? Events::Exitstatus }
+
+        # it yielded the line result
+        line_result = events.find { |e| e.kind_of? Events::LineResult }
         expect(line_result.line_number).to eq 100
-        expect(exitstatus.value).to eq 0
+
+        # it yielded the version
+        version = events.find { |e| e.kind_of? Events::SiBVersion }
+        expect(version.value).to eq 'some ver'
       end
 
       it 'stops looping if there is no more input' do
+        producer.record_result :inspect, 100, 2
+        producer.record_sib_version('some ver')
         finish!
-        expect(consumer.each.map { |e| e }).to eq [
-          Events::NumLines.new(0),
-          Events::Exitstatus.new(0),
-        ]
+        expect(consumer.each.map { |e| e.class })
+          .to eq [Events::LineResult, Events::SiBVersion, Events::NumLines]
       end
 
       it 'returns nil' do
@@ -160,8 +169,10 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'returns an enumerator if not given a block' do
+        producer.record_sib_version('some ver')
         finish!
-        expect(consumer.each.map &:class).to include Events::Exitstatus
+        classes = consumer.each.map &:class
+        expect(classes).to include Events::SiBVersion
       end
     end
 
@@ -384,23 +395,13 @@ module SeeingIsBelieving::EventStream
       end
 
       context 'when the exception is a SystemExit' do
-        it 'sets the exit status to the one provided' do
-          record_exception { exit 22 }
-          expect(producer.exitstatus).to eq 22
-        end
-
-        it 'sets the exit status to 0 or 1 if exited with true or false' do
-          expect(producer.exitstatus).to eq 0
-          record_exception { exit true }
-          expect(producer.exitstatus).to eq 0
-          record_exception { exit false }
-          expect(producer.exitstatus).to eq 1
-        end
-
-        it 'sets the exit status to 1 if the exception is not a SystemExit' do
-          expect(producer.exitstatus).to eq 0
-          record_exception { raise }
-          expect(producer.exitstatus).to eq 1
+        it 'returns the status' do
+          begin
+            exit 22
+          rescue SystemExit
+            exitstatus = producer.record_exception(1, $!)
+            expect(exitstatus).to eq 22
+          end
         end
       end
 
@@ -515,11 +516,40 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+    describe 'record_exitstatus' do
+      specify 'true    -> 0' do
+        producer.record_exitstatus true
+        expect(consumer.call).to eq Events::Exitstatus.new(0)
+      end
+      specify 'false   -> 1' do
+        producer.record_exitstatus false
+        expect(consumer.call).to eq Events::Exitstatus.new(1)
+      end
+      specify 'int n   -> n' do
+        producer.record_exitstatus 74
+        expect(consumer.call).to eq Events::Exitstatus.new(74)
+      end
+      specify 'num f   -> n.to_i' do
+        producer.record_exitstatus 100.99
+        expect(consumer.call).to eq Events::Exitstatus.new(100)
+      end
+      specify 'intable -> o.to_int' do
+        obj = Object.new
+        def obj.to_int; 42; end
+        producer.record_exitstatus obj
+        expect(consumer.call).to eq Events::Exitstatus.new(42)
+      end
+      specify 'non-numeric/booleans raise a TypeError' do
+        expect { producer.record_exitstatus Object.new }.to raise_error TypeError
+        expect { producer.record_exitstatus nil }.to raise_error TypeError
+      end
+    end
+
 
     describe 'finish!' do
-      def final_event(producer, consumer, event_class)
+      def final_event(producer, consumer)
         finish!
-        consumer.call(2).find { |e| e.class == event_class }
+        consumer.each.to_a.last
       end
 
       it 'stops the producer from producing' do
@@ -527,44 +557,33 @@ module SeeingIsBelieving::EventStream
         producer = SeeingIsBelieving::EventStream::Producer.new write
         producer.finish!
         read.gets
-        read.gets
         producer.record_filename("zomg")
         write.close
         expect(read.gets).to eq nil
       end
 
+      # TODO: just delete this altogether? what value does it actually have?
       describe 'num_lines' do
         it 'interprets numbers' do
           producer.num_lines = 21
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 21
+          expect(final_event(producer, consumer).value).to eq 21
         end
 
         it 'is 0 by default' do
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 0
+          expect(final_event(producer, consumer).value).to eq 0
         end
 
         it 'updates its value if it sees a result from a line larger than its value' do
           producer.num_lines = 2
           producer.record_result :sometype, 100, :someval
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
+          expect(final_event(producer, consumer).value).to eq 100
         end
 
         it 'updates its value if it sees an exception from a line larger than its value' do
           producer.num_lines = 2
           begin; raise; rescue; e = $!; end
           producer.record_exception 100, e
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
-        end
-      end
-
-      describe 'exitstatus' do
-        it 'is 0 by default' do
-          expect(final_event(producer, consumer, Events::Exitstatus).value).to eq 0
-        end
-
-        it 'can be overridden' do
-          producer.exitstatus = 74
-          expect(final_event(producer, consumer, Events::Exitstatus).value).to eq 74
+          expect(final_event(producer, consumer).value).to eq 100
         end
       end
     end
