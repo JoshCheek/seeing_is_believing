@@ -391,13 +391,17 @@ module SeeingIsBelieving::EventStream
       end
 
       context 'when the exception is a SystemExit' do
-        it 'returns the status' do
-          begin
-            exit 22
+        it 'returns the status and does not record the exception' do
+          exception = nil
+          begin exit 22
           rescue SystemExit
-            exitstatus = producer.record_exception(1, $!)
-            expect(exitstatus).to eq 22
+            exception = $!
           end
+
+          exitstatus = producer.record_exception(1, exception)
+          expect(exitstatus).to eq 22
+          finish!
+          expect(consumer.each.find { |e| e.kind_of? Events::Exception }).to eq nil
         end
       end
 

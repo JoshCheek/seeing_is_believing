@@ -84,11 +84,11 @@ class SeeingIsBelieving
 
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
+        return exception.status if exception.kind_of? SystemExit
         if line_number
           self.num_lines = line_number if num_lines < line_number
         elsif filename
-          begin
-            line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
+          begin line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
           rescue Exception
           end
         end
@@ -101,7 +101,7 @@ class SeeingIsBelieving
           queue << "  backtrace   #{to_string_token line}"
         }
         queue << "end"
-        exception.kind_of?(SystemExit) ? exception.status : 1
+        1
       end
 
       def record_filename(filename)
