@@ -10,47 +10,25 @@ class SeeingIsBelieving
       NoMoreEvents       = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
       UnknownEvent       = Class.new SeeingIsBelievingError
-      class ButYouAlreadyLeft < SeeingIsBelievingError
-        attr_accessor :prev_status, :crnt_status
-        def initialize(prev_status, crnt_status)
-          self.prev_status     = prev_status
-          self.crnt_status     = crnt_status
-          super "Previously saw an exit status of #{prev_status.inspect}, but received a second exit status of #{crnt_status.inspect}, which should not happen (you can only exit once). This is probably a bug in SiB"
-        end
-      end
 
       class FinishCriteria
-        EventThreadFinished  = :event_thread_finished
-        StdoutThreadFinished = :stdout_thread_finished
-        StderrThreadFinished = :stderr_thread_finished
-        ProcessExited        = :process_exited
+        CRITERIA = [
+          :event_thread_finished!,
+          :stdout_thread_finished!,
+          :stderr_thread_finished!,
+          :process_exited!,
+        ].freeze.each do |name|
+          define_method name do
+            @unmet_criteria.delete name
+            @satisfied = @unmet_criteria.empty?
+          end
+        end
         def initialize
-          @satisfied = false
-          @unmet_criteria = [
-            EventThreadFinished,
-            StdoutThreadFinished,
-            StderrThreadFinished,
-            ProcessExited
-          ]
+          @satisfied      = false
+          @unmet_criteria = CRITERIA.dup
         end
         def satisfied?
           @satisfied
-        end
-        def event_thread_finished!
-          @unmet_criteria.delete EventThreadFinished
-          @satisfied = @unmet_criteria.empty?
-        end
-        def stdout_thread_finished!
-          @unmet_criteria.delete StdoutThreadFinished
-          @satisfied = @unmet_criteria.empty?
-        end
-        def stderr_thread_finished!
-          @unmet_criteria.delete StderrThreadFinished
-          @satisfied = @unmet_criteria.empty?
-        end
-        def process_exited!
-          @unmet_criteria.delete ProcessExited
-          @satisfied = @unmet_criteria.empty?
         end
       end
 
@@ -59,7 +37,7 @@ class SeeingIsBelieving
         str.encode! Encoding::UTF_8
       rescue EncodingError
         str = str.force_encoding(Encoding::UTF_8)
-        return str.scrub('�') if str.respond_to? :scrub # not implemented on 1.9.3
+        return str.scrub('�') if str.respond_to? :scrub # b/c it's not implemented on 1.9.3
         str.each_char.inject("") do |new_str, char|
           if char.valid_encoding?
             new_str << char
@@ -71,34 +49,27 @@ class SeeingIsBelieving
 
       def initialize(streams)
         self.finish_criteria = FinishCriteria.new
-        self.finished_threads = []
-        self.queue            = Queue.new
-        self.event_stream     = streams.fetch :events
-        stdout_stream         = streams.fetch :stdout
-        stderr_stream         = streams.fetch :stderr
+        self.queue           = Queue.new
+        self.event_stream    = streams.fetch :events
+        stdout_stream        = streams.fetch :stdout
+        stderr_stream        = streams.fetch :stderr
 
-        # TODO: push all processing/extraction into main thread so that it blows up when incorrect?
-        # would then also give us a way to declare extra stdout/stderr events at it
-        self.stdout_thread = Thread.new do
+        Thread.new do
           stdout_stream.each_line { |line| queue << Events::Stdout.new(line) }
           queue << lambda { finish_criteria.stdout_thread_finished! }
         end
 
-        self.stderr_thread = Thread.new do
+        Thread.new do
           stderr_stream.each_line { |line| queue << Events::Stderr.new(line) }
           queue << lambda { finish_criteria.stderr_thread_finished! }
         end
 
-        self.event_thread = Thread.new do
-          begin loop do
-                   break unless line = event_stream.gets
-                   event = event_for line
-                   queue << event
-                 end
-          rescue IOError; queue << WtfWhoClosedMyShit.new("Our end of the pipe was closed!")
-          rescue SeeingIsBelievingError; queue << $!
+        Thread.new do
+          begin  event_stream.each_line { |line| queue << event_for(line) }
+          rescue IOError;        queue << lambda { raise WtfWhoClosedMyShit.new("Our end of the pipe was closed!") }
+          rescue Exception => e; queue << lambda { raise e }
+          ensure                 queue << lambda { finish_criteria.event_thread_finished! }
           end
-          queue << lambda { finish_criteria.event_thread_finished! }
         end
       end
 
@@ -120,21 +91,14 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :finish_criteria
-      attr_accessor :queue, :event_stream, :finished_threads
-      attr_accessor :event_thread, :stdout_thread, :stderr_thread
+      attr_accessor :queue, :event_stream, :finish_criteria
 
       def next_event
         raise NoMoreEvents if finish_criteria.satisfied?
-        case event = queue.shift
-        when Proc
-          event.call
-          next_event
-        when SeeingIsBelievingError
-          raise event
-        else
-          event
-        end
+        event = queue.shift
+        return event unless event.kind_of? Proc
+        event.call
+        next_event
       end
 
       def extract_token(line)
@@ -147,10 +111,6 @@ class SeeingIsBelieving
       def extract_string(line)
         str = Marshal.load extract_token(line).unpack('m0').first
         Consumer.fix_encoding(str)
-      end
-
-      def tokenize(line)
-        line.split(' ')
       end
 
       def event_for(original_line)
