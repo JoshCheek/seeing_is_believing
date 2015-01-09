@@ -14,15 +14,25 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     'seeing_is_believing/the_matrix'
   end
 
+  def null_options(overrides={})
+    {event_handler: lambda { |*| }}.merge(overrides)
+  end
+
   def invoke(program, options={})
+    result  = SeeingIsBelieving::Result.new
+    options = null_options(
+      event_handler:  lambda { |event| SeeingIsBelieving::EventStream::UpdateResult.call result, event },
+    ).merge(options)
     evaluator = described_class.new(program, filename, options)
     FileUtils.rm_f evaluator.temp_filename
     evaluator.call
+    result
   end
 
   it 'evaluates the code when the file DNE' do
     FileUtils.rm_f filename
-    expect(invoke('print 1').stdout).to eq '1'
+    debugger = SeeingIsBelieving::Debugger.new stream: $stdout
+    expect(invoke('print 1', debugger: debugger).stdout).to eq '1'
   end
 
   it 'evaluates the code when the file Exists' do
@@ -31,7 +41,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'raises an error when the temp file already exists' do
-    evaluator = described_class.new('', filename)
+    evaluator = described_class.new('', filename, null_options)
     FileUtils.touch evaluator.temp_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::TempFileAlreadyExists
   end
@@ -47,7 +57,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'uses HardCoreEnsure to move the file back' do
-    evaluator = described_class.new 'PROGRAM', filename
+    evaluator = described_class.new 'PROGRAM', filename, null_options
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
     FileUtils.rm_rf evaluator.temp_filename
     expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
@@ -69,7 +79,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
-    evaluator = described_class.new 'PROGRAM', filename
+    evaluator = described_class.new 'PROGRAM', filename, null_options
     FileUtils.rm_rf filename
     expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
@@ -113,7 +123,8 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'if it fails, it tells the debugger some information and raises an error' do
     error_stream = StringIO.new
-    evaluator = described_class.new 'raise "omg"', filename, debugger: SeeingIsBelieving::Debugger.new(stream: error_stream)
+    debugger     = SeeingIsBelieving::Debugger.new(stream: error_stream)
+    evaluator = described_class.new 'raise "omg"', filename, null_options(debugger: debugger)
     expect(evaluator).to receive(:evaluate_file).and_raise("whatevz")
     FileUtils.rm_f evaluator.temp_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib

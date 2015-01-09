@@ -35,8 +35,10 @@ class SeeingIsBelieving
       new_program = @annotate.call "#{@program.chomp}\n", filename, @number_of_captures
       @debugger.context("TRANSLATED PROGRAM") { new_program }
 
-      result = @evaluator.call new_program,
+      result = Result.new
+      @evaluator.call new_program,
                       filename,
+                      event_handler:  lambda { |event| EventStream::UpdateResult.call result, event },
                       provided_input: @stdin,
                       require:        @require,
                       load_path:      @load_path,

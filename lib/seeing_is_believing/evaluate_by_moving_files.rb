@@ -25,12 +25,13 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout, :debugger
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout, :debugger, :event_handler
 
     # TODO: blow up if given unknown args
-    def initialize(program, filename, options={})
+    def initialize(program, filename,  options={})
       self.program         = program
       self.filename        = filename
+      self.event_handler   = options.fetch :event_handler # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
       self.provided_input  = options.fetch :provided_input, String.new
       self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
@@ -40,17 +41,15 @@ class SeeingIsBelieving
     end
 
     def call
-      @result ||= HardCoreEnsure.call \
+      HardCoreEnsure.call \
         code: -> {
           we_will_not_overwrite_existing_tempfile!
           move_file_to_tempfile
           write_program_to_file
-          result = Result.new
-          begin  evaluate_file { |event| EventStream::UpdateResult.call result, event }
+          begin evaluate_file
           rescue Timeout::Error; raise
-          rescue Exception;      raise wrap_error result, $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
+          rescue Exception;      raise wrap_error $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
           end
-          result
         },
         ensure: -> {
           set_back_to_initial_conditions
@@ -91,7 +90,7 @@ class SeeingIsBelieving
     # https://github.com/ruby/ruby/pull/808    my PR
     # https://bugs.ruby-lang.org/issues/10699  they opened an issue
     # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
-    def evaluate_file(&event_handler)
+    def evaluate_file
       # setup streams
       eventstream, child_eventstream = IO.pipe
       stdout,      child_stdout      = IO.pipe
@@ -143,12 +142,9 @@ class SeeingIsBelieving
          filename]
     end
 
-    def wrap_error(result, error)
+    def wrap_error(error)
       debugger.context "Program could not be evaluated" do
         "Program:      #{program.inspect.chomp}\n\n"\
-        "Stderr:       #{result.stderr.inspect.chomp}\n\n"\
-        "Status:       #{result.exitstatus.inspect.chomp}\n\n"\
-        "Result:       #{result.inspect.chomp}\n\n"\
         "Actual Error: #{error.inspect.chomp}\n"+
         error.backtrace.map { |sf| "              #{sf}\n" }.join("")
       end
