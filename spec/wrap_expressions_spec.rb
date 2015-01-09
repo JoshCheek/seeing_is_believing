@@ -10,6 +10,19 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       after_each:  -> * { overrides.fetch :after_each,  '>' }
   end
 
+  def wrap_with_body(code, overrides={})
+    wrap code, { before_all: '[',
+                 after_all:  ']',
+               }.merge(overrides)
+  end
+
+  def heredoc_wrap(code, overrides={})
+    wrap_with_body code, { before_each: '{'.freeze,
+                           after_each:  '}'.freeze,
+                         }.merge(overrides)
+  end
+
+
   it 'raises a SyntaxError if the program is invalid' do
     expect { wrap '+' }.to raise_error SyntaxError
   end
@@ -19,12 +32,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'wrapping the body' do
-    def wrap_with_body(code, overrides={})
-      wrap(code, { before_all: '[',
-                   after_all: ']'
-                 }.merge(overrides))
-    end
-
     it 'wraps the entire body, ignoring leading comments and the data segment' do
       expect(wrap_with_body "#comment\nA\n__END__\n1").to eq "#comment\n[<A>]\n__END__\n1"
 
@@ -60,7 +67,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
 
     context 'fucking heredocs' do
       example 'single heredoc' do
-        expect(wrap_with_body "<<A\nA").to eq "[<<<A>]\nA"
+        expect(heredoc_wrap "<<A\nA").to eq "[{<<A}]\nA"
       end
 
       example 'multiple heredocs' do
@@ -70,17 +77,17 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
         # "[<<<<A>\nA\n<<B>]\nB"
         # instead of
         # "[<<<A>\nA\n<<<B>]\nB"
-        expect(wrap_with_body "<<A\nA\n<<B\nB", before_each: '{', after_each: '}')
+        expect(heredoc_wrap "<<A\nA\n<<B\nB")
           .to eq "[{{<<A}\nA\n<<B}]\nB"
       end
 
       example 'heredocs as targets and arguments to methods' do
-        expect(wrap_with_body "<<A.size 1\nA").to eq "[<<<A.size 1>]\nA"
-        expect(wrap_with_body "<<A.size\nA").to eq "[<<<A.size>]\nA"
-        expect(wrap_with_body "<<A.size()\nA").to eq "[<<<A.size()>]\nA"
-        expect(wrap_with_body "a.size <<A\nA").to eq "[<a.size <<A>]\nA"
-        expect(wrap_with_body "<<A.size <<B\nA\nB").to eq "[<<<A.size <<B>]\nA\nB"
-        expect(wrap_with_body "<<A.size(<<B)\nA\nB").to eq "[<<<A.size(<<B)>]\nA\nB"
+        expect(heredoc_wrap "<<A.size 1\nA").to eq "[{<<A.size 1}]\nA"
+        expect(heredoc_wrap "<<A.size\nA").to eq "[{<<A.size}]\nA"
+        expect(heredoc_wrap "<<A.size()\nA").to eq "[{<<A.size()}]\nA"
+        expect(heredoc_wrap "a.size <<A\nA").to eq "[{a.size <<A}]\nA"
+        expect(heredoc_wrap "<<A.size <<B\nA\nB").to eq "[{<<A.size <<B}]\nA\nB"
+        expect(heredoc_wrap "<<A.size(<<B)\nA\nB").to eq "[{<<A.size(<<B)}]\nA\nB"
       end
     end
 
@@ -689,45 +696,46 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps heredocs with call defined on them (edge cases on edge cases *sigh*)' do
-      expect(wrap("<<HERE.()\na\nHERE")).to eq "<<<HERE.()>\na\nHERE"
+      expect(heredoc_wrap "<<HERE.()\na\nHERE")
+        .to eq "[{<<HERE.()}]\na\nHERE"
     end
   end
 
   describe 'heredocs' do
     it 'wraps heredocs on their first line' do
-      expect(wrap("<<A\nA")).to eq "<<<A>\nA"
-      expect(wrap("<<A\n123\nA")).to eq "<<<A>\n123\nA"
-      expect(wrap("<<-A\nA")).to eq "<<<-A>\nA"
-      expect(wrap("<<-A\n123\nA")).to eq "<<<-A>\n123\nA"
-      expect(wrap("1\n<<A\nA")).to eq "<<1>\n<<A>\nA"
-      expect(wrap("<<A + <<B\n1\nA\n2\nB")).to eq "<<<A + <<B>\n1\nA\n2\nB"
-      expect(wrap("<<A\n1\nA\n<<B\n2\nB")).to eq "<<<<A>\n1\nA\n<<B>\n2\nB"
-      expect(wrap("puts <<A\nA\nputs <<B\nB")).to eq "<puts <<A>\nA\n<puts <<B>\nB"
+      expect(heredoc_wrap "<<A\nA").to eq "[{<<A}]\nA"
+      expect(heredoc_wrap "<<A\n123\nA").to eq "[{<<A}]\n123\nA"
+      expect(heredoc_wrap "<<-A\nA").to eq "[{<<-A}]\nA"
+      expect(heredoc_wrap "<<-A\n123\nA").to eq "[{<<-A}]\n123\nA"
+      expect(heredoc_wrap "1\n<<A\nA").to eq "[{{1}\n<<A}]\nA"
+      expect(heredoc_wrap "<<A + <<B\n1\nA\n2\nB").to eq "[{<<A + <<B}]\n1\nA\n2\nB"
+      expect(heredoc_wrap "<<A\n1\nA\n<<B\n2\nB").to eq "[{{<<A}\n1\nA\n<<B}]\n2\nB"
+      expect(heredoc_wrap "puts <<A\nA\nputs <<B\nB").to eq "[{puts <<A}\nA\n{puts <<B}]\nB"
     end
 
     it "wraps methods that wrap heredocs, even whent hey don't have parentheses" do
-      expect(wrap("a(<<HERE)\nHERE")).to eq "<a(<<HERE)>\nHERE"
-      expect(wrap("a <<HERE\nHERE")).to eq "<a <<HERE>\nHERE"
-      expect(wrap("a 1, <<HERE\nHERE")).to eq "<a 1, <<HERE>\nHERE"
-      expect(wrap("a.b 1, 2, <<HERE1, <<-HERE2 \nHERE1\n HERE2")).to eq\
-          "<a.b 1, 2, <<HERE1, <<-HERE2> \nHERE1\n HERE2"
-      expect(wrap("a.b 1,\n2,\n<<HERE\nHERE")).to eq "<a.b <1>,\n<2>,\n<<HERE>\nHERE"
+      expect(heredoc_wrap "a(<<HERE)\nHERE").to eq "[{a(<<HERE)}]\nHERE"
+      expect(heredoc_wrap "a <<HERE\nHERE").to eq "[{a <<HERE}]\nHERE"
+      expect(heredoc_wrap "a 1, <<HERE\nHERE").to eq "[{a 1, <<HERE}]\nHERE"
+      expect(heredoc_wrap "a.b 1, 2, <<HERE1, <<-HERE2 \nHERE1\n HERE2").to eq\
+          "[{a.b 1, 2, <<HERE1, <<-HERE2}] \nHERE1\n HERE2"
+      expect(heredoc_wrap "a.b 1,\n2,\n<<HERE\nHERE").to eq "[{a.b {1},\n{2},\n<<HERE}]\nHERE"
     end
 
     it "wraps assignments whose value is a heredoc" do
-      expect(wrap("a=<<A\nA")).to eq "<a=<<A>\nA"
-      expect(wrap("a,b=<<A,<<B\nA\nB")).to eq "<a,b=<<A,<<B>\nA\nB"
-      expect(wrap("a,b=1,<<B\nB")).to eq "<a,b=1,<<B>\nB"
-      expect(wrap("a,b=<<A,1\nA")).to eq "<a,b=<<A,1>\nA"
+      expect(heredoc_wrap "a=<<A\nA").to eq "[{a=<<A}]\nA"
+      expect(heredoc_wrap "a,b=<<A,<<B\nA\nB").to eq "[{a,b=<<A,<<B}]\nA\nB"
+      expect(heredoc_wrap "a,b=1,<<B\nB").to eq "[{a,b=1,<<B}]\nB"
+      expect(heredoc_wrap "a,b=<<A,1\nA").to eq "[{a,b=<<A,1}]\nA"
     end
 
     it 'wraps methods tacked onto the end of heredocs' do
-      expect(wrap("<<A.size\nA")).to eq "<<<A.size>\nA"
-      expect(wrap("<<A.size 1\nA")).to eq "<<<A.size 1>\nA"
-      expect(wrap("<<A.size(1)\nA")).to eq "<<<A.size(1)>\nA"
-      expect(wrap("<<A.whatever <<B\nA\nB")).to eq "<<<A.whatever <<B>\nA\nB"
-      expect(wrap("<<A.whatever(<<B)\nA\nB")).to eq "<<<A.whatever(<<B)>\nA\nB"
-      expect(wrap("<<A.size()\nA")).to eq "<<<A.size()>\nA"
+      expect(heredoc_wrap "<<A.size\nA").to eq "[{<<A.size}]\nA"
+      expect(heredoc_wrap "<<A.size 1\nA").to eq "[{<<A.size 1}]\nA"
+      expect(heredoc_wrap "<<A.size(1)\nA").to eq "[{<<A.size(1)}]\nA"
+      expect(heredoc_wrap "<<A.whatever <<B\nA\nB").to eq "[{<<A.whatever <<B}]\nA\nB"
+      expect(heredoc_wrap "<<A.whatever(<<B)\nA\nB").to eq "[{<<A.whatever(<<B)}]\nA\nB"
+      expect(heredoc_wrap "<<A.size()\nA").to eq "[{<<A.size()}]\nA"
     end
   end
 
