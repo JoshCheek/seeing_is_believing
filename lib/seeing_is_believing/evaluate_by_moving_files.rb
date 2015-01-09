@@ -68,7 +68,7 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :debugger, :result
+    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :debugger
 
     def initialize(program, filename, options={})
       self.program         = program
@@ -87,12 +87,12 @@ class SeeingIsBelieving
           we_will_not_overwrite_existing_tempfile!
           move_file_to_tempfile
           write_program_to_file
-          begin
-            evaluate_file
-            result
+          result = Result.new
+          begin  evaluate_file { |event| EventStream::UpdateResult.call result, event }
           rescue Timeout::Error; raise
-          rescue Exception;      raise wrap_error $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
+          rescue Exception;      raise wrap_error result, $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
           end
+          result
         },
         ensure: -> {
           set_back_to_initial_conditions
@@ -108,8 +108,6 @@ class SeeingIsBelieving
     end
 
     private
-
-    attr_accessor :stdout, :stderr, :exitstatus
 
     def we_will_not_overwrite_existing_tempfile!
       raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename
@@ -131,7 +129,7 @@ class SeeingIsBelieving
       File.open(filename, 'w') { |f| f.write program.to_s }
     end
 
-    def evaluate_file
+    def evaluate_file(&event_handler)
       # the event stream
       es_read, es_write = IO.pipe
       es_fd = es_write.to_i.to_s
@@ -148,22 +146,14 @@ class SeeingIsBelieving
         }
 
         # consume events
-        self.result = Result.new # set on self b/c if an error is raised, we still want to keep what we recorded
-        consumer = EventStream::Consumer.new(events: es_read,
-                                             stdout: process_stdout,
-                                             stderr: process_stderr)
-        event_consumer = Thread.new do
-          consumer.each { |event| EventStream::UpdateResult.call result, event }
-        end
+        consumer = EventStream::Consumer.new(events: es_read, stdout: process_stdout, stderr: process_stderr)
+        consumer_thread = Thread.new { consumer.each &event_handler }
 
         begin
           Timeout.timeout timeout do
             consumer.process_exitstatus(thread.value.exitstatus)
             es_write.close unless es_write.closed?
-            event_consumer.join
-            # TODO: seems like these belong entirely on result, not as ivars of this class
-            self.exitstatus = thread.value
-            self.stderr     = result.stderr
+            consumer_thread.join
           end
         rescue Timeout::Error
           Process.kill "TERM", thread.pid
@@ -185,11 +175,11 @@ class SeeingIsBelieving
          filename]
     end
 
-    def wrap_error(error)
+    def wrap_error(result, error)
       debugger.context "Program could not be evaluated" do
         "Program:      #{program.inspect.chomp}\n\n"\
-        "Stderr:       #{stderr.inspect.chomp}\n\n"\
-        "Status:       #{exitstatus.inspect.chomp}\n\n"\
+        "Stderr:       #{result.stderr.inspect.chomp}\n\n"\
+        "Status:       #{result.exitstatus.inspect.chomp}\n\n"\
         "Result:       #{result.inspect.chomp}\n\n"\
         "Actual Error: #{error.inspect.chomp}\n"+
         error.backtrace.map { |sf| "              #{sf}\n" }.join("")
