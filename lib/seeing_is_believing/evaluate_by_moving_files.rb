@@ -12,7 +12,6 @@
 # its body will be incorrect, anyway.
 
 require 'timeout'
-require 'fileutils' # DELETE?
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
@@ -74,14 +73,14 @@ class SeeingIsBelieving
 
     def move_file_to_tempfile
       return unless File.exist? filename
-      FileUtils.mv filename, temp_filename
+      File.rename filename, temp_filename
       @was_backed_up = true
     end
 
     def set_back_to_initial_conditions
       @was_backed_up ?
-        FileUtils.mv(temp_filename, filename) :
-        FileUtils.rm(filename)
+        File.rename(temp_filename, filename) :
+        File.delete(filename)
     end
 
     def write_program_to_file

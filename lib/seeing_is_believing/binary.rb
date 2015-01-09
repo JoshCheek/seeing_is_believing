@@ -89,6 +89,7 @@ class SeeingIsBelieving
     private
 
     def self.syntax_error_notice_for(body)
+      require 'open3'
       out, err, syntax_status = Open3.capture3 RbConfig.ruby, '-c', stdin_data: body
       return err unless syntax_status.success?
 
