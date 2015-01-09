@@ -24,7 +24,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
       event_handler:  lambda { |event| SeeingIsBelieving::EventStream::UpdateResult.call result, event },
     ).merge(options)
     evaluator = described_class.new(program, filename, options)
-    FileUtils.rm_f evaluator.temp_filename
+    FileUtils.rm_f evaluator.backup_filename
     evaluator.call
     result
   end
@@ -42,7 +42,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'raises an error when the temp file already exists' do
     evaluator = described_class.new('', filename, null_options)
-    FileUtils.touch evaluator.temp_filename
+    FileUtils.touch evaluator.backup_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::TempFileAlreadyExists
   end
 
@@ -59,21 +59,21 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'uses HardCoreEnsure to move the file back' do
     evaluator = described_class.new 'PROGRAM', filename, null_options
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
-    FileUtils.rm_rf evaluator.temp_filename
+    FileUtils.rm_rf evaluator.backup_filename
     expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
-      expect(File.exist? evaluator.temp_filename).to eq false
+      expect(File.exist? evaluator.backup_filename).to eq false
       expect(File.read filename).to eq 'ORIGINAL'
 
       # after code
       options[:code].call rescue nil
-      expect(File.read evaluator.temp_filename).to eq 'ORIGINAL'
+      expect(File.read evaluator.backup_filename).to eq 'ORIGINAL'
       expect(File.read filename).to eq 'PROGRAM'
 
       # after ensure
       options[:ensure].call
       expect(File.read filename).to eq 'ORIGINAL'
-      expect(File.exist? evaluator.temp_filename).to eq false
+      expect(File.exist? evaluator.backup_filename).to eq false
     end
     evaluator.call
   end
@@ -126,7 +126,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     debugger     = SeeingIsBelieving::Debugger.new(stream: error_stream)
     evaluator = described_class.new 'raise "omg"', filename, null_options(debugger: debugger)
     expect(evaluator).to receive(:evaluate_file).and_raise("whatevz")
-    FileUtils.rm_f evaluator.temp_filename
+    FileUtils.rm_f evaluator.backup_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib
     expect(error_stream.string).to include "Program could not be evaluated"
   end

@@ -4,9 +4,9 @@ class SeeingIsBelieving
   SeeingIsBelievingError = Class.new StandardError
 
   class TempFileAlreadyExists < SeeingIsBelievingError
-    def initialize(from_filename, temp_filename)
+    def initialize(from_filename, backup_filename)
       super "Trying to back up #{from_filename.inspect} (FILE) to"\
-            " #{temp_filename.inspect} (TEMPFILE) but TEMPFILE already exists."\
+            " #{backup_filename.inspect} (TEMPFILE) but TEMPFILE already exists."\
             " You should check the contents of these files. If FILE is correct,"\
             " then delete TEMPFILE. Otherwise rename TEMPFILE to FILE."
     end

@@ -44,8 +44,8 @@ class SeeingIsBelieving
     def call
       HardCoreEnsure.call \
         code: -> {
-          we_will_not_overwrite_existing_tempfile!
-          move_file_to_tempfile
+          we_will_not_overwrite_existing_backup_file!
+          backup_existing_file
           write_program_to_file
           begin evaluate_file
           rescue Timeout::Error; raise
@@ -61,25 +61,25 @@ class SeeingIsBelieving
       File.dirname filename
     end
 
-    def temp_filename
+    def backup_filename
       File.join file_directory, "seeing_is_believing_backup.#{File.basename filename}"
     end
 
     private
 
-    def we_will_not_overwrite_existing_tempfile!
-      raise TempFileAlreadyExists.new(filename, temp_filename) if File.exist? temp_filename
+    def we_will_not_overwrite_existing_backup_file!
+      raise TempFileAlreadyExists.new(filename, backup_filename) if File.exist? backup_filename
     end
 
-    def move_file_to_tempfile
+    def backup_existing_file
       return unless File.exist? filename
-      File.rename filename, temp_filename
+      File.rename filename, backup_filename
       @was_backed_up = true
     end
 
     def set_back_to_initial_conditions
       @was_backed_up ?
-        File.rename(temp_filename, filename) :
+        File.rename(backup_filename, filename) :
         File.delete(filename)
     end
 
