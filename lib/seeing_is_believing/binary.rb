@@ -38,7 +38,7 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      syntax_error_notice = syntax_error_notice_for(options.body)
+      syntax_error_notice = syntax_error_notice_for(options.filename, options.body)
       if syntax_error_notice
         stderr.puts syntax_error_notice
         return NONDISPLAYABLE_ERROR_STATUS
@@ -88,17 +88,12 @@ class SeeingIsBelieving
 
     private
 
-    def self.syntax_error_notice_for(body)
-      require 'open3'
-      out, err, syntax_status = Open3.capture3 RbConfig.ruby, '-c', stdin_data: body
-      return err unless syntax_status.success?
-
-      # The stdin_data may still be getting written when the pipe closes
-      # This is because Ruby will stop reading from stdin if everything left is in the DATA segment, and the data segment is not referenced.
-      # In this case, the Syntax is fine
-      # https://bugs.ruby-lang.org/issues/9583
-    rescue Errno::EPIPE
-      return nil
+    # brilliant idea from pry https://github.com/banister/method_source/blob/5e5c55642662c248e721282cc287b41a49778ee8/lib/method_source/code_helpers.rb#L58-72
+    def self.syntax_error_notice_for(filename, body)
+      catch(:valid) { eval "BEGIN{throw :valid}\n#{body}", binding, filename.to_s }
+      nil
+    rescue SyntaxError
+      return $!.message.sub(/:(\d):/) { ":#{$1.to_i-1}:" }
     end
 
     def self.evaluate_program(body, options)
