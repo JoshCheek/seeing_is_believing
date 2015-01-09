@@ -516,48 +516,25 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'record_exitstatus' do
-      specify 'true    -> 0' do
-        producer.record_exitstatus true
-        expect(consumer.call).to eq Events::Exitstatus.new(0)
-      end
-      specify 'false   -> 1' do
-        producer.record_exitstatus false
-        expect(consumer.call).to eq Events::Exitstatus.new(1)
-      end
-      specify 'int n   -> n' do
-        producer.record_exitstatus 74
-        expect(consumer.call).to eq Events::Exitstatus.new(74)
-      end
-      specify 'num f   -> n.to_i' do
-        producer.record_exitstatus 100.99
-        expect(consumer.call).to eq Events::Exitstatus.new(100)
-      end
-      specify 'intable -> o.to_int' do
-        obj = Object.new
-        def obj.to_int; 42; end
-        producer.record_exitstatus obj
-        expect(consumer.call).to eq Events::Exitstatus.new(42)
-      end
-      specify 'non-numeric/booleans raise a TypeError' do
-        expect { producer.record_exitstatus Object.new }.to raise_error TypeError
-        expect { producer.record_exitstatus nil }.to raise_error TypeError
-      end
-      specify 'raises a ButYouAlreadyLeft event if it sees multiple exit statuses' do
-        producer.record_exitstatus 1
-        producer.record_exitstatus 1
-        consumer.call
-        expect { consumer.call }.to raise_error Consumer::ButYouAlreadyLeft
-      end
-    end
-
-
     describe 'record_exec' do
       it 'records the event and the inspection of the args that were given to exec' do
         producer.record_exec(["ls", "-l"])
         expect(consumer.call).to eq Events::Exec.new('["ls", "-l"]')
       end
     end
+
+    describe 'process_exitstatus' do
+      it 'emits an exitstatus event' do
+        consumer.process_exitstatus 92
+        expect(consumer.call).to eq Events::Exitstatus.new(92)
+      end
+      it 'raises a ButYouAlreadyLeft if it is given multiple exitstatuses' do
+        consumer.process_exitstatus 12
+        expect { consumer.process_exitstatus 59 }
+          .to raise_error Consumer::ButYouAlreadyLeft, /\b12\b.*?\b59\b/
+      end
+    end
+
 
     describe 'finish!' do
       def final_event(producer, consumer)

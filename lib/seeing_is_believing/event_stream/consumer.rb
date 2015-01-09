@@ -11,7 +11,10 @@ class SeeingIsBelieving
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
       UnknownEvent       = Class.new SeeingIsBelievingError
       class ButYouAlreadyLeft < SeeingIsBelievingError
+        attr_accessor :prev_status, :crnt_status
         def initialize(prev_status, crnt_status)
+          self.prev_status = prev_status
+          self.crnt_status = crnt_status
           super "Previously saw an exit status of #{prev_status.inspect}, but received a second exit status of #{crnt_status.inspect}, which should not happen (you can only exit once). This is probably a bug in SiB"
         end
       end
@@ -75,6 +78,12 @@ class SeeingIsBelieving
       rescue NoMoreInput
       end
 
+      def process_exitstatus(status)
+        raise ButYouAlreadyLeft.new(@saw_exitstatus_of, status) if @saw_exitstatus_of
+        @saw_exitstatus_of = status
+        queue << Events::Exitstatus.new(status)
+      end
+
       private
 
       attr_accessor :queue, :event_stream, :finished_threads
@@ -88,10 +97,6 @@ class SeeingIsBelieving
           next_event
         when SeeingIsBelievingError
           raise event
-        when Events::Exitstatus
-          raise ButYouAlreadyLeft.new(@saw_exitstatus_of, event.value) if @saw_exitstatus_of
-          @saw_exitstatus_of = event.value
-          event
         else
           event
         end
@@ -143,8 +148,6 @@ class SeeingIsBelieving
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
           Events::MaxLineCaptures.new(value)
-        when :exitstatus
-          Events::Exitstatus.new(extract_token(line).to_i)
         when :num_lines
           Events::NumLines.new(extract_token(line).to_i)
         when :sib_version

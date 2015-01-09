@@ -109,12 +109,6 @@ class SeeingIsBelieving
         queue << "filename #{to_string_token filename}"
       end
 
-      def record_exitstatus(status)
-        exit status
-      rescue SystemExit
-        queue << "exitstatus #{$!.status}"
-      end
-
       def record_exec(args)
         queue << "exec #{to_string_token args.inspect}"
       end

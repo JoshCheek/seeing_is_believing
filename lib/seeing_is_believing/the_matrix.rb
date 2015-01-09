@@ -33,16 +33,14 @@ Kernel.module_eval do
   end
 
   define_method :exit! do |status=false|
-    $SiB.record_exitstatus status
     finish.call
-    real_exit_bang.call(0)
+    real_exit_bang.call(status)
   end
   module_function :exit!
 end
 
 at_exit do
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
-  $SiB.record_exitstatus exitstatus
   finish.call
-  real_exit_bang.call(0) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)
+  real_exit_bang.call(exitstatus) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)
 end
