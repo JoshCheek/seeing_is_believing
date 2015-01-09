@@ -1,4 +1,3 @@
-require 'stringio'
 require 'tmpdir'
 
 require 'seeing_is_believing/result'
@@ -17,7 +16,7 @@ class SeeingIsBelieving
   def initialize(program, options={})
     options             = options.dup
     @program            = program
-    @stdin              = to_stream(options.delete(:stdin) || '')
+    @stdin              = options.delete(:stdin)              || '' # can also be a stream
     @timeout            = options.delete(:timeout)            || 0
     @load_path          = options.delete(:load_path)          || []
     @encoding           = options.delete(:encoding)           || nil
@@ -38,23 +37,16 @@ class SeeingIsBelieving
 
       result = @evaluator.call new_program,
                       filename,
-                      input_stream:       @stdin,
-                      require:            @require,
-                      load_path:          @load_path,
-                      encoding:           @encoding,
-                      timeout:            @timeout,
-                      debugger:           @debugger
+                      provided_input: @stdin,
+                      require:        @require,
+                      load_path:      @load_path,
+                      encoding:       @encoding,
+                      timeout:        @timeout,
+                      debugger:       @debugger
 
       @debugger.context("RESULT") { result.inspect }
 
       result
     }
-  end
-
-  private
-
-  def to_stream(string_or_stream)
-    return string_or_stream if string_or_stream.respond_to? :gets
-    StringIO.new string_or_stream
   end
 end

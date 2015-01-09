@@ -11,9 +11,7 @@
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
 
-require 'open3'
 require 'timeout'
-require 'stringio'
 require 'fileutils' # DELETE?
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
@@ -24,56 +22,17 @@ require 'seeing_is_believing/event_stream/update_result'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
-
-    # *sigh* have to do this b/c can't use Open3, b/c keywords don't work right when the keys are not symbols, and I'm passing a file descriptor
-    # https://github.com/ruby/ruby/pull/808    my pr
-    # https://bugs.ruby-lang.org/issues/10699  they opened an issue
-    # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
-    module Spawn
-      extend self
-      def popen(*cmd)
-        opts = {}
-        opts = cmd.pop if cmd.last.kind_of? Hash
-
-        in_r, in_w = IO.pipe
-        opts[:in] = in_r
-        in_w.sync = true
-
-        out_r, out_w = IO.pipe
-        opts[:out] = out_w
-
-        err_r, err_w = IO.pipe
-        opts[:err] = err_w
-
-        pid       = spawn(*cmd, opts)
-        wait_thr  = Process.detach(pid)
-
-        in_r.close
-        out_w.close
-        err_w.close
-
-        begin
-          yield in_w, out_r, err_r, wait_thr
-          in_w.close unless in_w.closed?
-          wait_thr.value
-        ensure
-          [in_w, out_r, err_r].each { |io| io.close unless io.closed? }
-          wait_thr.join
-        end
-      end
-    end
-
-
     def self.call(*args)
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :input_stream, :require_flags, :load_path_flags, :encoding, :timeout, :debugger
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout, :debugger
 
+    # TODO: blow up if given unknown args
     def initialize(program, filename, options={})
       self.program         = program
       self.filename        = filename
-      self.input_stream    = options.fetch :input_stream, StringIO.new('')
+      self.provided_input  = options.fetch :provided_input, String.new
       self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
       self.encoding        = options.fetch :encoding, nil
@@ -129,40 +88,50 @@ class SeeingIsBelieving
       File.open(filename, 'w') { |f| f.write program.to_s }
     end
 
+    # have to basically copy a bunch of Open3 code into here b/c keywords don't work right when the keys are not symbols
+    # https://github.com/ruby/ruby/pull/808    my PR
+    # https://bugs.ruby-lang.org/issues/10699  they opened an issue
+    # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
     def evaluate_file(&event_handler)
-      # the event stream
-      es_read, es_write = IO.pipe
-      es_fd = es_write.to_i.to_s
+      # setup streams
+      eventstream, child_eventstream = IO.pipe
+      stdout,      child_stdout      = IO.pipe
+      stderr,      child_stderr      = IO.pipe
+      child_stdin, stdin             = IO.pipe
 
-      # invoke the process
-      Spawn.popen ENV, *popen_args, es_fd, es_write => es_write do |process_stdin, process_stdout, process_stderr, thread|
-        # child writes here, we close b/c won't get EOF until all fds are closed
-        es_write.close
+      # evaluate the code in a child process
+      args  = [ENV, *popen_args, child_eventstream.to_i.to_s]
+      opts  = {in: child_stdin, out: child_stdout, err: child_stderr, child_eventstream => child_eventstream}
+      child = Process.detach spawn(*args, opts)
 
-        # send stdin
-        Thread.new {
-          input_stream.each_char { |char| process_stdin.write char }
-          process_stdin.close
-        }
+      # close b/c we won't get EOF until all fds are closed
+      child_eventstream.close
+      child_stdout.close
+      child_stderr.close
+      child_stdin.close
+      stdin.sync = true
 
-        # consume events
-        consumer = EventStream::Consumer.new(events: es_read, stdout: process_stdout, stderr: process_stderr)
-        consumer_thread = Thread.new { consumer.each &event_handler }
+      # send stdin
+      Thread.new {
+        provided_input.each_char { |char| stdin.write char }
+        stdin.close
+      }
 
-        begin
-          Timeout.timeout timeout do
-            consumer.process_exitstatus(thread.value.exitstatus)
-            es_write.close unless es_write.closed?
-            consumer_thread.join
-          end
-        rescue Timeout::Error
-          Process.kill "TERM", thread.pid
-          raise $!
-        end
+      # consume events
+      consumer        = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
+      consumer_thread = Thread.new { consumer.each &event_handler }
+
+      # wait for completion
+      Timeout.timeout timeout do
+        exitstatus = child.value.exitstatus
+        consumer.process_exitstatus exitstatus
+        consumer_thread.join
       end
+    rescue Timeout::Error
+      Process.kill "TERM", child.pid
+      raise
     ensure
-      es_read.close  unless es_read.closed?
-      es_write.close unless es_write.closed?
+      [stdin, stdout, stderr, eventstream].each { |io| io.close unless io.closed? }
     end
 
     def popen_args
