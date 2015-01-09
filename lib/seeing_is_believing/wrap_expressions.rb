@@ -11,8 +11,8 @@ class SeeingIsBelieving
 
     def initialize(program, wrappings)
       self.program     = program
-      self.before_all  = wrappings.fetch :before_all,  -> { ''.freeze }
-      self.after_all   = wrappings.fetch :after_all,   -> { ''.freeze }
+      self.before_all  = wrappings.fetch :before_all,  -> { '' }
+      self.after_all   = wrappings.fetch :after_all,   -> { '' }
       self.before_each = wrappings.fetch :before_each, -> * { '' }
       self.after_each  = wrappings.fetch :after_each,  -> * { '' }
       self.wrappings   = {}
@@ -179,8 +179,8 @@ class SeeingIsBelieving
            :and_asgn, # a &&= b
            :op_asgn   # a += b, a -= b, a *= b, etc
 
-        # because the RHS can be a heredoc, and parser currently handles heredocs locations incorrectly
-        # we must hack around this
+        # a=b gets wrapped <a=b>
+        # but we don't wrap the lvar in `for a in range`
         if ast.children.last.kind_of? ::AST::Node
           begin_pos = ast.location.expression.begin_pos
           end_pos   = ast.children.last.location.expression.end_pos
@@ -189,80 +189,19 @@ class SeeingIsBelieving
           add_children ast, true
         end
       when :send
-        # because the target and the last child can be heredocs
-        # and the method may or may not have parens,
-        # it can inadvertently inherit the incorrect location of the heredocs
-        # so we check for this case, that way we can construct the correct range instead
         range = ast.location.expression
-
-        # first two children: target, message, so we want the last child only if it is an argument
-        children = ast.children
-        target   = children[0]
-        message  = children[1]
-        last_arg = children.size > 2 ? children[-1] : nil
-
-
-        # last arg is a heredoc, use the closing paren, or the end of the first line of the heredoc
-        if heredoc? last_arg
-          end_pos = last_arg.location.expression.end_pos
-          if buffer.source[ast.location.selector.end_pos] == '('
-            end_pos += 1 until buffer.source[end_pos] == ')'
-            end_pos += 1
-          end
-
-        # target is a heredoc, so we can't trust the expression
-        # but method has parens, so we can't trust the last arg
-        elsif heredoc?(target) && last_arg && buffer.source[ast.location.selector.end_pos] == '('
-          end_pos = last_arg.location.expression.end_pos
-          end_pos += 1 until buffer.source[end_pos] == ')'
-          end_pos += 1
-
-        elsif heredoc?(target) && last_arg
-          end_pos = last_arg.location.expression.end_pos
-
-        # neither the target, nor the last arg are heredocs, the range of the expression can be trusted
-        elsif last_arg
-          end_pos = ast.location.expression.end_pos
-
-        # in lambda{}.() the send has no selector, so use the expression
-        # I'm going to ignore the fact that you could define call on a heredoc and do <<HERE.(),
-        elsif !ast.location.selector
-          end_pos = ast.location.expression.end_pos
-
-        # there is no last arg, but there are parens, find the closing paren
-        # we can't trust the expression range because the *target* could be a heredoc
-        elsif buffer.source[ast.location.selector.end_pos] == '('
-          closing_paren_index = ast.location.selector.end_pos + 1
-          closing_paren_index += 1 until buffer.source[closing_paren_index] == ')'
-          end_pos = closing_paren_index + 1
-
-        # use the selector because we can't trust expression since target can be a heredoc
-        elsif heredoc? target
-          end_pos = ast.location.selector.end_pos
-
-        # use the expression because it could be something like !1, in which case the selector would return the rhs of the !
-        else
-          end_pos = ast.location.expression.end_pos
-        end
-
-        begin_pos = ast.location.expression.begin_pos
-        range     = Parser::Source::Range.new(buffer, begin_pos, end_pos)
-
-        meta = nil
-        meta = :total_fucking_failure if message == :__TOTAL_FUCKING_FAILURE__
-        add_to_wrappings range, meta
+        target, message, * = ast.children
+        meta = (:total_fucking_failure if message == :__TOTAL_FUCKING_FAILURE__)
+        add_to_wrappings ast, meta
         add_children ast
       when :begin
         if ast.location.expression.source.start_with?("(") && # e.g. `(1)` we want `<(1)>`
-           !void_value?(ast)                                  # e.g. `(return 1)` we want `(return <1>)`
+          !void_value?(ast)                                   # e.g. `(return 1)` we want `(return <1>)`
           add_to_wrappings ast
         else # e.g. `A\nB` we want `<A>\n<B>`
           last_child = ast.children.last
           if heredoc? last_child
-            range = Parser::Source::Range.new buffer,
-                                              ast.location.expression.begin_pos,
-                                              last_child.location.expression.end_pos
-            add_to_wrappings range unless void_value? ast.children.last
+            add_to_wrappings ast unless void_value? ast.children.last
           end
         end
         add_children ast
