@@ -7,7 +7,7 @@ require 'thread'
 class SeeingIsBelieving
   module EventStream
     class Consumer
-      NoMoreInput        = Class.new SeeingIsBelievingError # TODO: rename to NoMoreEvents
+      NoMoreEvents       = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
       UnknownEvent       = Class.new SeeingIsBelievingError
       class ButYouAlreadyLeft < SeeingIsBelievingError
@@ -110,7 +110,7 @@ class SeeingIsBelieving
       def each
         return to_enum :each unless block_given?
         loop { yield call(1) }
-      rescue NoMoreInput
+      rescue NoMoreEvents
       end
 
       def process_exitstatus(status)
@@ -125,7 +125,7 @@ class SeeingIsBelieving
       attr_accessor :event_thread, :stdout_thread, :stderr_thread
 
       def next_event
-        raise NoMoreInput if finish_criteria.satisfied?
+        raise NoMoreEvents if finish_criteria.satisfied?
         case event = queue.shift
         when Proc
           event.call

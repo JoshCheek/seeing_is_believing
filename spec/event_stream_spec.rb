@@ -104,17 +104,17 @@ module SeeingIsBelieving::EventStream
         expect(consumer.call.value).to eq "a� å"          # space just so its easier to see
       end
 
-      it 'raises NoMoreInput if input is closed before it finishes reading the number of requested inputs' do
+      it 'raises NoMoreEvents if input is closed before it finishes reading the number of requested inputs' do
         finish!
-        expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
+        expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreEvents
       end
 
-      it 'raises NoMoreInput once it its input streams are all closed and its seen the exit status' do
+      it 'raises NoMoreEvents once it its input streams are all closed and its seen the exit status' do
         close_streams eventstream_producer, stdout_producer, stderr_producer
         producer.finish!
         consumer.process_exitstatus 0
         consumer.call
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
+        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreEvents
       end
 
       it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
