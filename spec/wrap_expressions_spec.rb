@@ -2,10 +2,12 @@ require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
 RSpec.describe SeeingIsBelieving::WrapExpressions do
-  def wrap(code)
+  def wrap(code, overrides={})
     described_class.call code,
-      before_each: -> * { '<' },
-      after_each:  -> * { '>' }
+      before_all:  ->   { overrides.fetch :before_all,   '' },
+      after_all:   ->   { overrides.fetch :after_all,    '' },
+      before_each: -> * { overrides.fetch :before_each, '<' },
+      after_each:  -> * { overrides.fetch :after_each,  '>' }
   end
 
   it 'raises a SyntaxError if the program is invalid' do
@@ -17,34 +19,38 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'wrapping the body' do
-    let(:options) { { before_all:  ->   { "[".freeze },
-                      after_all:   ->   { "]".freeze },
-                      before_each: -> * { '<'.freeze },
-                      after_each:  -> * { '>'.freeze } } }
+    def wrap_with_body(code, overrides={})
+      wrap(code, { before_all: '[',
+                   after_all: ']'
+                 }.merge(overrides))
+    end
 
     it 'wraps the entire body, ignoring leading comments and the data segment' do
-      expect(described_class.call("#comment\nA\n__END__\n1", options)).to eq "#comment\n[<A>]\n__END__\n1"
+      expect(wrap_with_body "#comment\nA\n__END__\n1").to eq "#comment\n[<A>]\n__END__\n1"
+
+      # TODO: ist this actually true?
+      expect(wrap_with_body "#comment\n__END__\n1").to eq "[]#comment\n__END__\n1"
     end
 
-    it 'comes in on blank lines' do
-      expect(described_class.call('', options)).to eq '[]'
+    it 'wraps when code is an empty string' do
+      expect(wrap_with_body '').to eq '[]'
     end
 
-    it 'comes in first when there are only comments' do
-      expect(described_class.call("# abc", options)).to eq "[]# abc"
+    it 'places body before first comment when there are only comments' do
+      expect(wrap_with_body "# abc").to eq "[]# abc"
     end
 
-    it 'comes in before trailing comments' do
-      expect(described_class.call("1# abc", options)).to eq "[<1>]# abc"
+    it 'places body before trailing comments, but still wraps code' do
+      expect(wrap_with_body "1# abc").to eq "[<1>]# abc"
     end
 
     # this changes the number of lines, annoyingly, though it shouldn't mess anything up,
     # unless you were trying to reopen the file to read it, in which case, *surprise* the whole thing's been rewritten
     it 'injects a newline if there is a data segment and the after block doesn\'t end in a newline' do
-      expect(described_class.call("__END__", options)).to eq "[]\n__END__"
-      expect(described_class.call("\n__END__", options)).to eq "[]\n__END__"
-      expect(described_class.call("\n\n__END__", options)).to eq "[]\n\n__END__"
-      expect(described_class.call("__END__!", options)).to eq "[<__END__!>]"
+      expect(wrap_with_body "__END__").to eq "[]\n__END__"
+      expect(wrap_with_body "\n__END__").to eq "[]\n__END__"
+      expect(wrap_with_body "\n\n__END__").to eq "[]\n\n__END__"
+      expect(wrap_with_body "__END__!").to eq "[<__END__!>]"
     end
 
     it 'wraps bodies that are wrapped in parentheses' do
@@ -54,7 +60,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
 
     context 'fucking heredocs' do
       example 'single heredoc' do
-        expect(described_class.call("<<A\nA", options)).to eq "[<<<A>]\nA"
+        expect(wrap_with_body "<<A\nA").to eq "[<<<A>]\nA"
       end
 
       example 'multiple heredocs' do
@@ -64,25 +70,25 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
         # "[<<<<A>\nA\n<<B>]\nB"
         # instead of
         # "[<<<A>\nA\n<<<B>]\nB"
-        expect(described_class.call("<<A\nA\n<<B\nB", options)).to eq "[<<<<A>\nA\n<<B>]\nB"
+        expect(wrap_with_body "<<A\nA\n<<B\nB", before_each: '{', after_each: '}')
+          .to eq "[{{<<A}\nA\n<<B}]\nB"
       end
 
       example 'heredocs as targets and arguments to methods' do
-        expect(described_class.call("<<A.size 1\nA", options)).to eq "[<<<A.size 1>]\nA"
-        expect(described_class.call("<<A.size\nA", options)).to eq "[<<<A.size>]\nA"
-        expect(described_class.call("<<A.size()\nA", options)).to eq "[<<<A.size()>]\nA"
-        expect(described_class.call("a.size <<A\nA", options)).to eq "[<a.size <<A>]\nA"
-        expect(described_class.call("<<A.size <<B\nA\nB", options)).to eq "[<<<A.size <<B>]\nA\nB"
-        expect(described_class.call("<<A.size(<<B)\nA\nB", options)).to eq "[<<<A.size(<<B)>]\nA\nB"
+        expect(wrap_with_body "<<A.size 1\nA").to eq "[<<<A.size 1>]\nA"
+        expect(wrap_with_body "<<A.size\nA").to eq "[<<<A.size>]\nA"
+        expect(wrap_with_body "<<A.size()\nA").to eq "[<<<A.size()>]\nA"
+        expect(wrap_with_body "a.size <<A\nA").to eq "[<a.size <<A>]\nA"
+        expect(wrap_with_body "<<A.size <<B\nA\nB").to eq "[<<<A.size <<B>]\nA\nB"
+        expect(wrap_with_body "<<A.size(<<B)\nA\nB").to eq "[<<<A.size(<<B)>]\nA\nB"
       end
     end
 
     it 'identifies the last line of the body' do
-      expect(described_class.call("a\n"\
-                                  "def b\n"\
-                                  "  c = 1\n"\
-                                  "end",
-                                  options)
+      expect(wrap_with_body "a\n"\
+                            "def b\n"\
+                            "  c = 1\n"\
+                            "end"
             ).to eq "[<a>\n"\
                     "<def b\n"\
                     "  <c = 1>\n"\
