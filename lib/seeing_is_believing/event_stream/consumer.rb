@@ -10,6 +10,11 @@ class SeeingIsBelieving
       NoMoreInput        = Class.new SeeingIsBelievingError
       WtfWhoClosedMyShit = Class.new SeeingIsBelievingError
       UnknownEvent       = Class.new SeeingIsBelievingError
+      class ButYouAlreadyLeft < SeeingIsBelievingError
+        def initialize(prev_status, crnt_status)
+          super "Previously saw an exit status of #{prev_status.inspect}, but received a second exit status of #{crnt_status.inspect}, which should not happen (you can only exit once). This is probably a bug in SiB"
+        end
+      end
 
       # https://github.com/JoshCheek/seeing_is_believing/issues/46
       def self.fix_encoding(str)
@@ -77,13 +82,16 @@ class SeeingIsBelieving
 
       def next_event
         raise NoMoreInput if @no_more_input
-
         case event = queue.shift
         when Symbol
           @no_more_input = true if finished_threads.push(event).size == 3
           next_event
         when SeeingIsBelievingError
           raise event
+        when Events::Exitstatus
+          raise ButYouAlreadyLeft.new(@saw_exitstatus_of, event.value) if @saw_exitstatus_of
+          @saw_exitstatus_of = event.value
+          event
         else
           event
         end

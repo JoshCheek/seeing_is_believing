@@ -543,6 +543,12 @@ module SeeingIsBelieving::EventStream
         expect { producer.record_exitstatus Object.new }.to raise_error TypeError
         expect { producer.record_exitstatus nil }.to raise_error TypeError
       end
+      specify 'raises a ButYouAlreadyLeft event if it sees multiple exit statuses' do
+        producer.record_exitstatus 1
+        producer.record_exitstatus 1
+        consumer.call
+        expect { consumer.call }.to raise_error Consumer::ButYouAlreadyLeft
+      end
     end
 
 
