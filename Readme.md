@@ -4,36 +4,28 @@
 Seeing Is Believing
 ===================
 
-Evaluates a file, recording the results of each line of code.
+Evaluates Ruby code, recording the results of each line.
 Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing#editor-integration).
 
 ![example](https://s3.amazonaws.com/josh.cheek/images/scratch/sib-example1.gif)
 
 Watch a [longer video](http://vimeo.com/73866851).
 
-Works in Ruby 1.9, 2.0, 2.1, rubinius (I **think**, need to make better tests), still trying to get it working with Jruby.
+Works in Ruby 1.9, 2.0, 2.1, 2.2, rubinius (I **think**, need to make better tests), still trying to get it working with Jruby.
 
 Use The Binary
 ==============
 
-* Show every line of code (last expression)
-* Show only marked lines (xmpfilter style, except better b/c it understands expressions)
-* Clear annotations when they get in your way (even if code is invalid)
-* Smart enough to show
-  * method arguments
-  * if statement clauses
-  * values in a hash
-  * methods that are chained together across lines
-  * multiline string/symbol/regex
+`cat simple_example.rb`
 
-```sh
-$ cat simple_example.rb
+```ruby
 5.times do |i|
   i * 2
 end
+```
 
-
-$ seeing_is_believing simple_example.rb
+`seeing_is_believing simple_example.rb`
+```ruby
 5.times do |i|  # => 5
   i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
@@ -64,7 +56,7 @@ result.exception # => nil
 Install
 =======
 
-Currently requires Ruby 1.9 or 2.0.
+Currently requires Ruby 1.9 or 2.x
 
     $ gem install seeing_is_believing
 
@@ -102,7 +94,6 @@ Known Issues
 ============
 
 * `BEGIN/END` breaks things and I probably won't ever fix it, because it's annoying and it's really meant for command-line scripts... but there is currently a spec for it.
-* `exit!` ignores callbacks that `SeeingIsBelieving` uses to communicate the results back to the main app. If you call it, `SeeingIsBelieving` will blow up. We could "fix" this by overriding it, but I feel like that would violate the meaning of `exit!`, so basically, just don't call that method.
 * The code to find the data segment is naive, and could wind up interpolating results into a string or something.
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
