@@ -16,6 +16,7 @@ class SeeingIsBelieving
          when EventStream::Events::SiBVersion       then result.sib_version        = event.value
          when EventStream::Events::RubyVersion      then result.ruby_version       = event.value
          when EventStream::Events::Filename         then result.filename           = event.value
+         when EventStream::Events::Exec             then nil # no op
          else raise "Unknown event: #{event.inspect}"
          end
       end

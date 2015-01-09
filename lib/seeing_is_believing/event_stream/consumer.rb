@@ -145,6 +145,8 @@ class SeeingIsBelieving
           Events::RubyVersion.new(extract_string line)
         when :filename
           Events::Filename.new(extract_string line)
+        when :exec
+          Events::Exec.new(extract_string line)
         else
           raise UnknownEvent, original_line.inspect
         end

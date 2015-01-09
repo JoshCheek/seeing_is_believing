@@ -27,7 +27,7 @@ Kernel.module_eval do
   private
 
   define_method :exec do |*args, &block|
-    # $SiB.record_exec(args)
+    $SiB.record_exec(args)
     finish.call
     real_exec.call(*args, &block)
   end

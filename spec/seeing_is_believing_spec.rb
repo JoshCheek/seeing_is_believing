@@ -505,14 +505,17 @@ RSpec.describe SeeingIsBelieving do
     it 'passes stdin, stdout, stderr, and actually does exec the process' do
       result = invoke \
         "1+1\n"\
+        "$stdout.puts 'from stdin: ' + gets.inspect\n"\
         "$stdout.puts *1..1000\n"\
         "$stderr.puts *1..1000\n"\
-        "exec %(ruby -e '$stdout.puts %[out from exec];
+        "exec %(ruby -e '$stdout.puts %{from stdin: } + gets.inspect
+                         $stdout.puts %[out from exec]
                          $stderr.puts %[err from exec]')\n"\
-        "$stdout.puts 'this will never be executed'"
+        "$stdout.puts 'this will never be executed'",
+        stdin: Array.new(10_000) { 'x' }.join("\n")
       expect(result[1]).to eq ['2']
       nums = (1..1000).map { |n| "#{n}\n" }.join('')
-      expect(result.stdout).to eq "#{nums}out from exec\n"
+      expect(result.stdout).to eq "from stdin: \"x\\n\"\n#{nums}from stdin: \"x\\n\"\nout from exec\n"
       expect(result.stderr).to eq "#{nums}err from exec\n"
     end
 

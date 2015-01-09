@@ -115,6 +115,10 @@ class SeeingIsBelieving
         queue << "exitstatus #{$!.status}"
       end
 
+      def record_exec(args)
+        queue << "exec #{to_string_token args.inspect}"
+      end
+
       # TODO: do we even want to bother with the number of lines?
       # note that producer will continue reading until stream is closed
       def finish!

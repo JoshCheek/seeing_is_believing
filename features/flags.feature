@@ -375,7 +375,7 @@ Feature: Using flags
     Then the exit status is 123
 
 
-    @josh
+  @wip
   Scenario: --inherit-exit-status works with exit!
     Given the file "exit_bang.rb":
     """

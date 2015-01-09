@@ -546,6 +546,13 @@ module SeeingIsBelieving::EventStream
     end
 
 
+    describe 'record_exec' do
+      it 'records the event and the inspection of the args that were given to exec' do
+        producer.record_exec(["ls", "-l"])
+        expect(consumer.call).to eq Events::Exec.new('["ls", "-l"]')
+      end
+    end
+
     describe 'finish!' do
       def final_event(producer, consumer)
         finish!
