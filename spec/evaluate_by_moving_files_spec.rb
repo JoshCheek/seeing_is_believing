@@ -134,4 +134,18 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'does not blow up on exceptions raised in at_exit blocks' do
     expect { invoke 'at_exit { raise "zomg" }' }.to_not raise_error
   end
+
+  it 'can provide stdin as a string or stream' do
+    expect(invoke('p gets', provided_input: 'a').stdout).to eq %("a"\n)
+    require 'stringio'
+    result = invoke 'p gets', provided_input: StringIO.new('b')
+    expect(result.stdout).to eq %("b"\n)
+  end
+
+  it 'can set a timeout' do
+    expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
+    expect(Process).to receive(:kill)
+    expect { expect(invoke('p gets', timeout: 123).stdout).to eq %("a"\n) }
+      .to raise_error Timeout::Error
+  end
 end
