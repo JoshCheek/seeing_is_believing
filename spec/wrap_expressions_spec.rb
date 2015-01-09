@@ -71,14 +71,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       end
 
       example 'multiple heredocs' do
-        # a stupid implementation issue from hacking around heredocs
-        # causes the toplevel begin to wrap the whole file.
-        # It's fine b/c it is ultimately the same, but that's why it's
-        # "[<<<<A>\nA\n<<B>]\nB"
-        # instead of
-        # "[<<<A>\nA\n<<<B>]\nB"
-        expect(heredoc_wrap "<<A\nA\n<<B\nB")
-          .to eq "[{{<<A}\nA\n<<B}]\nB"
+        expect(heredoc_wrap "<<A\nA\n<<B\nB").to eq "[{<<A}\nA\n{<<B}]\nB"
       end
 
       example 'heredocs as targets and arguments to methods' do
@@ -707,9 +700,9 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(heredoc_wrap "<<A\n123\nA").to eq "[{<<A}]\n123\nA"
       expect(heredoc_wrap "<<-A\nA").to eq "[{<<-A}]\nA"
       expect(heredoc_wrap "<<-A\n123\nA").to eq "[{<<-A}]\n123\nA"
-      expect(heredoc_wrap "1\n<<A\nA").to eq "[{{1}\n<<A}]\nA"
+      expect(heredoc_wrap "1\n<<A\nA").to eq "[{1}\n{<<A}]\nA"
       expect(heredoc_wrap "<<A + <<B\n1\nA\n2\nB").to eq "[{<<A + <<B}]\n1\nA\n2\nB"
-      expect(heredoc_wrap "<<A\n1\nA\n<<B\n2\nB").to eq "[{{<<A}\n1\nA\n<<B}]\n2\nB"
+      expect(heredoc_wrap "<<A\n1\nA\n<<B\n2\nB").to eq "[{<<A}\n1\nA\n{<<B}]\n2\nB"
       expect(heredoc_wrap "puts <<A\nA\nputs <<B\nB").to eq "[{puts <<A}\nA\n{puts <<B}]\nB"
     end
 

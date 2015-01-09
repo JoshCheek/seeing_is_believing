@@ -50,7 +50,6 @@ class SeeingIsBelieving
     def root()            code.root              end
     def buffer()          code.buffer            end
     def rewriter()        code.rewriter          end
-    def heredoc?(ast)     code.heredoc?(ast)     end
     def void_value?(ast)  code.void_value?(ast)  end
 
     def root_range
@@ -198,11 +197,6 @@ class SeeingIsBelieving
         if ast.location.expression.source.start_with?("(") && # e.g. `(1)` we want `<(1)>`
           !void_value?(ast)                                   # e.g. `(return 1)` we want `(return <1>)`
           add_to_wrappings ast
-        else # e.g. `A\nB` we want `<A>\n<B>`
-          last_child = ast.children.last
-          if heredoc? last_child
-            add_to_wrappings ast unless void_value? ast.children.last
-          end
         end
         add_children ast
       when :str, :dstr, :xstr, :regexp
