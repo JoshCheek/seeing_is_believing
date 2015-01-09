@@ -27,17 +27,18 @@ class SeeingIsBelieving
 
     attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout, :debugger, :event_handler
 
-    # TODO: blow up if given unknown args
     def initialize(program, filename,  options={})
+      options = options.dup
       self.program         = program
       self.filename        = filename
-      self.event_handler   = options.fetch :event_handler # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
-      self.provided_input  = options.fetch :provided_input, String.new
-      self.require_flags   = options.fetch(:require, ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
-      self.load_path_flags = options.fetch(:load_path, []).map { |dir| ['-I', dir] }.flatten
-      self.encoding        = options.fetch :encoding, nil
-      self.timeout         = options.fetch :timeout, 0 # default: none
-      self.debugger        = options.fetch :debugger, Debugger.new(stream: nil)
+      self.encoding        = options.delete(:encoding)
+      self.timeout         = options.delete(:timeout)        || 0
+      self.provided_input  = options.delete(:provided_input) || String.new
+      self.debugger        = options.delete(:debugger)       || Debugger.new(stream: nil)
+      self.event_handler   = options.delete(:event_handler)  || raise("must provide an event handler") # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
+      self.load_path_flags = (options.delete(:load_path)     || []).map { |dir| ['-I', dir] }.flatten
+      self.require_flags   = (options.delete(:require)       || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
+      options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
     def call

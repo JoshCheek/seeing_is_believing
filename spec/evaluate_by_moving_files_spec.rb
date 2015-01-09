@@ -148,4 +148,9 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect { expect(invoke('p gets', timeout: 123).stdout).to eq %("a"\n) }
       .to raise_error Timeout::Error
   end
+
+  it 'raises an ArgumentError if given arguments it doesn\'t know' do
+    expect { invoke '1', watisthis: :idontknow }
+      .to raise_error ArgumentError, /watisthis/
+  end
 end
