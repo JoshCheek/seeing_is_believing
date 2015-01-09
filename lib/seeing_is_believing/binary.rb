@@ -79,7 +79,7 @@ class SeeingIsBelieving
 
       if options.inherit_exit_status?
         results.exitstatus
-      elsif results.has_exception? && results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
+      elsif results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
         DISPLAYABLE_ERROR_STATUS
       else
         SUCCESS_STATUS

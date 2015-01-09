@@ -352,14 +352,14 @@ RSpec.describe SeeingIsBelieving do
     result = invoke 'at_exit { puts "omg" }; exit!'
     expect([result.exitstatus, result.stdout, result.stderr]).to eq [1, '', '']
 
-    result = invoke 'at_exit { puts "omg" }; exit! 123'
-    expect([result.exitstatus, result.stdout]).to eq [123, '']
+    result = invoke 'at_exit { puts "omg" }; exit! 100'
+    expect([result.exitstatus, result.stdout]).to eq [100, '']
 
-    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 456'
-    expect([result.exitstatus, result.stdout]).to eq [456, '']
+    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 101'
+    expect([result.exitstatus, result.stdout]).to eq [101, '']
 
-    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 789'
-    expect([result.exitstatus, result.stdout]).to eq [789, '']
+    result = invoke 'at_exit { puts "omg" }; Kernel.exit! 102'
+    expect([result.exitstatus, result.stdout]).to eq [102, '']
   end
 
 
@@ -520,8 +520,7 @@ RSpec.describe SeeingIsBelieving do
     end
 
     it 'gets the exit status off of the child process' do
-      pending 'We don\'t yet support recording the exit status off the exec'
-      expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5   # status comes from an exec'd process
+      expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5
     end
   end
 end

@@ -16,6 +16,7 @@ module SeeingIsBelieving::EventStream
 
     def finish!
       producer.finish!
+      consumer.process_exitstatus(0)
       close_streams eventstream_producer, stdout_producer, stderr_producer
     end
 
@@ -108,16 +109,11 @@ module SeeingIsBelieving::EventStream
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
-      it 'raises NoMoreInput once it its input streams are all closed' do
-        producer.finish!
+      it 'raises NoMoreInput once it its input streams are all closed and its seen the exit status' do
         close_streams eventstream_producer, stdout_producer, stderr_producer
+        producer.finish!
+        consumer.process_exitstatus 0
         consumer.call
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
-      end
-
-      it 'raises NoMoreInput if its end of the stream is closed and there is no more stdout/stderr' do
-        close_streams eventstream_consumer, stdout_producer, stderr_producer
-        expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::WtfWhoClosedMyShit
         expect { consumer.call }.to raise_error SeeingIsBelieving::EventStream::Consumer::NoMoreInput
       end
 
@@ -159,8 +155,8 @@ module SeeingIsBelieving::EventStream
         producer.record_result :inspect, 100, 2
         producer.record_sib_version('some ver')
         finish!
-        expect(consumer.each.map { |e| e.class })
-          .to eq [Events::LineResult, Events::SiBVersion, Events::NumLines]
+        expect(consumer.each.map { |e| e.class }.sort_by(&:to_s))
+          .to eq [Events::Exitstatus, Events::LineResult, Events::NumLines, Events::SiBVersion]
       end
 
       it 'returns nil' do
@@ -528,18 +524,12 @@ module SeeingIsBelieving::EventStream
         consumer.process_exitstatus 92
         expect(consumer.call).to eq Events::Exitstatus.new(92)
       end
-      it 'raises a ButYouAlreadyLeft if it is given multiple exitstatuses' do
-        consumer.process_exitstatus 12
-        expect { consumer.process_exitstatus 59 }
-          .to raise_error Consumer::ButYouAlreadyLeft, /\b12\b.*?\b59\b/
-      end
     end
 
-
     describe 'finish!' do
-      def final_event(producer, consumer)
+      def final_event(producer, consumer, event_class)
         finish!
-        consumer.each.to_a.last
+        consumer.each.find { |e| e.class == event_class }
       end
 
       it 'stops the producer from producing' do
@@ -556,24 +546,24 @@ module SeeingIsBelieving::EventStream
       describe 'num_lines' do
         it 'interprets numbers' do
           producer.num_lines = 21
-          expect(final_event(producer, consumer).value).to eq 21
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 21
         end
 
         it 'is 0 by default' do
-          expect(final_event(producer, consumer).value).to eq 0
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 0
         end
 
         it 'updates its value if it sees a result from a line larger than its value' do
           producer.num_lines = 2
           producer.record_result :sometype, 100, :someval
-          expect(final_event(producer, consumer).value).to eq 100
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
         end
 
         it 'updates its value if it sees an exception from a line larger than its value' do
           producer.num_lines = 2
           begin; raise; rescue; e = $!; end
           producer.record_exception 100, e
-          expect(final_event(producer, consumer).value).to eq 100
+          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
         end
       end
     end

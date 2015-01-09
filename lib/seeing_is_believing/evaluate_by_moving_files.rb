@@ -149,14 +149,17 @@ class SeeingIsBelieving
 
         # consume events
         self.result = Result.new # set on self b/c if an error is raised, we still want to keep what we recorded
+        consumer = EventStream::Consumer.new(events: es_read,
+                                             stdout: process_stdout,
+                                             stderr: process_stderr)
         event_consumer = Thread.new do
-          EventStream::Consumer
-            .new(events: es_read, stdout: process_stdout, stderr: process_stderr)
-            .each { |event| EventStream::UpdateResult.call result, event }
+          consumer.each { |event| EventStream::UpdateResult.call result, event }
         end
 
         begin
           Timeout.timeout timeout do
+            consumer.process_exitstatus(thread.value.exitstatus)
+            es_write.close unless es_write.closed?
             event_consumer.join
             # TODO: seems like these belong entirely on result, not as ivars of this class
             self.exitstatus = thread.value
@@ -180,10 +183,6 @@ class SeeingIsBelieving
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]
-    end
-
-    def fail
-      raise "Exitstatus: #{exitstatus.inspect},\nError: #{stderr.inspect}"
     end
 
     def wrap_error(error)
