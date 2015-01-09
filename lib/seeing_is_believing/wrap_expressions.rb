@@ -22,19 +22,16 @@ class SeeingIsBelieving
 
     def call
       @called ||= begin
-        wrap_recursive
+        wrap_recursive code.root
 
         rewriter.insert_before root_range, before_all.call
 
-        if root # file may be empty
-          wrappings.each do |line_num, (range, last_col, meta)|
-            rewriter.insert_before range, before_each.call(line_num)
-            if meta == :total_fucking_failure
-              rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
-            end
-            rewriter.insert_after  range, after_each.call(line_num)
+        wrappings.each do |line_num, (range, last_col, meta)|
+          rewriter.insert_before range, before_each.call(line_num)
+          if meta == :total_fucking_failure
+            rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
           end
-          range = root.location.expression
+          rewriter.insert_after range, after_each.call(line_num)
         end
 
         rewriter.insert_after root_range, after_all_text
@@ -47,17 +44,12 @@ class SeeingIsBelieving
     attr_accessor :program, :before_all, :after_all, :before_each, :after_each
     attr_accessor :code, :wrappings
 
-    def root()            code.root              end
     def buffer()          code.buffer            end
     def rewriter()        code.rewriter          end
     def void_value?(ast)  code.void_value?(ast)  end
 
     def root_range
-      if root
-        root.location.expression
-      else
-        Parser::Source::Range.new buffer, 0, 0
-      end
+      code.root.location.expression
     end
 
     def after_all_text
@@ -95,7 +87,7 @@ class SeeingIsBelieving
 
     # todo: is this actually add_wrappings
     #       and add_wrappings is actually add_wrapping?
-    def wrap_recursive(ast=root)
+    def wrap_recursive(ast)
       return wrappings unless ast.kind_of? ::AST::Node
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line

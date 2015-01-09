@@ -32,12 +32,12 @@ class SeeingIsBelieving
       @buffer          = Parser::Source::Buffer.new(name)
       @buffer.source   = code
       builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
-      @rewriter        = Parser::Source::Rewriter.new @buffer
-      @raw_comments    = extract_comments(builder, @buffer)
+      @rewriter        = Parser::Source::Rewriter.new buffer
+      @raw_comments    = extract_comments(builder, buffer)
       @parser          = Parser::CurrentRuby.new builder
-      @inline_comments = @raw_comments.select(&:inline?).map { |c| wrap_comment c }
+      @inline_comments = raw_comments.select(&:inline?).map { |c| wrap_comment c }
       begin
-        @root          = parser.parse(@buffer)
+        @root          = @parser.parse(@buffer) || null_node
         @syntax        = Syntax.new
       rescue Parser::SyntaxError
         @syntax        = Syntax.new $!.message
@@ -123,6 +123,13 @@ class SeeingIsBelieving
                         range_for(first_char, comment.location.expression.end_pos),
                         preceding_whitespace_range,
                         comment.location.expression
+    end
+
+    def null_node
+      # mirrors the code that would come out of '1;2', but with no elements
+      expression = Parser::Source::Range.new(buffer, 0, 0)
+      location   = Parser::Source::Map::Collection.new(nil, nil, expression)
+      Parser::AST::Node.new(:begin, [], {location: location})
     end
   end
 end
