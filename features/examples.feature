@@ -222,3 +222,41 @@ Feature: Running the binary successfully
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
+
+  Scenario: Execing another process
+    # Print tons of x's b/c it reads more data in than it needs.
+    # No obvious way to turn it off, but doesn't matter,
+    # we just want to show that the file descriptors make it through the execs
+    Given the stdin content "{{['x']*10_000*"\n"}}"
+    And the file "calls_exec.rb":
+    """
+    $stdout.puts "Line 1: #{gets.inspect}"
+    $stderr.puts "calls_exec to stderr"
+    exec 'ruby', '-e', '
+      $stdout.puts "Line 2: #{gets.inspect}"
+      $stderr.puts "exec\'d file to stderr"
+      $stdout.flush
+      exec "ruby", "-v"
+    '
+    """
+    When I run "seeing_is_believing calls_exec.rb"
+    Then stderr is empty
+    And stdout is:
+    """
+    $stdout.puts "Line 1: #{gets.inspect}"  # => nil
+    $stderr.puts "calls_exec to stderr"     # => nil
+    exec 'ruby', '-e', '
+      $stdout.puts "Line 2: #{gets.inspect}"
+      $stderr.puts "exec\'d file to stderr"
+      $stdout.flush
+      exec "ruby", "-v"
+    '
+
+    # >> Line 1: "x\n"
+    # >> Line 2: "x\n"
+    # >> {{`ruby -v`.chomp}}
+
+    # !> calls_exec to stderr
+    # !> exec'd file to stderr
+    """
+    And the exit status is 0
