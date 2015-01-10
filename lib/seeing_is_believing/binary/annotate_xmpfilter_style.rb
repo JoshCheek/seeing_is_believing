@@ -59,15 +59,15 @@ class SeeingIsBelieving
           # TODO: doesn't currently realign output markers, do we want to do that?
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/format_comment'
-          always_rewrite = []
+          include_lines = []
 
           if @results.has_exception?
             exception_result  = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
             exception_lineno  = @results.exception.line_number
-            always_rewrite << exception_lineno
+            include_lines << exception_lineno
           end
 
-          new_body = RewriteComments.call @body, always_rewrite: always_rewrite do |comment|
+          new_body = RewriteComments.call @body, include_lines: include_lines do |comment|
             exception_on_line  = exception_lineno == comment.line_number
             annotate_this_line = comment.text[value_regex]
             pp_annotation      = annotate_this_line && comment.whitespace_col.zero?
@@ -77,7 +77,7 @@ class SeeingIsBelieving
             elsif exception_on_line
               whitespace = comment.whitespace
               whitespace = " " if whitespace.empty?
-              [whitespace, FormatComment.call(comment.line_number, exception_marker, exception_result, @options)]
+              [whitespace, FormatComment.call(0, exception_marker, exception_result, @options)]
             elsif normal_annotation
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
               [comment.whitespace, FormatComment.call(comment.text_col, value_marker, result, @options)]

@@ -58,7 +58,7 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
                      "'b'\n"\
                      "'c' # c\n"\
                      "'d'",
-                     always_rewrite: [2, 3]) do |c|
+                     include_lines: [2, 3]) do |c|
                        value = sprintf "%d|%d|%p|%d|%p|%d..%d|%d..%d|%d..%d",
                                        c.line_number,
                                        c.whitespace_col,
@@ -79,13 +79,17 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
       "'c'pre3|3|\" \"|4|\"# c\"|11..15|11..12|12..15\n"\
       "'d'"
 
-    rewritten = call("", always_rewrite: [1]) { |c| ['a', 'b'] }
+    rewritten = call("", include_lines: [1]) { |c| ['a', 'b'] }
     expect(rewritten).to eq "ab"
 
-    rewritten = call("a", always_rewrite: [1]) { |c| ['b', 'c'] }
+    rewritten = call("a", include_lines: [1]) { |c| ['b', 'c'] }
     expect(rewritten).to eq "abc"
 
-    rewritten = call("a\n", always_rewrite: [1]) { |c| ['b', 'c'] }
+    rewritten = call("a\n", include_lines: [1]) { |c| ['b', 'c'] }
     expect(rewritten).to eq "abc\n"
+  end
+
+  it 'blows up if given unknown options' do
+    expect { call '1', not_an_option: nil }.to raise_error /not_an_option/
   end
 end

@@ -4,9 +4,12 @@ class SeeingIsBelieving
   module Binary
     module RewriteComments
       def self.call(code, options={}, &mapping)
-        code     = Code.new(code)
-        comments = code.inline_comments
-        buffer   = code.buffer
+        code          = Code.new(code)
+        comments      = code.inline_comments
+        buffer        = code.buffer
+        options       = options.dup
+        include_lines = options.delete(:include_lines) || []
+        raise ArgumentError, "Unknown options: #{options.inspect}" if options.any?
 
         comments.each do |comment|
           new_whitespace, new_comment = mapping.call comment
@@ -15,7 +18,7 @@ class SeeingIsBelieving
         end
 
         line_begins = line_begins_for(buffer.source)
-        options.fetch(:always_rewrite, []).each { |line_number|
+        include_lines.each { |line_number|
           next if comments.any? { |c| c.line_number == line_number }
 
           # TODO: can this move down into Code?
