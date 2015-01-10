@@ -25,16 +25,8 @@ RSpec.describe SeeingIsBelieving::Code do
       end
     end
 
-    it 'raises an IndexError if asked for an index outside its range' do
-      code = code_for("aaa")
-      # expect { code.index_to_linenum -1 }.to raise_error IndexError # ignoring b/c maybe it makes more sense to look from the end?
-      code.index_to_linenum 0
-      code.index_to_linenum 1
-      code.index_to_linenum 2
-      expect { code.index_to_linenum 3 }.to raise_error IndexError
-
-      # when there are no chars
-      expect { code_for("").index_to_linenum 0 }.to raise_error IndexError
+    it 'considers any indexes after the end to be on the last line' do
+      expect(code_for("a\nb\nc").index_to_linenum(1000)).to eq 3
     end
   end
 end
