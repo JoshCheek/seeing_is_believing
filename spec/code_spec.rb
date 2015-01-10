@@ -1,12 +1,48 @@
-# require 'seeing_is_believing/code'
+require 'seeing_is_believing/code'
 
-# RSpec.describe 'SeeingIsBelieving::Code' do
-#   describe '#range' do
-#     it 'returns a range object with the specified start and ends'
-#   end
+RSpec.describe SeeingIsBelieving::Code do
+  def code_for(raw_code)
+    described_class.new(raw_code)
+  end
+
+  describe '#range_for' do
+    it 'returns a range object with the specified start and ends'
+  end
+
+  describe 'index_to_linenum' do
+    it 'treats indexes as 0 based and lines as 1based' do
+      code = code_for "xx\nyyy\n\nzz"
+      [[1,0], [1,1], [1,2],
+       [2,3], [2,4], [2,5], [2,6],
+       [3,7],
+       [4,8], [4,9],
+      ].each do |expected_lineno, index|
+        actual_lineno = code.index_to_linenum index
+        expect(expected_lineno).to eq(actual_lineno),
+          "index:           #{index}\n"\
+          "expected lineno: #{expected_lineno}\n"\
+          "actual lineno:   #{actual_lineno.inspect}"
+      end
+    end
+
+    it 'raises an IndexError if asked for an index outside its range' do
+      code = code_for("aaa")
+      # expect { code.index_to_linenum -1 }.to raise_error IndexError # ignoring b/c maybe it makes more sense to look from the end?
+      code.index_to_linenum 0
+      code.index_to_linenum 1
+      code.index_to_linenum 2
+      expect { code.index_to_linenum 3 }.to raise_error IndexError
+
+      # when there are no chars
+      expect { code_for("").index_to_linenum 0 }.to raise_error IndexError
+    end
+  end
+end
+
+
 
 #   describe '#inline_comments' do
-#     it 'finds their line_number, column_number, preceding_whitespace, text, preceding_whitespace_range, and comment_range' do
+#     xit 'finds their line_number, column_number, preceding_whitespace, text, preceding_whitespace_range, and comment_range' do
 #       code = code_for <<-CODE.gsub(/^\s*/, '')
 #       # c1
 #       not c

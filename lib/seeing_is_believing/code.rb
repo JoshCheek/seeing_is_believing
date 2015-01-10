@@ -48,8 +48,22 @@ class SeeingIsBelieving
       Parser::Source::Range.new buffer, start_index, end_index
     end
 
-    # this is the scardest fucking method I think I've ever written.
-    # *anything* can go wrong!
+    def index_to_linenum(char_index)
+      line_indexes.index { |line_index| char_index < line_index } ||
+        raise(IndexError, "Code is #{code.size} chars long, 0 indexed, you asked for index #{char_index}")
+    end
+
+    def line_indexes
+      @line_indexes ||= [
+        0,
+        *code.each_char
+             .with_index(1)
+             .select { |char, index| char == "\n" }
+             .map    { |char, index| index },
+        code.size
+      ].freeze
+    end
+
     def heredoc?(ast)
       # some strings are fucking weird.
       # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
