@@ -24,7 +24,7 @@ class SeeingIsBelieving
           col += 1 until col == next_line_index || buffer.source[next_line_index-2-col] == "\n"
 
           index   = next_line_index - 1
-          range   = Parser::Source::Range.new buffer, index, index
+          range   = code.range_for(index, index)
 
           comment = Code::InlineComment.new line_number, # line_number,
                                             col,         # preceding_whitespace_range.column,

@@ -127,8 +127,7 @@ class SeeingIsBelieving
 
     def null_node
       # mirrors the code that would come out of '1;2', but with no elements
-      expression = Parser::Source::Range.new(buffer, 0, 0)
-      location   = Parser::Source::Map::Collection.new(nil, nil, expression)
+      location   = Parser::Source::Map::Collection.new nil, nil, range_for(0, 0)
       Parser::AST::Node.new(:begin, [], {location: location})
     end
   end

@@ -157,7 +157,7 @@ class SeeingIsBelieving
         else
           begin_pos = ast.location.expression.begin_pos
           end_pos   = array.children.last.location.expression.end_pos
-          range     = Parser::Source::Range.new buffer, begin_pos, end_pos
+          range     = code.range_for(begin_pos, end_pos)
           add_to_wrappings range
           add_children ast.children.last
         end
@@ -175,7 +175,7 @@ class SeeingIsBelieving
         if ast.children.last.kind_of? ::AST::Node
           begin_pos = ast.location.expression.begin_pos
           end_pos   = ast.children.last.location.expression.end_pos
-          range     = Parser::Source::Range.new buffer, begin_pos, end_pos
+          range     = code.range_for(begin_pos, end_pos)
           add_to_wrappings range
           add_children ast, true
         end

@@ -61,7 +61,7 @@ class SeeingIsBelieving
         begin_pos -= 1 if raw_code[begin_pos] == "\n"
         begin_pos -= 1 if raw_code[begin_pos] == "\n" && remove_preceding_newline
         return if begin_pos.next == end_pos
-        rewriter.remove Parser::Source::Range.new(buffer, begin_pos.next, end_pos)
+        rewriter.remove code.range_for(begin_pos.next, end_pos)
       end
 
       def annotation_chunks_in(code)
