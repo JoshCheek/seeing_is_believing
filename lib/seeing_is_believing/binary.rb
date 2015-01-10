@@ -38,9 +38,10 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      syntax_error_notice = syntax_error_notice_for(options.filename, options.body)
-      if syntax_error_notice
-        stderr.puts syntax_error_notice
+      require 'seeing_is_believing/code'
+      syntax = Code.new(options.body, options.filename).syntax
+      if syntax.invalid?
+        stderr.puts "#{syntax.line_number}: #{syntax.error_message}"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
@@ -87,14 +88,6 @@ class SeeingIsBelieving
     end
 
     private
-
-    # brilliant idea from pry https://github.com/banister/method_source/blob/5e5c55642662c248e721282cc287b41a49778ee8/lib/method_source/code_helpers.rb#L58-72
-    def self.syntax_error_notice_for(filename, body)
-      catch(:valid) { eval "BEGIN{throw :valid}\n#{body}", binding, filename.to_s }
-      nil
-    rescue SyntaxError
-      return $!.message.sub(/:(\d):/) { ":#{$1.to_i-1}:" }
-    end
 
     def self.evaluate_program(body, options)
       return SeeingIsBelieving.call(body, options), false, nil

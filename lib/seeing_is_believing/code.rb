@@ -19,10 +19,9 @@ class SeeingIsBelieving
                                :whitespace_range,
                                :comment_range
 
-    Syntax = Struct.new :error_message do
-      def valid?
-        !error_message
-      end
+    Syntax = Struct.new :error_message, :line_number do
+      def valid?()   !invalid?     end
+      def invalid?() error_message end
     end
 
     attr_reader :code, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
@@ -40,7 +39,7 @@ class SeeingIsBelieving
         @root          = @parser.parse(@buffer) || null_node
         @syntax        = Syntax.new
       rescue Parser::SyntaxError
-        @syntax        = Syntax.new $!.message
+        @syntax        = Syntax.new $!.message, index_to_linenum($!.diagnostic.location.begin_pos)
       end
     end
 

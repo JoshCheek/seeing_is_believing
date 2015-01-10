@@ -51,10 +51,11 @@ Feature: Running the binary unsuccessfully
   Scenario: Syntactically invalid file
     Given the file "invalid_syntax.rb":
     """
-    'abc
+    'this is valid'
+    'this is not
     """
     When I run "seeing_is_believing invalid_syntax.rb"
-    Then stderr includes "1: unterminated string meets end of file"
+    Then stderr includes "2: unterminated string meets end of file"
     And the exit status is 2
     And stdout is empty
 
