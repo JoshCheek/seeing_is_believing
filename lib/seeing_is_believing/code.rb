@@ -1,7 +1,7 @@
 # With new versioning, there's lots of small versions
 # we don't need Parser to complain that we're on 2.1.1 and its parsing 2.1.5
 # https://github.com/whitequark/parser/blob/e2249d7051b1adb6979139928e14a81bc62f566e/lib/parser/current.rb#L3
-class << (Parser = Module.new)
+class << (Parser ||= Module.new)
   def warn(*) end
   require 'parser/current'
   remove_method :warn
@@ -24,12 +24,12 @@ class SeeingIsBelieving
       def invalid?() error_message end
     end
 
-    attr_reader :code, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
+    attr_reader :raw_code, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
 
-    def initialize(raw_ruby_code, name="SeeingIsBelieving")
-      @code            = raw_ruby_code
+    def initialize(raw_code, name="SeeingIsBelieving")
+      @raw_code        = raw_code
       @buffer          = Parser::Source::Buffer.new(name)
-      @buffer.source   = code
+      @buffer.source   = raw_code
       builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @rewriter        = Parser::Source::Rewriter.new buffer
       @raw_comments    = extract_comments(builder, buffer)
@@ -51,17 +51,6 @@ class SeeingIsBelieving
       line_indexes.index { |line_index| char_index < line_index }
     end
 
-    def line_indexes
-      @line_indexes ||= [
-        0,
-        *code.each_char
-             .with_index(1)
-             .select { |char, index| char == "\n" }
-             .map    { |char, index| index },
-        Float::INFINITY
-      ].freeze
-    end
-
     def heredoc?(ast)
       # some strings are fucking weird.
       # e.g. the "1" in `%w[1]` returns nil for ast.location.begin
@@ -76,7 +65,7 @@ class SeeingIsBelieving
     def void_value?(ast)
       case ast && ast.type
       when :begin, :kwbegin, :resbody
-        void_value?(ast.children[-1])
+        void_value?(ast.children.last)
       when :rescue, :ensure
         ast.children.any? { |child| void_value? child }
       when :if
@@ -111,7 +100,7 @@ class SeeingIsBelieving
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L139
       #   and since it's all private, it could change at any time (Parser is very state based),
       #   so I think it's just generally safer to mutate that one object, as we do now.
-      parser      = Parser::CurrentRuby.new builder
+      parser = Parser::CurrentRuby.new builder
       diagnostics = parser.diagnostics
       def diagnostics.process(*)
         self
@@ -123,7 +112,7 @@ class SeeingIsBelieving
     def wrap_comment(comment)
       last_char  = comment.location.expression.begin_pos
       first_char = last_char
-      first_char -= 1 while first_char > 0 && code[first_char-1] =~ /[ \t]/
+      first_char -= 1 while first_char > 0 && raw_code[first_char-1] =~ /[ \t]/
       preceding_whitespace        = buffer.source[first_char...last_char]
       preceding_whitespace_range  = range_for first_char, last_char
 
@@ -139,8 +128,19 @@ class SeeingIsBelieving
 
     def null_node
       # mirrors the code that would come out of '1;2', but with no elements
-      location   = Parser::Source::Map::Collection.new nil, nil, range_for(0, 0)
-      Parser::AST::Node.new(:begin, [], {location: location})
+      location = Parser::Source::Map::Collection.new nil, nil, range_for(0, 0)
+      Parser::AST::Node.new :begin, [], location: location
     end
+
+    def line_indexes
+      @line_indexes ||= [ 0,
+                          *raw_code.each_char
+                                   .with_index(1)
+                                   .select { |char, index| char == "\n" }
+                                   .map    { |char, index| index },
+                          Float::INFINITY
+                        ].freeze
+    end
+
   end
 end
