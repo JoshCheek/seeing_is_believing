@@ -1,10 +1,3 @@
-# WARNING: DO NOT REQUIRE THIS FILE, IT WILL FUCK YOU UP!!!!!!
-
-# READ THIS IF YOU WANT TO USE YOUR OWN MATRIX FILE:
-# https://github.com/JoshCheek/seeing_is_believing/issues/24
-#
-# (or if you want to understand why we do the pipe dance)
-
 require_relative 'version'
 require_relative 'event_stream/producer'
 
