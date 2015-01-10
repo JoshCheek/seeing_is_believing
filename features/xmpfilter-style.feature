@@ -168,7 +168,7 @@ Feature: Xmpfilter style
     """
 
 
-  @wip
+  @not-implemented
   Scenario: Correctly cleans/rewrites when the First line of inspection is indented more than its children
     Given the file "indented_inspection.rb":
     """
@@ -192,7 +192,7 @@ Feature: Xmpfilter style
     """
 
   # this one needs a bit more thought put into it, but I'm kinda fading now
-  @wip
+  @not-implemented
   Scenario: Error raised on an annotated line does not wipe it out
     Given the file "error_on_annotated_line.rb":
     """
@@ -206,6 +206,7 @@ Feature: Xmpfilter style
     """
 
 
+  # maybe can't fix this as it depends on the implementation of PP.pp
   @not-implemented
   Scenario: It can record values even when method is overridden
     Given the file "pretty_inspect_with_method_overridden.rb":

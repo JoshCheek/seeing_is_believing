@@ -223,7 +223,6 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is "1 + 1  # => 2"
 
-    @josh
   Scenario: Can exec another process, it records as many lines get exec'd, passes file descriptors, records exec'd output data
     Given the stdin content "pass this through"
     And the file "calls_exec.rb":
