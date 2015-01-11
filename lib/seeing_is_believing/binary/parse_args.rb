@@ -5,7 +5,6 @@ require 'seeing_is_believing/version' # We print the version in the output
 class SeeingIsBelieving
   module Binary
     class ParseArgs
-      # TODO: the two deprecated args should go through this
       DeprecatedArg = Struct.new :explanation, :args do
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
@@ -108,12 +107,12 @@ class SeeingIsBelieving
           short_help_screen:     self.class.help_screen(false),
           long_help_screen:      self.class.help_screen(true),
           safe:                  false,
-          deprecated_flags:      [], # TODO: rename to deprecated_args
+          deprecated_args:       [],
         }
       end
 
       def saw_deprecated(explanation, *args)
-        flags[:deprecated_flags] << DeprecatedArg.new(explanation, args)
+        flags[:deprecated_args] << DeprecatedArg.new(explanation, args)
       end
 
       def normalize_shortflags(consolidated_shortflag)

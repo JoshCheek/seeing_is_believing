@@ -57,7 +57,7 @@ class SeeingIsBelieving
       def initialize(flags, stdin, stdout)
         # Some simple attributes
         self.attributes = {}
-        attributes[:deprecations]   = flags.fetch(:deprecated_flags)
+        attributes[:deprecations]   = flags.fetch(:deprecated_args)
         attributes[:errors]         = flags.fetch(:errors)
         attributes[:markers]        = flags.fetch(:markers) # TODO: Should probably object-ify these
         attributes[:marker_regexes] = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }

@@ -32,7 +32,7 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   def assert_deprecated(flag, *args)
-    deprecated_args = parse([flag, *args])[:deprecated_flags]
+    deprecated_args = parse([flag, *args])[:deprecated_args]
     expect(deprecated_args.size).to eq 1
     deprecated = deprecated_args.first
     expect(deprecated.args).to eq [flag, *args]

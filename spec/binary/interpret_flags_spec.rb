@@ -203,13 +203,13 @@ class SeeingIsBelieving
         end
       end
 
-      context 'deprecated_flags' do
+      context 'deprecations' do
         it 'is the list of deprecations from the flags' do
-          deprecated_flag = ParseArgs::DeprecatedArg.new('do something else', ['flag'])
+          deprecated_arg = ParseArgs::DeprecatedArg.new('do something else', ['flag'])
           flags = ParseArgs.call([])
-          flags.fetch(:deprecated_flags) << deprecated_flag
+          flags.fetch(:deprecated_args) << deprecated_arg
           options = InterpretFlags.new(flags, stdin, stdout)
-          expect(options.deprecations).to include deprecated_flag
+          expect(options.deprecations).to include deprecated_arg
         end
       end
 
