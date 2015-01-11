@@ -11,7 +11,13 @@ RSpec.describe SeeingIsBelieving::Code do
   end
 
   describe '#range_for' do
-    it 'returns a range object with the specified start and ends'
+    it 'returns a range object with the specified start and ends' do
+      code  = code_for "abcd"
+      range = code.range_for(1, 2)
+      expect(range.begin_pos).to eq 1
+      expect(range.end_pos).to eq 2
+      expect(range.source).to eq 'b'
+    end
   end
 
   describe '#root' do
