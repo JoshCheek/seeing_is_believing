@@ -6,6 +6,7 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   def call(code, should_clean_values=true)
     indentation = code[/\A */]
     code        = code.gsub /^#{indentation}/, ''
+    code << "\n" unless code.end_with? "\n"
     described_class.call(code, should_clean_values, regexes).chomp
   end
 
@@ -53,8 +54,8 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
     example { expect(call "1  # ~>  1").to eq "1"   }
     example { expect(call "\n1 # ~> 1").to eq "\n1" }
 
-    example { expect(call "# >> 1").to eq ""        }
-    example { expect(call "# !> 1").to eq ""        }
+    example { expect(call "# >> 1").to   eq ""      }
+    example { expect(call "# !> 1").to   eq ""      }
   end
 
   context 'cleaning multiline results' do
@@ -188,6 +189,12 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
     # >> 2
     # >> 3
     CODE
+
+    example { expect(call <<-CODE.gsub(/^\s*/, '')).to eq "\n1" }
+
+    # >> err
+    1
+    CODE
   end
 
   context 'cleaning stderr annotations' do
@@ -216,6 +223,12 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
       # !> 2
     # !> 2
      # !> 2
+    CODE
+
+    example { expect(call <<-CODE.gsub(/^\s*/, '')).to eq "\n1" }
+
+    # !> err
+    1
     CODE
   end
 

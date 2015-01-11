@@ -34,6 +34,7 @@ class SeeingIsBelieving
       attr_predicate :print_cleaned
       attr_predicate :provided_filename_dne
       attr_predicate :file_is_on_stdin
+      attr_predicate :appended_newline
 
       def self.attr_attribute(name)
         define_method(name) { attributes.fetch name }
@@ -81,7 +82,14 @@ class SeeingIsBelieving
                                    String.new
 
         # Attributes that depend on predicates
-        attributes[:prepared_body] = body && annotator.prepare_body(body, marker_regexes)
+        if body.end_with? "\n"
+          predicates[:appended_newline] = false
+          body_with_nl                  = body
+        else
+          predicates[:appended_newline] = true
+          body_with_nl                  = body + "\n"
+        end
+        attributes[:prepared_body] = annotator.prepare_body(body_with_nl, marker_regexes)
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {

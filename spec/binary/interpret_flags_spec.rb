@@ -215,8 +215,22 @@ class SeeingIsBelieving
       end
 
       context 'prepared_body' do
+        it 'ends in a newline, regardless of whether the body did' do
+          flags = call program_from_args: "1"
+          expect(flags.body).to eq "1"
+          expect(flags.prepared_body).to eq "1\n"
+        end
         it 'is the body after being run throught he annotator\'s prepare method' do
           expect(call(program_from_args: '1+1 # => ').prepared_body).to eq "1+1\n"
+        end
+      end
+
+      context 'appended_newline?' do
+        it 'is true if it appended a newline to the body' do
+          expect(call(program_from_args: "1").appended_newline?).to eq true
+        end
+        it 'is false if the body already had a newline' do
+          expect(call(program_from_args: "1\n").appended_newline?).to eq false
         end
       end
 

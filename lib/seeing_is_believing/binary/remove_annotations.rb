@@ -57,9 +57,9 @@ class SeeingIsBelieving
       def remove_whitespace_before(index, buffer, rewriter, remove_preceding_newline)
         end_pos   = index
         begin_pos = end_pos - 1
-        begin_pos -= 1 while raw_code[begin_pos] =~ /\s/ && raw_code[begin_pos] != "\n"
-        begin_pos -= 1 if raw_code[begin_pos] == "\n"
-        begin_pos -= 1 if raw_code[begin_pos] == "\n" && remove_preceding_newline
+        begin_pos -= 1 while 0 <= begin_pos && raw_code[begin_pos] =~ /\s/ && raw_code[begin_pos] != "\n"
+        begin_pos -= 1 if 0 <= begin_pos && raw_code[begin_pos] == "\n"
+        begin_pos -= 1 if remove_preceding_newline && 0 <= begin_pos && raw_code[begin_pos] == "\n"
         return if begin_pos.next == end_pos
         rewriter.remove code.range_for(begin_pos.next, end_pos)
       end

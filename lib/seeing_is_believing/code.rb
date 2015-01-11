@@ -34,8 +34,7 @@ class SeeingIsBelieving
     attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax, :body_range
 
     def initialize(raw_code, name="SeeingIsBelieving")
-      # TODO: raise here instead of quietly changing the source. Make the caller deal with it
-      raw_code += "\n" unless raw_code[-1] == "\n" # lines must always end with a newline, ffs -.-
+      raw_code[-1] == "\n" || raise(SyntaxError, "Code must end in a newline for the sake of consistency (sanity)")
       @raw             = raw_code
       @buffer          = Parser::Source::Buffer.new(name)
       @buffer.source   = raw

@@ -3,6 +3,7 @@ require 'seeing_is_believing/wrap_expressions'
 
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
+    code = code + "\n" unless code.end_with? "\n"
     described_class.call(code,
       before_all:  ->   { overrides.fetch :before_all,   '' },
       after_all:   ->   { overrides.fetch :after_all,    '' },
@@ -100,7 +101,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
 
   it 'passes the current line number to the before_each and after_each wrappers' do
     pre_line_num = post_line_num = nil
-    described_class.call("\na",
+    described_class.call("\na\n",
                          before_each: -> _pre_line_num  { pre_line_num  = _pre_line_num;  '<' },
                          after_each:  -> _post_line_num { post_line_num = _post_line_num; '>' }
                         )
@@ -119,9 +120,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     expect(wrap "=begin\n1\n=end\n2").to eq "=begin\n1\n=end\n<2>"
   end
 
+  # TODO: move this into Code specs
   describe 'void value expressions' do
     def void_value?(ast)
-      klass = described_class.new '', {}
+      klass = described_class.new "\n", {}
       klass.__send__(:void_value?, ast)
     end
 

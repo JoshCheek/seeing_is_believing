@@ -39,7 +39,7 @@ class SeeingIsBelieving
       end
 
       require 'seeing_is_believing/code'
-      syntax = Code.new(options.body, options.filename).syntax
+      syntax = Code.new(options.prepared_body, options.filename).syntax
       if syntax.invalid?
         stderr.puts "#{syntax.line_number}: #{syntax.error_message}"
         return NONDISPLAYABLE_ERROR_STATUS
@@ -77,7 +77,7 @@ class SeeingIsBelieving
       annotated = options.annotator.call(options.prepared_body,
                                          results,
                                          options.annotator_options)
-      annotated = annotated[0...-1] if options.body[-1] != "\n"
+      annotated = annotated[0...-1] if options.appended_newline?
       stdout.print annotated
 
       if options.inherit_exit_status?

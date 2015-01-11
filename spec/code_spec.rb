@@ -1,13 +1,23 @@
 require 'seeing_is_believing/code'
 
 RSpec.describe SeeingIsBelieving::Code do
-  def code_for(raw_code)
+  def code_for(raw_code, options={})
+    manage_newline = options.fetch :nl, true
+    raw_code += "\n" if manage_newline && !raw_code.end_with?("\n")
     described_class.new(raw_code)
   end
 
   def assert_range(range, begin_pos, end_pos)
     expect(range.begin_pos).to eq begin_pos
     expect(range.end_pos).to eq end_pos
+  end
+
+  it 'raises a SyntaxError if given a file that does not end in a newline' do
+    code_for "\n", nl: false
+    expect { code_for "", nl: false  }.to raise_error SyntaxError, /newline/i
+
+    code_for "1\n", nl: false
+    expect { code_for "1", nl: false }.to raise_error SyntaxError, /newline/i
   end
 
   describe '#range_for' do

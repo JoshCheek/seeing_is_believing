@@ -3,6 +3,7 @@ require 'seeing_is_believing/binary/rewrite_comments'
 
 RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
   def call(code, options={}, &block)
+    code = code + "\n" unless code.end_with? "\n"
     described_class.call(code, options, &block).chomp
   end
 

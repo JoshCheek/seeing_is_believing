@@ -45,7 +45,7 @@ class SeeingIsBelieving
 
     def buffer()          code.buffer            end
     def rewriter()        code.rewriter          end
-    def void_value?(ast)  code.void_value?(ast)  end
+    def void_value?(ast)  code.void_value?(ast)  end # TODO: just call directly on Code
 
     def root_range
       code.root.location.expression

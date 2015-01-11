@@ -3,16 +3,18 @@ require 'seeing_is_believing/binary/comment_lines'
 
 RSpec.describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
   def call(code, &block)
-    described_class.call code, &block
+    return described_class.call(code, &block) if code.end_with? "\n"
+    code << "\n"
+    described_class.call(code, &block).chomp
   end
 
   example 'just checking some edge cases' do
-    expect(call("__END__\n1") { ';' }).to eq "__END__\n1\n"
-    expect(call("1\n__END__") { ';' }).to eq "1;\n__END__\n"
+    expect(call("__END__\n1") { ';' }).to eq "__END__\n1"
+    expect(call("1\n__END__") { ';' }).to eq "1;\n__END__"
   end
 
   it "doesn't comment lines whose newline is escaped" do
-    expect(call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }).to eq "1 +\\\n2--2--\n"
+    expect(call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }).to eq "1 +\\\n2--2--"
   end
 
   it "doesn't comment lines inside of strings" do
