@@ -199,6 +199,9 @@ class SeeingIsBelieving
         add_to_wrappings ast, meta if ast.location.begin
         add_children ast
 
+      when :block_pass
+        add_children ast # strange, I'm not too sure about this :/
+
       else
         add_to_wrappings ast
         add_children ast

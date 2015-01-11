@@ -1,15 +1,6 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-# TODO: (this one is an actual bug, we generate invalid syntax)
-# def a(&b)
-#   b
-#     b.call
-#     end
-#
-#     c = lambda { 123 }
-#     a(&b
-#     )
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
     code = code + "\n" unless code.end_with? "\n"
@@ -252,6 +243,8 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("a { }")).to eq "<a { }>"
       expect(wrap("a {\n}")).to eq "<a {\n}>"
       expect(wrap("a(b) {\n}")).to eq "<a(b) {\n}>"
+      expect(wrap("a(&b\n)")).to eq "<a(&<b>\n)>"
+      expect(wrap("a(&lambda { }\n)")).to eq "<a(&<lambda { }>\n)>"
     end
 
     it 'wraps method calls with an explicit receiver' do
