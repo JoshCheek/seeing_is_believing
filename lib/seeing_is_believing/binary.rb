@@ -32,10 +32,8 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      require 'seeing_is_believing/code'
-      syntax = Code.new(engine.prepared_body, engine.filename).syntax # TODO: move into engine?
-      if syntax.invalid?
-        stderr.puts "#{syntax.line_number}: #{syntax.error_message}"
+      if engine.syntax_error?
+        stderr.puts engine.syntax_error_message
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

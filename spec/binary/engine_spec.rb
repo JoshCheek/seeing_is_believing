@@ -252,6 +252,26 @@ class SeeingIsBelieving
         end
       end
 
+      context 'syntax' do
+        let(:valid_engine)   { call program_from_args: "1+1" }
+        let(:invalid_engine) { call program_from_args: "1+"  }
+        specify 'syntax is the evaluation of the syntax' do
+          expect(  valid_engine.syntax.valid?).to eq true
+          expect(invalid_engine.syntax.valid?).to eq false
+        end
+        specify 'syntax_error? is true when the body was syntactically invalid' do
+          expect(  valid_engine.syntax_error?).to eq false
+          expect(invalid_engine.syntax_error?).to eq true
+        end
+        specify 'syntax_error_message contains the syntax\'s error message with line information embedded into it' do
+          expect(valid_engine.syntax_error_message).to eq ""
+
+          allow_any_instance_of(Code::Syntax).to receive(:error_message).and_return "ERR!!"
+          allow_any_instance_of(Code::Syntax).to receive(:line_number).and_return   123
+          expect(invalid_engine.syntax_error_message).to eq "123: ERR!!"
+        end
+      end
+
       context 'lib_options' do
         def call(overrides={})
           super(overrides).lib_options

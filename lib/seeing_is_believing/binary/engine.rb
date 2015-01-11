@@ -15,6 +15,7 @@ require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 
 # Interface to lower level work
 require 'seeing_is_believing/binary/remove_annotations'
+require 'seeing_is_believing/code'
 
 
 class SeeingIsBelieving
@@ -39,6 +40,7 @@ class SeeingIsBelieving
       attr_predicate :provided_filename_dne
       attr_predicate :file_is_on_stdin
       attr_predicate :appended_newline
+      attr_predicate :syntax_error
 
       def self.attr_attribute(name)
         define_method(name) { attributes.fetch name }
@@ -56,6 +58,8 @@ class SeeingIsBelieving
       attr_attribute :lib_options
       attr_attribute :errors
       attr_attribute :deprecations
+      attr_attribute :syntax
+      attr_attribute :syntax_error_message
 
       def initialize(flags, stdin, stdout)
         # Some simple attributes
@@ -111,7 +115,7 @@ class SeeingIsBelieving
           errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
 
-        # Get the body
+        # Body and syntax
         errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
         attributes[:body] = ((print_version? || print_help? || errors.any?) && "") ||
                             flags.fetch(:program_from_args)                        ||
@@ -125,7 +129,10 @@ class SeeingIsBelieving
           predicates[:appended_newline] = true
           body_with_nl                  = body + "\n"
         end
-        attributes[:prepared_body] = annotator.prepare_body(body_with_nl, marker_regexes)
+        attributes[:prepared_body]        = annotator.prepare_body(body_with_nl, marker_regexes)
+        attributes[:syntax]               = Code.new(prepared_body, filename).syntax
+        predicates[:syntax_error]         = syntax.invalid?
+        attributes[:syntax_error_message] = (syntax.valid? ? "" : "#{syntax.line_number}: #{syntax.error_message}")
       end
 
       def inspect

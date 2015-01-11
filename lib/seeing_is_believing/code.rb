@@ -27,8 +27,8 @@ class SeeingIsBelieving
     end
 
     Syntax = Struct.new :error_message, :line_number do
-      def valid?()   !invalid?     end
-      def invalid?() error_message end
+      def valid?()   !error_message end
+      def invalid?() !valid?        end
     end
 
     attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax, :body_range
