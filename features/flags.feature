@@ -369,10 +369,16 @@ Feature: Using flags
 
   Scenario: --inherit-exit-status causes SiB to exit with the status of the evaluated file
     Given the file "exit_status.rb" "exit 123"
+
     When I run "seeing_is_believing exit_status.rb"
     Then the exit status is 1
+    And  stderr is empty
+    And stdout is "exit 123"
+
     When I run "seeing_is_believing --inherit-exit-status exit_status.rb"
     Then the exit status is 123
+    And  stderr is empty
+    And stdout is "exit 123"
 
 
   Scenario: --inherit-exit-status works with exit!

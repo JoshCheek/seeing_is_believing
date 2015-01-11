@@ -10,3 +10,20 @@ Feature: Flags that are deprecated
     Then stderr is empty
     And stdout is "123  # => 123"
     And the exit status is 0
+
+  Scenario: --number-of-captures
+    Given the file "number_of_captures.rb":
+    """
+    5.times do |i|
+      i
+    end
+    """
+    When I run "seeing_is_believing --number-of-captures 2 number_of_captures.rb"
+    Then stderr is empty
+    And stdout is:
+    """
+    5.times do |i|  # => 5
+      i             # => 0, 1, ...
+    end             # => 5
+    """
+    And the exit status is 0

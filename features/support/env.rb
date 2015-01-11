@@ -27,6 +27,10 @@ Then 'stdout is exactly:' do |code|
   expect(@last_executed.stdout).to eq eval_curlies(code)
 end
 
+Then 'stdout is exactly "$code"' do |code|
+  expect(@last_executed.stdout).to eq eval_curlies(code)
+end
+
 Then 'stdout is the JSON:' do |json|
   require 'json'
   expected = JSON.parse(json)
