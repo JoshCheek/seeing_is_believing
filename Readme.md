@@ -103,6 +103,18 @@ Shit that will probably never get done (or if it does, won't be until after 2.0)
 * What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
 * If given a file with a Unicode character, but not set Unicode, inform the user
 
+Inspiration
+===========
+
+* [Xmpfilter](http://www.rubydoc.info/gems/rcodetools/0.8.5.0/Rcodetools/XMPFilter), which is a part of the [rcodetools gem](https://rubygems.org/gems/rcodetools).
+* Bret Victor's completely inspiring talk [Inventing on Principle](https://www.youtube.com/watch?v=PUv66718DII).
+* My 8th Light mentor, [Doug Bradbury](http://blog.8thlight.com/doug-bradbury/archive.html) who asked me to make it for his Kids Ruby sessions (I don't think we ever finished integrating it, though >.<)
+
+Interestingly, [Swift playground](https://www.youtube.com/watch?v=oY6nQS3MiF8&t=25m51s)
+are very similar (though better integrated since they cerce you into using xcode).
+Released about a year and a half before them, but maybe I should take advantage of
+their marketing anyway: Swift Playgrounds for Ruby!! :P
+
 License
 =======
 
