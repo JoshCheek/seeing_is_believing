@@ -189,12 +189,33 @@ class SeeingIsBelieving
           expect(call(filename: 'f', program_from_args: nil).file_is_on_stdin?).to eq false
           expect(call(filename: nil, program_from_args: 'p').file_is_on_stdin?).to eq false
         end
+
+        it 'sets wont_evaluate when it will print the version, help, or errors' do
+          expect(call(                              ).wont_evaluate?).to eq false
+          expect(call(version:                  true).wont_evaluate?).to eq true
+          expect(call(help:                     true).wont_evaluate?).to eq true
+          expect(call(alignment_strategy: 'nonsense').wont_evaluate?).to eq true
+        end
+
+        it 'sets appended_newline if it appended a newline to the body' do
+          expect(call(program_from_args: "1").appended_newline?).to eq true
+          expect(call(program_from_args: "1\n").appended_newline?).to eq false
+        end
+      end
+
+      context 'deprecated_flags' do
+        it 'is the list of deprecations from the flags' do
+          deprecated_flag = ParseArgs::DeprecatedArg.new('flag', [], 'do something else')
+          flags = ParseArgs.call([])
+          flags.fetch(:deprecated_flags) << deprecated_flag
+          options = InterpretFlags.new(flags, stdin, stdout)
+          expect(options.deprecations).to include deprecated_flag
+        end
       end
 
       context 'body' do
-        it 'is an empty string if we\'re going to print the version or help instead of the program' do
-          expect(call(version: true).body).to eq ''
-          expect(call(help:    true).body).to eq ''
+        it 'is an empty string if we won\'t execute' do
+          expect(call(help: true).body).to eq ''
         end
 
         it 'is the program_from_args if this is provided' do
@@ -216,21 +237,12 @@ class SeeingIsBelieving
 
       context 'prepared_body' do
         it 'ends in a newline, regardless of whether the body did' do
-          flags = call program_from_args: "1"
-          expect(flags.body).to eq "1"
-          expect(flags.prepared_body).to eq "1\n"
+          options = call program_from_args: "1"
+          expect(options.body).to eq "1"
+          expect(options.prepared_body).to eq "1\n"
         end
         it 'is the body after being run throught he annotator\'s prepare method' do
           expect(call(program_from_args: '1+1 # => ').prepared_body).to eq "1+1\n"
-        end
-      end
-
-      context 'appended_newline?' do
-        it 'is true if it appended a newline to the body' do
-          expect(call(program_from_args: "1").appended_newline?).to eq true
-        end
-        it 'is false if the body already had a newline' do
-          expect(call(program_from_args: "1\n").appended_newline?).to eq false
         end
       end
 

@@ -14,7 +14,8 @@ class SeeingIsBelieving
       options = InterpretFlags.new(flags, stdin, stdout)
 
       if options.errors.any?
-        stderr.puts options.errors.join("\n")
+        to_print = options.errors + options.deprecations
+        stderr.puts to_print.join("\n")
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

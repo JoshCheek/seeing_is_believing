@@ -92,3 +92,10 @@ Feature: Running the binary unsuccessfully
     def m() m end  # ~> SystemStackError: stack level too deep
     m
     """
+
+    @wip
+  Scenario: Reports deprecations with errors
+    When I run "seeing_is_believing this_file_does_not_exist.rb --number-of-captures 10"
+    Then stderr includes "--number-of-captures 10"
+    And the exit status is 2
+    And stdout is empty

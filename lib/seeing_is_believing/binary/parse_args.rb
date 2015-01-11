@@ -5,6 +5,10 @@ require 'seeing_is_believing/version' # We print the version in the output
 class SeeingIsBelieving
   module Binary
     class ParseArgs
+      # TODO: Give this a nice to_s so we can just directly print it from
+      # TODO: the two deprecated args should go through this
+      DeprecatedArg = Struct.new :flag, :args, :explanation
+
       def self.default_markers
         { value:     '# => ',
           exception: '# ~> ',
@@ -101,7 +105,7 @@ class SeeingIsBelieving
           short_help_screen:     self.class.help_screen(false),
           long_help_screen:      self.class.help_screen(true),
           safe:                  false,
-          deprecated_flags:      [],
+          deprecated_flags:      [], # TODO: rename to deprecated_args
         }
       end
 

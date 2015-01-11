@@ -35,6 +35,7 @@ class SeeingIsBelieving
       attr_predicate :provided_filename_dne
       attr_predicate :file_is_on_stdin
       attr_predicate :appended_newline
+      attr_predicate :wont_evaluate
 
       def self.attr_attribute(name)
         define_method(name) { attributes.fetch name }
@@ -51,45 +52,31 @@ class SeeingIsBelieving
       attr_attribute :prepared_body
       attr_attribute :lib_options
       attr_attribute :errors
+      attr_attribute :deprecations
 
       def initialize(flags, stdin, stdout)
         # Some simple attributes
         self.attributes = {}
+        attributes[:deprecations]   = flags.fetch(:deprecated_flags)
         attributes[:errors]         = flags.fetch(:errors)
         attributes[:markers]        = flags.fetch(:markers) # TODO: Should probably object-ify these
         attributes[:marker_regexes] = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
         attributes[:timeout]        = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
         attributes[:filename]       = flags.fetch(:filename)
 
-        # All predicates
+        # Most predicates
         self.predicates = {}
         predicates[:print_version]         = flags.fetch(:version) # TODO: rename rhs to print_version ?
         predicates[:inherit_exit_status]   = flags.fetch(:inherit_exit_status)
         predicates[:result_as_json]        = flags.fetch(:result_as_json)
         predicates[:print_help]            = !!flags.fetch(:help)
         predicates[:print_cleaned]         = flags.fetch(:clean) # TODO: Better name on rhs
-        predicates[:provided_filename_dne] = !!(filename && !File.exist?(filename)) # TODO: Should this just be an error in errors table?
         predicates[:file_is_on_stdin]      = (!filename && !flags.fetch(:program_from_args))
 
         # Polymorphism, y'all!
         attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
         attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
         attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stdout, colour: true) : Debugger.new(stream: nil)
-        attributes[:body]        = ((print_version? || print_help?) && String.new)    ||
-                                   flags.fetch(:program_from_args)                    ||
-                                   (file_is_on_stdin? && stdin.read)                  ||
-                                   (File.read filename unless provided_filename_dne?) ||
-                                   String.new
-
-        # Attributes that depend on predicates
-        if body.end_with? "\n"
-          predicates[:appended_newline] = false
-          body_with_nl                  = body
-        else
-          predicates[:appended_newline] = true
-          body_with_nl                  = body + "\n"
-        end
-        attributes[:prepared_body] = annotator.prepare_body(body_with_nl, marker_regexes)
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {
@@ -120,6 +107,24 @@ class SeeingIsBelieving
         elsif filename && flags.fetch(:program_from_args)
           errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
+
+        # Get the body
+        predicates[:provided_filename_dne] = !!(filename && !File.exist?(filename)) # TODO: This should just be an error in errors table
+        predicates[:wont_evaluate]         = print_version? || print_help? || errors.any?
+        attributes[:body] = (wont_evaluate? && String.new)                     ||
+                            flags.fetch(:program_from_args)                    ||
+                            (file_is_on_stdin? && stdin.read)                  ||
+                            (File.read filename unless provided_filename_dne?) ||
+                            String.new
+
+        if body.end_with? "\n"
+          predicates[:appended_newline] = false
+          body_with_nl                  = body
+        else
+          predicates[:appended_newline] = true
+          body_with_nl                  = body + "\n"
+        end
+        attributes[:prepared_body] = annotator.prepare_body(body_with_nl, marker_regexes)
       end
 
       def inspect
