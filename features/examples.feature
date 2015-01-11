@@ -163,10 +163,10 @@ Feature: Running the binary successfully
     # !> goodbye
     """
 
-  Scenario: Respects macros
+  Scenario: Respects macros / magic comments
     Given the file "some_dir/uses_macros.rb":
     """
-    # encoding: utf-8
+    # encoding: EUC-JP
     __FILE__
     __LINE__
     __ENCODING__
@@ -183,10 +183,10 @@ Feature: Running the binary successfully
     And the exit status is 0
     And stdout is:
     """
-    # encoding: utf-8
+    # encoding: EUC-JP
     __FILE__            # => "some_dir/uses_macros.rb"
     __LINE__            # => 3
-    __ENCODING__        # => #<Encoding:UTF-8>
+    __ENCODING__        # => #<Encoding:EUC-JP>
     $stdout.puts "omg"  # => nil
     $stderr.puts "hi"   # => nil
     DATA.read           # => "1\n2\n"

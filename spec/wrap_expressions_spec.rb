@@ -36,8 +36,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   describe 'wrapping the body' do
     it 'wraps the entire body, ignoring leading comments and the data segment' do
       expect(wrap_with_body "#comment\nA\n__END__\n1").to eq "#comment\n[<A>]\n__END__\n1"
-
-      # TODO: ist this actually true?
       expect(wrap_with_body "#comment\n__END__\n1").to eq "[]#comment\n__END__\n1"
     end
 
