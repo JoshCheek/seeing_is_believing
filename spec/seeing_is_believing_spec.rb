@@ -27,6 +27,11 @@ RSpec.describe SeeingIsBelieving do
     invoke(input, options).to_a
   end
 
+  root_path       = File.expand_path("../..", __FILE__)
+  proving_grounds = File.expand_path('proving_grounds', root_path)
+  before(:all) { Dir.mkdir proving_grounds unless Dir.exist? proving_grounds }
+  around { |spec| Dir.chdir proving_grounds, &spec }
+
   let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
 
   it 'takes a string and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
@@ -475,7 +480,7 @@ RSpec.describe SeeingIsBelieving do
     result = invoke(%[def self.inspect
                         self
                       end
-                      self], filename: 'blowsup.rb') # TODO This actually writes the file into the root of SiB
+                      self], filename: 'blowsup.rb')
     expect(result).to have_exception
     expect(result.exception.class_name).to eq 'SystemStackError'
     expect(result.exception.backtrace.grep(/blowsup.rb/)).to_not be_empty # backtrace includes a line that we can show
