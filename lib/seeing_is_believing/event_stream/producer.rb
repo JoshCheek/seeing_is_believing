@@ -30,9 +30,9 @@ class SeeingIsBelieving
           rescue IOError, Errno::EPIPE
             queue.clear
           ensure
+            self.queue = NullQueue
             resultstream.flush rescue nil
           end
-          self.queue = NullQueue
         end
       end
 
@@ -114,10 +114,9 @@ class SeeingIsBelieving
       end
 
       # TODO: do we even want to bother with the number of lines?
-      # note that producer will continue reading until stream is closed
       def finish!
         queue << "num_lines #{num_lines}"
-        queue << :break
+        queue << :break # note that consumer will continue reading until stream is closed
         producer_thread.join
       end
 

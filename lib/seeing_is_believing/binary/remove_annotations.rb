@@ -3,9 +3,6 @@ require 'seeing_is_believing/code'   # We have to parse the file to find the com
 
 class SeeingIsBelieving
   module Binary
-    # TODO: might be here that we hit the issue where
-    # you sometimes have to run it 2x to get it to correctly reset whitespace
-    # should wipe out the full_range rather than just the comment_range
     class RemoveAnnotations
       def self.call(raw_code, should_clean_values, markers)
         new(raw_code, should_clean_values, markers).call
