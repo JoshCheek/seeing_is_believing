@@ -190,13 +190,6 @@ class SeeingIsBelieving
           expect(call(filename: nil, program_from_args: 'p').file_is_on_stdin?).to eq false
         end
 
-        it 'sets wont_evaluate when it will print the version, help, or errors' do
-          expect(call(                              ).wont_evaluate?).to eq false
-          expect(call(version:                  true).wont_evaluate?).to eq true
-          expect(call(help:                     true).wont_evaluate?).to eq true
-          expect(call(alignment_strategy: 'nonsense').wont_evaluate?).to eq true
-        end
-
         it 'sets appended_newline if it appended a newline to the body' do
           expect(call(program_from_args: "1").appended_newline?).to eq true
           expect(call(program_from_args: "1\n").appended_newline?).to eq false
@@ -214,8 +207,11 @@ class SeeingIsBelieving
       end
 
       context 'body' do
-        it 'is an empty string if we won\'t execute' do
-          expect(call(help: true).body).to eq ''
+        it 'is an empty string if we don\'t need the body (when there are errors or we are printing the version, or help)' do
+          expect(call(                              ).body).to_not be_empty
+          expect(call(version:                  true).body).to eq ''
+          expect(call(help:                     true).body).to eq ''
+          expect(call(alignment_strategy: 'nonsense').body).to eq ''
         end
 
         it 'is the program_from_args if this is provided' do

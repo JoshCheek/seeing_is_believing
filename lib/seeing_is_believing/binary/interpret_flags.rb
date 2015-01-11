@@ -35,7 +35,6 @@ class SeeingIsBelieving
       attr_predicate :provided_filename_dne
       attr_predicate :file_is_on_stdin
       attr_predicate :appended_newline
-      attr_predicate :wont_evaluate
 
       def self.attr_attribute(name)
         define_method(name) { attributes.fetch name }
@@ -110,11 +109,10 @@ class SeeingIsBelieving
 
         # Get the body
         errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
-        predicates[:wont_evaluate] = print_version? || print_help? || errors.any?
-        attributes[:body]          = (wont_evaluate? && String.new)    ||
-                                     flags.fetch(:program_from_args)   ||
-                                     (file_is_on_stdin? && stdin.read) ||
-                                     File.read(filename)
+        attributes[:body] = ((print_version? || print_help? || errors.any?) && "") ||
+                            flags.fetch(:program_from_args)                        ||
+                            (file_is_on_stdin? && stdin.read)                      ||
+                            File.read(filename)
 
         if body.end_with? "\n"
           predicates[:appended_newline] = false
