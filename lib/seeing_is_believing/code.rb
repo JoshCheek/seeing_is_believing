@@ -10,15 +10,21 @@ end
 
 class SeeingIsBelieving
   class Code
-    # TODO: init with keywords
-    InlineComment = Struct.new :line_number,
-                               :whitespace_col,
-                               :whitespace,
-                               :text_col,
-                               :text,
-                               :full_range,
-                               :whitespace_range,
-                               :comment_range
+    class InlineComment
+      attr_accessor :line_number, :whitespace_col, :whitespace, :text_col, :text, :full_range, :whitespace_range, :comment_range
+      def initialize(attributes)
+        attributes = attributes.dup
+        self.line_number       = attributes.delete(:line_number)      || raise(ArgumentError, "Missing attribute: line_number")
+        self.whitespace_col    = attributes.delete(:whitespace_col)   || raise(ArgumentError, "Missing attribute: whitespace_col")
+        self.whitespace        = attributes.delete(:whitespace)       || raise(ArgumentError, "Missing attribute: whitespace")
+        self.text_col          = attributes.delete(:text_col)         || raise(ArgumentError, "Missing attribute: text_col")
+        self.text              = attributes.delete(:text)             || raise(ArgumentError, "Missing attribute: text")
+        self.full_range        = attributes.delete(:full_range)       || raise(ArgumentError, "Missing attribute: full_range")
+        self.whitespace_range  = attributes.delete(:whitespace_range) || raise(ArgumentError, "Missing attribute: whitespace_range")
+        self.comment_range     = attributes.delete(:comment_range)    || raise(ArgumentError, "Missing attribute: comment_range")
+        raise ArgumentError, "Extra args: #{attributes.inspect}" unless attributes.empty?
+      end
+    end
 
     Syntax = Struct.new :error_message, :line_number do
       def valid?()   !invalid?     end
@@ -132,14 +138,14 @@ class SeeingIsBelieving
       preceding_whitespace        = buffer.source[first_char...last_char]
       preceding_whitespace_range  = range_for first_char, last_char
 
-      InlineComment.new comment.location.line,
-                        preceding_whitespace_range.column,
-                        preceding_whitespace,
-                        comment.location.column,
-                        comment.text,
-                        range_for(first_char, comment.location.expression.end_pos),
-                        preceding_whitespace_range,
-                        comment.location.expression
+      InlineComment.new line_number:      comment.location.line,
+                        whitespace_col:   preceding_whitespace_range.column,
+                        whitespace:       preceding_whitespace,
+                        text_col:         comment.location.column,
+                        text:             comment.text,
+                        full_range:       range_for(first_char, comment.location.expression.end_pos),
+                        whitespace_range: preceding_whitespace_range,
+                        comment_range:    comment.location.expression
     end
 
     def null_node

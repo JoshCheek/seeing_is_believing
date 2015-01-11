@@ -32,14 +32,14 @@ class SeeingIsBelieving
           comment_range = code.range_for(nextline_begin_col, nextline_begin_col)
 
           comment = Code::InlineComment.new \
-            line_number,                                   # line_number
-            whitespace_col-line_begin_col,                 # whitespace_col
-            raw_code[whitespace_col...nextline_begin_col], # preceding_whitespace
-            nextline_begin_col-line_begin_col,             # text_col
-            "",                                            # text
-            whitespace_range,                              # full_range
-            whitespace_range,                              # whitespace_range
-            comment_range                                  # comment_range
+            line_number:      line_number,
+            whitespace_col:   whitespace_col-line_begin_col,
+            whitespace:       raw_code[whitespace_col...nextline_begin_col],
+            text_col:         nextline_begin_col-line_begin_col,
+            text:             "",
+            full_range:       whitespace_range,
+            whitespace_range: whitespace_range,
+            comment_range:    comment_range
 
           whitespace, body = mapping.call comment
           code.rewriter.replace whitespace_range, "#{whitespace}#{body}"
