@@ -13,13 +13,7 @@ class SeeingIsBelieving
       flags   = ParseArgs.call(argv)
       options = InterpretFlags.new(flags, stdin, stdout)
 
-      if options.errors.any?
-        to_print = options.errors + options.deprecations
-        stderr.puts to_print.join("\n")
-        return NONDISPLAYABLE_ERROR_STATUS
-      end
-
-      if options.print_help?  # TODO: Should this be first?
+      if options.print_help?
         stdout.puts options.help_screen
         return SUCCESS_STATUS
       end
@@ -29,8 +23,9 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      if options.provided_filename_dne?
-        stderr.puts "#{options.filename} does not exist!"
+      if options.errors.any?
+        to_print = options.errors + options.deprecations
+        stderr.puts to_print.join("\n")
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

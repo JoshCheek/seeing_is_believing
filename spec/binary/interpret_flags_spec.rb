@@ -135,6 +135,12 @@ class SeeingIsBelieving
         it 'sets this as the filename' do
           expect(call(filename: 'somefilename').filename).to eq 'somefilename'
         end
+
+        it 'sets an error when there is a filename and that file does not exist' do
+          expect(call(filename:                  nil).errors).to     be_empty
+          expect(call(filename:    existing_filename).errors).to     be_empty
+          expect(call(filename: nonexisting_filename).errors).to_not be_empty
+        end
       end
 
       context 'filenames' do
@@ -176,12 +182,6 @@ class SeeingIsBelieving
         it 'sets print_cleaned when clean is set' do
           expect(call(clean: false).print_cleaned?).to eq false
           expect(call(clean: true).print_cleaned?).to eq true
-        end
-
-        it 'sets provided_filename_dne when there is a filename and that file does not exist' do
-          expect(call(filename: nonexisting_filename).provided_filename_dne?).to eq true
-          expect(call(filename: existing_filename).provided_filename_dne?).to eq false
-          expect(call(filename: nil).provided_filename_dne?).to eq false
         end
 
         it 'sets file_is_on_stdin when there is no filename and the program is not provided in the args' do

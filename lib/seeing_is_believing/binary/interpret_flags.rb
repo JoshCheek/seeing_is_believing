@@ -109,13 +109,12 @@ class SeeingIsBelieving
         end
 
         # Get the body
-        predicates[:provided_filename_dne] = !!(filename && !File.exist?(filename)) # TODO: This should just be an error in errors table
-        predicates[:wont_evaluate]         = print_version? || print_help? || errors.any?
-        attributes[:body] = (wont_evaluate? && String.new)                     ||
-                            flags.fetch(:program_from_args)                    ||
-                            (file_is_on_stdin? && stdin.read)                  ||
-                            (File.read filename unless provided_filename_dne?) ||
-                            String.new
+        errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
+        predicates[:wont_evaluate] = print_version? || print_help? || errors.any?
+        attributes[:body]          = (wont_evaluate? && String.new)    ||
+                                     flags.fetch(:program_from_args)   ||
+                                     (file_is_on_stdin? && stdin.read) ||
+                                     File.read(filename)
 
         if body.end_with? "\n"
           predicates[:appended_newline] = false

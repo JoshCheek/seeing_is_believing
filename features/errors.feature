@@ -72,9 +72,9 @@ Feature: Running the binary unsuccessfully
     And the exit status is 2
     And stdout is empty
 
-  Scenario: Passing an unknown option with a value but forgetting the filename
-    When I run "seeing_is_believing --unknown-option some-value"
-    Then stderr is 'Unknown option: "--unknown-option"'
+  Scenario: Reports deprecations with errors
+    When I run "seeing_is_believing this_file_does_not_exist.rb --number-of-captures 10"
+    Then stderr includes "--number-of-captures 10"
     And the exit status is 2
     And stdout is empty
 
@@ -92,10 +92,3 @@ Feature: Running the binary unsuccessfully
     def m() m end  # ~> SystemStackError: stack level too deep
     m
     """
-
-    @wip
-  Scenario: Reports deprecations with errors
-    When I run "seeing_is_believing this_file_does_not_exist.rb --number-of-captures 10"
-    Then stderr includes "--number-of-captures 10"
-    And the exit status is 2
-    And stdout is empty
