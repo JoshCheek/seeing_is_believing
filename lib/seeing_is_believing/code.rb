@@ -33,6 +33,8 @@ class SeeingIsBelieving
 
     attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax, :body_range
 
+    # TODO: can we determine how many lines there are and then explicitly stick that on the result?
+
     def initialize(raw_code, name="SeeingIsBelieving")
       raw_code[-1] == "\n" || raise(SyntaxError, "Code must end in a newline for the sake of consistency (sanity)")
       @raw             = raw_code

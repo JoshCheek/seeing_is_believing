@@ -335,7 +335,7 @@ RSpec.describe SeeingIsBelieving do
   it 'can deal with methods that are invoked entirely on the next line' do
     expect(values_for("a = 1\n.even?\na")).to eq [['1'], ['false'], ['false']]
     expect(values_for("a = 1.\neven?\na")).to eq [['1'], ['false'], ['false']]
-    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false'], []] # TODO: would be nice if we could consolidate this shit so we could find out things like __END__ without repeatedly parsing, I'd prefer if this did not imply there were results on this line -.-
+    expect(values_for("1\n.even?\n__END__")).to eq [['1'], ['false'], []]
   end
 
   it 'does not record leading comments' do
