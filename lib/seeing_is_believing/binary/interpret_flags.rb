@@ -44,7 +44,7 @@ class SeeingIsBelieving
       attr_attribute :debugger
       attr_attribute :markers
       attr_attribute :marker_regexes
-      attr_attribute :timeout
+      attr_attribute :timeout_seconds
       attr_attribute :filename
       attr_attribute :body
       attr_attribute :annotator_options
@@ -56,12 +56,12 @@ class SeeingIsBelieving
       def initialize(flags, stdin, stdout)
         # Some simple attributes
         self.attributes = {}
-        attributes[:deprecations]   = flags.fetch(:deprecated_args)
-        attributes[:errors]         = flags.fetch(:errors)
-        attributes[:markers]        = flags.fetch(:markers) # TODO: Should probably object-ify these
-        attributes[:marker_regexes] = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
-        attributes[:timeout]        = flags.fetch(:timeout) # b/c binary prints this out in the error message  TODO: rename seconds_until_timeout
-        attributes[:filename]       = flags.fetch(:filename)
+        attributes[:deprecations]    = flags.fetch(:deprecated_args)
+        attributes[:errors]          = flags.fetch(:errors)
+        attributes[:markers]         = flags.fetch(:markers) # TODO: Should probably object-ify these
+        attributes[:marker_regexes]  = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
+        attributes[:timeout_seconds] = flags.fetch(:timeout_seconds)
+        attributes[:filename]        = flags.fetch(:filename)
 
         # Most predicates
         self.predicates = {}
@@ -84,7 +84,7 @@ class SeeingIsBelieving
           require:               (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
           load_path:             ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),
           encoding:              flags.fetch(:encoding),
-          timeout:               timeout,
+          timeout_seconds:       timeout_seconds,
           debugger:              debugger,
           max_captures_per_line: flags.fetch(:max_captures_per_line),
           annotate:              annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions

@@ -45,7 +45,7 @@ class SeeingIsBelieving
         evaluate_program(options.prepared_body, options.lib_options)
 
       if program_timedout
-        stderr.puts "Timeout Error after #{options.timeout} seconds!"
+        stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

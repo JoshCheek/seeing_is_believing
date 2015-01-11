@@ -145,7 +145,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'can set a timeout' do
     expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
     expect(Process).to receive(:kill)
-    expect { expect(invoke('p gets', timeout: 123).stdout).to eq %("a"\n) }
+    expect { expect(invoke('p gets', timeout_seconds: 123).stdout).to eq %("a"\n) }
       .to raise_error Timeout::Error
   end
 

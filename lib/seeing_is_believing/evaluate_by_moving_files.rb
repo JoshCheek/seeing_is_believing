@@ -25,19 +25,19 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout, :debugger, :event_handler
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler
 
     def initialize(program, filename,  options={})
       options = options.dup
       self.program         = program
       self.filename        = filename
       self.encoding        = options.delete(:encoding)
-      self.timeout         = options.delete(:timeout)        || 0
-      self.provided_input  = options.delete(:provided_input) || String.new
-      self.debugger        = options.delete(:debugger)       || Debugger.new(stream: nil)
-      self.event_handler   = options.delete(:event_handler)  || raise("must provide an event handler") # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
-      self.load_path_flags = (options.delete(:load_path)     || []).map { |dir| ['-I', dir] }.flatten
-      self.require_flags   = (options.delete(:require)       || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
+      self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 = never timeout
+      self.provided_input  = options.delete(:provided_input)  || String.new
+      self.debugger        = options.delete(:debugger)        || Debugger.new(stream: nil)
+      self.event_handler   = options.delete(:event_handler)   || raise("must provide an event handler") # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
+      self.load_path_flags = (options.delete(:load_path)      || []).map { |dir| ['-I', dir] }.flatten
+      self.require_flags   = (options.delete(:require)        || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
@@ -121,7 +121,7 @@ class SeeingIsBelieving
       consumer_thread = Thread.new { consumer.each &event_handler }
 
       # wait for completion
-      Timeout.timeout timeout do
+      Timeout.timeout timeout_seconds do
         exitstatus = child.value.exitstatus
         consumer.process_exitstatus exitstatus
         consumer_thread.join

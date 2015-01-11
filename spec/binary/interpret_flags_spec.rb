@@ -126,8 +126,8 @@ class SeeingIsBelieving
 
       context 'timeout' do
         it 'sets timeout to the value' do
-          expect(call(timeout: 0).timeout).to eq 0
-          expect(call(timeout: 1).timeout).to eq 1
+          expect(call(timeout_seconds: 0).timeout_seconds).to eq 0
+          expect(call(timeout_seconds: 1).timeout_seconds).to eq 1
         end
       end
 
@@ -276,8 +276,8 @@ class SeeingIsBelieving
           expect(call(encoding: 'someencoding')[:encoding]).to eq 'someencoding'
         end
 
-        specify 'timeout is set to timeout' do
-          expect(call(timeout: 1.2)[:timeout]).to eq 1.2
+        specify 'timeout_seconds is set to timeout_seconds' do
+          expect(call(timeout_seconds: 1.2)[:timeout_seconds]).to eq 1.2
         end
 
         specify 'debugger is the same as the toplevel debugger' do

@@ -16,16 +16,16 @@ class SeeingIsBelieving
   def initialize(program, options={})
     options                = options.dup
     @program               = program
-    @stdin                 = options.delete(:stdin)              || '' # can also be a stream
-    @timeout               = options.delete(:timeout)            || 0
-    @load_path             = options.delete(:load_path)          || []
-    @encoding              = options.delete(:encoding)           || nil
-    @filename              = options.delete(:filename)           || nil
-    @require               = options.delete(:require)            || ['seeing_is_believing/the_matrix']
-    @debugger              = options.delete(:debugger)           || Debugger.new(stream: nil)
+    @stdin                 = options.delete(:stdin)                 || '' # can also be a stream
+    @timeout_seconds       = options.delete(:timeout_seconds)       || 0
+    @load_path             = options.delete(:load_path)             || []
+    @encoding              = options.delete(:encoding)              || nil
+    @filename              = options.delete(:filename)              || nil
+    @require               = options.delete(:require)               || ['seeing_is_believing/the_matrix']
+    @debugger              = options.delete(:debugger)              || Debugger.new(stream: nil)
     @max_captures_per_line = options.delete(:max_captures_per_line) || Float::INFINITY
-    @evaluator             = options.delete(:evaluator)          || EvaluateByMovingFiles
-    @annotate              = options.delete(:annotate)           || Annotate
+    @evaluator             = options.delete(:evaluator)             || EvaluateByMovingFiles
+    @annotate              = options.delete(:annotate)              || Annotate
     options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
   end
 
@@ -38,13 +38,13 @@ class SeeingIsBelieving
       result = Result.new
       @evaluator.call new_program,
                       filename,
-                      event_handler:  lambda { |event| EventStream::UpdateResult.call result, event },
-                      provided_input: @stdin,
-                      require:        @require,
-                      load_path:      @load_path,
-                      encoding:       @encoding,
-                      timeout:        @timeout,
-                      debugger:       @debugger
+                      event_handler:   lambda { |event| EventStream::UpdateResult.call result, event },
+                      provided_input:  @stdin,
+                      require:         @require,
+                      load_path:       @load_path,
+                      encoding:        @encoding,
+                      timeout_seconds: @timeout_seconds,
+                      debugger:        @debugger
 
       @debugger.context("RESULT") { result.inspect }
 

@@ -54,7 +54,9 @@ class SeeingIsBelieving
             when '-n',  '--max-captures-per-line' then extract_positive_int_for :max_captures_per_line, arg
             when        '--number-of-captures'    then extracted = extract_positive_int_for :max_captures_per_line, arg
                                                        saw_deprecated "use --max-captures-per-line instead", arg, extracted
-            when '-t',  '--timeout'               then extract_non_negative_float_for :timeout,         arg
+            when '-t',  '--timeout-seconds'       then extract_non_negative_float_for :timeout_seconds, arg
+            when        '--timeout'               then extracted = extract_non_negative_float_for :timeout_seconds, arg
+                                                       saw_deprecated "use --timeout-seconds instead", arg, extracted
             when '-r',  '--require'               then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:require]           << filename }
             when '-I',  '--load-path'             then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|        flags[:load_path]         << dir }
             when '-e',  '--program'               then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|    flags[:program_from_args] =  program }
@@ -96,7 +98,7 @@ class SeeingIsBelieving
           max_line_length:       Float::INFINITY,
           max_result_length:     Float::INFINITY,
           max_captures_per_line: Float::INFINITY,
-          timeout:               0, # timeout lib treats this as infinity
+          timeout_seconds:       0,
           errors:                [],
           require:               ['seeing_is_believing/the_matrix'],
           load_path:             [],
@@ -142,9 +144,11 @@ class SeeingIsBelieving
       end
 
       def extract_non_negative_float_for(key, flag)
-        float = Float args.shift
+        string = args.shift
+        float  = Float string
         raise if float < 0
         flags[key] = float
+        string
       rescue
         flags[:errors] << "#{flag} expects a positive float or integer argument"
       end
@@ -172,8 +176,9 @@ Usage: seeing_is_believing [options] [filename]
                                    chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                    file            =>  the entire file is at the same alignment
                                    line            =>  each line is at its own alignment
-  -t,  --timeout seconds         # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
-                                   the default is 0, which never times out
+  -t,  --timeout-seconds s       # how long to evaluate the source file before timing out
+                                   0 means it will never timeout (this is the default)
+                                   accepts floating point values (e.g. 0.5 would timeout after half a second)
   -I,  --load-path dir           # a dir that should be added to the $LOAD_PATH
   -r,  --require file            # additional files to be required before running the program
   -e,  --program program         # pass the program to execute as an argument
@@ -244,8 +249,8 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
     3
 
   Set a timeout (especially useful if running via an editor)
-    $ seeing_is_believing -e 'loop { sleep 1 }' -t 3
-    Timeout Error after 3.0 seconds!
+    $ seeing_is_believing -e 'loop { sleep 1 }' -t 3.5
+    Timeout Error after 3.5 seconds!
 
   Set the encoding to utf-8
     $ seeing_is_believing -Ku -e '"⛄ "'

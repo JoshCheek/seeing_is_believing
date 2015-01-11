@@ -251,17 +251,17 @@ Feature: Using flags
     And stdout includes "Examples:"
 
 
-  Scenario: --timeout
+  Scenario: --timeout-seconds
     Given the file "will_timeout.rb" "sleep 1"
-    When I run "seeing_is_believing --timeout 0.1 will_timeout.rb"
+    When I run "seeing_is_believing --timeout-seconds 0.1 will_timeout.rb"
     Then stdout is empty
     And the exit status is 2
     And stderr is "Timeout Error after 0.1 seconds!"
 
 
-  Scenario: --timeout
+  Scenario: --timeout-seconds
     Given the file "will_not_timeout.rb" "1 + 1"
-    When I run "seeing_is_believing --timeout 1.0 will_not_timeout.rb"
+    When I run "seeing_is_believing --timeout-seconds 1.0 will_not_timeout.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 + 1  # => 2"

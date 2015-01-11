@@ -285,12 +285,22 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  describe ':timeout' do
-    it 'defaults to 0' do
-      expect(parse([])[:timeout]).to eq 0
+  describe ':timeout_seconds' do
+    it 'defaults to 0: never timeout' do
+      expect(parse([])[:timeout_seconds]).to eq 0
     end
 
-    it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout']
+    it 'can be set with -t and --timeout-seconds' do
+      expect(parse(['-t', '1.1'])[:timeout_seconds]).to eq 1.1
+      expect(parse(['--timeout-seconds', '1.2'])[:timeout_seconds]).to eq 1.2
+    end
+
+    it 'can be set with the deprecated flag --timeout' do
+      expect(parse(['--timeout', '1.3'])[:timeout_seconds]).to eq 1.3
+      assert_deprecated '--timeout', 1.4
+    end
+
+    it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout-seconds']
   end
 
   describe ':alignment_strategy' do

@@ -334,7 +334,7 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'times out if the timeout limit is exceeded' do
-    expect { invoke "sleep 0.2", timeout: 0.1 }.to raise_error Timeout::Error
+    expect { invoke "sleep 0.2", timeout_seconds: 0.1 }.to raise_error Timeout::Error
   end
 
   it 'records the exit status' do
