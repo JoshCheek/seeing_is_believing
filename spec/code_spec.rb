@@ -10,7 +10,7 @@ RSpec.describe SeeingIsBelieving::Code do
   end
 
   describe 'index_to_linenum' do
-    it 'treats indexes as 0 based and lines as 1based' do
+    it 'treats indexes as 0based and lines as 1based' do
       code = code_for "xx\nyyy\n\nzz"
       [[1,0], [1,1], [1,2],
        [2,3], [2,4], [2,5], [2,6],
@@ -27,6 +27,21 @@ RSpec.describe SeeingIsBelieving::Code do
 
     it 'considers any indexes after the end to be on the last line' do
       expect(code_for("a\nb\nc").index_to_linenum(1000)).to eq 3
+    end
+  end
+
+  describe 'line_number_to_index' do
+    it 'treats line numebrs as 1based and indexes as 0based' do
+      code = code_for "xx\nyyy\n\nzz"
+      expect(code.line_number_to_index 1).to eq 0
+      expect(code.line_number_to_index 2).to eq 3
+      expect(code.line_number_to_index 3).to eq 7
+      expect(code.line_number_to_index 4).to eq 8
+      expect(code.line_number_to_index 5).to eq 10
+    end
+
+    it 'considers any lines past the end to be at 1 character after the last index' do
+      expect(code_for("abc").line_number_to_index(100)).to eq 3
     end
   end
 end

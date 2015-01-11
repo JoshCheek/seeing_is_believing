@@ -3,63 +3,50 @@ require 'seeing_is_believing/code'
 class SeeingIsBelieving
   module Binary
     module RewriteComments
-      def self.call(code, options={}, &mapping)
-        code          = Code.new(code)
+      def self.call(raw_code, options={}, &mapping)
+        code          = Code.new(raw_code)
         comments      = code.inline_comments
         buffer        = code.buffer
         options       = options.dup
-        include_lines = options.delete(:include_lines) || []
+        extra_lines   = options.delete(:include_lines) || []
         raise ArgumentError, "Unknown options: #{options.inspect}" if options.any?
 
+        # update existing comments
         comments.each do |comment|
+          extra_lines.delete comment.line_number
           new_whitespace, new_comment = mapping.call comment
           code.rewriter.replace comment.whitespace_range, new_whitespace
           code.rewriter.replace comment.comment_range,    new_comment
         end
 
-        line_begins = line_begins_for(buffer.source)
-        include_lines.each { |line_number|
-          next if comments.any? { |c| c.line_number == line_number }
+        # add additional comments
+        extra_lines.each do |line_number|
+          line_begin_col     = code.line_number_to_index(line_number)
+          nextline_begin_col = code.line_number_to_index(line_number.next)
+          nextline_begin_col -= 1 if raw_code[nextline_begin_col-1] == "\n"
+          whitespace_col     = nextline_begin_col-1
+          whitespace_col     -= 1 while line_begin_col < whitespace_col &&
+                                        raw_code[whitespace_col] =~ /\s/
+          whitespace_col += 1
+          whitespace_range = code.range_for(whitespace_col, nextline_begin_col)
+          comment_range = code.range_for(nextline_begin_col, nextline_begin_col)
 
-          # TODO: can this move down into Code?
-          _, next_line_index = (line_begins.find { |ln, index| ln == line_number } || [nil, buffer.source.size.next])
-          col  = 0
-          col += 1 until col == next_line_index || buffer.source[next_line_index-2-col] == "\n"
-
-          index   = next_line_index - 1
-          range   = code.range_for(index, index)
-
-          comment = Code::InlineComment.new line_number, # line_number,
-                                            col,         # preceding_whitespace_range.column,
-                                            "",          # preceding_whitespace,
-                                            col,         # comment.location.column,
-                                            "",          # comment.text,
-                                            range,       # range_for(first_char, comment.location.expression.end_pos),
-                                            range,       # preceding_whitespace_range,
-                                            range        # comment.location.expression
+          comment = Code::InlineComment.new \
+            line_number,                                   # line_number
+            whitespace_col-line_begin_col,                 # whitespace_col
+            raw_code[whitespace_col...nextline_begin_col], # preceding_whitespace
+            nextline_begin_col-line_begin_col,             # text_col
+            "",                                            # text
+            whitespace_range,                              # full_range
+            whitespace_range,                              # whitespace_range
+            comment_range                                  # comment_range
 
           whitespace, body = mapping.call comment
-          code.rewriter.insert_before range, "#{whitespace}#{body}"
-        }
-
-        code.rewriter.process
-      end
-
-      # TODO: Move down into the Code obj?
-      # returns: [[lineno, index], ...]
-      def self.line_begins_for(raw_code)
-        # Copied from here https://github.com/whitequark/parser/blob/34c40479293bb9b5ba217039cf349111466d1f9a/lib/parser/source/buffer.rb#L213-227
-        # I figured it's better to copy it than to violate encapsulation since this is private
-        line_begins, index = [ [ 0, 0 ] ], 1
-
-        raw_code.each_char do |char|
-          if char == "\n"
-            line_begins.unshift [ line_begins.length, index ]
-          end
-
-          index += 1
+          code.rewriter.replace whitespace_range, "#{whitespace}#{body}"
         end
-        line_begins
+
+        # perform the rewrite
+        code.rewriter.process
       end
     end
   end

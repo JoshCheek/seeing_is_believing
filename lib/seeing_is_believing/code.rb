@@ -10,6 +10,7 @@ end
 
 class SeeingIsBelieving
   class Code
+    # TODO: init with keywords
     InlineComment = Struct.new :line_number,
                                :whitespace_col,
                                :whitespace,
@@ -48,7 +49,13 @@ class SeeingIsBelieving
     end
 
     def index_to_linenum(char_index)
-      line_indexes.index { |line_index| char_index < line_index }
+      line_indexes.index { |line_index| char_index < line_index } || line_indexes.size
+    end
+
+    # TODO: rename linenum_to_index
+    def line_number_to_index(line_num)
+      return raw_code.size if line_indexes.size < line_num
+      line_indexes[line_num - 1]
     end
 
     def heredoc?(ast)
@@ -75,6 +82,15 @@ class SeeingIsBelieving
       else
         false
       end
+    end
+
+    def line_indexes
+      @line_indexes ||= [ 0,
+                          *raw_code.each_char
+                                   .with_index(1)
+                                   .select { |char, index| char == "\n" }
+                                   .map    { |char, index| index },
+                        ].freeze
     end
 
     private
@@ -130,16 +146,6 @@ class SeeingIsBelieving
       # mirrors the code that would come out of '1;2', but with no elements
       location = Parser::Source::Map::Collection.new nil, nil, range_for(0, 0)
       Parser::AST::Node.new :begin, [], location: location
-    end
-
-    def line_indexes
-      @line_indexes ||= [ 0,
-                          *raw_code.each_char
-                                   .with_index(1)
-                                   .select { |char, index| char == "\n" }
-                                   .map    { |char, index| index },
-                          Float::INFINITY
-                        ].freeze
     end
 
   end

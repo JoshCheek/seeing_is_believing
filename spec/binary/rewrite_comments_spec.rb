@@ -57,9 +57,10 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
     rewritten = call("'a'\n"\
                      "'b'\n"\
                      "'c' # c\n"\
-                     "'d'",
-                     include_lines: [2, 3]) do |c|
-                       value = sprintf "%d|%d|%p|%d|%p|%d..%d|%d..%d|%d..%d",
+                     "'d' \n"\
+                     "'e'",
+                     include_lines: [2, 3, 4, 5]) do |c|
+                       value = sprintf "%d|%d|%p|%d|%p|%d...%d|%d...%d|%d...%d",
                                        c.line_number,
                                        c.whitespace_col,
                                        c.whitespace,
@@ -75,9 +76,10 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
                      end
     expect(rewritten).to eq \
       "'a'\n"\
-      "'b'pre2|3|\"\"|3|\"\"|7..7|7..7|7..7\n"\
-      "'c'pre3|3|\" \"|4|\"# c\"|11..15|11..12|12..15\n"\
-      "'d'"
+      "'b'pre2|3|\"\"|3|\"\"|7...7|7...7|7...7\n"\
+      "'c'pre3|3|\" \"|4|\"# c\"|11...15|11...12|12...15\n"\
+      "'d'pre4|3|\" \"|4|\"\"|19...20|19...20|20...20\n"\
+      "'e'pre5|3|\"\"|3|\"\"|24...24|24...24|24...24"
 
     rewritten = call("", include_lines: [1]) { |c| ['a', 'b'] }
     expect(rewritten).to eq "ab"
@@ -86,6 +88,12 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
     expect(rewritten).to eq "abc"
 
     rewritten = call("a\n", include_lines: [1]) { |c| ['b', 'c'] }
+    expect(rewritten).to eq "abc\n"
+
+    rewritten = call("a ", include_lines: [1]) { |c| ['b', 'c'] }
+    expect(rewritten).to eq "abc"
+
+    rewritten = call("a \n", include_lines: [1]) { |c| ['b', 'c'] }
     expect(rewritten).to eq "abc\n"
   end
 
