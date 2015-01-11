@@ -1,4 +1,5 @@
 require 'seeing_is_believing/code'
+require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
   module Binary
@@ -13,11 +14,15 @@ class SeeingIsBelieving
 
         # update existing comments
         comments.each do |comment|
-          extra_lines.delete comment.line_number
           new_whitespace, new_comment = mapping.call comment
           code.rewriter.replace comment.whitespace_range, new_whitespace
           code.rewriter.replace comment.comment_range,    new_comment
         end
+
+        # remove extra lines that are handled / uncommentable
+        comments.each { |c| extra_lines.delete c.line_number }
+        commentable_linenums = CommentableLines.call(raw_code).map { |linenum, *| linenum }
+        extra_lines.select! { |linenum| commentable_linenums.include? linenum }
 
         # add additional comments
         extra_lines.each do |line_number|

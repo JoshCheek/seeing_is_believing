@@ -97,6 +97,14 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
     expect(rewritten).to eq "abc\n"
   end
 
+  it 'does not include lines that are uncommentable' do
+    rewritten = call("'a\n"\
+                     "b'",
+                     include_lines: [1, 2]) { ["whitespace", "comment"] }
+    expect(rewritten).to eq "'a\n"\
+                            "b'whitespacecomment"
+  end
+
   it 'blows up if given unknown options' do
     expect { call '1', not_an_option: nil }.to raise_error /not_an_option/
   end

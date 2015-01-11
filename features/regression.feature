@@ -441,7 +441,7 @@ Feature:
     Thread.new { Queue.new.shift }.join  # ~> fatal
     """
 
-  @wip
+
   Scenario: Xmpfilter does not write the error messages inside of strings
     Given the file "error_within_string.rb":
     """
@@ -452,7 +452,7 @@ Feature:
     Then stdout includes:
     """
     1.send "a
-    b"        # ~> NoMethodError: undefined method `a\nb' for 1:Fixnum
+    b"
 
     # ~> NoMethodError
     # ~> undefined method `a
