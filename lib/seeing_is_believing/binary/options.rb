@@ -13,14 +13,11 @@ require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 
-# Interface to lower level work
-require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/code'
-
 
 class SeeingIsBelieving
   module Binary
     class Options
+      # TODO: this goes somewhere, but not sure its here. If we do a markers object, then probably there
       def self.to_regex(string)
         flag_to_bit = {'i' => 0b001, 'x' => 0b010, 'm' => 0b100}
         string =~ %r{\A/(.*)/([mxi]*)\Z}
@@ -37,10 +34,7 @@ class SeeingIsBelieving
       attr_predicate :result_as_json
       attr_predicate :print_help
       attr_predicate :print_cleaned
-      attr_predicate :provided_filename_dne
       attr_predicate :file_is_on_stdin
-      attr_predicate :appended_newline
-      attr_predicate :syntax_error
 
       def self.attr_attribute(name)
         define_method(name) { attributes.fetch name }
@@ -54,12 +48,9 @@ class SeeingIsBelieving
       attr_attribute :filename
       attr_attribute :body
       attr_attribute :annotator_options
-      attr_attribute :prepared_body
       attr_attribute :lib_options
       attr_attribute :errors
       attr_attribute :deprecations
-      attr_attribute :syntax
-      attr_attribute :syntax_error_message
 
       def initialize(flags, stdin, stdout)
         # Some simple attributes
@@ -115,24 +106,12 @@ class SeeingIsBelieving
           errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
 
-        # Body and syntax
+        # Body
         errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
         attributes[:body] = ((print_version? || print_help? || errors.any?) && "") ||
                             flags.fetch(:program_from_args)                        ||
                             (file_is_on_stdin? && stdin.read)                      ||
                             File.read(filename)
-
-        if body.end_with? "\n"
-          predicates[:appended_newline] = false
-          body_with_nl                  = body
-        else
-          predicates[:appended_newline] = true
-          body_with_nl                  = body + "\n"
-        end
-        attributes[:prepared_body]        = annotator.prepare_body(body_with_nl, marker_regexes)
-        attributes[:syntax]               = Code.new(prepared_body, filename).syntax
-        predicates[:syntax_error]         = syntax.invalid?
-        attributes[:syntax_error_message] = (syntax.valid? ? "" : "#{syntax.line_number}: #{syntax.error_message}")
       end
 
       def inspect
@@ -149,17 +128,17 @@ class SeeingIsBelieving
         inspected
       end
 
-      def clean_body
-        @clean_body ||= begin
-          clean_body = RemoveAnnotations.call prepared_body, true, marker_regexes
-          clean_body.chomp! if appended_newline?
-          clean_body
-        end
-      end
-
       private
 
       attr_accessor :predicates, :attributes
+
+      def inspect_line(line)
+        if line.size < 78
+          line << "\n"
+        else
+          line[0, 75] << "...\n"
+        end
+      end
 
       def extract_alignment_strategy(strategy_name, errors)
         strategies = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
@@ -169,14 +148,6 @@ class SeeingIsBelieving
           errors << "alignment-strategy does not know #{strategy_name}, only knows: #{strategies.keys.join(', ')}"
         else
           errors << "alignment-strategy expected an alignment strategy as the following argument but did not see one"
-        end
-      end
-
-      def inspect_line(line)
-        if line.size < 78
-          line << "\n"
-        else
-          line[0, 75] << "...\n"
         end
       end
     end

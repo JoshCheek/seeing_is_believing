@@ -1,6 +1,7 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/options'
+require 'seeing_is_believing/binary/engine'
 
 class SeeingIsBelieving
   module Binary
@@ -9,8 +10,8 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      flags  = ParseArgs.call(argv)
-      options = Options.new(flags, stdin, stdout)
+      options = Options.new ParseArgs.call(argv), stdin, stdout
+      engine  = Engine.new options
 
       if options.print_help?
         stdout.puts options.help_screen
@@ -28,17 +29,18 @@ class SeeingIsBelieving
       end
 
       if options.print_cleaned?
-        stdout.print options.clean_body
+        stdout.print engine.cleaned_body
         return SUCCESS_STATUS
       end
 
-      if options.syntax_error?
-        stderr.puts options.syntax_error_message
+      if engine.syntax_error?
+        stderr.puts engine.syntax_error_message
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
+      # TODO: move this and most of the other work in here down into the engine
       results, program_timedout, unexpected_exception =
-        evaluate_program(options.prepared_body, options.lib_options)
+        evaluate_program(engine.prepared_body, options.lib_options)
 
       if program_timedout
         stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
@@ -68,8 +70,8 @@ class SeeingIsBelieving
 
       # TODO: Annoying debugger stuff from annotators can move up to here
       # or maybe debugging goes to stderr, and we still print this anyway?
-      annotated = options.annotator.call(options.prepared_body, results, options.annotator_options) # TODO: feture envy, move down into options?
-      annotated = annotated[0...-1] if options.appended_newline?
+      annotated = options.annotator.call(engine.prepared_body, results, options.annotator_options) # TODO: feture envy, move down into options?
+      annotated = annotated[0...-1] if engine.missing_newline?
       stdout.print annotated
 
       if options.inherit_exit_status?

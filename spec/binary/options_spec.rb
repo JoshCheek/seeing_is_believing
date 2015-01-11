@@ -3,7 +3,7 @@ require 'seeing_is_believing/binary/options'
 
 class SeeingIsBelieving
   module Binary
-    RSpec.describe SeeingIsBelieving::Binary::Options do
+    RSpec.describe Options do
       let(:stdin_data)  { 'stdin data' }
       let(:stdin)       { double 'stdin', read: stdin_data }
       let(:stdout)      { double 'stdout' }
@@ -189,11 +189,6 @@ class SeeingIsBelieving
           expect(call(filename: 'f', program_from_args: nil).file_is_on_stdin?).to eq false
           expect(call(filename: nil, program_from_args: 'p').file_is_on_stdin?).to eq false
         end
-
-        it 'sets appended_newline if it appended a newline to the body' do
-          expect(call(program_from_args: "1").appended_newline?).to eq true
-          expect(call(program_from_args: "1\n").appended_newline?).to eq false
-        end
       end
 
       context 'deprecations' do
@@ -228,58 +223,6 @@ class SeeingIsBelieving
 
         it 'is an empty string if the provided filename dne' do
           expect(call(filename: nonexisting_filename).body).to eq ""
-        end
-      end
-
-      context 'prepared_body' do
-        it 'ends in a newline, regardless of whether the body did' do
-          options = call program_from_args: "1"
-          expect(options.body).to eq "1"
-          expect(options.prepared_body).to eq "1\n"
-        end
-        it 'is the body after being run throught he annotator\'s prepare method' do
-          expect(call(program_from_args: '1+1 # => ').prepared_body).to eq "1+1\n"
-        end
-      end
-
-      context 'clean_body' do
-        it 'ends in a newline if the body ended in a newline' do
-          expect(call(program_from_args: "1").clean_body).to eq "1"
-          expect(call(program_from_args: "1\n").clean_body).to eq "1\n"
-        end
-        it 'has the annotations removed' do
-          expect(call(program_from_args: "1 # =>").clean_body).to eq "1"
-        end
-      end
-
-      context 'annotated_body' do
-        before { pending "unimplemented"; raise }
-        it 'ends in a newline if the body ended in a newline' do
-          expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
-          expect(call(program_from_args: "1\n").annotated_body).to eq "1  # => 1\n"
-        end
-        it 'is the body after being run through the annotator' do
-          expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
-        end
-      end
-
-      context 'syntax' do
-        let(:valid_engine)   { call program_from_args: "1+1" }
-        let(:invalid_engine) { call program_from_args: "1+"  }
-        specify 'syntax is the evaluation of the syntax' do
-          expect(  valid_engine.syntax.valid?).to eq true
-          expect(invalid_engine.syntax.valid?).to eq false
-        end
-        specify 'syntax_error? is true when the body was syntactically invalid' do
-          expect(  valid_engine.syntax_error?).to eq false
-          expect(invalid_engine.syntax_error?).to eq true
-        end
-        specify 'syntax_error_message contains the syntax\'s error message with line information embedded into it' do
-          expect(valid_engine.syntax_error_message).to eq ""
-
-          allow_any_instance_of(Code::Syntax).to receive(:error_message).and_return "ERR!!"
-          allow_any_instance_of(Code::Syntax).to receive(:line_number).and_return   123
-          expect(invalid_engine.syntax_error_message).to eq "123: ERR!!"
         end
       end
 
