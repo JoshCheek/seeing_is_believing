@@ -1,6 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/interpret_flags'
+require 'seeing_is_believing/binary/engine'
 require 'seeing_is_believing/binary/remove_annotations'
 
 class SeeingIsBelieving
@@ -10,42 +10,42 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      flags   = ParseArgs.call(argv)
-      options = InterpretFlags.new(flags, stdin, stdout)
+      flags  = ParseArgs.call(argv)
+      engine = Engine.new(flags, stdin, stdout)
 
-      if options.print_help?
-        stdout.puts options.help_screen
+      if engine.print_help?
+        stdout.puts engine.help_screen
         return SUCCESS_STATUS
       end
 
-      if options.print_version?
+      if engine.print_version?
         stdout.puts SeeingIsBelieving::VERSION
         return SUCCESS_STATUS
       end
 
-      if options.errors.any?
-        to_print = options.errors + options.deprecations
+      if engine.errors.any?
+        to_print = engine.errors + engine.deprecations
         stderr.puts to_print.join("\n")
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if options.print_cleaned?
-        stdout.print RemoveAnnotations.call(options.prepared_body, true, options.marker_regexes)
+      if engine.print_cleaned?
+        stdout.print RemoveAnnotations.call(engine.prepared_body, true, engine.marker_regexes)
         return SUCCESS_STATUS
       end
 
       require 'seeing_is_believing/code'
-      syntax = Code.new(options.prepared_body, options.filename).syntax # TODO: move into options?
+      syntax = Code.new(engine.prepared_body, engine.filename).syntax # TODO: move into engine?
       if syntax.invalid?
         stderr.puts "#{syntax.line_number}: #{syntax.error_message}"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
       results, program_timedout, unexpected_exception =
-        evaluate_program(options.prepared_body, options.lib_options)
+        evaluate_program(engine.prepared_body, engine.lib_options)
 
       if program_timedout
-        stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
+        stderr.puts "Timeout Error after #{engine.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
@@ -62,7 +62,7 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if options.result_as_json?
+      if engine.result_as_json?
         require 'json'
         stdout.puts JSON.dump(result_as_data_structure(results))
         return SUCCESS_STATUS
@@ -70,11 +70,11 @@ class SeeingIsBelieving
 
       # TODO: Annoying debugger stuff from annotators can move up to here
       # or maybe debugging goes to stderr, and we still print this anyway?
-      annotated = options.annotator.call(options.prepared_body, results, options.annotator_options) # TODO: feture envy, move down into options?
-      annotated = annotated[0...-1] if options.appended_newline?
+      annotated = engine.annotator.call(engine.prepared_body, results, engine.annotator_options) # TODO: feture envy, move down into engine?
+      annotated = annotated[0...-1] if engine.appended_newline?
       stdout.print annotated
 
-      if options.inherit_exit_status?
+      if engine.inherit_exit_status?
         results.exitstatus
       elsif results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
         DISPLAYABLE_ERROR_STATUS
@@ -85,8 +85,8 @@ class SeeingIsBelieving
 
     private
 
-    def self.evaluate_program(body, options)
-      return SeeingIsBelieving.call(body, options), false, nil
+    def self.evaluate_program(body, engine)
+      return SeeingIsBelieving.call(body, engine), false, nil
     rescue Timeout::Error
       return nil, true, nil
     rescue Exception

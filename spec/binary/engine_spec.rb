@@ -1,9 +1,9 @@
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/interpret_flags'
+require 'seeing_is_believing/binary/engine'
 
 class SeeingIsBelieving
   module Binary
-    RSpec.describe 'SeeingIsBelieving::Binary::InterpretFlags' do
+    RSpec.describe SeeingIsBelieving::Binary::Engine do
       let(:stdin_data)  { 'stdin data' }
       let(:stdin)       { double 'stdin', read: stdin_data }
       let(:stdout)      { double 'stdout' }
@@ -21,12 +21,12 @@ class SeeingIsBelieving
 
       def call(overrides={})
         flags = ParseArgs.call []
-        InterpretFlags.new(flags.merge(overrides), stdin, stdout)
+        described_class.new(flags.merge(overrides), stdin, stdout)
       end
 
       describe '.to_regex' do
         def call(input, regex)
-          expect(InterpretFlags.to_regex input).to eq regex
+          expect(described_class.to_regex input).to eq regex
         end
 
         it 'converts strings into regexes' do
@@ -201,8 +201,8 @@ class SeeingIsBelieving
           deprecated_arg = ParseArgs::DeprecatedArg.new('do something else', ['flag'])
           flags = ParseArgs.call([])
           flags.fetch(:deprecated_args) << deprecated_arg
-          options = InterpretFlags.new(flags, stdin, stdout)
-          expect(options.deprecations).to include deprecated_arg
+          engine = described_class.new(flags, stdin, stdout)
+          expect(engine.deprecations).to include deprecated_arg
         end
       end
 
@@ -233,9 +233,9 @@ class SeeingIsBelieving
 
       context 'prepared_body' do
         it 'ends in a newline, regardless of whether the body did' do
-          options = call program_from_args: "1"
-          expect(options.body).to eq "1"
-          expect(options.prepared_body).to eq "1\n"
+          engine = call program_from_args: "1"
+          expect(engine.body).to eq "1"
+          expect(engine.prepared_body).to eq "1\n"
         end
         it 'is the body after being run throught he annotator\'s prepare method' do
           expect(call(program_from_args: '1+1 # => ').prepared_body).to eq "1+1\n"
@@ -281,8 +281,8 @@ class SeeingIsBelieving
         end
 
         specify 'debugger is the same as the toplevel debugger' do
-          options = InterpretFlags.new(ParseArgs.call([]), stdin, stdout)
-          expect(options.lib_options[:debugger]).to equal options.debugger
+          engine = described_class.new(ParseArgs.call([]), stdin, stdout)
+          expect(engine.lib_options[:debugger]).to equal engine.debugger
         end
 
         specify 'max_captures_per_line is max_captures_per_line' do
@@ -307,20 +307,20 @@ class SeeingIsBelieving
         end
 
         it 'sets an error if the requested alignment strategy is not known, or not provided' do
-          flags   = ParseArgs.call([])
-          options = InterpretFlags.new(flags.merge(alignment_strategy: 'chunk'), stdin, stdout)
-          expect(options.errors.join).to_not include 'alignment-strategy'
+          flags  = ParseArgs.call([])
+          engine = described_class.new(flags.merge(alignment_strategy: 'chunk'), stdin, stdout)
+          expect(engine.errors.join).to_not include 'alignment-strategy'
 
-          options = InterpretFlags.new(flags.merge(alignment_strategy: 'nonsense'), stdin, stdout)
-          expect(options.errors.join).to include 'alignment-strategy does not know'
+          engine = described_class.new(flags.merge(alignment_strategy: 'nonsense'), stdin, stdout)
+          expect(engine.errors.join).to include 'alignment-strategy does not know'
 
-          options = InterpretFlags.new(flags.merge(alignment_strategy: nil), stdin, stdout)
-          expect(options.errors.join).to include 'alignment-strategy expected an alignment strategy'
+          engine = described_class.new(flags.merge(alignment_strategy: nil), stdin, stdout)
+          expect(engine.errors.join).to include 'alignment-strategy expected an alignment strategy'
         end
 
         it 'sets the debugger to the toplevel debugger' do
-          options = InterpretFlags.new(ParseArgs.call([]), stdin, stdout)
-          expect(options.annotator_options[:debugger]).to equal options.debugger
+          engine = described_class.new(ParseArgs.call([]), stdin, stdout)
+          expect(engine.annotator_options[:debugger]).to equal engine.debugger
         end
 
         # TODO: markers
