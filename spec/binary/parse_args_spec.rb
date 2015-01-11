@@ -31,6 +31,14 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     'seeing_is_believing/the_matrix'
   end
 
+  def assert_deprecated(flag, *args)
+    deprecated_args = parse([flag, *args])[:deprecated_flags]
+    expect(deprecated_args.size).to eq 1
+    deprecated = deprecated_args.first
+    expect(deprecated.args).to eq [flag, *args]
+    expect(deprecated.explanation).to be_a_kind_of String
+  end
+
   shared_examples 'it requires a positive int argument' do |flags|
     it 'expects an integer argument' do
       flags.each do |flag|
@@ -342,10 +350,9 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
 
   describe ':shebang' do
     it 'is added to the list of deprecated flags' do
-      expect(parse([])[:deprecated_flags]).to eq []
       parsed = parse(['--shebang', 'not_ruby', 'other'])
       expect(parsed[:shebang]).to eq nil
-      expect(parsed[:deprecated_flags]).to eq ['--shebang', 'not_ruby']
+      assert_deprecated '--shebang', 'not_ruby'
     end
 
     it 'sets an error if not given a next arg to execute' do
@@ -366,13 +373,7 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
 
     it 'can be set with the deprecated flag --number-of-captures' do
       expect(parse(['--number-of-captures', '12'])[:max_captures_per_line]).to eq 12
-    end
-
-    it 'adds --number-of-captures to the list of deprecated flags if used' do
-      expect(parse([])[:deprecated_flags]).to eq []
-      parsed = parse(['--number-of-captures', '12'])
-      expect(parsed[:number_of_captures]).to eq nil
-      expect(parsed[:deprecated_flags]).to eq ['--number-of-captures', '12']
+      assert_deprecated '--number-of-captures', '12'
     end
 
     it_behaves_like 'it requires a positive int argument', ['-n', '--max-captures-per-line', '--number-of-captures']

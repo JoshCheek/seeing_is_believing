@@ -5,9 +5,12 @@ require 'seeing_is_believing/version' # We print the version in the output
 class SeeingIsBelieving
   module Binary
     class ParseArgs
-      # TODO: Give this a nice to_s so we can just directly print it from
       # TODO: the two deprecated args should go through this
-      DeprecatedArg = Struct.new :flag, :args, :explanation
+      DeprecatedArg = Struct.new :explanation, :args do
+        def to_s
+          "Deprecated: `#{args.join ' '}` #{explanation}"
+        end
+      end
 
       def self.default_markers
         { value:     '# => ',
@@ -50,8 +53,8 @@ class SeeingIsBelieving
             when '-d',  '--line-length'           then extract_positive_int_for :max_line_length,       arg
             when '-D',  '--result-length'         then extract_positive_int_for :max_result_length,     arg
             when '-n',  '--max-captures-per-line' then extract_positive_int_for :max_captures_per_line, arg
-            when        '--number-of-captures'    then extracted = extract_positive_int_for :max_captures_per_line, "#{arg} (which is now deprecated, use --max-captures-per-line instead)"
-                                                       flags[:deprecated_flags] << '--number-of-captures' << extracted
+            when        '--number-of-captures'    then extracted = extract_positive_int_for :max_captures_per_line, arg
+                                                       saw_deprecated "use --max-captures-per-line instead", arg, extracted
             when '-t',  '--timeout'               then extract_non_negative_float_for :timeout,         arg
             when '-r',  '--require'               then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:require]           << filename }
             when '-I',  '--load-path'             then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|        flags[:load_path]         << dir }
@@ -60,7 +63,7 @@ class SeeingIsBelieving
             when '-s',  '--alignment-strategy'    then flags[:alignment_strategy] = args.shift
             when /\A-K(.+)/                       then flags[:encoding] = $1
             when '-K', '--encoding'               then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| flags[:encoding] = encoding }
-            when        '--shebang'               then next_arg("#{arg} is deprecated, SiB now uses the Ruby it was invoked with") { |executable| flags[:deprecated_flags] << '--shebang' << executable }
+            when        '--shebang'               then next_arg("#{arg} expected an arg: path to a ruby executable") { |executable| saw_deprecated "SiB now uses the Ruby it was invoked with", arg, executable }
             when /^(-.|--.*)$/                    then flags[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
             when /^-[^-]/                         then args.unshift *normalize_shortflags(arg)
             else
@@ -107,6 +110,10 @@ class SeeingIsBelieving
           safe:                  false,
           deprecated_flags:      [], # TODO: rename to deprecated_args
         }
+      end
+
+      def saw_deprecated(explanation, *args)
+        flags[:deprecated_flags] << DeprecatedArg.new(explanation, args)
       end
 
       def normalize_shortflags(consolidated_shortflag)
