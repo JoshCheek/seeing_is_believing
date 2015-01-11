@@ -172,10 +172,11 @@ Usage: seeing_is_believing [options] [filename]
                                    chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                    file            =>  the entire file is at the same alignment
                                    line            =>  each line is at its own alignment
-  -t,  --timeout n               # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
+  -t,  --timeout seconds         # timeout limit in seconds when evaluating source file (ex. -t 0.3 or -t 3)
+                                   the default is 0, which never times out
   -I,  --load-path dir           # a dir that should be added to the $LOAD_PATH
   -r,  --require file            # additional files to be required before running the program
-  -e,  --program program         # Pass the program to execute as an argument
+  -e,  --program program         # pass the program to execute as an argument
   -K,  --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a,  --as filename             # run the program as if it was the specified filename
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing

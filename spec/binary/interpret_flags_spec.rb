@@ -126,7 +126,7 @@ class SeeingIsBelieving
 
       context 'timeout' do
         it 'sets timeout to the value' do
-          expect(call(timeout: 0).timeout).to eq 0 # TODO: Should the interpretation of 0 move up from flags to here?
+          expect(call(timeout: 0).timeout).to eq 0
           expect(call(timeout: 1).timeout).to eq 1
         end
       end
@@ -257,25 +257,22 @@ class SeeingIsBelieving
           expect(call(as: 'from_as', filename: 'from_fn')[:filename]).to eq 'from_as'
         end
 
-        specify 'stdin is empty when the program is on stdin, and is stdin otherwise' do
-          # NOTE: the lib will normalize this into a stream
-          expect(call(filename: nil, program_from_args: nil)[:stdin]).to eq ''
+        specify 'the stdin we will pass to the program is an empty string when the program was provided on stdin, otherwise is the provided stdin' do
+          expect(call(filename: nil, program_from_args: nil)[:stdin]).to eq '' # string and stream both satisfy the #each_char interface
           expect(call(filename: nil, program_from_args: '1')[:stdin]).to eq stdin
         end
 
-        # TODO: Add cuke where required file prints
         specify 'require includes the matrix first, plus any other required files' do
           expect(call(require: ['somefile'])[:require]).to eq ['seeing_is_believing/the_matrix', 'somefile']
         end
 
-        # TODO: This is prob not ture for eval_in... maybe let the evaluators provide defaults?
         specify 'load_path is the load_path, with the full path to sib\'s lib added' do
           path_to_lib = File.expand_path('../../../lib', __FILE__)
           expect(call(load_path: ['somepath'])[:load_path]).to eq [path_to_lib, 'somepath']
         end
 
-        # TODO: Default this to utf-8
         specify 'encoding is set to the encoding' do
+          expect(call()[:encoding]).to eq nil
           expect(call(encoding: 'someencoding')[:encoding]).to eq 'someencoding'
         end
 
