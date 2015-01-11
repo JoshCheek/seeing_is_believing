@@ -3,8 +3,6 @@ require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
 
-# TODO: throw/catch (and uncaught)
-
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
     @result = def __some_method__; end
@@ -183,6 +181,18 @@ RSpec.describe SeeingIsBelieving do
       result = invoke("at_exit { puts $!.message.reverse}; at_exit { raise 'reverse this' }")
       expect(result.stdout).to eq "siht esrever\n"
     end
+  end
+
+  it 'supports catch/throw' do
+    values = values_for("catch :zomg do\n"\
+                        "  1\n"\
+                        "  throw :zomg\n"\
+                        "  2\n"\
+                        "end")
+    expect(values).to eq [[], ['1'], [], [], ['nil']]
+
+    result = invoke("throw :zomg")
+    expect(result.exception.message).to match /:zomg/
   end
 
   it 'does not fuck up the __ENCODING__ macro' do

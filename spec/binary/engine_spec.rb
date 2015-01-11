@@ -70,7 +70,7 @@ class SeeingIsBelieving
         specify('unexpected_exception?') { assert_must_evaluate :unexpected_exception? }
       end
 
-      context 'after evaluating', t:true do
+      context 'after evaluating' do
         specify 'results are the results of the evaluation' do
           status = call('exit 55').evaluate!.results.exitstatus
           expect(status).to eq 55
