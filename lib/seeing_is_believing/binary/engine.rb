@@ -4,6 +4,12 @@ require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   module Binary
+    class MustEvaluateFirst < SeeingIsBelievingError
+      def initialize(method)
+        super "Cannot call #{method} on engine until it has evaluated the program."
+      end
+    end
+
     class Engine
       def initialize(options)
         self.options = options
@@ -46,18 +52,48 @@ class SeeingIsBelieving
         end
       end
 
+      def evaluate!
+        @results, @timed_out, @unexpected_exception =
+          evaluate_program(prepared_body, options.lib_options)
+        @annotated_body = true
+        @evaluated = true
+      end
+
+      def results
+        @results || raise(MustEvaluateFirst.new __method__)
+      end
+
+      def timed_out?
+        return @timed_out unless @timed_out.nil?
+        raise MustEvaluateFirst.new __method__
+      end
+
+      def annotated_body
+        @annotated_body || raise(MustEvaluateFirst.new __method__)
+      end
+
+      def unexpected_exception
+        @evaluated || raise(MustEvaluateFirst.new __method__)
+        @unexpected_exception
+      end
+
+      def unexpected_exception?
+        @evaluated || raise(MustEvaluateFirst.new __method__)
+        !unexpected_exception
+      end
+
       private
 
       attr_accessor :options
 
-      # if body.end_with? "\n"
-      #   predicates[:appended_newline] = false
-      #   body_with_nl                  = body
-      # else
-      #   predicates[:appended_newline] = true
-      #   body_with_nl                  = body + "\n"
-      # end
-      # attributes[:prepared_body]        = annotator.prepare_body(body_with_nl, marker_regexes)
+      def evaluate_program(body, options)
+        return SeeingIsBelieving.call(body, options), false, nil
+      rescue Timeout::Error
+        return nil, true, nil
+      rescue Exception
+        return nil, false, $!
+      end
+
 
     end
   end

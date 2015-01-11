@@ -38,25 +38,30 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # TODO: move this and most of the other work in here down into the engine
-      results, program_timedout, unexpected_exception =
-        evaluate_program(engine.prepared_body, options.lib_options)
+      engine.evaluate!
 
-      if program_timedout
+      if engine.timed_out?
         stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if unexpected_exception.kind_of? BugInSib
-        stderr.puts unexpected_exception.message
+      # TODO: only wrap in BugInSib here at the toplevel,
+      # its stupid and annoying to hit it at a lower level where we really want the information
+
+      # results, program_timedout, unexpected_exception =
+      #   evaluate_program(engine.prepared_body, options.lib_options)
+      engine.unexpected_exception?
+      if engine.unexpected_exception.kind_of? BugInSib
+        stderr.puts engine.unexpected_exception.message
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if unexpected_exception
-        stderr.puts unexpected_exception.class,
-                    unexpected_exception.message,
+      # TODO: can this actually happen?
+      if engine.unexpected_exception
+        stderr.puts engine.unexpected_exception.class,
+                    engine.unexpected_exception.message,
                     "",
-                    unexpected_exception.backtrace
+                    engine.unexpected_exception.backtrace
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
@@ -64,19 +69,19 @@ class SeeingIsBelieving
       # ie shouldn't all the outputs be json if they specified json?
       if options.result_as_json?
         require 'json'
-        stdout.puts JSON.dump(result_as_data_structure(results))
+        stdout.puts JSON.dump(result_as_data_structure(engine.results))
         return SUCCESS_STATUS
       end
 
       # TODO: Annoying debugger stuff from annotators can move up to here
       # or maybe debugging goes to stderr, and we still print this anyway?
-      annotated = options.annotator.call(engine.prepared_body, results, options.annotator_options) # TODO: feture envy, move down into options?
+      annotated = options.annotator.call(engine.prepared_body, engine.results, options.annotator_options) # TODO: feture envy, move down into options?
       annotated = annotated[0...-1] if engine.missing_newline?
       stdout.print annotated
 
       if options.inherit_exit_status?
-        results.exitstatus
-      elsif results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
+        engine.results.exitstatus
+      elsif engine.results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
         DISPLAYABLE_ERROR_STATUS
       else
         SUCCESS_STATUS
@@ -84,14 +89,6 @@ class SeeingIsBelieving
     end
 
     private
-
-    def self.evaluate_program(body, options)
-      return SeeingIsBelieving.call(body, options), false, nil
-    rescue Timeout::Error
-      return nil, true, nil
-    rescue Exception
-      return nil, false, $!
-    end
 
     def self.result_as_data_structure(results)
       exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,

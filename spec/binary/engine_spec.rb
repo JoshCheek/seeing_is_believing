@@ -43,6 +43,30 @@ class SeeingIsBelieving
         end
       end
 
+      context 'prepared_body' do
+        it 'ends in a newline, regardless of whether the body did' do
+          expect(call("1").prepared_body).to eq "1\n"
+          expect(call("1\n").prepared_body).to eq "1\n"
+        end
+        it 'is the body after being run throught he annotator\'s prepare method' do
+          expect(call('1+1 # => ').prepared_body).to eq "1+1\n"
+        end
+      end
+
+      context 'before evaluating it raises if asked for' do
+        def assert_must_evaluate(message)
+          engine = call ''
+          expect { engine.__send__ message }.to raise_error MustEvaluateFirst, /#{message}/
+          engine.evaluate!
+          engine.__send__ message
+        end
+        specify('results')               { assert_must_evaluate :results }
+        specify('timed_out?')            { assert_must_evaluate :timed_out? }
+        specify('annotated_body')        { assert_must_evaluate :annotated_body }
+        specify('unexpected_exception')  { assert_must_evaluate :unexpected_exception }
+        specify('unexpected_exception?') { assert_must_evaluate :unexpected_exception? }
+      end
+
       # context 'annotated_body' do
       #   before { pending "unimplemented"; raise }
       #   it 'ends in a newline if the body ended in a newline' do
@@ -53,16 +77,6 @@ class SeeingIsBelieving
       #     expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
       #   end
       # end
-
-      context 'prepared_body' do
-        it 'ends in a newline, regardless of whether the body did' do
-          expect(call("1").prepared_body).to eq "1\n"
-          expect(call("1\n").prepared_body).to eq "1\n"
-        end
-        it 'is the body after being run throught he annotator\'s prepare method' do
-          expect(call('1+1 # => ').prepared_body).to eq "1+1\n"
-        end
-      end
     end
   end
 end
