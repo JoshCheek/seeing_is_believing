@@ -1,9 +1,17 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-# TODO: make sure I support all the latest greatest syntax
-# https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
+# TODO: [1,\n*b\n] <[<1>,\n*<b>\n]>
 
+# TODO: (this one is an actual bug, we generate invalid syntax)
+# def a(&b)
+#   b
+#     b.call
+#     end
+#
+#     c = lambda { 123 }
+#     a(&b
+#     )
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
     code = code + "\n" unless code.end_with? "\n"
@@ -148,9 +156,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
 
     # many of these taken from http://en.wikibooks.org/wiki/Ruby_Programming/Syntax/Literals
     it 'wraps simple literals' do
-      # should maybe also do %i[] and %I[] for symbols,
-      # but that's only Ruby 2.0, so I'm ignoring it for now
-      # (I expect it to handle them just fine)
       %w|123
          -123
          1_123
@@ -172,6 +177,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
          1...2
 
          (true==true)..(1==2)
+         (true==true)...(1==2)
 
          true
          false
@@ -213,6 +219,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'does not wrap alias, undef' do
       expect(wrap("alias tos to_s")).to eq "alias tos to_s"
       expect(wrap("undef tos")).to eq "undef tos"
+      expect(wrap("alias $a $b")).to eq "alias $a $b"
     end
 
     it 'wraps syscalls, but not code interpolated into them' do
@@ -225,6 +232,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'wraps them' do
       expect(wrap('a')).to eq "<a>"
       expect(wrap("$a")).to eq "<$a>"
+      expect(wrap("$1")).to eq "<$1>"
       expect(wrap("@a")).to eq "<@a>"
       expect(wrap("@@a")).to eq "<@@a>"
     end
@@ -342,11 +350,13 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("a -= 1")).to eq "<a -= 1>"
       expect(wrap("a /= 1")).to eq "<a /= 1>"
       expect(wrap("a **= 1")).to eq "<a **= 1>"
+      expect(wrap("a != 1")).to eq "<a != 1>"
       expect(wrap("a |= 1")).to eq "<a |= 1>"
       expect(wrap("a &= 1")).to eq "<a &= 1>"
       expect(wrap("a ||= 1")).to eq "<a ||= 1>"
       expect(wrap("a &&= 1")).to eq "<a &&= 1>"
       expect(wrap("a[1] = 2")).to eq "<a[1] = 2>"
+      expect(wrap("a[1,2] = 3")).to eq "<a[1,2] = 3>"
       expect(wrap("a[1] ||= 2")).to eq "<a[1] ||= 2>"
       expect(wrap("@a  ||= 123")).to eq "<@a  ||= 123>"
       expect(wrap("$a  ||= 123")).to eq "<$a  ||= 123>"
@@ -378,6 +388,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("a,B::C={\n},{\n}")).to eq "<a,B::C=<{\n}>,{\n}>"
       expect(wrap("a,@b={\n},{\n}")).to eq "<a,@b=<{\n}>,{\n}>"
       expect(wrap("a,@@b={\n},{\n}")).to eq "<a,@@b=<{\n}>,{\n}>"
+      expect(wrap("a,$b={\n},{\n}")).to eq "<a,$b=<{\n}>,{\n}>"
       expect(wrap("a,$b={\n},{\n}")).to eq "<a,$b=<{\n}>,{\n}>"
 
       # repeated assignments
@@ -437,6 +448,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("1 if 2")).to eq "<1 if 2>"
     end
 
+    # TODO: could maybe rewrite them as <!!/a/> or <~/a/> although IIRC, that's broken with respect to setting local args
     it 'ignores conditionals that are implicit regexes' do
       expect(wrap("if /a/\n1\nend")).to eq "<if /a/\n<1>\nend>"
     end
@@ -502,12 +514,14 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("while 1\n2\nend")).to eq "<while <1>\n<2>\nend>"
       expect(wrap("1 while 2")).to eq "<1 while 2>"
       expect(wrap("begin\n1\nend while true")).to eq "<begin\n<1>\nend while true>"
+      expect(wrap("begin\n1\nend until true")).to eq "<begin\n<1>\nend until true>"
     end
     it 'wraps for/in loops collections and bodies' do
       expect(wrap("for a in range;1;end")).to eq "<for a in range;1;end>"
       expect(wrap("for a in range\n1\nend")).to eq "<for a in <range>\n<1>\nend>"
       expect(wrap("for a in range do\n1\nend")).to eq "<for a in <range> do\n<1>\nend>"
       expect(wrap("for a,b in whatev\n1\nend")).to eq "<for a,b in <whatev>\n<1>\nend>"
+      # TODO: wake up and look at this
       # this one just isn't worth it for now, too edge and I'm fucking tired
       # wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend").should ==
       #   "<for char in <<<HERE.each_char>\nabc\nHERE\n<puts char>\nend>"
@@ -531,6 +545,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'wraps namespaced constant access' do
       expect(wrap("::A")).to eq "<::A>"
       expect(wrap("A::B")).to eq "<A::B>"
+      expect(wrap("a::B")).to eq "<a::B>"
     end
   end
 
@@ -696,6 +711,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
+  # TODO: Just go ahead and wrap these
   # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally wraped
   # by e.g. a begin/end
   # ignoring public/private/protected for now, b/c they're just methods, not keywords
@@ -748,11 +764,15 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
 
     it 'wraps calls to yield' do
       expect(wrap("def a\nyield\nend")).to eq "<def a\n<yield>\nend>"
+      expect(wrap("def a\nyield 1\nend")).to eq "<def a\n<yield 1>\nend>"
+      expect(wrap("def a\nyield(\n1\n)\nend")).to eq "<def a\n<yield(\n<1>\n)>\nend>"
     end
 
     it 'wraps calls to super' do
       expect(wrap("def a\nsuper\nend")).to eq "<def a\n<super>\nend>"
       expect(wrap("def a\nsuper 1\nend")).to eq "<def a\n<super 1>\nend>"
+      expect(wrap("def a\nsuper(1)\nend")).to eq "<def a\n<super(1)>\nend>"
+      expect(wrap("def a\nsuper(\n1\n)\nend")).to eq "<def a\n<super(\n<1>\n)>\nend>"
     end
 
     it 'wraps the bodies of returns' do
@@ -764,11 +784,17 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("def a\n1\nrescue\n2\nensure\n3\nend")).to eq "<def a\n<1>\nrescue\n<2>\nensure\n<3>\nend>"
       expect(wrap("def a\n1\nensure\n2\nend")).to eq "<def a\n<1>\nensure\n<2>\nend>"
     end
+
+    it 'wrap a definition as a call to an invocation' do
+      expect(wrap("a def b\nc\nend,\nd")).to eq "<a <def b\n<c>\nend>,\nd>"
+    end
   end
 
-  describe 'lambdas' do
+  describe 'lambdas', t:true do
     it 'wraps the lambda' do
       expect(wrap("lambda { }")).to eq "<lambda { }>"
+      expect(wrap("lambda { |;a| }")).to eq "<lambda { |;a| }>"
+      expect(wrap("lambda { |a,b=1,*c,&d| }")).to eq "<lambda { |a,b=1,*c,&d| }>"
       expect(wrap("-> { }")).to eq "<-> { }>"
       expect(wrap("-> a, b { }")).to eq "<-> a, b { }>"
       expect(wrap("-> {\n1\n}")).to eq "<-> {\n<1>\n}>"
@@ -816,10 +842,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   lambda {
     filename = File.expand_path('../wrap_ruby2_expressions.rb', __FILE__)
     major, minor, patch = RUBY_VERSION.scan(/\d+/).map(&:to_i)
-    if major == 1
-      # no op, I don't know of anything was deprecated
-    else
-      describe 'Ruby 2.0+ syntax', :'2.x' => true do
+    if 2 <= major && 2 <= minor
+      describe 'Ruby 2 syntaxes', :'2.x' => true do
+        # only checking on 2.2 b/c its hard to figure out when different pieces were introduced
+        # we'll assume that if it passes on 2.2, it will pass on 2.0 or 2.1, if the feature is available on that Ruby
         binding.eval File.read(filename), filename
       end
     end
