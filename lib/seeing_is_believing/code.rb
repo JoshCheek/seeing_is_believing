@@ -34,6 +34,8 @@ class SeeingIsBelieving
     attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax, :body_range
 
     def initialize(raw_code, name="SeeingIsBelieving")
+      # TODO: raise here instead of quietly changing the source. Make the caller deal with it
+      raw_code += "\n" unless raw_code[-1] == "\n" # lines must always end with a newline, ffs -.-
       @raw             = raw_code
       @buffer          = Parser::Source::Buffer.new(name)
       @buffer.source   = raw
@@ -132,12 +134,11 @@ class SeeingIsBelieving
     end
 
     def body_range_from_tokens(tokens)
-      last_token  = tokens.last      || []
-      token_data  = last_token.last  || []
-      token_range = token_data.last  || range_for(0, 0)
-      end_pos     = token_range.end_pos
-      end_pos    += 1        if last_token.first == :tCOMMENT # b/c it won't continue processing newlines at this point
-      end_pos     = raw.size if raw.size < end_pos # we can accidentally go over depending on whether there is a newline
+      return range_for(0, 0) if raw.start_with? "__END__\n"
+      (name, (_, range)) = tokens.max_by { |name, (data, range)| range.end_pos } ||
+                            [nil, [nil, range_for(0, 1)]]
+      end_pos = range.end_pos
+      end_pos += 1 if name == :tCOMMENT || name == :tSTRING_END #
       range_for 0, end_pos
     end
 

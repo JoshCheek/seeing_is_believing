@@ -26,22 +26,22 @@ RSpec.describe SeeingIsBelieving::Code do
     end
 
     it 'considers any indexes after the end to be on the last line' do
-      expect(code_for("a\nb\nc").index_to_linenum(1000)).to eq 3
+      expect(code_for("a\nb\nc\n").index_to_linenum(1000)).to eq 4
     end
   end
 
   describe 'linenum_to_index' do
     it 'treats line numebrs as 1based and indexes as 0based' do
-      code = code_for "xx\nyyy\n\nzz"
+      code = code_for "xx\nyyy\n\nzz\n"
       expect(code.linenum_to_index 1).to eq 0
       expect(code.linenum_to_index 2).to eq 3
       expect(code.linenum_to_index 3).to eq 7
       expect(code.linenum_to_index 4).to eq 8
-      expect(code.linenum_to_index 5).to eq 10
+      expect(code.linenum_to_index 5).to eq 11
     end
 
     it 'considers any lines past the end to be at 1 character after the last index' do
-      expect(code_for("abc").linenum_to_index(100)).to eq 3
+      expect(code_for("abc\n").linenum_to_index(100)).to eq 4
     end
   end
 
@@ -53,25 +53,31 @@ RSpec.describe SeeingIsBelieving::Code do
     end
 
     it 'returns a range for the whole body' do
-      assert_range code_for("").body_range, 0, 0
-      assert_range code_for("1").body_range, 0, 1
-      assert_range code_for("1111").body_range, 0, 4
+      assert_range code_for("\n").body_range, 0, 1
+      assert_range code_for("1\n").body_range, 0, 2
+      assert_range code_for("1111\n").body_range, 0, 5
     end
 
     it 'ends after the last token prior to __END__ statements' do
-      assert_range code_for("__END__").body_range, 0, 0
-      assert_range code_for("\n__END__").body_range, 0, 0
-      assert_range code_for("a\n__END__").body_range, 0, 2
-      assert_range code_for("a\n\n\n__END__").body_range, 0, 2
+      assert_range code_for("__END__\n").body_range, 0, 0
+      assert_range code_for("\n__END__\n").body_range, 0, 1
+      assert_range code_for("a\n__END__\n").body_range, 0, 2
+      assert_range code_for("a\n\n\n__END__\n").body_range, 0, 2
     end
 
     it 'ends after trailing comments' do
-      assert_range code_for("1#a").body_range, 0, 3
-      assert_range code_for("1#a\n#b\n#c").body_range, 0, 9
+      assert_range code_for("1#a\n").body_range, 0, 4
       assert_range code_for("1#a\n#b\n#c\n").body_range, 0, 10
-      assert_range code_for("a\n#c\n\n__END__").body_range, 0, 5
-      assert_range code_for("1#a\n#b\n#c\n__END__").body_range, 0, 10
-      assert_range code_for("1#a\n#b\n#c\n\n__END__").body_range, 0, 10
+      assert_range code_for("1#a\n#b\n#c\n\n").body_range, 0, 10
+      assert_range code_for("a\n#c\n\n__END__\n").body_range, 0, 5
+      assert_range code_for("1#a\n#b\n#c\n__END__\n").body_range, 0, 10
+      assert_range code_for("1#a\n#b\n#c\n\n__END__\n").body_range, 0, 10
+    end
+
+    it 'ends after heredocs' do
+      assert_range code_for("<<a\nb\na\n").body_range, 0, 8
+      assert_range code_for("<<a\nb\na\n1\n").body_range, 0, 10
+      assert_range code_for("<<a\nb\na\n#c\n").body_range, 0, 11
     end
   end
 end

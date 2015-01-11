@@ -74,9 +74,11 @@ class SeeingIsBelieving
 
       # TODO: Annoying debugger stuff from annotators can move up to here
       # or maybe debugging goes to stderr, and we still print this anyway?
-      stdout.print options.annotator.call(options.prepared_body,
-                                          results,
-                                          options.annotator_options)
+      annotated = options.annotator.call(options.prepared_body,
+                                         results,
+                                         options.annotator_options)
+      annotated = annotated[0...-1] if options.body[-1] != "\n"
+      stdout.print annotated
 
       if options.inherit_exit_status?
         results.exitstatus

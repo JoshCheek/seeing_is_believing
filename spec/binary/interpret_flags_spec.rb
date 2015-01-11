@@ -216,7 +216,7 @@ class SeeingIsBelieving
 
       context 'prepared_body' do
         it 'is the body after being run throught he annotator\'s prepare method' do
-          expect(call(program_from_args: '1+1 # => ').prepared_body).to eq '1+1'
+          expect(call(program_from_args: '1+1 # => ').prepared_body).to eq "1+1\n"
         end
       end
 

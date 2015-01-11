@@ -3,7 +3,7 @@ require 'seeing_is_believing/binary/rewrite_comments'
 
 RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
   def call(code, options={}, &block)
-    described_class.call code, options, &block
+    described_class.call(code, options, &block).chomp
   end
 
   it 'ignores multiline comments' do
@@ -87,14 +87,8 @@ RSpec.describe SeeingIsBelieving::Binary::RewriteComments do
     rewritten = call("a", include_lines: [1]) { |c| ['b', 'c'] }
     expect(rewritten).to eq "abc"
 
-    rewritten = call("a\n", include_lines: [1]) { |c| ['b', 'c'] }
-    expect(rewritten).to eq "abc\n"
-
     rewritten = call("a ", include_lines: [1]) { |c| ['b', 'c'] }
     expect(rewritten).to eq "abc"
-
-    rewritten = call("a \n", include_lines: [1]) { |c| ['b', 'c'] }
-    expect(rewritten).to eq "abc\n"
   end
 
   it 'does not include lines that are uncommentable' do

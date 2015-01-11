@@ -21,17 +21,17 @@ class SeeingIsBelieving
 
         # remove extra lines that are handled / uncommentable
         comments.each { |c| extra_lines.delete c.line_number }
-        commentable_linenums = CommentableLines.call(raw_code).map { |linenum, *| linenum }
+        commentable_linenums = CommentableLines.call(code.raw).map { |linenum, *| linenum }
         extra_lines.select! { |linenum| commentable_linenums.include? linenum }
 
         # add additional comments
         extra_lines.each do |line_number|
           line_begin_col     = code.linenum_to_index(line_number)
           nextline_begin_col = code.linenum_to_index(line_number.next)
-          nextline_begin_col -= 1 if raw_code[nextline_begin_col-1] == "\n"
+          nextline_begin_col -= 1 if code.raw[nextline_begin_col-1] == "\n"
           whitespace_col     = nextline_begin_col-1
           whitespace_col     -= 1 while line_begin_col < whitespace_col &&
-                                        raw_code[whitespace_col] =~ /\s/
+                                        code.raw[whitespace_col] =~ /\s/
           whitespace_col += 1
           whitespace_range = code.range_for(whitespace_col, nextline_begin_col)
           comment_range = code.range_for(nextline_begin_col, nextline_begin_col)
@@ -39,7 +39,7 @@ class SeeingIsBelieving
           comment = Code::InlineComment.new \
             line_number:      line_number,
             whitespace_col:   whitespace_col-line_begin_col,
-            whitespace:       raw_code[whitespace_col...nextline_begin_col],
+            whitespace:       code.raw[whitespace_col...nextline_begin_col]||"",
             text_col:         nextline_begin_col-line_begin_col,
             text:             "",
             full_range:       whitespace_range,

@@ -114,8 +114,8 @@ class SeeingIsBelieving
       def remove_lines_after_data_segment(line_num_to_location)
         end_index = code_obj.body_range.end_pos
         body_end  = code_obj.index_to_linenum end_index
-        max_line  = line_num_to_location.keys.max
-        body_end.upto(max_line) { |line_number| line_num_to_location.delete line_number }
+        file_end  = line_num_to_location.keys.max
+        body_end.upto(file_end) { |line_number| line_num_to_location.delete line_number }
       end
     end
   end

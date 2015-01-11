@@ -3,11 +3,12 @@ require 'seeing_is_believing/wrap_expressions'
 
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
-    described_class.call code,
+    described_class.call(code,
       before_all:  ->   { overrides.fetch :before_all,   '' },
       after_all:   ->   { overrides.fetch :after_all,    '' },
       before_each: -> * { overrides.fetch :before_each, '<' },
       after_each:  -> * { overrides.fetch :after_each,  '>' }
+    ).chomp
   end
 
   def wrap_with_body(code, overrides={})
@@ -57,9 +58,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap_with_body "__END__").to eq "[]\n__END__"
       expect(wrap_with_body "\n__END__").to eq "[]\n__END__"
       expect(wrap_with_body "\n\n__END__").to eq "[]\n\n__END__"
-      expect(wrap_with_body "__END__\n").to eq "[]\n__END__\n"
-      expect(wrap_with_body "\n__END__\n").to eq "[]\n__END__\n"
-      expect(wrap_with_body "\n\n__END__\n").to eq "[]\n\n__END__\n"
       expect(wrap_with_body "__END__!").to eq "[<__END__!>]"
       expect(wrap_with_body "%(\n__END__\n)").to eq "[<%(\n__END__\n)>]"
     end
@@ -111,8 +109,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   it 'does nothing for an empty program' do
-    expect(wrap("")).to eq ""
-    expect(wrap("\n")).to eq "\n"
+    expect(wrap("")).to eq "" # note that code will fix the missing newline, and wrap will chomp it from the result for convenience
   end
 
   it 'ignores comments' do
