@@ -252,6 +252,17 @@ class SeeingIsBelieving
         end
       end
 
+      context 'annotated_body' do
+        before { pending "unimplemented"; raise }
+        it 'ends in a newline if the body ended in a newline' do
+          expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
+          expect(call(program_from_args: "1\n").annotated_body).to eq "1  # => 1\n"
+        end
+        it 'is the body after being run through the annotator' do
+          expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
+        end
+      end
+
       context 'syntax' do
         let(:valid_engine)   { call program_from_args: "1+1" }
         let(:invalid_engine) { call program_from_args: "1+"  }

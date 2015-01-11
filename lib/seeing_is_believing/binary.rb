@@ -58,6 +58,8 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
+      # TODO: it feels like there should be a printer object?
+      # ie shouldn't all the outputs be json if they specified json?
       if engine.result_as_json?
         require 'json'
         stdout.puts JSON.dump(result_as_data_structure(results))
