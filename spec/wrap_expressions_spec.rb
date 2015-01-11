@@ -204,7 +204,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps macros' do
-      # TODO: there is also __dir__, but it's only 2.0
       expect(wrap("__FILE__")).to eq "<__FILE__>"
       expect(wrap("__LINE__")).to eq "<__LINE__>"
       expect(wrap("__ENCODING__")).to eq "<__ENCODING__>"
@@ -813,4 +812,16 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("END {\n123\n}")).to eq "END {\n<123>\n}"
     end
   end
+
+  lambda {
+    filename = File.expand_path('../wrap_ruby2_expressions.rb', __FILE__)
+    major, minor, patch = RUBY_VERSION.scan(/\d+/).map(&:to_i)
+    if major == 1
+      # no op, I don't know of anything was deprecated
+    else
+      describe 'Ruby 2.0+ syntax', :'2.x' => true do
+        binding.eval File.read(filename), filename
+      end
+    end
+  }.call
 end
