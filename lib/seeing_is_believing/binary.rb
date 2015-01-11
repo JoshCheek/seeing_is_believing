@@ -48,20 +48,9 @@ class SeeingIsBelieving
       # TODO: only wrap in BugInSib here at the toplevel,
       # its stupid and annoying to hit it at a lower level where we really want the information
 
-      # results, program_timedout, unexpected_exception =
-      #   evaluate_program(engine.prepared_body, options.lib_options)
       engine.unexpected_exception?
       if engine.unexpected_exception.kind_of? BugInSib
         stderr.puts engine.unexpected_exception.message
-        return NONDISPLAYABLE_ERROR_STATUS
-      end
-
-      # TODO: can this actually happen?
-      if engine.unexpected_exception
-        stderr.puts engine.unexpected_exception.class,
-                    engine.unexpected_exception.message,
-                    "",
-                    engine.unexpected_exception.backtrace
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
