@@ -94,7 +94,6 @@ Known Issues
 ============
 
 * `BEGIN/END` breaks things and I probably won't ever fix it, because it's annoying and it's really meant for command-line scripts... but there is currently a spec for it.
-* The code to find the data segment is naive, and could wind up interpolating results into a string or something.
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================

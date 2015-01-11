@@ -45,9 +45,34 @@ RSpec.describe SeeingIsBelieving::Code do
     end
   end
 
+  # should it begin after magic comments and stuff?
   describe 'body_range' do
-    it 'returns a range for the whole body'
-    it 'ends prior to __END__ statements'
+    def assert_range(range, begin_pos, end_pos)
+      expect(range.begin_pos).to eq begin_pos
+      expect(range.end_pos).to eq end_pos
+    end
+
+    it 'returns a range for the whole body' do
+      assert_range code_for("").body_range, 0, 0
+      assert_range code_for("1").body_range, 0, 1
+      assert_range code_for("1111").body_range, 0, 4
+    end
+
+    it 'ends after the last token prior to __END__ statements' do
+      assert_range code_for("__END__").body_range, 0, 0
+      assert_range code_for("\n__END__").body_range, 0, 0
+      assert_range code_for("a\n__END__").body_range, 0, 2
+      assert_range code_for("a\n\n\n__END__").body_range, 0, 2
+    end
+
+    it 'ends after trailing comments' do
+      assert_range code_for("1#a").body_range, 0, 3
+      assert_range code_for("1#a\n#b\n#c").body_range, 0, 9
+      assert_range code_for("1#a\n#b\n#c\n").body_range, 0, 10
+      assert_range code_for("a\n#c\n\n__END__").body_range, 0, 5
+      assert_range code_for("1#a\n#b\n#c\n__END__").body_range, 0, 10
+      assert_range code_for("1#a\n#b\n#c\n\n__END__").body_range, 0, 10
+    end
   end
 end
 

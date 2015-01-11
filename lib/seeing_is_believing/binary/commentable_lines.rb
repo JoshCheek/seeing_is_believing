@@ -112,18 +112,10 @@ class SeeingIsBelieving
       end
 
       def remove_lines_after_data_segment(line_num_to_location)
-        data_segment_line, _ = line_num_to_location.find do |line_number, (end_index, col)|
-          if end_index == 7
-            code.start_with? '__END__'
-          elsif end_index < 7
-            false
-          else
-            code[(end_index-8)...end_index] == "\n__END__"
-          end
-        end
-        return unless data_segment_line
-        max_line = line_num_to_location.keys.max
-        data_segment_line.upto(max_line) { |line_number| line_num_to_location.delete line_number }
+        end_index = code_obj.body_range.end_pos
+        body_end  = code_obj.index_to_linenum end_index
+        max_line  = line_num_to_location.keys.max
+        body_end.upto(max_line) { |line_number| line_num_to_location.delete line_number }
       end
     end
   end

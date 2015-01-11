@@ -477,3 +477,26 @@ Feature:
     require 'json'             # => true
     JSON.parse JSON.dump("√")
     """
+
+
+  Scenario: Correctly identify end of file
+    Given the file "fake_data_segment.rb":
+    """
+    puts "output"
+    "
+    __END__
+    "
+    __END__
+    """
+    When I run "seeing_is_believing fake_data_segment.rb"
+    Then stdout is:
+    """
+    puts "output"  # => nil
+    "
+    __END__
+    "              # => "\n__END__\n"
+
+    # >> output
+    __END__
+    """
+

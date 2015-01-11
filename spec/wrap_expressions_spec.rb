@@ -57,7 +57,11 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap_with_body "__END__").to eq "[]\n__END__"
       expect(wrap_with_body "\n__END__").to eq "[]\n__END__"
       expect(wrap_with_body "\n\n__END__").to eq "[]\n\n__END__"
+      expect(wrap_with_body "__END__\n").to eq "[]\n__END__\n"
+      expect(wrap_with_body "\n__END__\n").to eq "[]\n__END__\n"
+      expect(wrap_with_body "\n\n__END__\n").to eq "[]\n\n__END__\n"
       expect(wrap_with_body "__END__!").to eq "[<__END__!>]"
+      expect(wrap_with_body "%(\n__END__\n)").to eq "[<%(\n__END__\n)>]"
     end
 
     it 'wraps bodies that are wrapped in parentheses' do

@@ -31,7 +31,7 @@ class SeeingIsBelieving
       def invalid?() error_message end
     end
 
-    attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
+    attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax, :body_range
 
     def initialize(raw_code, name="SeeingIsBelieving")
       @raw             = raw_code
@@ -39,7 +39,8 @@ class SeeingIsBelieving
       @buffer.source   = raw
       builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @rewriter        = Parser::Source::Rewriter.new buffer
-      @raw_comments    = extract_comments(builder, buffer)
+      @raw_comments, tokens = comments_and_tokens(builder, buffer)
+      @body_range      = body_range_from_tokens(tokens)
       @parser          = Parser::CurrentRuby.new builder
       @inline_comments = raw_comments.select(&:inline?).map { |c| wrap_comment c }
       begin
@@ -100,7 +101,7 @@ class SeeingIsBelieving
 
     private
 
-    def extract_comments(builder, buffer)
+    def comments_and_tokens(builder, buffer)
       # THIS IS SO WE CAN EXTRACT COMMENTS FROM INVALID FILES.
       # We do it by telling Parser's diagnostic to not blow up.
       #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb
@@ -126,8 +127,18 @@ class SeeingIsBelieving
       def diagnostics.process(*)
         self
       end
-      _, all_comments, _ = parser.tokenize(@buffer)
-      all_comments
+      _, all_comments, tokens = parser.tokenize(@buffer)
+      [all_comments, tokens]
+    end
+
+    def body_range_from_tokens(tokens)
+      last_token  = tokens.last      || []
+      token_data  = last_token.last  || []
+      token_range = token_data.last  || range_for(0, 0)
+      end_pos     = token_range.end_pos
+      end_pos    += 1        if last_token.first == :tCOMMENT # b/c it won't continue processing newlines at this point
+      end_pos     = raw.size if raw.size < end_pos # we can accidentally go over depending on whether there is a newline
+      range_for 0, end_pos
     end
 
     def wrap_comment(comment)
