@@ -1,7 +1,7 @@
 require_relative 'version'
 require_relative 'event_stream/producer'
 
-event_stream = IO.open(ARGV.shift.to_i, "w")
+event_stream = IO.open(ENV['event_stream_fd'].to_i, "w")
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 
 stdout, stderr = STDOUT, STDERR

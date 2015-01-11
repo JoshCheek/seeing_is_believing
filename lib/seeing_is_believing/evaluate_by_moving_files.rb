@@ -99,9 +99,9 @@ class SeeingIsBelieving
       child_stdin, stdin             = IO.pipe
 
       # evaluate the code in a child process
-      args  = [ENV, *popen_args, child_eventstream.to_i.to_s]
+      env   = ENV.to_hash.merge('event_stream_fd' => child_eventstream.to_i.to_s)
       opts  = {in: child_stdin, out: child_stdout, err: child_stderr, child_eventstream => child_eventstream}
-      child = Process.detach spawn(*args, opts)
+      child = Process.detach spawn(env, *popen_args, opts)
 
       # close b/c we won't get EOF until all fds are closed
       child_eventstream.close
