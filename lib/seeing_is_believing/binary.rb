@@ -48,8 +48,7 @@ class SeeingIsBelieving
       # TODO: only wrap in BugInSib here at the toplevel,
       # its stupid and annoying to hit it at a lower level where we really want the information
 
-      engine.unexpected_exception?
-      if engine.unexpected_exception.kind_of? BugInSib
+      if engine.unexpected_exception?
         stderr.puts engine.unexpected_exception.message
         return NONDISPLAYABLE_ERROR_STATUS
       end
@@ -62,18 +61,14 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      # TODO: Annoying debugger stuff from annotators can move up to here
-      # or maybe debugging goes to stderr, and we still print this anyway?
-      annotated = options.annotator.call(engine.prepared_body, engine.results, options.annotator_options) # TODO: feture envy, move down into options?
-      annotated = annotated[0...-1] if engine.missing_newline?
-      stdout.print annotated
+      stdout.print engine.annotated_body
 
       if options.inherit_exit_status?
         engine.results.exitstatus
-      elsif engine.results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
-        DISPLAYABLE_ERROR_STATUS
-      else
+      elsif engine.results.exitstatus.zero?
         SUCCESS_STATUS
+      else
+        DISPLAYABLE_ERROR_STATUS # the error is rendered in the annotated body
       end
     end
 

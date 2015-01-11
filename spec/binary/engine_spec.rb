@@ -8,9 +8,12 @@ class SeeingIsBelieving
       let(:stdin)  { double :stdin }
       let(:stdout) { double :stdout }
 
-      def call(body)
+      def call(body, options={})
+        timeout = options.delete(:timeout)
+        options.empty? || raise("Unexpected options: #{options.inspect}")
         flags   = ParseArgs.call []
         flags[:program_from_args] = body
+        flags[:timeout_seconds]   = timeout
         options = Options.new(flags, stdin, stdout)
         Engine.new options
       end
@@ -34,22 +37,22 @@ class SeeingIsBelieving
       end
 
       context 'cleaned_body' do
+        it 'has the annotations removed' do
+          expect(call("1 # =>").cleaned_body).to eq "1"
+        end
         it 'ends in a newline if the body ended in a newline' do
           expect(call("1").cleaned_body).to eq "1"
           expect(call("1\n").cleaned_body).to eq "1\n"
         end
-        it 'has the annotations removed' do
-          expect(call("1 # =>").cleaned_body).to eq "1"
-        end
       end
 
       context 'prepared_body' do
+        it 'is the body after being run throught he annotator\'s prepare method' do
+          expect(call('1+1 # => ').prepared_body).to eq "1+1\n"
+        end
         it 'ends in a newline, regardless of whether the body did' do
           expect(call("1").prepared_body).to eq "1\n"
           expect(call("1\n").prepared_body).to eq "1\n"
-        end
-        it 'is the body after being run throught he annotator\'s prepare method' do
-          expect(call('1+1 # => ').prepared_body).to eq "1+1\n"
         end
       end
 
@@ -67,16 +70,39 @@ class SeeingIsBelieving
         specify('unexpected_exception?') { assert_must_evaluate :unexpected_exception? }
       end
 
-      # context 'annotated_body' do
-      #   before { pending "unimplemented"; raise }
-      #   it 'ends in a newline if the body ended in a newline' do
-      #     expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
-      #     expect(call(program_from_args: "1\n").annotated_body).to eq "1  # => 1\n"
-      #   end
-      #   it 'is the body after being run through the annotator' do
-      #     expect(call(program_from_args: "1").annotated_body).to eq "1  # => 1"
-      #   end
-      # end
+      context 'after evaluating', t:true do
+        specify 'results are the results of the evaluation' do
+          status = call('exit 55').evaluate!.results.exitstatus
+          expect(status).to eq 55
+        end
+
+        specify 'timed_out? true if the program it raised a Timeout::Error' do
+          expect(call('', timeout: 1).evaluate!.timed_out?).to eq false
+          expect(call('sleep 1', timeout: 0.01).evaluate!.timed_out?).to eq true
+        end
+
+        context 'annotated_body' do
+          it 'is the body after being run through the annotator' do
+            expect(call("1").evaluate!.annotated_body).to eq "1  # => 1"
+          end
+          it 'ends in a newline if the body ended in a newline' do
+            expect(call("1").evaluate!.annotated_body).to eq "1  # => 1"
+            expect(call("1\n").evaluate!.annotated_body).to eq "1  # => 1\n"
+          end
+        end
+
+        specify 'unexpected_exception? is true if some other error was raised' do
+          expect(call("").evaluate!.unexpected_exception?).to eq false
+          expect(SeeingIsBelieving).to receive(:call).and_raise "wat"
+          expect(call("").evaluate!.unexpected_exception?).to eq true
+        end
+
+        specify 'unexpected_exception is nil or any unexpected exceptions that were raised' do
+          expect(call("").evaluate!.unexpected_exception).to eq nil
+          expect(SeeingIsBelieving).to receive(:call).and_raise "wat"
+          expect(call("").evaluate!.unexpected_exception.message).to eq "wat"
+        end
+      end
     end
   end
 end

@@ -19,14 +19,6 @@ class SeeingIsBelieving
         @missing_newline ||= !options.body.end_with?("\n")
       end
 
-      def code
-        @code ||= Code.new(prepared_body, options.filename)
-      end
-
-      def syntax
-        code.syntax
-      end
-
       def syntax_error?
         syntax.invalid?
       end
@@ -53,10 +45,12 @@ class SeeingIsBelieving
       end
 
       def evaluate!
-        @results, @timed_out, @unexpected_exception =
-          evaluate_program(prepared_body, options.lib_options)
-        @annotated_body = true
-        @evaluated = true
+        @evaluated ||= begin
+          @results, @timed_out, @unexpected_exception =
+            evaluate_program(prepared_body, options.lib_options)
+          true
+        end
+        self
       end
 
       def results
@@ -64,12 +58,21 @@ class SeeingIsBelieving
       end
 
       def timed_out?
-        return @timed_out unless @timed_out.nil?
-        raise MustEvaluateFirst.new __method__
+        @evaluated || raise(MustEvaluateFirst.new __method__)
+        @timed_out
       end
 
+      # TODO: Annoying debugger stuff from annotators can move up to here
+      # or maybe debugging goes to stderr, and we still print this anyway?
       def annotated_body
-        @annotated_body || raise(MustEvaluateFirst.new __method__)
+        @annotated_body ||= begin
+          @evaluated || raise(MustEvaluateFirst.new __method__)
+          annotated = options.annotator.call prepared_body,
+                                             results,
+                                             options.annotator_options
+          annotated.chomp! if missing_newline?
+          annotated
+        end
       end
 
       def unexpected_exception
@@ -79,13 +82,22 @@ class SeeingIsBelieving
 
       def unexpected_exception?
         @evaluated || raise(MustEvaluateFirst.new __method__)
-        !unexpected_exception
+        !!unexpected_exception
       end
 
       private
 
       attr_accessor :options
 
+      def code
+        @code ||= Code.new(prepared_body, options.filename)
+      end
+
+      def syntax
+        code.syntax
+      end
+
+      # returns the result, whether the program timed out, and any exception that was raised
       def evaluate_program(body, options)
         return SeeingIsBelieving.call(body, options), false, nil
       rescue Timeout::Error
@@ -93,8 +105,6 @@ class SeeingIsBelieving
       rescue Exception
         return nil, false, $!
       end
-
-
     end
   end
 end
