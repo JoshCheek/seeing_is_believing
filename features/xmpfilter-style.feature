@@ -3,11 +3,11 @@ Feature: Xmpfilter style
   Support the same (or highly similar) interface as xmpfilter,
   so that people who use that lib can easily transition to SiB.
 
-  TODO:
-  * multiple values on pp lines
-  * show that exceptions respect line-length restriction flags
-  * Scenario: pp output on line with exception
-  * when input has previously identified exception
+  TODO: multiple values on pp lines
+  TODO: show that exceptions respect line-length restriction flags
+  TODO: Scenario: pp output on line with exception
+  TODO: when input has previously identified exception
+  TODO: what should happen when used in tandem with the --json flag?
 
 
   Scenario: --xmpfilter-style Generic updating of marked lines

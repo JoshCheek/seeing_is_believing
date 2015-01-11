@@ -20,6 +20,16 @@ class SeeingIsBelieving
       end
 
       # TODO: rename to default_marker_regexes ...or turn into fkn objects
+
+      # TODO: --cd dir | --cd :file:
+      #   when given a dir, cd to that dir before executing the code
+      #   when not given a dir, cd to the dir of the file being executed before executing it
+
+      # TODO: --only-show-lines
+      #   Output only on specified lines (doesn't change stdout/stderr/exceptions)
+
+      # TODO: --alignment-strategy n-or-line / n-or-chunk / n-or-file (help-file should prob just link to cuke examples)
+      # add default to number of captures (1000), require user to explicitly set it to infinity
       def self.marker_regexes
         { value:     '^#\s*=>\s*',
           exception: '^#\s*~>\s*',
@@ -82,6 +92,7 @@ class SeeingIsBelieving
 
       attr_accessor :args
 
+      # TODO: return a "safe hash" ie cannot set/get args that it wasn't initialized with
       def flags
         @flags ||= {
           as:                    nil,

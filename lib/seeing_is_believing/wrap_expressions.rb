@@ -28,6 +28,7 @@ class SeeingIsBelieving
         wrappings.each do |line_num, (range, last_col, meta)|
           rewriter.insert_before range, before_each.call(line_num)
           if meta == :total_fucking_failure
+            # TODO: this doesn't "totally fail" anymore... not sure if we still care about it
             rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
           end
           rewriter.insert_after range, after_each.call(line_num)

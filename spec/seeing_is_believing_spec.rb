@@ -3,6 +3,8 @@ require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
 
+# TODO: throw/catch (and uncaught)
+
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
     @result = def __some_method__; end

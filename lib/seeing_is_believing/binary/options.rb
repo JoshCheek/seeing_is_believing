@@ -64,16 +64,18 @@ class SeeingIsBelieving
 
         # Most predicates
         self.predicates = {}
-        predicates[:print_version]         = flags.fetch(:version) # TODO: rename rhs to print_version ?
-        predicates[:inherit_exit_status]   = flags.fetch(:inherit_exit_status)
-        predicates[:result_as_json]        = flags.fetch(:result_as_json)
-        predicates[:print_help]            = !!flags.fetch(:help)
-        predicates[:print_cleaned]         = flags.fetch(:clean) # TODO: Better name on rhs
-        predicates[:file_is_on_stdin]      = (!filename && !flags.fetch(:program_from_args))
+        predicates[:print_version]       = flags.fetch(:version) # TODO: rename rhs to print_version ?
+        predicates[:inherit_exit_status] = flags.fetch(:inherit_exit_status)
+        predicates[:result_as_json]      = flags.fetch(:result_as_json)
+        predicates[:print_help]          = !!flags.fetch(:help)
+        predicates[:print_cleaned]       = flags.fetch(:clean) # TODO: Better name on rhs
+        predicates[:file_is_on_stdin]    = (!filename && !flags.fetch(:program_from_args))
 
         # Polymorphism, y'all!
         attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
         attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
+        # TODO: allow debugger to take a stream
+        # TODO: dbeugger should debug to stderr, not stdout
         attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stdout, colour: true) : Debugger.new(stream: nil)
 
         # The lib's options (passed to SeeingIsBelieving.new)
@@ -114,6 +116,7 @@ class SeeingIsBelieving
                             File.read(filename)
       end
 
+      # TODO: Options inspects itself if debugger is set to true
       def inspect
         inspected = "#<#{self.class.name.inspect}\n"
         inspected << "  --PREDICATES--\n"

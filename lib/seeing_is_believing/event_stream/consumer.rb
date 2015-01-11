@@ -43,6 +43,7 @@ class SeeingIsBelieving
         end
       end
 
+      # TODO: work with the debugger
       def initialize(streams)
         self.finish_criteria = FinishCriteria.new
         self.queue           = Queue.new

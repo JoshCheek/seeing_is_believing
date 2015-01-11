@@ -1,6 +1,9 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
+# TODO: make sure I support all the latest greatest syntax
+# https://github.com/whitequark/parser/blob/master/doc/AST_FORMAT.md
+
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
     code = code + "\n" unless code.end_with? "\n"
@@ -201,7 +204,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps macros' do
-      # there is also __dir__, but it's only 2.0
+      # TODO: there is also __dir__, but it's only 2.0
       expect(wrap("__FILE__")).to eq "<__FILE__>"
       expect(wrap("__LINE__")).to eq "<__LINE__>"
       expect(wrap("__ENCODING__")).to eq "<__ENCODING__>"

@@ -3,6 +3,7 @@ require 'seeing_is_believing/binary/format_comment'
 
 class SeeingIsBelieving
   module Binary
+    # TODO: Rename to AnnotateStdoutStderrAndException
     module AnnotateEndOfFile
       extend self
 

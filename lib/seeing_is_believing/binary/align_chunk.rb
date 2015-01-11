@@ -7,6 +7,8 @@ class SeeingIsBelieving
         self.body = body
       end
 
+      # TODO: Consider entirely whitespace lines to be chunk separators
+
       # max line length of the the chunk (newline separated sections of code exempting comments) + 2 spaces for padding
       def line_length_for(line_number)
         line_lengths.fetch line_number, 0
