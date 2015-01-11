@@ -257,3 +257,22 @@ Feature: Running the binary successfully
     # !> Exec'd file to stderr
     """
     And the exit status is 0
+
+
+  Scenario: Implicit regexp conditional
+    Given the stdin content "abc"
+    And the file "implicit_regex_conditional.rb":
+    """
+    gets
+    if /(.)c/
+      $1
+    end
+    """
+    When I run "seeing_is_believing implicit_regex_conditional.rb"
+    Then stdout is:
+    """
+    gets       # => "abc"
+    if /(.)c/  # => 1
+      $1       # => "b"
+    end        # => "b"
+    """

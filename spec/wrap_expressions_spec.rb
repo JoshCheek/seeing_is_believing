@@ -439,9 +439,9 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("1 if 2")).to eq "<1 if 2>"
     end
 
-    # TODO: could maybe rewrite them as <!!/a/> or <~/a/> although IIRC, that's broken with respect to setting local args
-    it 'ignores conditionals that are implicit regexes' do
-      expect(wrap("if /a/\n1\nend")).to eq "<if /a/\n<1>\nend>"
+    it 'wraps implicit regexes, retaining their magic behaviour by prepending a ~' do
+      expect(wrap("if /a/\n1\nend")).to eq "<if <~/a/>\n<1>\nend>"
+      expect(wrap("/a/ &&\n1")).to eq "<</a/> &&\n1>"
     end
 
     it 'wraps ternaries' do
@@ -700,7 +700,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
-  describe 'class definitions', t:true do
+  describe 'class definitions' do
     it 'does not wrap the class definition, does wrap the body' do
       expect(wrap("class A\n1\nend")).to eq "<class A\n<1>\nend>"
     end
@@ -718,7 +718,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
-  describe 'module definitions', t:true do
+  describe 'module definitions' do
     it 'does not wrap the definition, does wrap the body' do
       expect(wrap("module A\n1\nend")).to eq "<module A\n<1>\nend>"
     end

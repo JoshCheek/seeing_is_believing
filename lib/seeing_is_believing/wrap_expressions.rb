@@ -27,9 +27,12 @@ class SeeingIsBelieving
 
         wrappings.each do |line_num, (range, last_col, meta)|
           rewriter.insert_before range, before_each.call(line_num)
-          if meta == :total_fucking_failure
+          case meta
+          when :total_fucking_failure
             # TODO: this doesn't "totally fail" anymore... not sure if we still care about it
             rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
+          when :match_current_line
+            rewriter.insert_before range, '~' # Regexp#~
           end
           rewriter.insert_after range, after_each.call(line_num)
         end
@@ -89,7 +92,7 @@ class SeeingIsBelieving
     def wrap_recursive(ast)
       return wrappings unless ast.kind_of? ::AST::Node
       case ast.type
-      when :args, :redo, :retry, :alias, :undef, :match_current_line, :null_node
+      when :args, :redo, :retry, :alias, :undef, :null_node
         # no op
       when :defs, :class, :module
         add_to_wrappings ast
@@ -201,6 +204,9 @@ class SeeingIsBelieving
 
       when :block_pass
         add_children ast # strange, I'm not too sure about this :/
+
+      when :match_current_line # ie `if /abc/; ...; end`
+        add_to_wrappings ast, :match_current_line
 
       else
         add_to_wrappings ast
