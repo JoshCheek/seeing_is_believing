@@ -26,8 +26,8 @@ class SeeingIsBelieving
 
         # add additional comments
         extra_lines.each do |line_number|
-          line_begin_col     = code.line_number_to_index(line_number)
-          nextline_begin_col = code.line_number_to_index(line_number.next)
+          line_begin_col     = code.linenum_to_index(line_number)
+          nextline_begin_col = code.linenum_to_index(line_number.next)
           nextline_begin_col -= 1 if raw_code[nextline_begin_col-1] == "\n"
           whitespace_col     = nextline_begin_col-1
           whitespace_col     -= 1 while line_begin_col < whitespace_col &&

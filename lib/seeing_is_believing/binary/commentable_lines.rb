@@ -3,12 +3,7 @@ require 'seeing_is_believing/code'
 class SeeingIsBelieving
   module Binary
 
-    # could possibly be sped up by just reflecting on the tokens instead of the whole ast
-    #
-    # specs for this class are in spec/binary/comment_lines_spec.rb
-    # because it was extracted from that class
     class CommentableLines
-
       def self.call(code)
         new(code).call
       end

@@ -31,12 +31,12 @@ class SeeingIsBelieving
       def invalid?() error_message end
     end
 
-    attr_reader :raw_code, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
+    attr_reader :raw, :buffer, :parser, :rewriter, :inline_comments, :root, :raw_comments, :syntax
 
     def initialize(raw_code, name="SeeingIsBelieving")
-      @raw_code        = raw_code
+      @raw             = raw_code
       @buffer          = Parser::Source::Buffer.new(name)
-      @buffer.source   = raw_code
+      @buffer.source   = raw
       builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @rewriter        = Parser::Source::Rewriter.new buffer
       @raw_comments    = extract_comments(builder, buffer)
@@ -58,9 +58,8 @@ class SeeingIsBelieving
       line_indexes.index { |line_index| char_index < line_index } || line_indexes.size
     end
 
-    # TODO: rename linenum_to_index
-    def line_number_to_index(line_num)
-      return raw_code.size if line_indexes.size < line_num
+    def linenum_to_index(line_num)
+      return raw.size if line_indexes.size < line_num
       line_indexes[line_num - 1]
     end
 
@@ -92,10 +91,10 @@ class SeeingIsBelieving
 
     def line_indexes
       @line_indexes ||= [ 0,
-                          *raw_code.each_char
-                                   .with_index(1)
-                                   .select { |char, index| char == "\n" }
-                                   .map    { |char, index| index },
+                          *raw.each_char
+                              .with_index(1)
+                              .select { |char, index| char == "\n" }
+                              .map    { |char, index| index },
                         ].freeze
     end
 
@@ -134,7 +133,7 @@ class SeeingIsBelieving
     def wrap_comment(comment)
       last_char  = comment.location.expression.begin_pos
       first_char = last_char
-      first_char -= 1 while first_char > 0 && raw_code[first_char-1] =~ /[ \t]/
+      first_char -= 1 while first_char > 0 && raw[first_char-1] =~ /[ \t]/
       preceding_whitespace        = buffer.source[first_char...last_char]
       preceding_whitespace_range  = range_for first_char, last_char
 

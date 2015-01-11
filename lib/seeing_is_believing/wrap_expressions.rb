@@ -10,7 +10,6 @@ class SeeingIsBelieving
     end
 
     def initialize(program, wrappings)
-      self.program     = program
       self.before_all  = wrappings.fetch :before_all,  -> { '' }
       self.after_all   = wrappings.fetch :after_all,   -> { '' }
       self.before_each = wrappings.fetch :before_each, -> * { '' }
@@ -41,7 +40,7 @@ class SeeingIsBelieving
 
     private
 
-    attr_accessor :program, :before_all, :after_all, :before_each, :after_each
+    attr_accessor :before_all, :after_all, :before_each, :after_each
     attr_accessor :code, :wrappings
 
     def buffer()          code.buffer            end
