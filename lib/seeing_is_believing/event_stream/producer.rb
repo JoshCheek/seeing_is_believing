@@ -11,15 +11,15 @@ class SeeingIsBelieving
         def shift() end
       end
 
-      attr_accessor :max_line_captures, :num_lines, :filename
+      attr_accessor :max_captures_per_line, :num_lines, :filename
 
       def initialize(resultstream)
-        self.filename          = nil
-        self.max_line_captures = Float::INFINITY
-        self.num_lines         = 0
-        self.recorded_results  = []
-        self.queue             = Queue.new
-        self.producer_thread   = Thread.new do
+        self.filename              = nil
+        self.max_captures_per_line = Float::INFINITY
+        self.num_lines             = 0
+        self.recorded_results      = []
+        self.queue                 = Queue.new
+        self.producer_thread       = Thread.new do
           begin
             resultstream.sync = true
             loop do
@@ -47,9 +47,9 @@ class SeeingIsBelieving
         queue << "ruby_version #{to_string_token ruby_version}"
       end
 
-      def record_max_line_captures(max_line_captures)
-        self.max_line_captures = max_line_captures
-        queue << "max_line_captures #{max_line_captures}"
+      def record_max_captures_per_line(max_captures_per_line)
+        self.max_captures_per_line = max_captures_per_line
+        queue << "max_captures_per_line #{max_captures_per_line}"
       end
 
       StackErrors = [SystemStackError]
@@ -59,7 +59,7 @@ class SeeingIsBelieving
         counts = recorded_results[line_number] ||= Hash.new(0)
         count  = counts[type]
         recorded_results[line_number][type] = count.next
-        if count < max_line_captures
+        if count < max_captures_per_line
           begin
             if block_given?
               inspected = yield(value).to_str
@@ -76,7 +76,7 @@ class SeeingIsBelieving
             inspected = "#<no inspect available>"
           end
           queue << "result #{line_number} #{type} #{to_string_token inspected}"
-        elsif count == max_line_captures
+        elsif count == max_captures_per_line
           queue << "maxed_result #{line_number} #{type}"
         end
         value

@@ -135,7 +135,7 @@ class SeeingIsBelieving
               end
             end
           end
-        when :max_line_captures
+        when :max_captures_per_line
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
           Events::MaxLineCaptures.new(value)

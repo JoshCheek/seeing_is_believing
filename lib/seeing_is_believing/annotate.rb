@@ -1,16 +1,16 @@
 require 'seeing_is_believing/wrap_expressions'
 class SeeingIsBelieving
   module Annotate
-    def self.call(program, filename, number_of_captures, options={})
+    def self.call(program, filename, max_captures_per_line, options={})
       # TODO: much of this is duplicated in annotate_xmpfilter_stle
-      number_of_captures_as_str = number_of_captures.inspect
-      number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
+      max_captures_per_line_as_str = max_captures_per_line.inspect
+      max_captures_per_line_as_str = 'Float::INFINITY' if max_captures_per_line == Float::INFINITY
 
       wrap_expressions_callbacks = {}
       wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  -> { "$SiB.record_ruby_version RUBY_VERSION;"\
                                                                                   "$SiB.record_sib_version #{VERSION.inspect};"\
                                                                                   "$SiB.record_filename #{filename.inspect};"\
-                                                                                  "$SiB.record_max_line_captures #{number_of_captures_as_str};"\
+                                                                                  "$SiB.record_max_captures_per_line #{max_captures_per_line_as_str};"\
                                                                                   "$SiB.num_lines = #{program.lines.count}; " }
       wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   -> { "" }
       wrap_expressions_callbacks[:before_each] = options.fetch :before_each, -> line_number { "(" }

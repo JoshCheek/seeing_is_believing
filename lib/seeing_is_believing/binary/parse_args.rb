@@ -34,29 +34,31 @@ class SeeingIsBelieving
         @result ||= begin
           until args.empty?
             case (arg = args.shift)
-            when '-h',  '--help'                then flags[:help]                = 'help'
-            when '-h+', '--help+'               then flags[:help]                = 'help+'
-            when '-c',  '--clean'               then flags[:clean]               = true
-            when '-v',  '--version'             then flags[:version]             = true
-            when '-x',  '--xmpfilter-style'     then flags[:xmpfilter_style]     = true
-            when '-i',  '--inherit-exit-status' then flags[:inherit_exit_status] = true
-            when '-j',  '--json'                then flags[:result_as_json]      = true
-            when '-g',  '--debug'               then flags[:debug]               = true
-            when        '--safe'                then flags[:safe]                = true
-            when '-d',  '--line-length'         then extract_positive_int_for :max_line_length,    arg
-            when '-D',  '--result-length'       then extract_positive_int_for :max_result_length,  arg
-            when '-n',  '--number-of-captures'  then extract_positive_int_for :number_of_captures, arg
-            when '-t',  '--timeout'             then extract_non_negative_float_for :timeout,      arg
-            when '-r',  '--require'             then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:require]           << filename }
-            when '-I',  '--load-path'           then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|        flags[:load_path]         << dir }
-            when '-e',  '--program'             then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|    flags[:program_from_args] =  program }
-            when '-a',  '--as'                  then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:as]                =  filename }
-            when '-s',  '--alignment-strategy'  then flags[:alignment_strategy] = args.shift
-            when /\A-K(.+)/                     then flags[:encoding] = $1
-            when '-K', '--encoding'             then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| flags[:encoding] = encoding }
-            when        '--shebang'             then next_arg("#{arg} is deprecated, SiB now uses the Ruby it was invoked with")           { |executable| flags[:deprecated_flags] << '--shebang' << executable }
-            when /^(-.|--.*)$/                  then flags[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
-            when /^-[^-]/                       then args.unshift *normalize_shortflags(arg)
+            when '-h',  '--help'                  then flags[:help]                = 'help'
+            when '-h+', '--help+'                 then flags[:help]                = 'help+'
+            when '-c',  '--clean'                 then flags[:clean]               = true
+            when '-v',  '--version'               then flags[:version]             = true
+            when '-x',  '--xmpfilter-style'       then flags[:xmpfilter_style]     = true
+            when '-i',  '--inherit-exit-status'   then flags[:inherit_exit_status] = true
+            when '-j',  '--json'                  then flags[:result_as_json]      = true
+            when '-g',  '--debug'                 then flags[:debug]               = true
+            when        '--safe'                  then flags[:safe]                = true
+            when '-d',  '--line-length'           then extract_positive_int_for :max_line_length,       arg
+            when '-D',  '--result-length'         then extract_positive_int_for :max_result_length,     arg
+            when '-n',  '--max-captures-per-line' then extract_positive_int_for :max_captures_per_line, arg
+            when        '--number-of-captures'    then extracted = extract_positive_int_for :max_captures_per_line, "#{arg} (which is now deprecated, use --max-captures-per-line instead)"
+                                                       flags[:deprecated_flags] << '--number-of-captures' << extracted
+            when '-t',  '--timeout'               then extract_non_negative_float_for :timeout,         arg
+            when '-r',  '--require'               then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:require]           << filename }
+            when '-I',  '--load-path'             then next_arg("#{arg} expected a directory as the following argument but did not see one") { |dir|        flags[:load_path]         << dir }
+            when '-e',  '--program'               then next_arg("#{arg} expected a program as the following argument but did not see one")   { |program|    flags[:program_from_args] =  program }
+            when '-a',  '--as'                    then next_arg("#{arg} expected a filename as the following argument but did not see one")  { |filename|   flags[:as]                =  filename }
+            when '-s',  '--alignment-strategy'    then flags[:alignment_strategy] = args.shift
+            when /\A-K(.+)/                       then flags[:encoding] = $1
+            when '-K', '--encoding'               then next_arg("#{arg} expects an encoding, see `man ruby` for possibile values") { |encoding| flags[:encoding] = encoding }
+            when        '--shebang'               then next_arg("#{arg} is deprecated, SiB now uses the Ruby it was invoked with") { |executable| flags[:deprecated_flags] << '--shebang' << executable }
+            when /^(-.|--.*)$/                    then flags[:errors] << "Unknown option: #{arg.inspect}" # unknown flags
+            when /^-[^-]/                         then args.unshift *normalize_shortflags(arg)
             else
               flags[:filenames] << arg
               flags[:filename] = arg
@@ -74,32 +76,32 @@ class SeeingIsBelieving
 
       def flags
         @flags ||= {
-          as:                  nil,
-          filenames:           [],
-          help:                nil,
-          encoding:            nil,
-          debug:               false,
-          version:             false,
-          clean:               false,
-          xmpfilter_style:     false,
-          inherit_exit_status: false,
-          program_from_args:   nil,
-          filename:            nil,
-          max_line_length:     Float::INFINITY,
-          max_result_length:   Float::INFINITY,
-          number_of_captures:  Float::INFINITY,
-          timeout:             0, # timeout lib treats this as infinity
-          errors:              [],
-          require:             ['seeing_is_believing/the_matrix'],
-          load_path:           [],
-          alignment_strategy:  'chunk',
-          result_as_json:      false,
-          markers:             self.class.default_markers,
-          marker_regexes:      self.class.marker_regexes,
-          short_help_screen:   self.class.help_screen(false),
-          long_help_screen:    self.class.help_screen(true),
-          safe:                false,
-          deprecated_flags:    [],
+          as:                    nil,
+          filenames:             [],
+          help:                  nil,
+          encoding:              nil,
+          debug:                 false,
+          version:               false,
+          clean:                 false,
+          xmpfilter_style:       false,
+          inherit_exit_status:   false,
+          program_from_args:     nil,
+          filename:              nil,
+          max_line_length:       Float::INFINITY,
+          max_result_length:     Float::INFINITY,
+          max_captures_per_line: Float::INFINITY,
+          timeout:               0, # timeout lib treats this as infinity
+          errors:                [],
+          require:               ['seeing_is_believing/the_matrix'],
+          load_path:             [],
+          alignment_strategy:    'chunk',
+          result_as_json:        false,
+          markers:               self.class.default_markers,
+          marker_regexes:        self.class.marker_regexes,
+          short_help_screen:     self.class.help_screen(false),
+          long_help_screen:      self.class.help_screen(true),
+          safe:                  false,
+          deprecated_flags:      [],
         }
       end
 
@@ -126,6 +128,7 @@ class SeeingIsBelieving
         else
           flags[:errors] << "#{flag} expects a positive integer argument"
         end
+        string
       end
 
       def extract_non_negative_float_for(key, flag)
@@ -152,7 +155,7 @@ Usage: seeing_is_believing [options] [filename]
 
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
   -D,  --result-length n         # max length of the portion after the "#{value_marker}"
-  -n,  --number-of-captures n    # how many results to capture for a given line
+  -n,  --max-captures-per-line n # how many results to capture for a given line
                                    if you had 1 million results on a line, it could take a long time to record
                                    and serialize them, you might limit it to 1000 results as an optimization
   -s,  --alignment-strategy name # select the alignment strategy:

@@ -3,7 +3,7 @@ class SeeingIsBelieving
     include Enumerable
     RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
-    attr_accessor :stdout, :stderr, :exitstatus, :number_of_captures, :exception, :num_lines, :sib_version, :ruby_version, :filename
+    attr_accessor :stdout, :stderr, :exitstatus, :max_captures_per_line, :exception, :num_lines, :sib_version, :ruby_version, :filename
 
     def initialize
       self.stdout = ''
@@ -52,8 +52,8 @@ class SeeingIsBelieving
       "#<SIB::Result #{variables.join "\n  "}>"
     end
 
-    def number_of_captures
-      @number_of_captures || Float::INFINITY
+    def max_captures_per_line
+      @max_captures_per_line || Float::INFINITY
     end
 
     private

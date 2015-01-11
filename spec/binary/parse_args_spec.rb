@@ -354,17 +354,28 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  describe ':number_of_captures' do
+  describe ':max_captures_per_line' do
     it 'defaults to infinity' do
-      expect(parse([])[:number_of_captures]).to eq Float::INFINITY
+      expect(parse([])[:max_captures_per_line]).to eq Float::INFINITY
     end
 
-    it 'can be set with --number-of-captures or -n' do
-      expect(parse(['-n', '10'])[:number_of_captures]).to eq 10
-      expect(parse(['--number-of-captures', '10'])[:number_of_captures]).to eq 10
+    it 'can be set with --max-captures-per-line or -n' do
+      expect(parse(['-n', '10'])[:max_captures_per_line]).to eq 10
+      expect(parse(['--max-captures-per-line', '10'])[:max_captures_per_line]).to eq 10
     end
 
-    it_behaves_like 'it requires a positive int argument', ['-n', '--number-of-captures']
+    it 'can be set with the deprecated flag --number-of-captures' do
+      expect(parse(['--number-of-captures', '12'])[:max_captures_per_line]).to eq 12
+    end
+
+    it 'adds --number-of-captures to the list of deprecated flags if used' do
+      expect(parse([])[:deprecated_flags]).to eq []
+      parsed = parse(['--number-of-captures', '12'])
+      expect(parsed[:number_of_captures]).to eq nil
+      expect(parsed[:deprecated_flags]).to eq ['--number-of-captures', '12']
+    end
+
+    it_behaves_like 'it requires a positive int argument', ['-n', '--max-captures-per-line', '--number-of-captures']
   end
 
   describe ':result_as_json' do

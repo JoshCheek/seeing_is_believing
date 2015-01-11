@@ -9,7 +9,7 @@ class SeeingIsBelieving
       end
 
       def self.expression_wrapper(markers, marker_regexes)
-        lambda do |program, filename, number_of_captures|
+        lambda do |program, filename, max_captures_per_line|
           inspect_linenos = []
           pp_linenos      = []
           Code.new(program).inline_comments.each do |c|
@@ -20,12 +20,12 @@ class SeeingIsBelieving
 
           Annotate.call program,
                         filename,
-                        number_of_captures,
+                        max_captures_per_line,
                         before_all: -> {
                           # TODO: this is duplicated with the InspectExpressions class
-                          number_of_captures_as_str = number_of_captures.inspect
-                          number_of_captures_as_str = 'Float::INFINITY' if number_of_captures == Float::INFINITY
-                          "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{number_of_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
+                          max_captures_per_line_as_str = max_captures_per_line.inspect
+                          max_captures_per_line_as_str = 'Float::INFINITY' if max_captures_per_line == Float::INFINITY
+                          "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_captures_per_line #{max_captures_per_line_as_str}; $SiB.num_lines = #{program.lines.count}; "
                         },
                         after_each: -> line_number {
                           should_inspect = inspect_linenos.include?(line_number)

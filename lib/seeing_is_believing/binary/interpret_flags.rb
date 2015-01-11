@@ -93,15 +93,15 @@ class SeeingIsBelieving
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {
-          filename:           (flags.fetch(:as) || filename),
-          stdin:              (file_is_on_stdin? ? '' : stdin),
-          require:            (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
-          load_path:          ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),
-          encoding:           flags.fetch(:encoding),
-          timeout:            timeout,
-          debugger:           debugger,
-          number_of_captures: flags.fetch(:number_of_captures), # TODO: Rename to max_number_of_captures
-          annotate:           annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
+          filename:              (flags.fetch(:as) || filename),
+          stdin:                 (file_is_on_stdin? ? '' : stdin),
+          require:               (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
+          load_path:             ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),
+          encoding:              flags.fetch(:encoding),
+          timeout:               timeout,
+          debugger:              debugger,
+          max_captures_per_line: flags.fetch(:max_captures_per_line),
+          annotate:              annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
         }
 
         # The annotator's options (passed to annotator.call)

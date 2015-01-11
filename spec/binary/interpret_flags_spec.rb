@@ -280,8 +280,8 @@ class SeeingIsBelieving
           expect(options.lib_options[:debugger]).to equal options.debugger
         end
 
-        specify 'number_of_captures is number_of_captures' do
-          expect(call(number_of_captures: 12345)[:number_of_captures]).to eq 12345
+        specify 'max_captures_per_line is max_captures_per_line' do
+          expect(call(max_captures_per_line: 12345)[:max_captures_per_line]).to eq 12345
         end
 
         specify 'annotate is the annotator\'s expression wrapper' do
