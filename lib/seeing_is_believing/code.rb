@@ -46,10 +46,12 @@ class SeeingIsBelieving
       @parser          = Parser::CurrentRuby.new builder
       @inline_comments = raw_comments.select(&:inline?).map { |c| wrap_comment c }
       begin
-        @root          = @parser.parse(@buffer) || null_node
+        @root          = @parser.parse(@buffer)
         @syntax        = Syntax.new
       rescue Parser::SyntaxError
         @syntax        = Syntax.new $!.message, index_to_linenum($!.diagnostic.location.begin_pos)
+      ensure
+        @root        ||= null_node
       end
     end
 
@@ -160,9 +162,8 @@ class SeeingIsBelieving
     end
 
     def null_node
-      # mirrors the code that would come out of '1;2', but with no elements
       location = Parser::Source::Map::Collection.new nil, nil, range_for(0, 0)
-      Parser::AST::Node.new :begin, [], location: location
+      Parser::AST::Node.new :null_node, [], location: location
     end
 
   end

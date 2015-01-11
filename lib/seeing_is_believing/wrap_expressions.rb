@@ -89,7 +89,7 @@ class SeeingIsBelieving
     def wrap_recursive(ast)
       return wrappings unless ast.kind_of? ::AST::Node
       case ast.type
-      when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line
+      when :args, :redo, :retry, :alias, :undef, :splat, :match_current_line, :null_node
         # no op
       when :defs
         add_to_wrappings ast

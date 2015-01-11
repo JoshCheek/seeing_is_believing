@@ -5,11 +5,32 @@ RSpec.describe SeeingIsBelieving::Code do
     described_class.new(raw_code)
   end
 
+  def assert_range(range, begin_pos, end_pos)
+    expect(range.begin_pos).to eq begin_pos
+    expect(range.end_pos).to eq end_pos
+  end
+
   describe '#range_for' do
     it 'returns a range object with the specified start and ends'
   end
 
-  describe 'index_to_linenum' do
+  describe '#root' do
+    it 'returns the root for valid code' do
+      expect(code_for('1').root.type).to eq :int
+    end
+    it 'returns a null root for invalid code' do
+      root = code_for('"').root
+      expect(root.type).to eq :null_node
+      assert_range root.location.expression, 0, 0
+    end
+    it 'returns a null root for empty code' do
+      root = code_for('').root
+      expect(root.type).to eq :null_node
+      assert_range root.location.expression, 0, 0
+    end
+  end
+
+  describe '#index_to_linenum' do
     it 'treats indexes as 0based and lines as 1based' do
       code = code_for "xx\nyyy\n\nzz"
       [[1,0], [1,1], [1,2],
@@ -30,7 +51,7 @@ RSpec.describe SeeingIsBelieving::Code do
     end
   end
 
-  describe 'linenum_to_index' do
+  describe '#linenum_to_index' do
     it 'treats line numebrs as 1based and indexes as 0based' do
       code = code_for "xx\nyyy\n\nzz\n"
       expect(code.linenum_to_index 1).to eq 0
@@ -46,12 +67,7 @@ RSpec.describe SeeingIsBelieving::Code do
   end
 
   # should it begin after magic comments and stuff?
-  describe 'body_range' do
-    def assert_range(range, begin_pos, end_pos)
-      expect(range.begin_pos).to eq begin_pos
-      expect(range.end_pos).to eq end_pos
-    end
-
+  describe '#body_range' do
     it 'returns a range for the whole body' do
       assert_range code_for("\n").body_range, 0, 1
       assert_range code_for("1\n").body_range, 0, 2
