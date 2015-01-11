@@ -512,10 +512,8 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("for a in range\n1\nend")).to eq "<for a in <range>\n<1>\nend>"
       expect(wrap("for a in range do\n1\nend")).to eq "<for a in <range> do\n<1>\nend>"
       expect(wrap("for a,b in whatev\n1\nend")).to eq "<for a,b in <whatev>\n<1>\nend>"
-      # TODO: wake up and look at this
-      # this one just isn't worth it for now, too edge and I'm fucking tired
-      # wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend").should ==
-      #   "<for char in <<<HERE.each_char>\nabc\nHERE\n<puts char>\nend>"
+      expect(wrap("for char in <<HERE.each_char\nabc\nHERE\nputs char\nend"))
+        .to eq "<for char in <<<HERE.each_char>\nabc\nHERE\n<puts char>\nend>"
     end
     it 'does not wrap redo' do
       expect(wrap("loop do\nredo\nend")).to eq "<loop do\nredo\nend>"
