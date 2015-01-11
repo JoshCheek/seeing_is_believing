@@ -1,6 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/engine'
+require 'seeing_is_believing/binary/options'
 
 class SeeingIsBelieving
   module Binary
@@ -10,38 +10,38 @@ class SeeingIsBelieving
 
     def self.call(argv, stdin, stdout, stderr)
       flags  = ParseArgs.call(argv)
-      engine = Engine.new(flags, stdin, stdout)
+      options = Options.new(flags, stdin, stdout)
 
-      if engine.print_help?
-        stdout.puts engine.help_screen
+      if options.print_help?
+        stdout.puts options.help_screen
         return SUCCESS_STATUS
       end
 
-      if engine.print_version?
+      if options.print_version?
         stdout.puts SeeingIsBelieving::VERSION
         return SUCCESS_STATUS
       end
 
-      if engine.errors.any?
-        stderr.puts *engine.errors, *engine.deprecations
+      if options.errors.any?
+        stderr.puts *options.errors, *options.deprecations
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if engine.print_cleaned?
-        stdout.print engine.clean_body
+      if options.print_cleaned?
+        stdout.print options.clean_body
         return SUCCESS_STATUS
       end
 
-      if engine.syntax_error?
-        stderr.puts engine.syntax_error_message
+      if options.syntax_error?
+        stderr.puts options.syntax_error_message
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
       results, program_timedout, unexpected_exception =
-        evaluate_program(engine.prepared_body, engine.lib_options)
+        evaluate_program(options.prepared_body, options.lib_options)
 
       if program_timedout
-        stderr.puts "Timeout Error after #{engine.timeout_seconds} seconds!"
+        stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
@@ -60,7 +60,7 @@ class SeeingIsBelieving
 
       # TODO: it feels like there should be a printer object?
       # ie shouldn't all the outputs be json if they specified json?
-      if engine.result_as_json?
+      if options.result_as_json?
         require 'json'
         stdout.puts JSON.dump(result_as_data_structure(results))
         return SUCCESS_STATUS
@@ -68,11 +68,11 @@ class SeeingIsBelieving
 
       # TODO: Annoying debugger stuff from annotators can move up to here
       # or maybe debugging goes to stderr, and we still print this anyway?
-      annotated = engine.annotator.call(engine.prepared_body, results, engine.annotator_options) # TODO: feture envy, move down into engine?
-      annotated = annotated[0...-1] if engine.appended_newline?
+      annotated = options.annotator.call(options.prepared_body, results, options.annotator_options) # TODO: feture envy, move down into options?
+      annotated = annotated[0...-1] if options.appended_newline?
       stdout.print annotated
 
-      if engine.inherit_exit_status?
+      if options.inherit_exit_status?
         results.exitstatus
       elsif results.exitstatus != 0 # e.g. `exit 0` raises SystemExit but isn't an error
         DISPLAYABLE_ERROR_STATUS
@@ -83,8 +83,8 @@ class SeeingIsBelieving
 
     private
 
-    def self.evaluate_program(body, engine)
-      return SeeingIsBelieving.call(body, engine), false, nil
+    def self.evaluate_program(body, options)
+      return SeeingIsBelieving.call(body, options), false, nil
     rescue Timeout::Error
       return nil, true, nil
     rescue Exception

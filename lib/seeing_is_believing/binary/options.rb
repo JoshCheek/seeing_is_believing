@@ -20,7 +20,7 @@ require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   module Binary
-    class Engine
+    class Options
       def self.to_regex(string)
         flag_to_bit = {'i' => 0b001, 'x' => 0b010, 'm' => 0b100}
         string =~ %r{\A/(.*)/([mxi]*)\Z}
