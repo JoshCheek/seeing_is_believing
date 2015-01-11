@@ -45,7 +45,6 @@ class SeeingIsBelieving
 
     def buffer()          code.buffer            end
     def rewriter()        code.rewriter          end
-    def void_value?(ast)  code.void_value?(ast)  end # TODO: just call directly on Code
 
     def root_range
       code.root.location.expression
@@ -98,11 +97,11 @@ class SeeingIsBelieving
         add_children ast
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
-          add_to_wrappings ast unless ast.children.any? { |child| void_value? child }
+          add_to_wrappings ast unless ast.children.any? { |child| code.void_value? child }
           add_children ast
         else
           keyword = ast.location.keyword.source
-          if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| void_value? child }
+          if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| code.void_value? child }
             add_to_wrappings ast
           end
           add_children ast
@@ -186,7 +185,7 @@ class SeeingIsBelieving
         add_children ast
       when :begin
         if ast.location.expression.source.start_with?("(") && # e.g. `(1)` we want `<(1)>`
-          !void_value?(ast)                                   # e.g. `(return 1)` we want `(return <1>)`
+          !code.void_value?(ast)                              # e.g. `(return 1)` we want `(return <1>)`
           add_to_wrappings ast
         end
         add_children ast
