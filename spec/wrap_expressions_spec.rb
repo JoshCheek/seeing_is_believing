@@ -1,8 +1,6 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-# TODO: [1,\n*b\n] <[<1>,\n*<b>\n]>
-
 # TODO: (this one is an actual bug, we generate invalid syntax)
 # def a(&b)
 #   b
@@ -288,9 +286,9 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("a 1,\n2")).to eq "<a <1>,\n2>"
     end
 
-    it 'does not wrap splat args' do
-      expect(wrap("a(\n*a\n)")).to eq "<a(\n*a\n)>"
-      expect(wrap("a(\n*1..2\n)")).to eq "<a(\n*1..2\n)>"
+    it 'does wraps splat args' do
+      expect(wrap("a(\n*a\n)")).to eq "<a(\n*<a>\n)>"
+      expect(wrap("a(\n*1..2\n)")).to eq "<a(\n*<1..2>\n)>"
     end
 
     it 'does not wrap hash args' do
@@ -568,8 +566,8 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("%w[\n1\n]")).to eq "<%w[\n1\n]>"
     end
 
-    it 'does not wrap splat elements' do
-      expect(wrap("[1,\n*2..3,\n4\n]")).to eq "<[<1>,\n*2..3,\n<4>\n]>"
+    it 'does wraps splat elements' do
+      expect(wrap("[1,\n*2..3,\n4\n]")).to eq "<[<1>,\n*<2..3>,\n<4>\n]>"
     end
   end
 
@@ -790,7 +788,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
-  describe 'lambdas', t:true do
+  describe 'lambdas' do
     it 'wraps the lambda' do
       expect(wrap("lambda { }")).to eq "<lambda { }>"
       expect(wrap("lambda { |;a| }")).to eq "<lambda { |;a| }>"
@@ -862,7 +860,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("def a b:\nreturn 1\nend")).to eq "<def a b:\nreturn <1>\nend>"
       expect(wrap("def a b:\nreturn\nend")).to eq "<def a b:\nreturn\nend>"
       expect(wrap("a b:1, **c")).to eq "<a b:1, **c>"
-      pending "THIS IS A BUG! (NOTE: THEY ALSO HIT ARRAY SPLATTING)"
       expect(wrap("{\na:1,\n**b\n}")).to eq "<{\na:<1>,\n**<b>\n}>"
       expect(wrap("a(b:1,\n **c\n)")).to eq "<a(b:<1>,\n **<c>\n)>"
     end
