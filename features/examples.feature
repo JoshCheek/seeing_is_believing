@@ -105,7 +105,7 @@ Feature: Running the binary successfully
       def name
         @name   # => "Josh", "Rick"
       end       # => {{method_result :name}}
-    end
+    end         # => {{method_result :name}}
 
     User.new("Josh").name  # => "Josh"
     User.new("Rick").name  # => "Rick"

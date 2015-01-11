@@ -91,7 +91,7 @@ class SeeingIsBelieving
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :match_current_line, :null_node
         # no op
-      when :defs
+      when :defs, :class, :module
         add_to_wrappings ast
         add_children ast, true
       when :rescue, :ensure, :return, :break, :next, :splat, :kwsplat
@@ -107,7 +107,7 @@ class SeeingIsBelieving
           end
           add_children ast
         end
-      when :when, :pair, :class, :module, :sclass
+      when :when, :pair # pair is 1=>2
         wrap_recursive ast.children.last
       when :resbody
         exception_type, variable_name, body = ast.children

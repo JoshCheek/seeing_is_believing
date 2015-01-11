@@ -700,37 +700,30 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
-  # TODO: Just go ahead and wrap these
-  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally wraped
-  # by e.g. a begin/end
-  # ignoring public/private/protected for now, b/c they're just methods, not keywords
-  describe 'class definitions' do
+  describe 'class definitions', t:true do
     it 'does not wrap the class definition, does wrap the body' do
-      expect(wrap("class A\n1\nend")).to eq "class A\n<1>\nend"
+      expect(wrap("class A\n1\nend")).to eq "<class A\n<1>\nend>"
     end
 
     it 'does not wrap the superclass definition' do
-      expect(wrap("class A < B\nend")).to eq "class A < B\nend"
+      expect(wrap("class A < B\nend")).to eq "<class A < <B>\nend>"
     end
 
     it 'wraps the rescue body' do
-      expect(wrap("class A < B\n1\nrescue\n2\nend")).to eq "class A < B\n<1>\nrescue\n<2>\nend"
+      expect(wrap("class A < B\n1\nrescue\n2\nend")).to eq "<class A < <B>\n<1>\nrescue\n<2>\nend>"
     end
 
     it 'does not wrap the singleton class' do
-      expect(wrap("class << self\n end")).to eq "class << self\n end"
+      expect(wrap("class << self\n end")).to eq "<class << <self>\n end>"
     end
   end
 
-  # eventually, don't wrap these b/c they're spammy, but can be annoying since they can be accidentally wraped
-  # by e.g. a begin/end
-  # ignoring public/private/protected for now, b/c they're just methods, not keywords
-  describe 'module definitions' do
+  describe 'module definitions', t:true do
     it 'does not wrap the definition, does wrap the body' do
-      expect(wrap("module A\n1\nend")).to eq "module A\n<1>\nend"
+      expect(wrap("module A\n1\nend")).to eq "<module A\n<1>\nend>"
     end
     it 'wraps the rescue portion' do
-      expect(wrap("module A\n1\nrescue\n2\nend")).to eq "module A\n<1>\nrescue\n<2>\nend"
+      expect(wrap("module A\n1\nrescue\n2\nend")).to eq "<module A\n<1>\nrescue\n<2>\nend>"
     end
   end
 

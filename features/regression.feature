@@ -184,7 +184,7 @@ Feature:
     """
     class CreditCard
 
-    end
+    end  # => nil
 
     describe CreditCard do  # ~> NoMethodError: undefined method `describe' for main:Object
 
@@ -224,7 +224,7 @@ Feature:
       def inspect
         "<PROC>"   # => "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>", "<PROC>"
       end          # => {{method_result :inspect}}
-    end
+    end            # => {{method_result :inspect}}
 
     generic_fib_gen = -> current, prev {
       -> {
@@ -390,7 +390,7 @@ Feature:
     class Object
       def !(a)
       end         # => {{method_result :!}}
-    end
+    end           # => {{method_result :!}}
     """
 
 
