@@ -242,6 +242,16 @@ class SeeingIsBelieving
         end
       end
 
+      context 'clean_body' do
+        it 'ends in a newline if the body ended in a newline' do
+          expect(call(program_from_args: "1").clean_body).to eq "1"
+          expect(call(program_from_args: "1\n").clean_body).to eq "1\n"
+        end
+        it 'has the annotations removed' do
+          expect(call(program_from_args: "1 # =>").clean_body).to eq "1"
+        end
+      end
+
       context 'lib_options' do
         def call(overrides={})
           super(overrides).lib_options

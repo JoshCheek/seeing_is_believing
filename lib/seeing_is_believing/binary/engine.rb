@@ -1,17 +1,21 @@
-# Debugger initialization happens here
+# Debugger initialization
 require 'seeing_is_believing/debugger'
 
-# Alignment decision happens here
+# Alignment decision
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
 
-# Evaluator decision happens here
+# Evaluator decision
 require 'seeing_is_believing/evaluate_by_moving_files'
 
-# Annotator decision happens here
+# Annotator decision
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
+
+# Interface to lower level work
+require 'seeing_is_believing/binary/remove_annotations'
+
 
 class SeeingIsBelieving
   module Binary
@@ -136,6 +140,14 @@ class SeeingIsBelieving
         end
         inspected << ">"
         inspected
+      end
+
+      def clean_body
+        @clean_body ||= begin
+          clean_body = RemoveAnnotations.call prepared_body, true, marker_regexes
+          clean_body.chomp! if appended_newline?
+          clean_body
+        end
       end
 
       private

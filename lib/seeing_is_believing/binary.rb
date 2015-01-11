@@ -1,7 +1,6 @@
 require 'seeing_is_believing'
 require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/engine'
-require 'seeing_is_believing/binary/remove_annotations'
 
 class SeeingIsBelieving
   module Binary
@@ -24,13 +23,12 @@ class SeeingIsBelieving
       end
 
       if engine.errors.any?
-        to_print = engine.errors + engine.deprecations
-        stderr.puts to_print.join("\n")
+        stderr.puts *engine.errors, *engine.deprecations
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
       if engine.print_cleaned?
-        stdout.print RemoveAnnotations.call(engine.prepared_body, true, engine.marker_regexes)
+        stdout.print engine.clean_body
         return SUCCESS_STATUS
       end
 
