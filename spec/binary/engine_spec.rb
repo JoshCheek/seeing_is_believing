@@ -7,6 +7,7 @@ class SeeingIsBelieving
     RSpec.describe Engine do
       let(:stdin)  { double :stdin }
       let(:stdout) { double :stdout }
+      let(:stderr) { double :stderr }
 
       def call(body, options={})
         timeout = options.delete(:timeout)
@@ -14,7 +15,7 @@ class SeeingIsBelieving
         flags   = ParseArgs.call []
         flags[:program_from_args] = body
         flags[:timeout_seconds]   = timeout
-        options = Options.new(flags, stdin, stdout)
+        options = Options.new(flags, stdin, stdout, stderr)
         Engine.new options
       end
 

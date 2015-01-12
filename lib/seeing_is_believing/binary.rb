@@ -10,7 +10,7 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      options = Options.new ParseArgs.call(argv), stdin, stdout
+      options = Options.new(ParseArgs.call(argv), stdin, stdout, stderr)
       engine  = Engine.new options
 
       if options.print_help?

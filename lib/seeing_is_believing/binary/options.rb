@@ -52,7 +52,7 @@ class SeeingIsBelieving
       attr_attribute :errors
       attr_attribute :deprecations
 
-      def initialize(flags, stdin, stdout)
+      def initialize(flags, stdin, stdout, stderr)
         # Some simple attributes
         self.attributes = {}
         attributes[:deprecations]    = flags.fetch(:deprecated_args)
@@ -75,8 +75,7 @@ class SeeingIsBelieving
         attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
         attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
         # TODO: allow debugger to take a stream
-        # TODO: dbeugger should debug to stderr, not stdout
-        attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stdout, colour: true) : Debugger.new(stream: nil)
+        attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
 
         # The lib's options (passed to SeeingIsBelieving.new)
         attributes[:lib_options] = {

@@ -7,6 +7,7 @@ class SeeingIsBelieving
       let(:stdin_data)  { 'stdin data' }
       let(:stdin)       { double 'stdin', read: stdin_data }
       let(:stdout)      { double 'stdout' }
+      let(:stderr)      { double 'stderr' }
 
       let(:file_body)            { 'good file body' }
       let(:nonexisting_filename) { 'badfilename'    }
@@ -21,7 +22,7 @@ class SeeingIsBelieving
 
       def call(overrides={})
         flags = ParseArgs.call []
-        described_class.new(flags.merge(overrides), stdin, stdout)
+        described_class.new(flags.merge(overrides), stdin, stdout, stderr)
       end
 
       describe '.to_regex' do
@@ -111,12 +112,17 @@ class SeeingIsBelieving
       end
 
       context 'debug' do
-        it 'sts a null debugger when false' do
+        it 'sets a null debugger when false' do
           expect(call(debug: false).debugger).to_not be_enabled
         end
 
-        it 'sets a debugger to the output stream when true' do
+        it 'sets a debugger to the error stream when true' do
           expect(call(debug: true).debugger).to be_enabled
+          seen = ""
+          allow(stderr).to receive(:<<) { |str| seen << str }
+          call(debug: true).debugger.context("oooooooo") { "chills and fever" }
+          expect(seen).to include "oooooooo"
+          expect(seen).to include "chills and fever"
         end
       end
 
@@ -196,7 +202,7 @@ class SeeingIsBelieving
           deprecated_arg = ParseArgs::DeprecatedArg.new('do something else', ['flag'])
           flags = ParseArgs.call([])
           flags.fetch(:deprecated_args) << deprecated_arg
-          options = described_class.new(flags, stdin, stdout)
+          options = described_class.new(flags, stdin, stdout, stderr)
           expect(options.deprecations).to include deprecated_arg
         end
       end
@@ -265,7 +271,7 @@ class SeeingIsBelieving
         end
 
         specify 'debugger is the same as the toplevel debugger' do
-          options = described_class.new(ParseArgs.call([]), stdin, stdout)
+          options = described_class.new(ParseArgs.call([]), stdin, stdout, stderr)
           expect(options.lib_options[:debugger]).to equal options.debugger
         end
 
@@ -292,18 +298,18 @@ class SeeingIsBelieving
 
         it 'sets an error if the requested alignment strategy is not known, or not provided' do
           flags  = ParseArgs.call([])
-          options = described_class.new(flags.merge(alignment_strategy: 'chunk'), stdin, stdout)
+          options = described_class.new(flags.merge(alignment_strategy: 'chunk'), stdin, stdout, stderr)
           expect(options.errors.join).to_not include 'alignment-strategy'
 
-          options = described_class.new(flags.merge(alignment_strategy: 'nonsense'), stdin, stdout)
+          options = described_class.new(flags.merge(alignment_strategy: 'nonsense'), stdin, stdout, stderr)
           expect(options.errors.join).to include 'alignment-strategy does not know'
 
-          options = described_class.new(flags.merge(alignment_strategy: nil), stdin, stdout)
+          options = described_class.new(flags.merge(alignment_strategy: nil), stdin, stdout, stderr)
           expect(options.errors.join).to include 'alignment-strategy expected an alignment strategy'
         end
 
         it 'sets the debugger to the toplevel debugger' do
-          options = described_class.new(ParseArgs.call([]), stdin, stdout)
+          options = described_class.new(ParseArgs.call([]), stdin, stdout, stderr)
           expect(options.annotator_options[:debugger]).to equal options.debugger
         end
 
