@@ -10,6 +10,10 @@ class SeeingIsBelieving
       @init_blocks ||= {}
     end
 
+    def init_blocks=(init_blocks)
+      @init_blocks = init_blocks
+    end
+
     def attribute(name, value=NoDefault, &init_block)
       init_blocks.key?(name)                       && raise(ArgumentError, "#{name} was already defined")
       name.kind_of?(Symbol)                        || raise(ArgumentError, "#{name.inspect} should have been a symbol")
@@ -55,7 +59,8 @@ class SeeingIsBelieving
     end
 
     def anon
-      Class.new(self)
+      init_blocks = self.init_blocks.dup
+      Class.new(self) { @init_blocks = init_blocks }
     end
 
     def for(*attributes_args)

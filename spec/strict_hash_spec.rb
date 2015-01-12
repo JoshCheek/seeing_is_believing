@@ -128,6 +128,15 @@ RSpec.describe SeeingIsBelieving::StrictHash do
       eq! 3,     klass.new(a: 1).b
       raises!(NoMethodError) { klass.new(a: 1).b? }
     end
+
+    specify 'subclasses retain their parents attributes without them mixing' do
+      parent = klass.attributes(a: 1)
+      child  = klass.for(b: 2)
+      eq! 1, child.new.a
+      eq! 2, child.new.b
+      eq! 1, parent.new.a
+      raises!(NoMethodError) { parent.new.b }
+    end
   end
 
 
