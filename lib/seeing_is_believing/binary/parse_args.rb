@@ -1,10 +1,41 @@
 # encoding: utf-8
 
 require 'seeing_is_believing/version' # We print the version in the output
+require 'seeing_is_believing/strict_hash'
 
 class SeeingIsBelieving
   module Binary
     class ParseArgs
+      class ParsedArgs < StrictHash
+        attribute :as,                    nil
+        attribute :help,                  nil
+        attribute :encoding,              nil
+        attribute :debug,                 false
+        attribute :version,               false
+        attribute :clean,                 false
+        attribute :xmpfilter_style,       false
+        attribute :inherit_exit_status,   false
+        attribute :program_from_args,     nil
+        attribute :filename,              nil
+        attribute :max_line_length,       Float::INFINITY
+        attribute :max_result_length,     Float::INFINITY
+        attribute :max_captures_per_line, Float::INFINITY
+        attribute :timeout_seconds,       0
+        attribute :result_as_json,        false
+        attribute :safe,                  false # TODO still using this?
+
+        attribute(:deprecated_args)       { [] }
+        attribute(:filenames)             { [] }
+        attribute(:errors)                { [] }
+        attribute(:require)               { ['seeing_is_believing/the_matrix'] }
+        attribute(:load_path)             { [] }
+        attribute(:alignment_strategy)    { 'chunk' }
+        attribute(:markers)               { ParseArgs.default_markers }
+        attribute(:marker_regexes)        { ParseArgs.marker_regexes }
+        attribute(:short_help_screen)     { ParseArgs.help_screen(false) }
+        attribute(:long_help_screen)      { ParseArgs.help_screen(true) }
+      end
+
       DeprecatedArg = Struct.new :explanation, :args do
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
@@ -86,42 +117,12 @@ class SeeingIsBelieving
         end
       end
 
-
-
       private
 
       attr_accessor :args
 
-      # TODO: return a "safe hash" ie cannot set/get args that it wasn't initialized with
       def flags
-        @flags ||= {
-          as:                    nil,
-          filenames:             [],
-          help:                  nil,
-          encoding:              nil,
-          debug:                 false,
-          version:               false,
-          clean:                 false,
-          xmpfilter_style:       false,
-          inherit_exit_status:   false,
-          program_from_args:     nil,
-          filename:              nil,
-          max_line_length:       Float::INFINITY,
-          max_result_length:     Float::INFINITY,
-          max_captures_per_line: Float::INFINITY,
-          timeout_seconds:       0,
-          errors:                [],
-          require:               ['seeing_is_believing/the_matrix'],
-          load_path:             [],
-          alignment_strategy:    'chunk',
-          result_as_json:        false,
-          markers:               self.class.default_markers,
-          marker_regexes:        self.class.marker_regexes,
-          short_help_screen:     self.class.help_screen(false),
-          long_help_screen:      self.class.help_screen(true),
-          safe:                  false,
-          deprecated_args:       [],
-        }
+        @flags ||= ParsedArgs.new
       end
 
       def saw_deprecated(explanation, *args)

@@ -360,7 +360,7 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   describe ':shebang' do
     it 'is added to the list of deprecated flags' do
       parsed = parse(['--shebang', 'not_ruby', 'other'])
-      expect(parsed[:shebang]).to eq nil
+      expect(parsed).to_not be_key(:shebang)
       assert_deprecated '--shebang', 'not_ruby'
     end
 
