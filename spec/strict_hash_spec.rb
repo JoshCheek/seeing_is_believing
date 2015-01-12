@@ -12,8 +12,8 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     klass
   }
 
-  def eq!(expected, actual)
-    expect(expected).to eq actual
+  def eq!(expected, actual, *message)
+    expect(actual).to eq(expected), *message
   end
 
   def raises!(*exception_class_and_matcher, &block)
@@ -86,59 +86,203 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         raises!(ArgumentError) { klass.attributes 'c' => 1 }
         raises!(ArgumentError) { klass.predicates 'd' => 1 }
       end
-
-      specify 'accept nil as a value (common edge case)' do
-        eq! nil, klass.attribute(:a, nil).new.a
-      end
     end
   end
 
 
   describe 'use' do
     describe 'initialization' do
-      it 'sets all values to their defaults, calling the init blocks at that time'
-      it 'accepts a hash of any declard attribute overrides'
-      it 'accepts string and symbol keys'
-      it 'raises if given any attributes it doesn\'t know'
+      it 'sets all values to their defaults, calling the init blocks at that time' do
+        calls = []
+        klass.attribute(:a) { calls << :a; 1 }.attribute(:b, 2).attributes(c: 3)
+             .predicate(:d) { calls << :d; 4 }.predicate(:e, 5).predicates(f: 6)
+        eq! [], calls
+        instance = klass.new
+        eq! [:a, :d], calls
+        eq! 1, instance.a
+        eq! 2, instance.b
+        eq! 3, instance.c
+        eq! 4, instance.d
+        eq! 5, instance.e
+        eq! 6, instance.f
+        eq! [:a, :d], calls
+      end
+      it 'accepts a hash of any declard attribute overrides' do
+        instance = klass.attributes(a: 1, b: 2).new(a: 3)
+        eq! 3, instance.a
+        eq! 2, instance.b
+      end
+      it 'accepts string and symbol keys' do
+        instance = klass.attributes(a: 1, b: 2).new(a: 3, 'b' => 4)
+        eq! 3, instance.a
+        eq! 4, instance.b
+      end
+      it 'raises if initialized with attributes it doesn\'t know' do
+        klass.attribute :a, 1
+        raises!(KeyError) { klass.new b: 2 }
+      end
     end
 
     describe '#[] / #[]=' do
-      specify 'get/set an attribute'
-      specify 'raise if given a key that is not an attribute'
-      specify 'accepts string and symbol keys'
+      specify 'get/set an attribute using string or symbol' do
+        instance = klass.attribute(:a, 1).new
+        eq! 1, instance[:a]
+        eq! 1, instance['a']
+        instance[:a] = 2
+        eq! 2, instance[:a]
+        eq! 2, instance['a']
+        instance['a'] = 3
+        eq! 3, instance[:a]
+        eq! 3, instance['a']
+      end
+      specify 'raise if given a key that is not an attribute' do
+        instance = klass.attribute(:a, 1).new
+        instance[:a]
+        raises!(KeyError) { instance[:b] }
+
+        instance[:a] = 2
+        raises!(KeyError) { instance[:b] = 2 }
+      end
     end
 
     describe 'setter, getter, predicate' do
-      specify '#<attr>  gets the attribute'
-      specify '#<attr>= sets the attribute'
-      specify '#<attr>? is an additional predicate getter'
-      specify '#<attr>? always returns true or false'
+      specify '#<attr>  gets the attribute' do
+        eq! 1, klass.attribute(:a, 1).new.a
+      end
+      specify '#<attr>= sets the attribute' do
+        instance = klass.attribute(:a, 1).new
+        eq! 1, instance.a
+        instance.a = 2
+        eq! 2, instance.a
+      end
+      specify '#<attr>? is an additional predicate getter' do
+        klass.attribute(:a, 1).attributes(b: 2)
+             .predicate(:c, 3).predicates(d: 4)
+        instance = klass.new
+        raises!(NoMethodError) { instance.a? }
+        raises!(NoMethodError) { instance.b? }
+        instance.c?
+        instance.d?
+      end
+      specify '#<attr>? returns true or false based on what the value would do in a conditional' do
+        instance = klass.predicates(nil: nil, false: false, true: true, object: Object.new).new
+        eq! false, instance.nil?
+        eq! false, instance.false?
+        eq! true,  instance.true?
+        eq! true,  instance.object?
+      end
     end
 
+    # include a fancy inspect with optional color?, optional width? tabular format?
     describe 'inspection' do
-      it 'inspects prettily' # optional color?, optional width? tabular format?
+      class Example < described_class
+        attributes a: 1, b: "c"
+      end
+      it 'inspects prettily' do
+        eq! '#<StrictHash Example: {a: 1, b: "c"}>', Example.new.inspect
+        klass.attributes(c: /d/)
+        eq! '#<StrictHash subclass: {c: /d/}>', klass.new.inspect
+      end
     end
 
     describe '#to_hash / #to_h' do
-      it 'returns a dup\'d Ruby hash of the internal attributes'
+      it 'returns a dup\'d Ruby hash of the internal attributes' do
+        klass.attributes(a: 1, b: 2)
+        eq!({a: 1, b: 3}, klass.new(b: 3).to_hash)
+        eq!({a: 3, b: 2}, klass.new(a: 3).to_h)
+
+        instance = klass.new
+        instance.to_h[:a] = :injected
+        eq!({a: 1, b: 2}, instance.to_h)
+      end
     end
 
     describe 'merge' do
-      it 'returns a new instance with the merged values overriding its own'
+      before { klass.attributes(a: 1, b: 2, c: 3) }
+
+      it 'returns a new instance with the merged values overriding its own' do
+        merged = klass.new(b: -2).merge c: -3
+        eq! klass, merged.class
+        eq!({a: 1, b: -2, c: -3}, merged.to_h)
+      end
+
+      it 'does not modify the LHS or RHS' do
+        instance   = klass.new b: -2
+        merge_hash = {c: -3}
+        instance.merge merge_hash
+        eq!({a: 1, b: -2, c: 3}, instance.to_h)
+        eq!({c: -3}, merge_hash)
+      end
     end
 
     describe 'enumerability' do
-      it 'is enumerable, iterating over each attribute(as symbol)/value pair'
-      it 'iterates in the order the attributes were declared'
+      it 'is enumerable, iterating over each attribute(as symbol)/value pair' do
+        klass.attributes(a: 1, b: 2)
+        eq! [[:a, 1], [:b, 2]], klass.new.to_a
+        eq! "a1b2", klass.new.each.with_object("") { |(k, v), s| s << "#{k}#{v}" }
+      end
     end
 
     describe 'keys/values' do
-      specify 'keys returns an array of symbols of all its attributes'
-      specify 'values returns an array of symbol values'
+      specify 'keys returns an array of symbols of all its attributes' do
+        eq! [:a, :b], klass.attributes(a: 1, b: 2).new(b: 3).keys
+      end
+      specify 'values returns an array of symbol values' do
+        eq! [1, 3], klass.attributes(a: 1, b: 2).new(b: 3).values
+      end
     end
 
     describe '#key? / #has_key? / #include? / #member?' do
-      specify 'return true iff the key (symbolic or string) is an attribute'
+      specify 'return true iff the key (symbolic or string) is an attribute' do
+        instance = klass.attributes(a: 1, b: nil, c: false).new
+        [:key?, :has_key?, :include?, :member?].each do |predicate|
+          [:a, :b, :c, 'a', 'b', 'c'].each do |key|
+            eq! true, instance.__send__(predicate, key), "#{instance.inspect}.#{predicate}(#{key.inspect}) returned false"
+          end
+          eq! false, instance.__send__(predicate, :d)
+          eq! false, instance.__send__(predicate, 'd')
+          eq! false, instance.__send__(predicate, /b/)
+        end
+      end
+    end
+
+    specify 'accepts nil as a value (common edge case)' do
+      klass.attributes default_is_nil: nil, default_is_1: 1
+
+      # default init block
+      instance = klass.new
+      eq! nil, instance.default_is_nil
+      eq! nil, instance[:default_is_nil]
+
+      # overridden on initialization
+      instance = klass.new default_is_1: nil
+      eq! nil, instance.default_is_1
+      eq! nil, instance[:default_is_1]
+
+      # set with setter
+      instance = klass.new
+      instance.default_is_1 = nil
+      eq! nil, instance.default_is_1
+      eq! nil, instance[:default_is_1]
+
+      # set with []= and symbol
+      instance = klass.new
+      instance[:default_is_1] = nil
+      eq! nil, instance.default_is_1
+      eq! nil, instance[:default_is_1]
+
+      # set with []= and string
+      instance = klass.new
+      instance['default_is_1'] = nil
+      eq! nil, instance.default_is_1
+      eq! nil, instance[:default_is_1]
+
+      # set after its been set to nil
+      instance = klass.new
+      instance[:default_is_nil] = nil
+      instance[:default_is_nil] = nil
+      instance.default_is_nil   = nil
+      instance.default_is_nil   = nil
     end
   end
 end
