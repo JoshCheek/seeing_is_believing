@@ -199,7 +199,7 @@ class SeeingIsBelieving
 
       context 'deprecations' do
         it 'is the list of deprecations from the flags' do
-          deprecated_arg = ParseArgs::DeprecatedArg.new('do something else', ['flag'])
+          deprecated_arg = ParseArgs::DeprecatedArg.new(explanation: 'do something else', args: ['flag'])
           expect(
             opts(deprecated_args: [deprecated_arg]).deprecations
           ).to include deprecated_arg

@@ -48,7 +48,9 @@ class SeeingIsBelieving
                    stderr:    '^#\s*!>\s*'.freeze
       end
 
-      DeprecatedArg = Struct.new :explanation, :args do
+      class DeprecatedArg < StrictHash
+        attribute :explanation, nil
+        attribute :args,        nil
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
         end
@@ -122,7 +124,7 @@ class SeeingIsBelieving
       end
 
       def saw_deprecated(explanation, *args)
-        flags[:deprecated_args] << DeprecatedArg.new(explanation, args)
+        flags[:deprecated_args] << DeprecatedArg.new(explanation: explanation, args: args)
       end
 
       def normalize_shortflags(consolidated_shortflag)
