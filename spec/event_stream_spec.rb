@@ -546,7 +546,6 @@ module SeeingIsBelieving::EventStream
         expect(read.gets).to eq nil
       end
 
-      # TODO: just delete this altogether? what value does it actually have?
       describe 'num_lines' do
         it 'interprets numbers' do
           producer.num_lines = 21

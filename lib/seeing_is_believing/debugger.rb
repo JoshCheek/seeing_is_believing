@@ -1,7 +1,7 @@
 class SeeingIsBelieving
   class Debugger
 
-    CONTEXT_COLOUR = "\e[37;44m"
+    CONTEXT_COLOUR = "\e[37;44m" # background blue
     RESET_COLOUR   = "\e[0m"
 
     # TODO: CI debugger

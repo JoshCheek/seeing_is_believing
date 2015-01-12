@@ -304,7 +304,6 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
   end
 
   describe ':alignment_strategy' do
-    # TODO: maybe change the default?
     it 'defaults to "chunk"' do
       expect(parse([])[:alignment_strategy]).to eq 'chunk'
     end
