@@ -1,6 +1,14 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
+# TODO: BUG -- incorrectly wraps void value, generating syntactically invalid code
+# a = begin
+#       1
+#     else
+#       break true
+#     end
+# a
+
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
     code = code + "\n" unless code.end_with? "\n"
