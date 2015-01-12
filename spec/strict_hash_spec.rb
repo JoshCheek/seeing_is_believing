@@ -149,6 +149,20 @@ RSpec.describe SeeingIsBelieving::StrictHash do
       end
     end
 
+    describe '#fetch' do
+      let(:instance) { klass.attributes(a: :value).new }
+      it 'returns the key if it exists' do
+        eq! :value, instance.fetch(:a)
+      end
+      it 'accepts a second argument, which it just ignores' do
+        eq! :value, instance.fetch(:a, :default)
+      end
+      it 'raises a KeyError if the key doesn\'t exist, regardless of the second argument or a default block -- point of this is that you know what\'s in the hashes' do
+        raises!(KeyError) { instance.fetch(:b, :default) }
+        raises!(KeyError) { instance.fetch(:b) { :default } }
+      end
+    end
+
     describe 'setter, getter, predicate' do
       specify '#<attr>  gets the attribute' do
         eq! 1, klass.attribute(:a, 1).new.a

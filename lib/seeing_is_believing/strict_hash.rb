@@ -63,6 +63,10 @@ class SeeingIsBelieving
       @attributes[internalize key] = value
     end
 
+    def fetch(key, ignored=nil)
+      self[key]
+    end
+
     def to_hash
       @attributes.dup
     end
