@@ -7,23 +7,22 @@ class SeeingIsBelieving
   module Binary
     class ParseArgs
       class ParsedArgs < StrictHash
-        attribute :as,                    nil
-        attribute :help,                  nil
-        attribute :encoding,              nil
-        attribute :debug,                 false
-        attribute :version,               false
-        attribute :clean,                 false
-        attribute :xmpfilter_style,       false
-        attribute :inherit_exit_status,   false
-        attribute :program_from_args,     nil
-        attribute :filename,              nil
-        attribute :max_line_length,       Float::INFINITY
-        attribute :max_result_length,     Float::INFINITY
-        attribute :max_captures_per_line, Float::INFINITY
-        attribute :timeout_seconds,       0
-        attribute :result_as_json,        false
-        attribute :safe,                  false # TODO still using this?
-
+        attribute(:as)                    { nil }
+        attribute(:help)                  { nil }
+        attribute(:encoding)              { nil }
+        attribute(:debug)                 { false }
+        attribute(:version)               { false }
+        attribute(:clean)                 { false }
+        attribute(:xmpfilter_style)       { false }
+        attribute(:inherit_exit_status)   { false }
+        attribute(:program_from_args)     { nil }
+        attribute(:filename)              { nil }
+        attribute(:max_line_length)       { Float::INFINITY }
+        attribute(:max_result_length)     { Float::INFINITY }
+        attribute(:max_captures_per_line) { Float::INFINITY }
+        attribute(:timeout_seconds)       { 0 }
+        attribute(:result_as_json)        { false }
+        attribute(:safe)                  { false } # TODO still using this?
         attribute(:deprecated_args)       { [] }
         attribute(:filenames)             { [] }
         attribute(:errors)                { [] }
