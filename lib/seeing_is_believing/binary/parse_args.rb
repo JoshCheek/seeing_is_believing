@@ -30,10 +30,24 @@ class SeeingIsBelieving
         attribute(:require)               { ['seeing_is_believing/the_matrix'] }
         attribute(:load_path)             { [] }
         attribute(:alignment_strategy)    { 'chunk' }
-        attribute(:markers)               { ParseArgs.default_markers }
-        attribute(:marker_regexes)        { ParseArgs.marker_regexes }
+        attribute(:markers)               { ParseArgs::Markers.new }
+        attribute(:marker_regexes)        { ParseArgs::MarkerRegexes.new }
         attribute(:short_help_screen)     { ParseArgs.help_screen(false) }
         attribute(:long_help_screen)      { ParseArgs.help_screen(true) }
+      end
+
+      class Markers < StrictHash
+        attributes value:     '# => '.freeze,
+                   exception: '# ~> '.freeze,
+                   stdout:    '# >> '.freeze,
+                   stderr:    '# !> '.freeze
+      end
+
+      class MarkerRegexes < StrictHash
+        attributes value:     '^#\s*=>\s*'.freeze,
+                   exception: '^#\s*~>\s*'.freeze,
+                   stdout:    '^#\s*>>\s*'.freeze,
+                   stderr:    '^#\s*!>\s*'.freeze
       end
 
       DeprecatedArg = Struct.new :explanation, :args do
@@ -42,15 +56,7 @@ class SeeingIsBelieving
         end
       end
 
-      def self.default_markers
-        { value:     '# => ',
-          exception: '# ~> ',
-          stdout:    '# >> ',
-          stderr:    '# !> ',
-        }
-      end
 
-      # TODO: rename to default_marker_regexes ...or turn into fkn objects
 
       # TODO: --cd dir | --cd :file:
       #   when given a dir, cd to that dir before executing the code
@@ -61,13 +67,6 @@ class SeeingIsBelieving
 
       # TODO: --alignment-strategy n-or-line / n-or-chunk / n-or-file (help-file should prob just link to cuke examples)
       # add default to number of captures (1000), require user to explicitly set it to infinity
-      def self.marker_regexes
-        { value:     '^#\s*=>\s*',
-          exception: '^#\s*~>\s*',
-          stdout:    '^#\s*>>\s*',
-          stderr:    '^#\s*!>\s*',
-        }
-      end
 
       def self.call(args)
         new(args).call
@@ -166,7 +165,7 @@ class SeeingIsBelieving
       end
     end
 
-    def ParseArgs.help_screen(include_examples, markers=default_markers)
+    def ParseArgs.help_screen(include_examples, markers=ParseArgs::Markers.new)
       value_marker     = markers.fetch(:value)
       exception_marker = markers.fetch(:exception)
       stdout_marker    = markers.fetch(:stdout)

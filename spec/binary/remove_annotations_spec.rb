@@ -11,8 +11,7 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   end
 
   def regexes
-    SeeingIsBelieving::Binary::ParseArgs
-      .marker_regexes
+    SeeingIsBelieving::Binary::ParseArgs::MarkerRegexes.new
       .each_with_object({}) { |(name, str), rs| rs[name] = Regexp.new str }
   end
 
