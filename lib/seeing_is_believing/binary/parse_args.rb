@@ -22,7 +22,6 @@ class SeeingIsBelieving
         attribute(:max_captures_per_line) { Float::INFINITY }
         attribute(:timeout_seconds)       { 0 }
         attribute(:result_as_json)        { false }
-        attribute(:safe)                  { false } # TODO still using this?
         attribute(:deprecated_args)       { [] }
         attribute(:filenames)             { [] }
         attribute(:errors)                { [] }
@@ -87,7 +86,6 @@ class SeeingIsBelieving
             when '-i',  '--inherit-exit-status'   then flags[:inherit_exit_status] = true
             when '-j',  '--json'                  then flags[:result_as_json]      = true
             when '-g',  '--debug'                 then flags[:debug]               = true
-            when        '--safe'                  then flags[:safe]                = true
             when '-d',  '--line-length'           then extract_positive_int_for :max_line_length,       arg
             when '-D',  '--result-length'         then extract_positive_int_for :max_result_length,     arg
             when '-n',  '--max-captures-per-line' then extract_positive_int_for :max_captures_per_line, arg
