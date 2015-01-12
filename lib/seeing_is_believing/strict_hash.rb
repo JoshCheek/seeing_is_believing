@@ -102,7 +102,7 @@ class SeeingIsBelieving
     alias to_h to_hash
 
     def merge(overrides)
-      self.class.new(to_hash.merge overrides)
+      self.class.new(to_h.merge overrides)
     end
 
     def keys
@@ -114,7 +114,7 @@ class SeeingIsBelieving
     end
 
     def inspect
-      classname  = self.class.name || 'subclass'
+      classname = self.class.name || 'subclass'
       inspected_attrs = map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
       "#<StrictHash #{classname}: {#{inspected_attrs}}>"
     end
@@ -130,7 +130,15 @@ class SeeingIsBelieving
     alias member?  key? # b/c Hash does this
 
     def ==(other)
-      equal?(other) || other.respond_to?(:to_h) && to_h == other.to_h
+      if equal? other
+        true
+      elsif other.kind_of? Hash
+        to_h == other
+      elsif other.respond_to?(:to_h)
+        to_h == other.to_h
+      else
+        false
+      end
     end
 
     private
