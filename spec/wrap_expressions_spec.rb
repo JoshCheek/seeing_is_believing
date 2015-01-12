@@ -1,14 +1,6 @@
 require 'spec_helper'
 require 'seeing_is_believing/wrap_expressions'
 
-# TODO: BUG -- incorrectly wraps void value, generating syntactically invalid code
-# a = begin
-#       1
-#     else
-#       break true
-#     end
-# a
-
 RSpec.describe SeeingIsBelieving::WrapExpressions do
   def wrap(code, overrides={})
     code = code + "\n" unless code.end_with? "\n"
@@ -138,9 +130,13 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("begin\n1\n2\nend")).to eq "<begin\n<1>\n<2>\nend>"
     end
 
-    it 'does not wrap multiple expressions when they constitute a void value' do
+    it 'does not wrap multiple expressions when they constitute a void value', t:true do
       expect(wrap("def a\n1\nreturn 2\nend")).to eq "<def a\n<1>\nreturn <2>\nend>"
       expect(wrap("def a\nreturn 1\n2\nend")).to eq "<def a\nreturn <1>\n<2>\nend>"
+      # BUG, but I'm skipping it, b/c it's borderline invalid.
+      # To the point that Parser doesn't even emit the else clause in the AST
+      # And Ruby will warn you that it's useless
+      # expect(wrap("begin\n1\nelse\nbreak\nend")).to eq "begin\n<1>\nelse\nbreak\nend"
     end
 
     it 'wraps nested expressions' do
