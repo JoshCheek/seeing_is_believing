@@ -2,5 +2,6 @@
 
 $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 
+gem 'parser', '~> 2.2.0.2'
 require 'seeing_is_believing/binary'
 exit SeeingIsBelieving::Binary.call(ARGV, $stdin, $stdout, $stderr)

@@ -843,13 +843,14 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'does not wrap keyword/keywordrest arguments' do
       expect(wrap("def a(b,c=1,*d,e:,f:1,**g, &h)\n1\nend"))
         .to eq "<def a(b,c=1,*d,e:,f:1,**g, &h)\n<1>\nend>"
-      expect(wrap("def a(*, **)\n1\nend")).to eq "<def a(*, **)\n<1>\nend>"
       expect(wrap("def a b:\n1\nend")).to eq "<def a b:\n<1>\nend>"
       expect(wrap("def a b:\nreturn 1\nend")).to eq "<def a b:\nreturn <1>\nend>"
       expect(wrap("def a b:\nreturn\nend")).to eq "<def a b:\nreturn\nend>"
       expect(wrap("a b:1, **c")).to eq "<a b:1, **c>"
       expect(wrap("{\na:1,\n**b\n}")).to eq "<{\na:<1>,\n**<b>\n}>"
       expect(wrap("a(b:1,\n **c\n)")).to eq "<a(b:<1>,\n **<c>\n)>"
+      pending 'Fixed this in Parser, but it\'s not released yet https://github.com/whitequark/parser/commit/aeb95c776d11e212ed95b92c69e96d1cccdb6424'
+      expect(wrap("def a(*, **)\n1\nend")).to eq "<def a(*, **)\n<1>\nend>"
     end
 
     it 'tags javascript style hashes' do
