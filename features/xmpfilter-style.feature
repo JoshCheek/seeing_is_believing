@@ -3,7 +3,7 @@ Feature: Xmpfilter style
   Support the same (or highly similar) interface as xmpfilter,
   so that people who use that lib can easily transition to SiB.
 
-  TODO: multiple values on pp lines
+  TODO: multiple values on pp lines: prepend a metadata comment with the hashes of the inspected lines
   TODO: show that exceptions respect line-length restriction flags
   TODO: Scenario: pp output on line with exception
   TODO: when input has previously identified exception
