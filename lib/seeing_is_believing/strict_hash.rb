@@ -8,26 +8,17 @@ class SeeingIsBelieving
       @init_blocks ||= {}
     end
 
-
     def attribute(name, value=AttributeNotProvided, &init_block)
-      value == AttributeNotProvided && !init_block and
-        raise ArgumentError, "Must provide a default value for #{name.inspect}"
+      value == AttributeNotProvided && !init_block && raise(ArgumentError, "Must provide a default value for #{name.inspect}")
+      init_blocks.key?(name)                       && raise(ArgumentError, "#{name} was already defined")
+      name.kind_of?(Symbol)                        || raise(ArgumentError, "#{name.inspect} should have been a symbol")
 
-      init_blocks.key? name and
-        raise ArgumentError, "#{name} was already defined"
-
-      name.kind_of? Symbol or
-        raise ArgumentError, "#{name.inspect} should have been a symbol"
-
-      init_block ||= lambda { value }
-      init_blocks[name] = init_block
-
+      init_blocks[name] = init_block || lambda { value }
       define_method(name) { @attributes[name] }
       define_method(:"#{name}=") { |val| @attributes[name] = val }
 
       self
     end
-
 
     def attributes(pairs={})
       pairs.each { |key, value| attribute key, value }
@@ -115,7 +106,7 @@ class SeeingIsBelieving
 
     def internalize(key)
       internal = key.to_sym
-      @attributes.key? internal or raise KeyError
+      @attributes.key?(internal) || raise(KeyError)
       internal
     rescue NoMethodError, KeyError
       raise KeyError, "#{key.inspect} is not an attribute, should be in #{@attributes.keys.inspect}"
