@@ -29,7 +29,6 @@ class SeeingIsBelieving
           rewriter.insert_before range, before_each.call(line_num)
           case meta
           when :total_fucking_failure
-            # TODO: this doesn't "totally fail" anymore... not sure if we still care about it
             rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
           when :match_current_line
             rewriter.insert_before range, '~' # Regexp#~
