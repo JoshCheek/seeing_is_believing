@@ -43,62 +43,62 @@ class SeeingIsBelieving
 
       def init_from_flags(flags, stdin, stdout, stderr)
         # Some simple attributes
-        self[:deprecations]    = flags.fetch(:deprecated_args)
-        self[:errors]          = flags.fetch(:errors)
-        self[:markers]         = flags.fetch(:markers) # TODO: Should probably object-ify these
-        self[:marker_regexes]  = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
-        self[:timeout_seconds] = flags.fetch(:timeout_seconds)
-        self[:filename]        = flags.fetch(:filename)
+        self[:deprecations]    = flags[:deprecated_args]
+        self[:errors]          = flags[:errors]
+        self[:markers]         = flags[:markers] # TODO: Should probably object-ify these
+        self[:marker_regexes]  = flags[:marker_regexes].each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
+        self[:timeout_seconds] = flags[:timeout_seconds]
+        self[:filename]        = flags[:filename]
 
         # Most predicates
-        self[:print_version]       = flags.fetch(:version) # TODO: rename rhs to print_version ?
-        self[:inherit_exit_status] = flags.fetch(:inherit_exit_status)
-        self[:result_as_json]      = flags.fetch(:result_as_json)
-        self[:print_help]          = !!flags.fetch(:help)
-        self[:print_cleaned]       = flags.fetch(:clean) # TODO: Better name on rhs
-        self[:file_is_on_stdin]    = (!filename && !flags.fetch(:program_from_args))
+        self[:print_version]       = flags[:version] # TODO: rename rhs to print_version ?
+        self[:inherit_exit_status] = flags[:inherit_exit_status]
+        self[:result_as_json]      = flags[:result_as_json]
+        self[:print_help]          = !!flags[:help]
+        self[:print_cleaned]       = flags[:clean] # TODO: Better name on rhs
+        self[:file_is_on_stdin]    = (!filename && !flags[:program_from_args])
 
         # Polymorphism, y'all!
         # TODO: rename xmpfilter_style to something more about behaviour than inspiration ie AnnotateMarkedLines
-        self[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
-        self[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
+        self[:annotator]   = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle    : AnnotateEveryLine)
+        self[:help_screen] = flags[:help] == 'help'   ? flags[:short_help_screen] : flags[:long_help_screen]
         # TODO: allow debugger to take a stream
-        self[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
+        self[:debugger]    = flags[:debug]            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
 
         # The lib's options (passed to SeeingIsBelieving.new)
         self[:lib_options] = {
-          filename:              (flags.fetch(:as) || filename),
+          filename:              (flags[:as] || filename),
           stdin:                 (file_is_on_stdin? ? '' : stdin),
-          require:               (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
-          load_path:             ([File.expand_path('../../..', __FILE__)] + flags.fetch(:load_path)),
-          encoding:              flags.fetch(:encoding),
+          require:               (['seeing_is_believing/the_matrix'] + flags[:require]), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
+          load_path:             ([File.expand_path('../../..', __FILE__)] + flags[:load_path]),
+          encoding:              flags[:encoding],
           timeout_seconds:       timeout_seconds,
           debugger:              debugger,
-          max_captures_per_line: flags.fetch(:max_captures_per_line),
+          max_captures_per_line: flags[:max_captures_per_line],
           annotate:              annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
         }
 
         # The annotator's options (passed to annotator.call)
         self[:annotator_options] = {
-          alignment_strategy: extract_alignment_strategy(flags.fetch(:alignment_strategy), errors),
+          alignment_strategy: extract_alignment_strategy(flags[:alignment_strategy], errors),
           debugger:           debugger,
           markers:            markers,
           marker_regexes:     marker_regexes,
-          max_line_length:    flags.fetch(:max_line_length),
-          max_result_length:  flags.fetch(:max_result_length),
+          max_line_length:    flags[:max_line_length],
+          max_result_length:  flags[:max_result_length],
         }
 
         # Some error checking
-        if 1 < flags.fetch(:filenames).size
-          errors << "Can only have one filename, but had: #{flags.fetch(:filenames).map(&:inspect).join ', '}"
-        elsif filename && flags.fetch(:program_from_args)
+        if 1 < flags[:filenames].size
+          errors << "Can only have one filename, but had: #{flags[:filenames].map(&:inspect).join ', '}"
+        elsif filename && flags[:program_from_args]
           errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
         end
 
         # Body
         errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
         self[:body] = ((print_version? || print_help? || errors.any?) && "") ||
-                      flags.fetch(:program_from_args)                        ||
+                      flags[:program_from_args]                              ||
                       (file_is_on_stdin? && stdin.read)                      ||
                       File.read(filename)
       end
