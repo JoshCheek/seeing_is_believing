@@ -44,8 +44,13 @@ class SeeingIsBelieving
       self
     end
 
-    def predicates(pairs)
-      pairs.each { |key, value| predicate key, value }
+    def predicates(*names_or_pairs)
+      names_or_pairs.each do |name_or_pairs|
+        name = pairs = name_or_pairs
+        name_or_pairs.kind_of?(Symbol) ?
+          predicate(name) :
+          pairs.each { |name, default| predicate name, default }
+      end
       self
     end
   end

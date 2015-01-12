@@ -68,6 +68,16 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         eq! 1, klass.new.a
         eq! 2, klass.new.b
       end
+      specify 'can omit a default if they are initialized with one' do
+        klass.predicate :a
+        eq! true, klass.new(a: 1).a?
+        raises!(ArgumentError, /:a/) { klass.new }
+      end
+      specify 'can group declare uninitialized attributes with .attributes(*names)' do
+        klass.predicates(:a, :b)
+        eq! true, klass.new(a: 1, b: 2).a?
+        raises!(ArgumentError, /:b/) { klass.new a: 1 }
+      end
     end
 
     describe 'conflicts' do
