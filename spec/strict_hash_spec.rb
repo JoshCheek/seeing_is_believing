@@ -50,6 +50,12 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         eq! 1, klass.new(a: 1).a
         raises!(ArgumentError, /:a/) { klass.new }
       end
+
+      specify 'can group declare uninitialized attributes with .attributes(*names)' do
+        klass.attributes(:a, :b)
+        eq! 1, klass.new(a: 1, b: 2).a
+        raises!(ArgumentError, /:b/) { klass.new a: 1 }
+      end
     end
 
     describe 'predicates are attributes which' do

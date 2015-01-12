@@ -28,8 +28,13 @@ class SeeingIsBelieving
       self
     end
 
-    def attributes(pairs={})
-      pairs.each { |key, value| attribute key, value }
+    def attributes(*names_or_pairs)
+      names_or_pairs.each do |name_or_pairs|
+        name = pairs = name_or_pairs
+        name_or_pairs.kind_of?(Symbol) ?
+          attribute(name) :
+          pairs.each { |name, default| attribute name, default }
+      end
       self
     end
 
