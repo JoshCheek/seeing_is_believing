@@ -282,6 +282,9 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         neq! instance1, instance3
         neq! instance1, {a: 1}
         neq! instance1, {a: 1, b: 2, c: 1}
+        eq! false, 1.respond_to?(:to_h)
+        eq! false, 1.respond_to?(:to_hash)
+        neq! instance1, 1
       end
     end
 

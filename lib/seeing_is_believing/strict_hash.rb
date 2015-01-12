@@ -115,7 +115,7 @@ class SeeingIsBelieving
     alias member?  key? # b/c Hash does this
 
     def ==(other)
-      equal?(other) || @attributes == other.to_h
+      equal?(other) || other.respond_to?(:to_h) && @attributes == other.to_h
     end
 
     private
