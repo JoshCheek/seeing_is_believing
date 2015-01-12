@@ -1,16 +1,7 @@
 require 'seeing_is_believing/strict_hash'
 
 RSpec.describe SeeingIsBelieving::StrictHash do
-  let(:klass) {
-    klass = Class.new(described_class)
-    class << klass
-      public :attribute
-      public :attributes
-      public :predicate
-      public :predicates
-    end
-    klass
-  }
+  let(:klass) { described_class.anon }
 
   def eq!(expected, actual, *message)
     expect(actual).to eq(expected), *message
@@ -316,9 +307,9 @@ RSpec.describe SeeingIsBelieving::StrictHash do
 
     describe '#==' do
       it 'is true if the RHS\'s to_h has the same key/value pairs' do
-        instance1 = Class.new(described_class) { attributes a: 1, b: 2 }.new
-        instance2 = Class.new(described_class) { attributes a: 1, b: 2 }.new
-        instance3 = Class.new(described_class) { attributes a: 1, c: 2 }.new
+        instance1 = described_class.anon(a: 1, b: 2).new
+        instance2 = described_class.anon(a: 1, b: 2).new
+        instance3 = described_class.anon(a: 1, c: 2).new
         eq! instance1, instance1
         eq! instance1, instance2
         eq! instance1, {a: 1, b: 2}
