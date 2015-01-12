@@ -274,8 +274,8 @@ class SeeingIsBelieving
           expect(options.lib_options[:debugger]).to equal options.debugger
         end
 
-        specify 'max_captures_per_line is max_captures_per_line' do
-          expect(lib_opts(max_captures_per_line: 12345)[:max_captures_per_line]).to eq 12345
+        specify 'max_line_captures is max_line_captures' do
+          expect(lib_opts(max_line_captures: 12345)[:max_line_captures]).to eq 12345
         end
 
         specify 'annotate is the annotator\'s expression wrapper' do

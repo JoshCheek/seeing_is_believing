@@ -85,21 +85,21 @@ Feature: Using flags
     Then stdout is "12345"
 
 
-  Scenario: --max-captures-per-line determines how many times a line will be recorded
-    Given the file "max_captures_per_line.rb":
+  Scenario: --max-line-captures determines how many times a line will be recorded
+    Given the file "max_line_captures.rb":
     """
     5.times do |i|
       i
     end
     """
-    When I run "seeing_is_believing --max-captures-per-line 4 max_captures_per_line.rb"
+    When I run "seeing_is_believing --max-line-captures 4 max_line_captures.rb"
     Then stdout is:
     """
     5.times do |i|  # => 5
       i             # => 0, 1, 2, 3, ...
     end             # => 5
     """
-    When I run "seeing_is_believing --max-captures-per-line 5 max_captures_per_line.rb"
+    When I run "seeing_is_believing --max-line-captures 5 max_line_captures.rb"
     Then stdout is:
     """
     5.times do |i|  # => 5

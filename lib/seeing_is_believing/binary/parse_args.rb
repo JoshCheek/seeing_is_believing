@@ -7,31 +7,31 @@ class SeeingIsBelieving
   module Binary
     class ParseArgs
       class ParsedArgs < StrictHash
-        attribute(:as)                    { nil }
-        attribute(:help)                  { nil }
-        attribute(:encoding)              { nil }
-        attribute(:debug)                 { false }
-        attribute(:version)               { false }
-        attribute(:clean)                 { false }
-        attribute(:xmpfilter_style)       { false }
-        attribute(:inherit_exit_status)   { false }
-        attribute(:program_from_args)     { nil }
-        attribute(:filename)              { nil }
-        attribute(:max_line_length)       { Float::INFINITY }
-        attribute(:max_result_length)     { Float::INFINITY }
-        attribute(:max_captures_per_line) { Float::INFINITY }
-        attribute(:timeout_seconds)       { 0 }
-        attribute(:result_as_json)        { false }
-        attribute(:deprecated_args)       { [] }
-        attribute(:filenames)             { [] }
-        attribute(:errors)                { [] }
-        attribute(:require)               { ['seeing_is_believing/the_matrix'] }
-        attribute(:load_path)             { [] }
-        attribute(:alignment_strategy)    { 'chunk' }
-        attribute(:markers)               { ParseArgs::Markers.new }
-        attribute(:marker_regexes)        { ParseArgs::MarkerRegexes.new }
-        attribute(:short_help_screen)     { ParseArgs.help_screen(false) }
-        attribute(:long_help_screen)      { ParseArgs.help_screen(true) }
+        attribute(:as)                  { nil }
+        attribute(:help)                { nil }
+        attribute(:encoding)            { nil }
+        attribute(:debug)               { false }
+        attribute(:version)             { false }
+        attribute(:clean)               { false }
+        attribute(:xmpfilter_style)     { false }
+        attribute(:inherit_exit_status) { false }
+        attribute(:program_from_args)   { nil }
+        attribute(:filename)            { nil }
+        attribute(:max_line_length)     { Float::INFINITY }
+        attribute(:max_result_length)   { Float::INFINITY }
+        attribute(:max_line_captures)   { Float::INFINITY }
+        attribute(:timeout_seconds)     { 0 }
+        attribute(:result_as_json)      { false }
+        attribute(:deprecated_args)     { [] }
+        attribute(:filenames)           { [] }
+        attribute(:errors)              { [] }
+        attribute(:require)             { ['seeing_is_believing/the_matrix'] }
+        attribute(:load_path)           { [] }
+        attribute(:alignment_strategy)  { 'chunk' }
+        attribute(:markers)             { ParseArgs::Markers.new }
+        attribute(:marker_regexes)      { ParseArgs::MarkerRegexes.new }
+        attribute(:short_help_screen)   { ParseArgs.help_screen(false) }
+        attribute(:long_help_screen)    { ParseArgs.help_screen(true) }
       end
 
       class Markers < StrictHash
@@ -87,11 +87,11 @@ class SeeingIsBelieving
             when '-i',  '--inherit-exit-status'   then flags[:inherit_exit_status] = true
             when '-j',  '--json'                  then flags[:result_as_json]      = true
             when '-g',  '--debug'                 then flags[:debug]               = true
-            when '-d',  '--line-length'           then extract_positive_int_for :max_line_length,       arg
-            when '-D',  '--result-length'         then extract_positive_int_for :max_result_length,     arg
-            when '-n',  '--max-captures-per-line' then extract_positive_int_for :max_captures_per_line, arg
-            when        '--number-of-captures'    then extracted = extract_positive_int_for :max_captures_per_line, arg
-                                                       saw_deprecated "use --max-captures-per-line instead", arg, extracted
+            when '-d',  '--line-length'           then extract_positive_int_for :max_line_length,   arg
+            when '-D',  '--result-length'         then extract_positive_int_for :max_result_length, arg
+            when '-n',  '--max-line-captures'     then extract_positive_int_for :max_line_captures, arg
+            when        '--number-of-captures'    then extracted = extract_positive_int_for :max_line_captures, arg
+                                                       saw_deprecated "use --max-line-captures instead", arg, extracted
             when '-t',  '--timeout-seconds'       then extract_non_negative_float_for :timeout_seconds, arg
             when        '--timeout'               then extracted = extract_non_negative_float_for :timeout_seconds, arg
                                                        saw_deprecated "use --timeout-seconds instead", arg, extracted
@@ -178,7 +178,7 @@ Usage: seeing_is_believing [options] [filename]
 
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
   -D,  --result-length n         # max length of the portion after the "#{value_marker}"
-  -n,  --max-captures-per-line n # how many results to capture for a given line
+  -n,  --max-line-captures n     # how many results to capture for a given line
                                    if you had 1 million results on a line, it could take a long time to record
                                    and serialize them, you might limit it to 1000 results as an optimization
   -s,  --alignment-strategy name # select the alignment strategy:

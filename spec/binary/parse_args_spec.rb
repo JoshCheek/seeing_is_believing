@@ -370,22 +370,22 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  describe ':max_captures_per_line' do
+  describe ':max_line_captures' do
     it 'defaults to infinity' do
-      expect(parse([])[:max_captures_per_line]).to eq Float::INFINITY
+      expect(parse([])[:max_line_captures]).to eq Float::INFINITY
     end
 
-    it 'can be set with --max-captures-per-line or -n' do
-      expect(parse(['-n', '10'])[:max_captures_per_line]).to eq 10
-      expect(parse(['--max-captures-per-line', '10'])[:max_captures_per_line]).to eq 10
+    it 'can be set with --max-line-captures or -n' do
+      expect(parse(['-n', '10'])[:max_line_captures]).to eq 10
+      expect(parse(['--max-line-captures', '10'])[:max_line_captures]).to eq 10
     end
 
     it 'can be set with the deprecated flag --number-of-captures' do
-      expect(parse(['--number-of-captures', '12'])[:max_captures_per_line]).to eq 12
+      expect(parse(['--number-of-captures', '12'])[:max_line_captures]).to eq 12
       assert_deprecated '--number-of-captures', '12'
     end
 
-    it_behaves_like 'it requires a positive int argument', ['-n', '--max-captures-per-line', '--number-of-captures']
+    it_behaves_like 'it requires a positive int argument', ['-n', '--max-line-captures', '--number-of-captures']
   end
 
   describe ':result_as_json' do

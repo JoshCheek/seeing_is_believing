@@ -54,10 +54,10 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'records various useful information on the result' do
-    result = invoke '', max_captures_per_line: 10, filename: 'abc.rb'
+    result = invoke '', max_line_captures: 10, filename: 'abc.rb'
     expect(result.sib_version).to eq SeeingIsBelieving::VERSION
     expect(result.ruby_version).to eq RUBY_VERSION
-    expect(result.max_captures_per_line).to eq 10
+    expect(result.max_line_captures).to eq 10
     expect(result.num_lines).to eq 1
     expect(result.filename).to eq 'abc.rb'
   end
@@ -420,7 +420,7 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'can be limited to a specific number of captures per line' do
-    expect(values_for "2.times do\n1\nend", max_captures_per_line: 1).to \
+    expect(values_for "2.times do\n1\nend", max_line_captures: 1).to \
       eq [['2'],
           ['1', '...'],
           ['2']]

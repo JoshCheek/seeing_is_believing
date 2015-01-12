@@ -199,7 +199,7 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'indicates that there are more results once it hits the max, but does not continue reporting them' do
-        producer.max_captures_per_line = 2
+        producer.max_line_captures = 2
 
         producer.record_result :type1, 123, 1
         expect(consumer.call 1).to eq Events::LineResult.new(:type1, 123, '1')
@@ -215,7 +215,7 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'scopes the max to a given type/line' do
-        producer.max_captures_per_line = 1
+        producer.max_line_captures = 1
 
         producer.record_result :type1, 1, 1
         producer.record_result :type1, 1, 2
@@ -322,24 +322,24 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'max_captures_per_line (value and recording)' do
+    describe 'max_line_captures (value and recording)' do
       it 'is infinity by default' do
-        expect(producer.max_captures_per_line).to eq Float::INFINITY
+        expect(producer.max_line_captures).to eq Float::INFINITY
       end
 
-      it 'emits the event and sets the max_captures_per_line' do
-        producer.record_max_captures_per_line 123
-        expect(producer.max_captures_per_line).to eq 123
+      it 'emits the event and sets the max_line_captures' do
+        producer.record_max_line_captures 123
+        expect(producer.max_line_captures).to eq 123
         expect(consumer.call).to eq Events::MaxLineCaptures.new(123)
       end
 
       it 'interprets numbers' do
-        producer.record_max_captures_per_line 12
+        producer.record_max_line_captures 12
         expect(consumer.call).to eq Events::MaxLineCaptures.new(12)
       end
 
       it 'interprets infinity' do
-        producer.record_max_captures_per_line Float::INFINITY
+        producer.record_max_line_captures Float::INFINITY
         expect(consumer.call).to eq Events::MaxLineCaptures.new(Float::INFINITY)
       end
     end
