@@ -1,6 +1,19 @@
 require 'seeing_is_believing/binary/remove_annotations'
 require 'seeing_is_believing/code'
 
+# From options, it uses:
+#   body
+#   filename
+#   lib_options
+#   annotator
+#   marker_regexes     (entirely for annotator)
+#   annotator_options
+# Should be able to do this job with just:
+#   body
+#   filename
+#   prepare_body(body)       <-- uhm, what's this for again?
+#   evaluate(prepared_body)
+#   annotate(body)
 
 class SeeingIsBelieving
   module Binary
@@ -45,10 +58,14 @@ class SeeingIsBelieving
       end
 
       def evaluate!
-        @evaluated ||= begin
-          @results, @timed_out, @unexpected_exception =
-            evaluate_program(prepared_body, options.lib_options)
-          true
+        return self if @evaluate
+        @evaluated = true
+        @results, @timed_out, @unexpected_exception = begin
+          [SeeingIsBelieving.call(prepared_body, options.lib_options), false, nil]
+        rescue Timeout::Error
+          [nil, true, nil]
+        rescue Exception
+          [nil, false, $!]
         end
         self
       end
@@ -95,15 +112,6 @@ class SeeingIsBelieving
 
       def syntax
         code.syntax
-      end
-
-      # returns the result, whether the program timed out, and any exception that was raised
-      def evaluate_program(body, options)
-        return SeeingIsBelieving.call(body, options), false, nil
-      rescue Timeout::Error
-        return nil, true, nil
-      rescue Exception
-        return nil, false, $!
       end
     end
   end

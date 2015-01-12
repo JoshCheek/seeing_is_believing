@@ -72,6 +72,7 @@ class SeeingIsBelieving
         predicates[:file_is_on_stdin]    = (!filename && !flags.fetch(:program_from_args))
 
         # Polymorphism, y'all!
+        # TODO: rename xmpfilter_style to something more about behaviour than inspiration ie AnnotateMarkedLines
         attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
         attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
         # TODO: allow debugger to take a stream
