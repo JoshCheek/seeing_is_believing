@@ -140,6 +140,26 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         klass.attribute :a, 1
         raises!(KeyError) { klass.new b: 2 }
       end
+      it 'raises an ArgumentError if all its values aren\'t initialized between defaults and init hash' do
+        klass.attribute :a, 1
+        klass.attribute :b
+        klass.new(b: 1)
+        raises!(ArgumentError) { klass.new }
+      end
+      it 'won\'t raise until after a provided block is invoked' do
+        klass.attributes(:a, :b)
+        eq! 1, klass.new(b: 1) { |i| i.a = 1 }.a
+        eq! nil, klass.new(b: 1) { |i| i.a = nil }.a
+        raises!(ArgumentError) { klass.new {} }
+        klass.new(b: 2) { |instance|
+          raises!(ArgumentError) { instance.a }
+          raises!(ArgumentError) { instance[:a] }
+          instance.a = 1
+          eq! 1, instance.a
+          eq! 1, instance[:a]
+          eq! 2, instance.b
+        }
+      end
     end
 
     describe '#[] / #[]=' do

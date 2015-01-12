@@ -22,8 +22,8 @@ class SeeingIsBelieving
         end
       end
       init_blocks[name] = init_block
-      define_method(name) { @attributes[name] }
-      define_method(:"#{name}=") { |val| @attributes[name] = val }
+      define_method(name) { self[name] }
+      define_method(:"#{name}=") { |val| self[name] = val }
 
       self
     end
@@ -40,7 +40,7 @@ class SeeingIsBelieving
 
     def predicate(name, *rest, &b)
       attribute name, *rest, &b
-      define_method(:"#{name}?") { !!@attributes[name] }
+      define_method(:"#{name}?") { !!self[name] }
       self
     end
 
@@ -56,22 +56,40 @@ class SeeingIsBelieving
   end
 
   class StrictHash
-    Uninitialized = Module.new
-    def initialize(initial_values={})
-      uninitialized_key_value_pairs = self.class.init_blocks.map { |name, _| [name, Uninitialized] }
-      @attributes = Hash[uninitialized_key_value_pairs]
+    class Attr
+      def initialize(value=nil, &block)
+        @block = block if block
+        @value = value unless block
+      end
+      def value
+        return @value if defined? @value
+        @value = @block.call
+      end
+    end
+
+    def initialize(initial_values={}, &initializer)
+      @attributes = Hash[
+        self.class.init_blocks.map { |name, block| [name, Attr.new(&block) ] }
+      ]
       initial_values.each { |key, value| self[key] = value }
-      self.class.init_blocks.each do |name, init_block|
-        self[name] = init_block.call if self[name] == Uninitialized
+      initializer.call self if initializer
+      each { } # access each key to see if it blows up
+    end
+
+    include Enumerable
+    def each(&block)
+      return to_enum :each unless block
+      @attributes.keys.each do |name|
+        block.call(name, self[name])
       end
     end
 
     def [](key)
-      @attributes[internalize key]
+      @attributes[internalize! key].value
     end
 
     def []=(key, value)
-      @attributes[internalize key] = value
+      @attributes[internalize! key] = Attr.new(value)
     end
 
     def fetch(key, ignored=nil)
@@ -79,38 +97,30 @@ class SeeingIsBelieving
     end
 
     def to_hash
-      @attributes.dup
+      Hash[to_a]
     end
     alias to_h to_hash
 
     def merge(overrides)
-      self.class.new(@attributes.merge overrides)
-    end
-
-    include Enumerable
-    def each(&block)
-      return to_enum :each unless block
-      @attributes.each do |key, value|
-        block.call(key, value)
-      end
+      self.class.new(to_hash.merge overrides)
     end
 
     def keys
-      @attributes.keys
+      to_a.map(&:first)
     end
 
     def values
-      @attributes.values
+      to_a.map(&:last)
     end
 
     def inspect
       classname  = self.class.name || 'subclass'
-      attributes = map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
-      "#<StrictHash #{classname}: {#{attributes}}>"
+      inspected_attrs = map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
+      "#<StrictHash #{classname}: {#{inspected_attrs}}>"
     end
 
     def key?(potential_key)
-      internalize potential_key
+      internalize! potential_key
       return true
     rescue KeyError
       return false
@@ -120,12 +130,12 @@ class SeeingIsBelieving
     alias member?  key? # b/c Hash does this
 
     def ==(other)
-      equal?(other) || other.respond_to?(:to_h) && @attributes == other.to_h
+      equal?(other) || other.respond_to?(:to_h) && to_h == other.to_h
     end
 
     private
 
-    def internalize(key)
+    def internalize!(key)
       internal = key.to_sym
       @attributes.key?(internal) || raise(KeyError)
       internal
