@@ -99,18 +99,34 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     end
   end
 
-  describe '.anon' do
-    it 'returns a subclass of StrictHash' do
+  describe 'anonymous subclasses try to be generally terse and useful to be valid replacements over Struct' do
+    specify '.anon / .for / .for? return a subclass of StrictHash' do
       klass = described_class.anon
       neq! klass, described_class
       expect(klass.ancestors).to include described_class
+
+      klass = described_class.for
+      neq! klass, described_class
+      expect(klass.ancestors).to include described_class
+
+      klass = described_class.for?
+      neq! klass, described_class
+      expect(klass.ancestors).to include described_class
     end
-    it 'tries to be generally terse and useful by accepting args that are handed to .predicates' do
-      klass = described_class.anon(:a, {b: 3})
+
+    specify '.for? passes its args to .predicates' do
+      klass = described_class.for?(:a, b: 3)
       eq! 1,     klass.new(a: 1).a
       eq! 3,     klass.new(a: 1).b
       eq! true,  klass.new(a: 1).b?
       eq! false, klass.new(a: 1, b: nil).b?
+    end
+
+    specify '.for passes its args to .attributes' do
+      klass = described_class.for(:a, b: 3)
+      eq! 1,     klass.new(a: 1).a
+      eq! 3,     klass.new(a: 1).b
+      raises!(NoMethodError) { klass.new(a: 1).b? }
     end
   end
 
@@ -307,9 +323,9 @@ RSpec.describe SeeingIsBelieving::StrictHash do
 
     describe '#==' do
       it 'is true if the RHS\'s to_h has the same key/value pairs' do
-        instance1 = described_class.anon(a: 1, b: 2).new
-        instance2 = described_class.anon(a: 1, b: 2).new
-        instance3 = described_class.anon(a: 1, c: 2).new
+        instance1 = described_class.for(a: 1, b: 2).new
+        instance2 = described_class.for(a: 1, b: 2).new
+        instance3 = described_class.for(a: 1, c: 2).new
         eq! instance1, instance1
         eq! instance1, instance2
         eq! instance1, {a: 1, b: 2}

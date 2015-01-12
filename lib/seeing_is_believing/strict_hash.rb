@@ -54,8 +54,16 @@ class SeeingIsBelieving
       self
     end
 
-    def anon(*predicate_args)
-      Class.new(self).predicates(*predicate_args)
+    def anon
+      Class.new(self)
+    end
+
+    def for(*attributes_args)
+      anon.attributes(*attributes_args)
+    end
+
+    def for?(*predicate_args)
+      anon.predicates(*predicate_args)
     end
   end
 
