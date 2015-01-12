@@ -108,6 +108,21 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     end
   end
 
+  describe '.anon' do
+    it 'returns a subclass of StrictHash' do
+      klass = described_class.anon
+      neq! klass, described_class
+      expect(klass.ancestors).to include described_class
+    end
+    it 'tries to be generally terse and useful by accepting args that are handed to .predicates' do
+      klass = described_class.anon(:a, {b: 3})
+      eq! 1,     klass.new(a: 1).a
+      eq! 3,     klass.new(a: 1).b
+      eq! true,  klass.new(a: 1).b?
+      eq! false, klass.new(a: 1, b: nil).b?
+    end
+  end
+
 
   describe 'use' do
     describe 'initialization' do

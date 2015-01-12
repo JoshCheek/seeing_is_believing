@@ -53,6 +53,10 @@ class SeeingIsBelieving
       end
       self
     end
+
+    def anon(*predicate_args)
+      Class.new(self).predicates(*predicate_args)
+    end
   end
 
   class StrictHash
