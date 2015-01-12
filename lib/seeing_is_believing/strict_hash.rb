@@ -1,8 +1,6 @@
 class SeeingIsBelieving
   StrictHash = Class.new
 
-  # TODO: Do I want to support non-block form by using dup? or clone?
-  # uhh.... what's the difference between dup and clone again?
   class << StrictHash
     NoDefault = Module.new
 
