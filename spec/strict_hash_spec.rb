@@ -16,6 +16,10 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     expect(actual).to eq(expected), *message
   end
 
+  def neq!(expected, actual, *message)
+    expect(actual).to_not eq(expected), *message
+  end
+
   def raises!(*exception_class_and_matcher, &block)
     expect(&block).to raise_error(*exception_class_and_matcher)
   end
@@ -243,6 +247,22 @@ RSpec.describe SeeingIsBelieving::StrictHash do
           eq! false, instance.__send__(predicate, 'd')
           eq! false, instance.__send__(predicate, /b/)
         end
+      end
+    end
+
+    describe '#==' do
+      it 'is true if the RHS\'s to_h has the same key/value pairs' do
+        instance1 = Class.new(described_class) { attributes a: 1, b: 2 }.new
+        instance2 = Class.new(described_class) { attributes a: 1, b: 2 }.new
+        instance3 = Class.new(described_class) { attributes a: 1, c: 2 }.new
+        eq! instance1, instance1
+        eq! instance1, instance2
+        eq! instance1, {a: 1, b: 2}
+        instance2.b = 3
+        neq! instance1, instance2
+        neq! instance1, instance3
+        neq! instance1, {a: 1}
+        neq! instance1, {a: 1, b: 2, c: 1}
       end
     end
 

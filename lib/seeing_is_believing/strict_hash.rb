@@ -104,6 +104,10 @@ class SeeingIsBelieving
     alias include? key? # b/c Hash does this
     alias member?  key? # b/c Hash does this
 
+    def ==(other)
+      equal?(other) || @attributes == other.to_h
+    end
+
     private
 
     def internalize(key)
