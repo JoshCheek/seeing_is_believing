@@ -186,15 +186,15 @@ module SeeingIsBelieving::EventStream
         producer.record_result :type1, 123, "Ω≈ç√∫˜µ≤≥"
 
         expect(consumer.call 9).to eq [
-          Events::LineResult.new(:type1, 123, [*'a'..'z', *'A'..'Z', *'0'..'9'].join("").inspect),
-          Events::LineResult.new(:type1, 123, '"'.inspect),
-          Events::LineResult.new(:type1, 123, '""'.inspect),
-          Events::LineResult.new(:type1, 123, "\n".inspect),
-          Events::LineResult.new(:type1, 123, "\r".inspect),
-          Events::LineResult.new(:type1, 123, "\n\r\n".inspect),
-          Events::LineResult.new(:type1, 123, "\#{}".inspect),
-          Events::LineResult.new(:type1, 123, [*0..127].map(&:chr).join("").inspect),
-          Events::LineResult.new(:type1, 123, "Ω≈ç√∫˜µ≤≥".inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: [*'a'..'z', *'A'..'Z', *'0'..'9'].join("").inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: '"'.inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: '""'.inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: "\n".inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: "\r".inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: "\n\r\n".inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: "\#{}".inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: [*0..127].map(&:chr).join("").inspect),
+          Events::LineResult.new(type: :type1, line_number: 123, inspected: "Ω≈ç√∫˜µ≤≥".inspect),
         ]
       end
 
@@ -202,16 +202,16 @@ module SeeingIsBelieving::EventStream
         producer.max_line_captures = 2
 
         producer.record_result :type1, 123, 1
-        expect(consumer.call 1).to eq Events::LineResult.new(:type1, 123, '1')
+        expect(consumer.call 1).to eq Events::LineResult.new(type: :type1, line_number: 123, inspected: '1')
 
         producer.record_result :type1, 123, 2
-        expect(consumer.call 1).to eq Events::LineResult.new(:type1, 123, '2')
+        expect(consumer.call 1).to eq Events::LineResult.new(type: :type1, line_number: 123, inspected: '2')
 
         producer.record_result :type1, 123, 3
         producer.record_result :type1, 123, 4
         producer.record_result :type2, 123, 1
-        expect(consumer.call 2).to eq [Events::UnrecordedResult.new(:type1, 123),
-                                       Events::LineResult.new(:type2, 123, '1')]
+        expect(consumer.call 2).to eq [Events::UnrecordedResult.new(type: :type1, line_number: 123),
+                                       Events::LineResult.new(type: :type2, line_number: 123, inspected: '1')]
       end
 
       it 'scopes the max to a given type/line' do
@@ -224,12 +224,12 @@ module SeeingIsBelieving::EventStream
         producer.record_result :type2, 1, 5
         producer.record_result :type2, 1, 6
         expect(consumer.call 6).to eq [
-          Events::LineResult.new(:type1, 1, '1'),
-          Events::UnrecordedResult.new(:type1, 1),
-          Events::LineResult.new(:type1, 2, '3'),
-          Events::UnrecordedResult.new(:type1, 2),
-          Events::LineResult.new(:type2, 1, '5'),
-          Events::UnrecordedResult.new(:type2, 1),
+          Events::LineResult.new(      type: :type1, line_number: 1, inspected: '1'),
+          Events::UnrecordedResult.new(type: :type1, line_number: 1),
+          Events::LineResult.new(      type: :type1, line_number: 2, inspected: '3'),
+          Events::UnrecordedResult.new(type: :type1, line_number: 2),
+          Events::LineResult.new(      type: :type2, line_number: 1, inspected: '5'),
+          Events::UnrecordedResult.new(type: :type2, line_number: 1),
         ]
       end
 
@@ -241,10 +241,10 @@ module SeeingIsBelieving::EventStream
       # Some examples, mostly for the purpose of running individually if things get confusing
       example 'Example: Simple' do
         producer.record_result :type, 1, "a"
-        expect(consumer.call).to eq Events::LineResult.new(:type, 1, '"a"')
+        expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '"a"')
 
         producer.record_result :type, 1, 1
-        expect(consumer.call).to eq Events::LineResult.new(:type, 1, '1')
+        expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '1')
       end
 
       example 'Example: Complex' do
@@ -252,14 +252,14 @@ module SeeingIsBelieving::EventStream
         str2 = str1.dup
         producer.record_result :type, 1, str2
         expect(str2).to eq str1 # just making sure it doesn't mutate since this one is so complex
-        expect(consumer.call).to eq Events::LineResult.new(:type, 1, str1.inspect)
+        expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: str1.inspect)
       end
 
       context 'calls #inspect when no block is given' do
         it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
           obj = BasicObject.new
           producer.record_result :type, 1, obj
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, "#<no inspect available>")
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: "#<no inspect available>")
         end
 
 
@@ -269,7 +269,7 @@ module SeeingIsBelieving::EventStream
             nil
           end
           producer.record_result :type, 1, obj
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, "#<no inspect available>")
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: "#<no inspect available>")
         end
 
         it 'only calls inspect once' do
@@ -289,24 +289,24 @@ module SeeingIsBelieving::EventStream
           def o.inspect()       'real-inspect'  end
           def o.other_inspect() 'other-inspect' end
           producer.record_result(:type, 1, o) { |x| x.other_inspect }
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, 'other-inspect')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: 'other-inspect')
         end
 
         it 'doesn\'t blow up if the block raises' do
           o = Object.new
           producer.record_result(:type, 1, o) { raise Exception, "zomg" }
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, '#<no inspect available>')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '#<no inspect available>')
         end
 
         it 'doesn\'t blow up if the block returns a non-string' do
           o = Object.new
           producer.record_result(:type, 1, o) { nil }
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, '#<no inspect available>')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '#<no inspect available>')
 
           stringish = Object.new
           def stringish.to_str() 'actual string' end
           producer.record_result(:type, 1, o) { stringish }
-          expect(consumer.call).to eq Events::LineResult.new(:type, 1, 'actual string')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: 'actual string')
         end
 
         it 'invokes the block only once' do
@@ -330,17 +330,17 @@ module SeeingIsBelieving::EventStream
       it 'emits the event and sets the max_line_captures' do
         producer.record_max_line_captures 123
         expect(producer.max_line_captures).to eq 123
-        expect(consumer.call).to eq Events::MaxLineCaptures.new(123)
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(value: 123)
       end
 
       it 'interprets numbers' do
         producer.record_max_line_captures 12
-        expect(consumer.call).to eq Events::MaxLineCaptures.new(12)
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(value: 12)
       end
 
       it 'interprets infinity' do
         producer.record_max_line_captures Float::INFINITY
-        expect(consumer.call).to eq Events::MaxLineCaptures.new(Float::INFINITY)
+        expect(consumer.call).to eq Events::MaxLineCaptures.new(value: Float::INFINITY)
       end
     end
 
@@ -459,7 +459,7 @@ module SeeingIsBelieving::EventStream
       describe 'recording the version' do
         it 'emits the version info' do
           producer.record_sib_version '1.2.3'
-          expect(consumer.call).to eq Events::SiBVersion.new("1.2.3")
+          expect(consumer.call).to eq Events::SiBVersion.new(value: "1.2.3")
         end
       end
 
@@ -473,7 +473,7 @@ module SeeingIsBelieving::EventStream
     describe 'record_ruby_version' do
       it 'emits the ruby version info' do
         producer.record_ruby_version 'o.m.g.'
-        expect(consumer.call).to eq Events::RubyVersion.new('o.m.g.')
+        expect(consumer.call).to eq Events::RubyVersion.new(value: 'o.m.g.')
       end
     end
 
@@ -484,49 +484,49 @@ module SeeingIsBelieving::EventStream
       end
       it 'emits the filename' do
         producer.record_filename 'this-iz-mah-file.rb'
-        expect(consumer.call).to eq Events::Filename.new('this-iz-mah-file.rb')
+        expect(consumer.call).to eq Events::Filename.new(value: 'this-iz-mah-file.rb')
       end
     end
 
     describe 'stdout' do
       it 'is emitted along with the events from the event stream' do
         stdout_producer.puts "this is the stdout¡"
-        expect(consumer.call).to eq Events::Stdout.new("this is the stdout¡\n")
+        expect(consumer.call).to eq Events::Stdout.new(value: "this is the stdout¡\n")
       end
       specify 'each line is emitted as an event' do
         stdout_producer.puts "first"
         stdout_producer.puts "second\nthird"
-        expect(consumer.call).to eq Events::Stdout.new("first\n")
-        expect(consumer.call).to eq Events::Stdout.new("second\n")
-        expect(consumer.call).to eq Events::Stdout.new("third\n")
+        expect(consumer.call).to eq Events::Stdout.new(value: "first\n")
+        expect(consumer.call).to eq Events::Stdout.new(value: "second\n")
+        expect(consumer.call).to eq Events::Stdout.new(value: "third\n")
       end
     end
 
     describe 'stderr' do
       it 'is emitted along with the events from the event stream' do
         stderr_producer.puts "this is the stderr¡"
-        expect(consumer.call).to eq Events::Stderr.new("this is the stderr¡\n")
+        expect(consumer.call).to eq Events::Stderr.new(value: "this is the stderr¡\n")
       end
       specify 'each line is emitted as an event' do
         stderr_producer.puts "first"
         stderr_producer.puts "second\nthird"
-        expect(consumer.call).to eq Events::Stderr.new("first\n")
-        expect(consumer.call).to eq Events::Stderr.new("second\n")
-        expect(consumer.call).to eq Events::Stderr.new("third\n")
+        expect(consumer.call).to eq Events::Stderr.new(value: "first\n")
+        expect(consumer.call).to eq Events::Stderr.new(value: "second\n")
+        expect(consumer.call).to eq Events::Stderr.new(value: "third\n")
       end
     end
 
     describe 'record_exec' do
       it 'records the event and the inspection of the args that were given to exec' do
         producer.record_exec(["ls", "-l"])
-        expect(consumer.call).to eq Events::Exec.new('["ls", "-l"]')
+        expect(consumer.call).to eq Events::Exec.new(args: '["ls", "-l"]')
       end
     end
 
     describe 'process_exitstatus' do
       it 'emits an exitstatus event' do
         consumer.process_exitstatus 92
-        expect(consumer.call).to eq Events::Exitstatus.new(92)
+        expect(consumer.call).to eq Events::Exitstatus.new(value: 92)
       end
     end
 

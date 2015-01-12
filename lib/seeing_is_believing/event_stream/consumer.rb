@@ -52,12 +52,12 @@ class SeeingIsBelieving
         stderr_stream        = streams.fetch :stderr
 
         Thread.new do
-          stdout_stream.each_line { |line| queue << Events::Stdout.new(line) }
+          stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
           queue << lambda { finish_criteria.stdout_thread_finished! }
         end
 
         Thread.new do
-          stderr_stream.each_line { |line| queue << Events::Stderr.new(line) }
+          stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
           queue << lambda { finish_criteria.stderr_thread_finished! }
         end
 
@@ -82,7 +82,7 @@ class SeeingIsBelieving
       end
 
       def process_exitstatus(status)
-        queue << Events::Exitstatus.new(status)
+        queue << Events::Exitstatus.new(value: status)
         queue << lambda { finish_criteria.process_exited! }
       end
 
@@ -118,13 +118,13 @@ class SeeingIsBelieving
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
           inspected   = extract_string(line)
-          Events::LineResult.new(type, line_number, inspected)
+          Events::LineResult.new(type: type, line_number: line_number, inspected: inspected)
         when :maxed_result
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
-          Events::UnrecordedResult.new(type, line_number)
+          Events::UnrecordedResult.new(type: type, line_number: line_number)
         when :exception
-          Events::Exception.new(-1, '', '', []).tap do |exception|
+          Events::Exception.new(line_number: -1, class_name: '', message: '', backtrace: []).tap do |exception|
             loop do
               line = event_stream.gets.chomp
               case extract_token(line).intern
@@ -139,17 +139,17 @@ class SeeingIsBelieving
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
-          Events::MaxLineCaptures.new(value)
+          Events::MaxLineCaptures.new(value: value)
         when :num_lines
-          Events::NumLines.new(extract_token(line).to_i)
+          Events::NumLines.new(value: extract_token(line).to_i)
         when :sib_version
-          Events::SiBVersion.new(extract_string line)
+          Events::SiBVersion.new(value: extract_string(line))
         when :ruby_version
-          Events::RubyVersion.new(extract_string line)
+          Events::RubyVersion.new(value: extract_string(line))
         when :filename
-          Events::Filename.new(extract_string line)
+          Events::Filename.new(value: extract_string(line))
         when :exec
-          Events::Exec.new(extract_string line)
+          Events::Exec.new(args: extract_string(line))
         else
           raise UnknownEvent, original_line.inspect
         end
