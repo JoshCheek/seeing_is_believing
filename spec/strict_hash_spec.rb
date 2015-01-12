@@ -79,11 +79,6 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     end
 
     describe '.attribute / .attributes / .predicate / .predicates' do
-      specify 'are private' do
-        raises!(NoMethodError) { Class.new(described_class).attribute :a, 1 }
-        eq! 1, Class.new(described_class) { attribute :a, 1 }.new.a
-      end
-
       specify 'raise if a key is not a symbol (you shouldn\'t be dynamically creating this class with strings)' do
         raises!(ArgumentError) { klass.attribute 'a', 1 }
         raises!(ArgumentError) { klass.predicate 'b', 1 }

@@ -2,7 +2,6 @@ class SeeingIsBelieving
   StrictHash = Class.new
 
   class << StrictHash
-    private
     AttributeNotProvided = Module.new
 
     def init_blocks
