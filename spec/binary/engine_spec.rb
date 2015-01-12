@@ -15,7 +15,7 @@ class SeeingIsBelieving
         flags   = ParseArgs.call []
         flags[:program_from_args] = body
         flags[:timeout_seconds]   = timeout
-        options = Options.new(flags, stdin, stdout, stderr)
+        options = Options.init(flags, stdin, stdout, stderr)
         Engine.new options
       end
 
