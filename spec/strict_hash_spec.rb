@@ -22,7 +22,7 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         eq! 2, klass.attribute(:b) { 2 }.new.b
       end
 
-      specify 'the block form is always called' do
+      specify 'the block value is not cached' do
         klass.attribute(:a,   "a" ).new.a << "-modified"
         eq! "a-modified", klass.new.a
 

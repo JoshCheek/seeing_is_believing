@@ -2,21 +2,23 @@ require 'seeing_is_believing/strict_hash'
 
 class SeeingIsBelieving
   module EventStream
-    # actually, it might make sense for the consumer to emit a finish event when it knows there are no more
-    # also might be nice for it to emit events when it knows different streams are done, just for informational purposes
+    Event = StrictHash.anon # one superclass to rule them all!
+
     module Events
-      Stdout           = StrictHash.for(:value)
-      Stderr           = StrictHash.for(:value)
-      MaxLineCaptures  = StrictHash.for(:value)
-      Filename         = StrictHash.for(:value)
-      NumLines         = StrictHash.for(:value)
-      SiBVersion       = StrictHash.for(:value)
-      RubyVersion      = StrictHash.for(:value)
-      Exitstatus       = StrictHash.for(:value)
-      LineResult       = StrictHash.for(:type, :line_number, :inspected)
-      UnrecordedResult = StrictHash.for(:type, :line_number)
-      Exception        = StrictHash.for(:line_number, :class_name, :message, :backtrace)
-      Exec             = StrictHash.for(:args)
+      # actually, it might make sense for the consumer to emit a finish event when it knows there are no more
+      # also might be nice for it to emit events when it knows different streams are done, just for informational purposes
+      Stdout           = Event.for :value
+      Stderr           = Event.for :value
+      MaxLineCaptures  = Event.for :value
+      Filename         = Event.for :value
+      NumLines         = Event.for :value
+      SiBVersion       = Event.for :value
+      RubyVersion      = Event.for :value
+      Exitstatus       = Event.for :value
+      Exec             = Event.for :args
+      UnrecordedResult = Event.for :type, :line_number
+      LineResult       = Event.for :type, :line_number, :inspected
+      Exception        = Event.for :line_number, :class_name, :message, :backtrace
     end
   end
 end
