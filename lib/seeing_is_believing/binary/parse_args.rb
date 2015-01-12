@@ -49,8 +49,7 @@ class SeeingIsBelieving
       end
 
       class DeprecatedArg < StrictHash
-        attribute :explanation, nil
-        attribute :args,        nil
+        attributes :args, :explanation
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
         end
