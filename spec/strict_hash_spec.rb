@@ -102,16 +102,16 @@ RSpec.describe SeeingIsBelieving::StrictHash do
   describe 'anonymous subclasses try to be generally terse and useful to be valid replacements over Struct' do
     specify '.anon / .for / .for? return a subclass of StrictHash' do
       klass = described_class.anon
-      neq! klass, described_class
-      expect(klass.ancestors).to include described_class
+      neq! described_class, klass
+      eq!  described_class, klass.superclass
 
       klass = described_class.for
-      neq! klass, described_class
-      expect(klass.ancestors).to include described_class
+      neq! described_class, klass
+      eq!  described_class, klass.superclass
 
       klass = described_class.for?
-      neq! klass, described_class
-      expect(klass.ancestors).to include described_class
+      neq! described_class, klass
+      eq!  described_class, klass.superclass
     end
 
     specify '.for? passes its args to .predicates' do
@@ -130,12 +130,31 @@ RSpec.describe SeeingIsBelieving::StrictHash do
     end
 
     specify 'subclasses retain their parents attributes without them mixing' do
-      parent = klass.attributes(a: 1)
-      child  = klass.for(b: 2)
+      parent = klass.for(a: 1)
+      child  = parent.for(b: 2)
       eq! 1, child.new.a
       eq! 2, child.new.b
       eq! 1, parent.new.a
       raises!(NoMethodError) { parent.new.b }
+    end
+
+    specify 'subclasses can override their parents attributes' do
+      c1 = klass.for(a: 1, b: 1, c: 1)
+      c2 = c1.for(a: 2, b: 2)
+      c3 = c2.for(a: 3)
+      eq! 3, c3.new.a
+      eq! 2, c3.new.b
+      eq! 1, c3.new.c
+
+      eq! 2, c2.new.a
+      eq! 2, c2.new.b
+      eq! 1, c2.new.c
+
+      eq! 1, c1.new.a
+      eq! 1, c1.new.b
+      eq! 1, c1.new.c
+
+      raises!(ArgumentError) { c2.attribute :a } # still can't redefine their own
     end
   end
 

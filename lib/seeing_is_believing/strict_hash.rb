@@ -10,13 +10,9 @@ class SeeingIsBelieving
       @init_blocks ||= {}
     end
 
-    def init_blocks=(init_blocks)
-      @init_blocks = init_blocks
-    end
-
     def attribute(name, value=NoDefault, &init_block)
-      init_blocks.key?(name)                       && raise(ArgumentError, "#{name} was already defined")
-      name.kind_of?(Symbol)                        || raise(ArgumentError, "#{name.inspect} should have been a symbol")
+      init_blocks.key?(name) && raise(ArgumentError, "#{name} was already defined")
+      name.kind_of?(Symbol)  || raise(ArgumentError, "#{name.inspect} should have been a symbol")
 
       init_block ||= lambda do
         if value == NoDefault
@@ -59,8 +55,7 @@ class SeeingIsBelieving
     end
 
     def anon
-      init_blocks = self.init_blocks.dup
-      Class.new(self) { @init_blocks = init_blocks }
+      Class.new self
     end
 
     def for(*attributes_args)
@@ -85,9 +80,14 @@ class SeeingIsBelieving
     end
 
     def initialize(initial_values={}, &initializer)
-      @attributes = Hash[
-        self.class.init_blocks.map { |name, block| [name, Attr.new(&block) ] }
-      ]
+      @attributes = self
+        .class
+        .ancestors
+        .take_while { |ancestor| ancestor != StrictHash }
+        .map(&:init_blocks)
+        .reverse
+        .inject({}, :merge)
+        .each_with_object({}) { |(name, block), attrs| attrs[name] = Attr.new(&block) }
       initial_values.each { |key, value| self[key] = value }
       initializer.call self if initializer
       each { } # access each key to see if it blows up
