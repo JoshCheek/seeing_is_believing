@@ -13,10 +13,13 @@ require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
 
+# Options data structure
+require 'seeing_is_believing/strict_hash'
+
 
 class SeeingIsBelieving
   module Binary
-    class Options
+    class Options < StrictHash
       # TODO: this goes somewhere, but not sure its here. If we do a markers object, then probably there
       def self.to_regex(string)
         flag_to_bit = {'i' => 0b001, 'x' => 0b010, 'm' => 0b100}
@@ -25,61 +28,45 @@ class SeeingIsBelieving
                    ($2||"").each_char.inject(0) { |bits, flag| bits|flag_to_bit[flag] }
       end
 
+      predicates :print_version, :inherit_exit_status, :result_as_json,
+                 :print_help, :print_cleaned, :file_is_on_stdin
 
-      def self.attr_predicate(name)
-        define_method("#{name}?") { predicates.fetch name }
+      attributes :annotator, :help_screen, :debugger, :markers,
+                 :marker_regexes, :timeout_seconds, :filename,
+                 :body, :annotator_options, :lib_options, :errors,
+                 :deprecations
+
+      def self.init(flags, stdin, stdout, stderr)
+        new { |opts| opts.init_from_flags flags, stdin, stdout, stderr }
       end
-      attr_predicate :print_version
-      attr_predicate :inherit_exit_status
-      attr_predicate :result_as_json
-      attr_predicate :print_help
-      attr_predicate :print_cleaned
-      attr_predicate :file_is_on_stdin
 
-      def self.attr_attribute(name)
-        define_method(name) { attributes.fetch name }
-      end
-      attr_attribute :annotator
-      attr_attribute :help_screen
-      attr_attribute :debugger
-      attr_attribute :markers
-      attr_attribute :marker_regexes
-      attr_attribute :timeout_seconds
-      attr_attribute :filename
-      attr_attribute :body
-      attr_attribute :annotator_options
-      attr_attribute :lib_options
-      attr_attribute :errors
-      attr_attribute :deprecations
 
-      def initialize(flags, stdin, stdout, stderr)
+      def init_from_flags(flags, stdin, stdout, stderr)
         # Some simple attributes
-        self.attributes = {}
-        attributes[:deprecations]    = flags.fetch(:deprecated_args)
-        attributes[:errors]          = flags.fetch(:errors)
-        attributes[:markers]         = flags.fetch(:markers) # TODO: Should probably object-ify these
-        attributes[:marker_regexes]  = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
-        attributes[:timeout_seconds] = flags.fetch(:timeout_seconds)
-        attributes[:filename]        = flags.fetch(:filename)
+        self[:deprecations]    = flags.fetch(:deprecated_args)
+        self[:errors]          = flags.fetch(:errors)
+        self[:markers]         = flags.fetch(:markers) # TODO: Should probably object-ify these
+        self[:marker_regexes]  = flags.fetch(:marker_regexes).each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
+        self[:timeout_seconds] = flags.fetch(:timeout_seconds)
+        self[:filename]        = flags.fetch(:filename)
 
         # Most predicates
-        self.predicates = {}
-        predicates[:print_version]       = flags.fetch(:version) # TODO: rename rhs to print_version ?
-        predicates[:inherit_exit_status] = flags.fetch(:inherit_exit_status)
-        predicates[:result_as_json]      = flags.fetch(:result_as_json)
-        predicates[:print_help]          = !!flags.fetch(:help)
-        predicates[:print_cleaned]       = flags.fetch(:clean) # TODO: Better name on rhs
-        predicates[:file_is_on_stdin]    = (!filename && !flags.fetch(:program_from_args))
+        self[:print_version]       = flags.fetch(:version) # TODO: rename rhs to print_version ?
+        self[:inherit_exit_status] = flags.fetch(:inherit_exit_status)
+        self[:result_as_json]      = flags.fetch(:result_as_json)
+        self[:print_help]          = !!flags.fetch(:help)
+        self[:print_cleaned]       = flags.fetch(:clean) # TODO: Better name on rhs
+        self[:file_is_on_stdin]    = (!filename && !flags.fetch(:program_from_args))
 
         # Polymorphism, y'all!
         # TODO: rename xmpfilter_style to something more about behaviour than inspiration ie AnnotateMarkedLines
-        attributes[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
-        attributes[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
+        self[:annotator]   = (flags.fetch(:xmpfilter_style) ? AnnotateXmpfilterStyle                     : AnnotateEveryLine)
+        self[:help_screen] = flags.fetch(:help) == 'help'   ? flags.fetch(:short_help_screen)            : flags.fetch(:long_help_screen)
         # TODO: allow debugger to take a stream
-        attributes[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
+        self[:debugger]    = flags.fetch(:debug)            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
 
         # The lib's options (passed to SeeingIsBelieving.new)
-        attributes[:lib_options] = {
+        self[:lib_options] = {
           filename:              (flags.fetch(:as) || filename),
           stdin:                 (file_is_on_stdin? ? '' : stdin),
           require:               (['seeing_is_believing/the_matrix'] + flags.fetch(:require)), # TODO: rename requires: files_to_require, or :requires or maybe :to_require
@@ -92,7 +79,7 @@ class SeeingIsBelieving
         }
 
         # The annotator's options (passed to annotator.call)
-        attributes[:annotator_options] = {
+        self[:annotator_options] = {
           alignment_strategy: extract_alignment_strategy(flags.fetch(:alignment_strategy), errors),
           debugger:           debugger,
           markers:            markers,
@@ -110,30 +97,31 @@ class SeeingIsBelieving
 
         # Body
         errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
-        attributes[:body] = ((print_version? || print_help? || errors.any?) && "") ||
-                            flags.fetch(:program_from_args)                        ||
-                            (file_is_on_stdin? && stdin.read)                      ||
-                            File.read(filename)
+        self[:body] = ((print_version? || print_help? || errors.any?) && "") ||
+                      flags.fetch(:program_from_args)                        ||
+                      (file_is_on_stdin? && stdin.read)                      ||
+                      File.read(filename)
       end
+
 
       # TODO: Options inspects itself if debugger is set to true
       def inspect
         inspected = "#<#{self.class.name.inspect}\n"
         inspected << "  --PREDICATES--\n"
-        predicates.each do |predicate, value|
-          inspected << inspect_line(sprintf "    %-25s %p", predicate.to_s+"?", value)
-        end
+        # predicates.each do |predicate, value|
+        #   inspected << inspect_line(sprintf "    %-25s %p", predicate.to_s+"?", value)
+        # end
         inspected << "  --ATTRIBUTES--\n"
-        attributes.each do |predicate, value|
+        each do |predicate, value|
           inspected << inspect_line(sprintf "    %-20s %p", predicate.to_s, value)
         end
         inspected << ">"
         inspected
       end
 
-      private
 
-      attr_accessor :predicates, :attributes
+
+      private
 
       def inspect_line(line)
         if line.size < 78

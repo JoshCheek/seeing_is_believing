@@ -22,7 +22,7 @@ class SeeingIsBelieving
 
       def opts(overrides={})
         flags = ParseArgs.call []
-        described_class.new(flags.merge(overrides), stdin, stdout, stderr)
+        described_class.init(flags.merge(overrides), stdin, stdout, stderr)
       end
 
       describe '.to_regex' do
