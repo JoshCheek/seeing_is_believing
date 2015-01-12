@@ -26,10 +26,9 @@ RSpec.describe SeeingIsBelieving::StrictHash do
 
   describe 'declaration' do
     describe 'attributes' do
-      specify 'can be individually declared, requiring a default value or init block using .attribute' do
+      specify 'can be individually declared, providing a default value or init block using .attribute' do
         eq! 1, klass.attribute(:a,   1 ).new.a
         eq! 2, klass.attribute(:b) { 2 }.new.b
-        raises!(ArgumentError) { klass.attribute :c }
       end
 
       specify 'the block form is always called' do
@@ -45,13 +44,18 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         eq! 1, klass.new.a
         eq! 2, klass.new.b
       end
+
+      specify 'can omit a default if they are initialized with one' do
+        klass.attribute :a
+        eq! 1, klass.new(a: 1).a
+        raises!(ArgumentError, /:a/) { klass.new }
+      end
     end
 
     describe 'predicates are attributes which' do
       specify 'can be individually declared with .predicate' do
         eq! 1, klass.predicate(:a,   1 ).new.a
         eq! 2, klass.predicate(:b) { 2 }.new.b
-        raises!(ArgumentError) { klass.predicate :c }
       end
       specify 'can be group declared with .predicates' do
         klass.predicates a: 1, b: 2

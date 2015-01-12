@@ -1,19 +1,27 @@
 class SeeingIsBelieving
   StrictHash = Class.new
 
+  # TODO: Do I want to support non-block form by using dup? or clone?
+  # uhh.... what's the difference between dup and clone again?
   class << StrictHash
-    AttributeNotProvided = Module.new
+    NoDefault = Module.new
 
     def init_blocks
       @init_blocks ||= {}
     end
 
-    def attribute(name, value=AttributeNotProvided, &init_block)
-      value == AttributeNotProvided && !init_block && raise(ArgumentError, "Must provide a default value for #{name.inspect}")
+    def attribute(name, value=NoDefault, &init_block)
       init_blocks.key?(name)                       && raise(ArgumentError, "#{name} was already defined")
       name.kind_of?(Symbol)                        || raise(ArgumentError, "#{name.inspect} should have been a symbol")
 
-      init_blocks[name] = init_block || lambda { value }
+      init_block ||= lambda do
+        if value == NoDefault
+          raise ArgumentError, "Must provide a value for #{name.inspect}"
+        else
+          value
+        end
+      end
+      init_blocks[name] = init_block
       define_method(name) { @attributes[name] }
       define_method(:"#{name}=") { |val| @attributes[name] = val }
 
@@ -38,11 +46,14 @@ class SeeingIsBelieving
   end
 
   class StrictHash
+    Uninitialized = Module.new
     def initialize(initial_values={})
-      @attributes = {}
-      self.class.__send__(:init_blocks)
-          .each { |name, init_block| @attributes[name] = init_block.call }
+      uninitialized_key_value_pairs = self.class.init_blocks.map { |name, _| [name, Uninitialized] }
+      @attributes = Hash[uninitialized_key_value_pairs]
       initial_values.each { |key, value| self[key] = value }
+      self.class.init_blocks.each do |name, init_block|
+        self[name] = init_block.call if self[name] == Uninitialized
+      end
     end
 
     def [](key)
