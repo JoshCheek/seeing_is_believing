@@ -31,8 +31,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'evaluates the code when the file DNE' do
     FileUtils.rm_f filename
-    debugger = SeeingIsBelieving::Debugger.new stream: $stdout
-    expect(invoke('print 1', debugger: debugger).stdout).to eq '1'
+    expect(invoke('print 1').stdout).to eq '1'
   end
 
   it 'evaluates the code when the file Exists' do
