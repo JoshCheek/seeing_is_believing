@@ -29,9 +29,4 @@ class SeeingIsBelieving
   # EventStream
   NoMoreEvents = Class.new SeeingIsBelievingError
   UnknownEvent = Class.new SeeingIsBelievingError
-  class WtfWhoClosedMyShit < SeeingIsBelievingError
-    def initialize
-      super "Our end of the pipe was closed!"
-    end
-  end
 end

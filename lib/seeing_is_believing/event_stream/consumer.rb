@@ -52,19 +52,20 @@ class SeeingIsBelieving
         stderr_stream        = streams.fetch :stderr
 
         Thread.new do
-          stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
-          queue << lambda { finish_criteria.stdout_thread_finished! }
+          begin  stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
+          ensure queue << lambda { finish_criteria.stdout_thread_finished! }
+          end
         end
 
         Thread.new do
-          stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
-          queue << lambda { finish_criteria.stderr_thread_finished! }
+          begin  stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
+          ensure queue << lambda { finish_criteria.stderr_thread_finished! }
+          end
         end
 
         Thread.new do
-          begin           event_stream.each_line { |line| queue << line }
-          rescue IOError; queue << lambda { raise WtfWhoClosedMyShit }
-          ensure          queue << lambda { finish_criteria.event_thread_finished! }
+          begin  event_stream.each_line { |line| queue << line }
+          ensure queue << lambda { finish_criteria.event_thread_finished! }
           end
         end
       end
@@ -76,13 +77,13 @@ class SeeingIsBelieving
 
       def each
         return to_enum :each unless block_given?
-        loop { yield call(1) }
+        loop { yield call 1 }
       rescue NoMoreEvents
       end
 
-      # TODO: This could actually be dangerous,
-      # b/c this is the thread that is consuming it,
-      # so if it got full and blocked
+      # NOTE: Note it's probably a bad plan to call this method
+      # from within the same thread as the consumer, because if it
+      # blocks, who will remove items from the queue?
       def process_exitstatus(status)
         queue << Events::Exitstatus.new(value: status)
         queue << lambda { finish_criteria.process_exited! }
@@ -102,8 +103,6 @@ class SeeingIsBelieving
           next_event
         when Event
           element
-        else
-          raise "Uhhh... what's this thing here: #{element.inspect}"
         end
       end
 

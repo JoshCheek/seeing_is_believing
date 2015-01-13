@@ -117,9 +117,11 @@ module SeeingIsBelieving::EventStream
         expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
-      it 'raises WtfWhoClosedMyShit if its end of the stream is closed' do
-        close_streams eventstream_consumer, stdout_producer, stderr_producer
-        expect { consumer.call }.to raise_error SeeingIsBelieving::WtfWhoClosedMyShit
+      it 'gracefully handles its side of the streams getting closed' do
+        close_streams eventstream_consumer, stdout_consumer, stderr_consumer
+        consumer.process_exitstatus 0
+        consumer.call
+        expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
       specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
