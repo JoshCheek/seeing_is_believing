@@ -19,6 +19,7 @@ require 'seeing_is_believing/strict_hash'
 
 class SeeingIsBelieving
   module Binary
+    # TODO: Can I move half of this into flags and the other half into engine?
     class Options < StrictHash
       # TODO: this goes somewhere, but not sure its here. If we do a markers object, then probably there
       def self.to_regex(string)
@@ -40,32 +41,36 @@ class SeeingIsBelieving
         new { |opts| opts.init_from_flags flags, stdin, stdout, stderr }
       end
 
-
       def init_from_flags(flags, stdin, stdout, stderr)
-        # Some simple attributes
-        self[:deprecations]    = flags[:deprecated_args]
-        self[:errors]          = flags[:errors]
-        self[:markers]         = flags[:markers] # TODO: Should probably object-ify these
-        self[:marker_regexes]  = flags[:marker_regexes].each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
-        self[:timeout_seconds] = flags[:timeout_seconds]
-        self[:filename]        = flags[:filename]
-
-        # Most predicates
+        self[:deprecations]        = flags[:deprecated_args].dup
+        self[:markers]             = flags[:markers] # TODO: Should probably object-ify these
+        self[:marker_regexes]      = flags[:marker_regexes].each_with_object({}) { |(k, v), rs| rs[k] = self.class.to_regex v }
+        self[:timeout_seconds]     = flags[:timeout_seconds]
+        self[:filename]            = flags[:filename]
         self[:print_version]       = flags[:print_version]
         self[:inherit_exit_status] = flags[:inherit_exit_status]
         self[:result_as_json]      = flags[:result_as_json]
         self[:print_help]          = !!flags[:help]
         self[:print_cleaned]       = flags[:clean]
         self[:file_is_on_stdin]    = (!filename && !flags[:program_from_args])
+        self[:annotator]           = AnnotateEveryLine
+        self[:annotator]           = AnnotateXmpfilterStyle if flags[:xmpfilter_style]
+        self[:help_screen]         = "They didn't ask for help!"
+        self[:help_screen]         = flags[:short_help_screen] if flags[:help] == 'help'
+        self[:help_screen]         = flags[:long_help_screen]  if flags[:help] == 'help+'
+        self[:debugger]            = Debugger.new(stream: nil)
+        self[:debugger]            = Debugger.new(stream: stderr, colour: true) if flags[:debug]
 
-        # Polymorphism, y'all!
-        # TODO: rename xmpfilter_style to something more about behaviour than inspiration ie AnnotateMarkedLines
-        self[:annotator]   = (flags[:xmpfilter_style] ? AnnotateXmpfilterStyle    : AnnotateEveryLine)
-        self[:help_screen] = flags[:help] == 'help'   ? flags[:short_help_screen] : flags[:long_help_screen]
-        # TODO: allow debugger to take a stream
-        self[:debugger]    = flags[:debug]            ? Debugger.new(stream: stderr, colour: true) : Debugger.new(stream: nil)
+        # incongruent sources
+        self[:errors]              = flags[:errors].dup
+        if 1 < flags[:filenames].size
+          errors << "Can only have one filename, but had: #{flags[:filenames].map(&:inspect).join ', '}"
+        elsif filename && flags[:program_from_args]
+          errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
+        end
+        errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
 
-        # The lib's options (passed to SeeingIsBelieving.new)
+        # passed to SeeingIsBelieving.new
         self[:lib_options] = {
           filename:          (flags[:as] || filename),
           stdin:             (file_is_on_stdin? ? '' : stdin),
@@ -78,7 +83,7 @@ class SeeingIsBelieving
           annotate:          annotator.expression_wrapper(markers, marker_regexes), # TODO: rename to wrap_expressions
         }
 
-        # The annotator's options (passed to annotator.call)
+        # passed to annotator.call
         self[:annotator_options] = {
           alignment_strategy: extract_alignment_strategy(flags[:alignment_strategy], errors),
           debugger:           debugger,
@@ -88,21 +93,12 @@ class SeeingIsBelieving
           max_result_length:  flags[:max_result_length],
         }
 
-        # Some error checking
-        if 1 < flags[:filenames].size
-          errors << "Can only have one filename, but had: #{flags[:filenames].map(&:inspect).join ', '}"
-        elsif filename && flags[:program_from_args]
-          errors << "You passed the program in an argument, but have also specified the filename #{filename.inspect}"
-        end
-
-        # Body
-        errors << "#{filename} does not exist!" if filename && !File.exist?(filename)
+        # get body
         self[:body] = ((print_version? || print_help? || errors.any?) && "") ||
                       flags[:program_from_args]                              ||
                       (file_is_on_stdin? && stdin.read)                      ||
                       File.read(filename)
       end
-
 
       # TODO: Options inspects itself if debugger is set to true
       def inspect
@@ -118,8 +114,6 @@ class SeeingIsBelieving
         inspected << ">"
         inspected
       end
-
-
 
       private
 

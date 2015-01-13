@@ -57,6 +57,8 @@ class SeeingIsBelieving
 
 
 
+      # TODO: allow debugger to take a stream
+
       # TODO: --cd dir | --cd :file:
       #   when given a dir, cd to that dir before executing the code
       #   when not given a dir, cd to the dir of the file being executed before executing it
