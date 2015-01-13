@@ -94,6 +94,10 @@ Known Issues
 ============
 
 * `BEGIN/END` breaks things and I probably won't ever fix it, because it's annoying and it's really meant for command-line scripts... but there is currently a spec for it.
+* `begin; else; break; end` this code (an else without a resecue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
+  As such, I doubt that anyone will ever write it. But if you were to write it, it would blow up, because SiB rewrites your code, wrapping every expression that could have a value.
+  This code will be wrapped. But using the value is syntactically invalid in Ruby, because it constitutes a "void value expression" (aka a nightmare for anyone working with code).
+  I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge taht I don't think it's worth worrying about.
 
 Shit that will probably never get done (or if it does, won't be until after 2.0)
 ================================================================================
@@ -114,6 +118,14 @@ Interestingly, [Swift playground](https://www.youtube.com/watch?v=oY6nQS3MiF8&t=
 are very similar (though better integrated since they cerce you into using xcode).
 Released about a year and a half before them, but maybe I should take advantage of
 their marketing anyway: Swift Playgrounds for Ruby!! :P
+
+Shout outs
+==========
+
+* Whitequark for all the work on [Parser](http://github.com/whitequark/parser/), which dramatically dramatically improved SiB (I used to have my own horribly shitty line-based parser)
+* [Travis CI](https://travis-ci.org/JoshCheek/seeing_is_believing)... I love you times a million! So many difficult bugs have been caught by this.
+  It's so easy to work with, astoundingly convenient, helps me guarantee that SiB works on everyone else's computers, too. And it's free since SiB is open source.
+  I literally have a Travis CI sticker on my laptop, I love you that much.
 
 License
 =======
