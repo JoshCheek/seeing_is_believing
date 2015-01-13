@@ -274,14 +274,14 @@ RSpec.describe SeeingIsBelieving::Binary::ParseArgs do
     end
   end
 
-  describe ':version' do
+  describe ':print_version' do
     it 'defaults to false' do
-      expect(parse([])[:version]).to eq false
+      expect(parse([])[:print_version]).to eq false
     end
 
     it 'can be set with -v and --version' do
-      expect(parse(%w[-v])[:version]).to eq true
-      expect(parse(%w[--version])[:version]).to eq true
+      expect(parse(%w[-v])[:print_version]).to eq true
+      expect(parse(%w[--version])[:print_version]).to eq true
     end
   end
 

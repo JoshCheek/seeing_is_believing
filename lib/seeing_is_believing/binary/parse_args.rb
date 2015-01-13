@@ -11,7 +11,7 @@ class SeeingIsBelieving
         attribute(:help)                { nil }
         attribute(:encoding)            { nil }
         attribute(:debug)               { false }
-        attribute(:version)             { false }
+        attribute(:print_version)       { false }
         attribute(:clean)               { false }
         attribute(:xmpfilter_style)     { false }
         attribute(:inherit_exit_status) { false }
@@ -82,7 +82,7 @@ class SeeingIsBelieving
             when '-h',  '--help'                  then flags[:help]                = 'help'
             when '-h+', '--help+'                 then flags[:help]                = 'help+'
             when '-c',  '--clean'                 then flags[:clean]               = true
-            when '-v',  '--version'               then flags[:version]             = true
+            when '-v',  '--version'               then flags[:print_version]       = true
             when '-x',  '--xmpfilter-style'       then flags[:xmpfilter_style]     = true
             when '-i',  '--inherit-exit-status'   then flags[:inherit_exit_status] = true
             when '-j',  '--json'                  then flags[:result_as_json]      = true

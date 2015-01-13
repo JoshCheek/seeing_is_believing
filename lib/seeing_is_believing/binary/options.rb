@@ -51,11 +51,11 @@ class SeeingIsBelieving
         self[:filename]        = flags[:filename]
 
         # Most predicates
-        self[:print_version]       = flags[:version] # TODO: rename rhs to print_version ?
+        self[:print_version]       = flags[:print_version]
         self[:inherit_exit_status] = flags[:inherit_exit_status]
         self[:result_as_json]      = flags[:result_as_json]
         self[:print_help]          = !!flags[:help]
-        self[:print_cleaned]       = flags[:clean] # TODO: Better name on rhs
+        self[:print_cleaned]       = flags[:clean]
         self[:file_is_on_stdin]    = (!filename && !flags[:program_from_args])
 
         # Polymorphism, y'all!

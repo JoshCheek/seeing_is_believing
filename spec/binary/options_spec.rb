@@ -165,9 +165,9 @@ class SeeingIsBelieving
       end
 
       context 'predicates' do
-        it 'sets print_version? when version is true' do
-          expect(opts(version: false).print_version?).to eq false
-          expect(opts(version: true).print_version?).to eq true
+        it 'sets print_version? when print_version is true' do
+          expect(opts(print_version: false).print_version?).to eq false
+          expect(opts(print_version: true).print_version?).to eq true
         end
 
         it 'sets inherit_exit_status when inherit_exit_status is true' do
@@ -209,7 +209,7 @@ class SeeingIsBelieving
       context 'body' do
         it 'is an empty string if we don\'t need the body (when there are errors or we are printing the version, or help)' do
           expect(opts(                              ).body).to_not be_empty
-          expect(opts(version:                  true).body).to eq ''
+          expect(opts(print_version:            true).body).to eq ''
           expect(opts(help:                     true).body).to eq ''
           expect(opts(alignment_strategy: 'nonsense').body).to eq ''
         end
