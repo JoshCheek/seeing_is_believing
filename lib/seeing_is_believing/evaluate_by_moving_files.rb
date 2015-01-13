@@ -47,10 +47,7 @@ class SeeingIsBelieving
           we_will_not_overwrite_existing_backup_file!
           backup_existing_file
           write_program_to_file
-          begin evaluate_file
-          rescue Timeout::Error; raise
-          rescue Exception;      raise wrap_error $! # <-- do we know what kinds of errors can come up? would it be better blacklist?
-          end
+          evaluate_file
         },
         ensure: -> {
           set_back_to_initial_conditions
@@ -141,15 +138,6 @@ class SeeingIsBelieving
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]
-    end
-
-    def wrap_error(error)
-      debugger.context "Program could not be evaluated" do
-        "Program:      #{program.inspect.chomp}\n\n"\
-        "Actual Error: #{error.inspect.chomp}\n"+
-        error.backtrace.map { |sf| "              #{sf}\n" }.join("")
-      end
-      BugInSib.new error
     end
   end
 end

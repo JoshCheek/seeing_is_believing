@@ -58,16 +58,13 @@ class SeeingIsBelieving
       end
 
       def evaluate!
-        return self if @evaluate
+        return if @evaluate
         @evaluated = true
-        @results, @timed_out, @unexpected_exception = begin
-          [SeeingIsBelieving.call(prepared_body, options.lib_options), false, nil]
-        rescue Timeout::Error
-          [nil, true, nil]
-        rescue Exception
-          [nil, false, $!]
-        end
-        self
+        @timed_out = false
+        @results   = SeeingIsBelieving.call prepared_body, options.lib_options
+      rescue Timeout::Error
+        @timed_out = true
+      ensure return self
       end
 
       def results

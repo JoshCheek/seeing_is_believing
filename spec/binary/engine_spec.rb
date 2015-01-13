@@ -91,18 +91,6 @@ class SeeingIsBelieving
             expect(call("1\n").evaluate!.annotated_body).to eq "1  # => 1\n"
           end
         end
-
-        specify 'unexpected_exception? is true if some other error was raised' do
-          expect(call("").evaluate!.unexpected_exception?).to eq false
-          expect(SeeingIsBelieving).to receive(:call).and_raise "wat"
-          expect(call("").evaluate!.unexpected_exception?).to eq true
-        end
-
-        specify 'unexpected_exception is nil or any unexpected exceptions that were raised' do
-          expect(call("").evaluate!.unexpected_exception).to eq nil
-          expect(SeeingIsBelieving).to receive(:call).and_raise "wat"
-          expect(call("").evaluate!.unexpected_exception.message).to eq "wat"
-        end
       end
     end
   end

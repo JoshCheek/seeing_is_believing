@@ -45,13 +45,6 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # TODO: only wrap in BugInSib here at the toplevel,
-      # its stupid and annoying to hit it at a lower level where we really want the information
-      if engine.unexpected_exception?
-        stderr.puts engine.unexpected_exception.message
-        return NONDISPLAYABLE_ERROR_STATUS
-      end
-
       # TODO: it feels like there should be a printer object?
       # ie shouldn't all the outputs be json if they specified json?
       if options.result_as_json?

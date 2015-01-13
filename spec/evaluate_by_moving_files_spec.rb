@@ -121,16 +121,6 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     end
   end
 
-  it 'if it fails, it tells the debugger some information and raises an error' do
-    error_stream = StringIO.new
-    debugger     = SeeingIsBelieving::Debugger.new(stream: error_stream)
-    evaluator = described_class.new 'raise "omg"', filename, null_options(debugger: debugger)
-    expect(evaluator).to receive(:evaluate_file).and_raise("whatevz")
-    FileUtils.rm_f evaluator.backup_filename
-    expect { evaluator.call }.to raise_error SeeingIsBelieving::BugInSib
-    expect(error_stream.string).to include "Program could not be evaluated"
-  end
-
   it 'does not blow up on exceptions raised in at_exit blocks' do
     expect { invoke 'at_exit { raise "zomg" }' }.to_not raise_error
   end
