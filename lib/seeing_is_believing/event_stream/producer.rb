@@ -84,6 +84,7 @@ class SeeingIsBelieving
 
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
+        # TODO: do record SystemExit, and just let caller choose to not append it to file
         return exception.status if exception.kind_of? SystemExit
         if line_number
           self.num_lines = line_number if num_lines < line_number
@@ -93,15 +94,15 @@ class SeeingIsBelieving
           end
         end
         line_number ||= -1
-        queue << "exception"
-        queue << "  line_number #{line_number}"
-        queue << "  class_name  #{to_string_token exception.class.name}"
-        queue << "  message     #{to_string_token exception.message}"
-        exception.backtrace.each { |line|
-          queue << "  backtrace   #{to_string_token line}"
-        }
-        queue << "end"
-        1
+        queue << [
+          "exception",
+          line_number,
+          to_string_token(exception.class.name),
+          to_string_token(exception.message),
+          exception.backtrace.size,
+          *exception.backtrace.map { |line| to_string_token line }
+        ].join(" ")
+        1 # exit status
       end
 
       def record_filename(filename)

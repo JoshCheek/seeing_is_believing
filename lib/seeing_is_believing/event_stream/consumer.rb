@@ -47,7 +47,7 @@ class SeeingIsBelieving
       def initialize(streams)
         self.finish_criteria = FinishCriteria.new
         self.queue           = Queue.new
-        self.event_stream    = streams.fetch :events
+        event_stream         = streams.fetch :events
         stdout_stream        = streams.fetch :stdout
         stderr_stream        = streams.fetch :stderr
 
@@ -62,10 +62,9 @@ class SeeingIsBelieving
         end
 
         Thread.new do
-          begin  event_stream.each_line { |line| queue << event_for(line) }
-          rescue IOError;        queue << lambda { raise WtfWhoClosedMyShit }
-          rescue Exception => e; queue << lambda { raise e }
-          ensure                 queue << lambda { finish_criteria.event_thread_finished! }
+          begin           event_stream.each_line { |line| queue << line }
+          rescue IOError; queue << lambda { raise WtfWhoClosedMyShit }
+          ensure          queue << lambda { finish_criteria.event_thread_finished! }
           end
         end
       end
@@ -81,6 +80,9 @@ class SeeingIsBelieving
       rescue NoMoreEvents
       end
 
+      # TODO: This could actually be dangerous,
+      # b/c this is the thread that is consuming it,
+      # so if it got full and blocked
       def process_exitstatus(status)
         queue << Events::Exitstatus.new(value: status)
         queue << lambda { finish_criteria.process_exited! }
@@ -88,14 +90,21 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :queue, :event_stream, :finish_criteria
+      attr_accessor :queue, :finish_criteria
 
       def next_event
         raise NoMoreEvents if finish_criteria.satisfied?
-        event = queue.shift
-        return event unless event.kind_of? Proc
-        event.call
-        next_event
+        case element = queue.shift
+        when String
+          event_for element
+        when Proc
+          element.call
+          next_event
+        when Event
+          element
+        else
+          raise "Uhhh... what's this thing here: #{element.inspect}"
+        end
       end
 
       def extract_token(line)
@@ -124,18 +133,11 @@ class SeeingIsBelieving
           type        = extract_token(line).intern
           Events::UnrecordedResult.new(type: type, line_number: line_number)
         when :exception
-          Events::Exception.new(line_number: -1, class_name: '', message: '', backtrace: []).tap do |exception|
-            loop do
-              line = event_stream.gets.chomp
-              case extract_token(line).intern
-              when :line_number   then exception.line_number = extract_token(line).to_i
-              when :class_name    then exception.class_name  = extract_string(line)
-              when :message       then exception.message     = extract_string(line)
-              when :backtrace     then exception.backtrace << extract_string(line)
-              when :end           then break
-              end
-            end
-          end
+          Events::Exception.new \
+            line_number: extract_token(line).to_i,
+            class_name:  extract_string(line),
+            message:     extract_string(line),
+            backtrace:   extract_token(line).to_i.times.map { extract_string line }
         when :max_line_captures
           token = extract_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
