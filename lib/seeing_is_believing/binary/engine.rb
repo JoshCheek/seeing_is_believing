@@ -8,6 +8,7 @@ require 'seeing_is_believing/code'
 #   annotator
 #   marker_regexes     (entirely for annotator)
 #   annotator_options
+#   debugger
 # Should be able to do this job with just:
 #   body
 #   filename
@@ -76,8 +77,6 @@ class SeeingIsBelieving
         @timed_out
       end
 
-      # TODO: Annoying debugger stuff from annotators can move up to here
-      # or maybe debugging goes to stderr, and we still print this anyway?
       def annotated_body
         @annotated_body ||= begin
           @evaluated || raise(MustEvaluateFirst.new __method__)
@@ -85,6 +84,7 @@ class SeeingIsBelieving
                                              results,
                                              options.annotator_options
           annotated.chomp! if missing_newline?
+          options[:debugger].context("ANNOTATED CODE") { annotated }
           annotated
         end
       end

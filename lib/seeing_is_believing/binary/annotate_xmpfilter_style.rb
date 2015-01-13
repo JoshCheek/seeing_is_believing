@@ -102,8 +102,6 @@ class SeeingIsBelieving
           require 'seeing_is_believing/binary/annotate_end_of_file'
           AnnotateEndOfFile.add_stdout_stderr_and_exceptions_to new_body, @results, @options
 
-          # What's w/ this debugger? maybe this should move higher?
-          @options.fetch(:debugger).context "OUTPUT"
           new_body
         end
       end
