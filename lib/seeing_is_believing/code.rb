@@ -7,26 +7,13 @@ class << (Parser ||= Module.new)
   remove_method :warn
 end
 
+require 'seeing_is_believing/hash_struct'
 
 class SeeingIsBelieving
   class Code
-    # TODO: switch to HashStruct
-    class InlineComment
-      attr_accessor :line_number, :whitespace_col, :whitespace, :text_col, :text, :full_range, :whitespace_range, :comment_range
-      def initialize(attributes)
-        attributes = attributes.dup
-        self.line_number       = attributes.delete(:line_number)      || raise(ArgumentError, "Missing attribute: line_number")
-        self.whitespace_col    = attributes.delete(:whitespace_col)   || raise(ArgumentError, "Missing attribute: whitespace_col")
-        self.whitespace        = attributes.delete(:whitespace)       || raise(ArgumentError, "Missing attribute: whitespace")
-        self.text_col          = attributes.delete(:text_col)         || raise(ArgumentError, "Missing attribute: text_col")
-        self.text              = attributes.delete(:text)             || raise(ArgumentError, "Missing attribute: text")
-        self.full_range        = attributes.delete(:full_range)       || raise(ArgumentError, "Missing attribute: full_range")
-        self.whitespace_range  = attributes.delete(:whitespace_range) || raise(ArgumentError, "Missing attribute: whitespace_range")
-        self.comment_range     = attributes.delete(:comment_range)    || raise(ArgumentError, "Missing attribute: comment_range")
-        raise ArgumentError, "Extra args: #{attributes.inspect}" unless attributes.empty?
-      end
-    end
+    InlineComment = HashStruct.for :line_number, :whitespace_col, :whitespace, :text_col, :text, :full_range, :whitespace_range, :comment_range
 
+    # TODO: once HashStruct can take a body, switch this over
     Syntax = Struct.new :error_message, :line_number do
       def valid?()   !error_message end
       def invalid?() !valid?        end
