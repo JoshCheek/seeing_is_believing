@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/event_stream/update_result'
+require 'seeing_is_believing/event_stream/update_result_handler'
 require 'fileutils'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
@@ -22,7 +22,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   def invoke(program, options={})
     result  = SeeingIsBelieving::Result.new
     options = null_options(
-      event_handler:  lambda { |event| SeeingIsBelieving::EventStream::UpdateResult.call result, event },
+      event_handler:  lambda { |event| SeeingIsBelieving::EventStream::UpdateResultHandler.call result, event },
     ).merge(options)
     evaluator = described_class.new(program, filename, options)
     FileUtils.rm_f evaluator.backup_filename

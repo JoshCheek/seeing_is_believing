@@ -2,7 +2,6 @@ class SeeingIsBelieving
   HashStruct = Class.new
 
   # TODO: dynamic attributes
-  # TODO: Rename to HashStruct
   # TODO: new vs new! one validates arg presence, maybe a separate #validate!
   # method for that, this way it's easier to have an invalid hash while constructing it (the block thing is kinda whatever)
   class << HashStruct

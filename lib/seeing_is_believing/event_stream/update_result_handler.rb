@@ -2,8 +2,7 @@ require 'seeing_is_believing/event_stream/events'
 class SeeingIsBelieving
   module EventStream
     # Adapter between EventStream and Result
-    module UpdateResult
-      # TODO: Rename UpdateResultHandler
+    module UpdateResultHandler
       def self.call(result, event)
          case event
          when EventStream::Events::LineResult       then result.record_result(event.type, event.line_number, event.inspected)

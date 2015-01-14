@@ -6,8 +6,8 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/annotate'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/event_stream/update_result'
 require 'seeing_is_believing/event_stream/debugging_handler'
+require 'seeing_is_believing/event_stream/update_result_handler'
 
 class SeeingIsBelieving
   class Options < HashStruct
@@ -46,7 +46,7 @@ class SeeingIsBelieving
       options.debugger.context("TRANSLATED PROGRAM") { new_program }
 
       result = Result.new
-      event_handler = lambda { |event| EventStream::UpdateResult.call result, event }
+      event_handler = lambda { |event| EventStream::UpdateResultHandler.call result, event }
       event_handler = EventStream::DebuggingHandler.new(options.debugger, event_handler)
       EvaluateByMovingFiles.call \
         new_program,
