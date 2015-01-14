@@ -1,7 +1,5 @@
 # encoding: utf-8
-require 'seeing_is_believing/version'
-require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing'
 
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
@@ -37,21 +35,6 @@ class SeeingIsBelieving
                    stderr:    to_regex('^#\s*!>\s*')
       end
 
-      # passed to SeeingIsBelieving.new
-      # TODO: make program body an arg like these ones (ie all args are keyword)
-      # TODO: Move LibOptions into library
-      class LibOptions < StrictHash
-        attribute(:filename)          { nil }
-        attribute(:encoding)          { nil }
-        attribute(:stdin)             { "" }
-        attribute(:require)           { ['seeing_is_believing/the_matrix'] } # TODO: should rename to requires ?
-        attribute(:load_path)         { [File.expand_path('../../..', __FILE__)] } # TODO: should rename to load_path_dirs ?
-        attribute(:timeout_seconds)   { 0 }
-        attribute(:debugger)          { Debugger.new stream: nil } # TODO: Debugger.null
-        attribute(:max_line_captures) { Float::INFINITY }
-        require 'seeing_is_believing/annotate'
-        attribute(:annotate)          { Annotate }
-      end
 
       # passed to annotator.call
       # TODO: move AnnotatorOptions to uhm, annotator or something
@@ -84,7 +67,7 @@ class SeeingIsBelieving
       attribute(:markers)             { Markers.new }
       attribute(:marker_regexes)      { MarkerRegexes.new }
       attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
-      attribute(:lib_options)         { LibOptions.new }
+      attribute(:lib_options)         { SeeingIsBelieving::Options.new }       # passed to SeeingIsBelieving.new
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
       # TODO: allow debugger to take a filename

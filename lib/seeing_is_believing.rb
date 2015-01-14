@@ -4,49 +4,59 @@ require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/annotate'
+require 'seeing_is_believing/strict_hash'
 require 'seeing_is_believing/evaluate_by_moving_files'
 
 class SeeingIsBelieving
-  BLANK_REGEX = /\A\s*\Z/
+  class Options < StrictHash
+    attribute(:filename)          { nil }
+    attribute(:encoding)          { nil }
+    attribute(:stdin)             { "" }
+    attribute(:require)           { ['seeing_is_believing/the_matrix'] } # TODO: should rename to requires ?
+    attribute(:load_path)         { [File.expand_path('..', __FILE__)] } # TODO: should rename to load_path_dirs ?
+    attribute(:timeout_seconds)   { 0 }
+    attribute(:debugger)          { Debugger.new stream: nil } # TODO: Debugger.null
+    attribute(:max_line_captures) { Float::INFINITY }
+    attribute(:annotate)          { Annotate }
+    # TODO: this is something like...
+    # wrap_expressions   (but that conflicts with the WrapExpressions class)
+    # record_expressions (kinda like this, wrapping expressions is generic, we are specifically wrapping them in recording code)
+    # we output it to debugging as "TRANSLATED PROGRAM"
+  end
 
   def self.call(*args)
     new(*args).call
   end
 
+  attr_reader :options
   def initialize(program, options={})
-    options            = options.dup
-    @program           = program
-    @stdin             = options.delete(:stdin)                 || '' # can also be a stream
-    @timeout_seconds   = options.delete(:timeout_seconds)       || 0
-    @load_path         = options.delete(:load_path)             || []
-    @encoding          = options.delete(:encoding)              || nil
-    @filename          = options.delete(:filename)              || nil
-    @require           = options.delete(:require)               || ['seeing_is_believing/the_matrix']
-    @debugger          = options.delete(:debugger)              || Debugger.new(stream: nil)
-    @max_line_captures = options.delete(:max_line_captures) || Float::INFINITY
-    @evaluator         = options.delete(:evaluator)             || EvaluateByMovingFiles
-    @annotate          = options.delete(:annotate)              || Annotate
-    options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
+    @program = program
+    @program += "\n" unless @program.end_with? "\n"
+    @options = Options.new options
   end
 
   def call
     @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
-      filename    = @filename || File.join(dir, 'program.rb')
-      new_program = @annotate.call "#{@program.chomp}\n", filename, @max_line_captures
-      @debugger.context("TRANSLATED PROGRAM") { new_program }
+      options.filename ||= File.join(dir, 'program.rb')
+      new_program = options.annotate.call @program,
+                                          options.filename,
+                                          options.max_line_captures
+
+      options.debugger.context("TRANSLATED PROGRAM") { new_program }
 
       result = Result.new
-      @evaluator.call new_program,
-                      filename,
-                      event_handler:   lambda { |event| EventStream::UpdateResult.call result, event },
-                      provided_input:  @stdin,
-                      require:         @require,
-                      load_path:       @load_path,
-                      encoding:        @encoding,
-                      timeout_seconds: @timeout_seconds,
-                      debugger:        @debugger
+      EvaluateByMovingFiles.call \
+        new_program,
+        options.filename,
+        event_handler:   lambda { |event| EventStream::UpdateResult.call result, event },
+        provided_input:  options.stdin,
+        require:         options.require,
+        load_path:       options.load_path,
+        encoding:        options.encoding,
+        timeout_seconds: options.timeout_seconds,
+        debugger:        options.debugger
 
-      @debugger.context("RESULT") { result.inspect }
+      options.debugger.context("RESULT") { result.inspect }
 
       result
     }

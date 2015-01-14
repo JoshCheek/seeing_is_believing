@@ -613,7 +613,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'lib_options.stdin' do
-      let(:default) { described_class::LibOptions.new.stdin }
+      let(:default) { SeeingIsBelieving::Options.new.stdin }
 
       it 'is the default when we aren\'t evaluating' do
         [ {errors: ['e']},

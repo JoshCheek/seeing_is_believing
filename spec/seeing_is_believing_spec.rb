@@ -41,7 +41,7 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'blows up if given unknown options' do
-    expect { invoke '', not_an_option: 123 }.to raise_error ArgumentError, /not_an_option/
+    expect { invoke '', not_an_option: 123 }.to raise_error KeyError, /not_an_option/
   end
 
   it 'only invokes inspect once' do
