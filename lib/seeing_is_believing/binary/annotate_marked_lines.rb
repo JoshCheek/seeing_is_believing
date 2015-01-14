@@ -75,24 +75,24 @@ class SeeingIsBelieving
             pp_annotation      = annotate_this_line && comment.whitespace_col.zero?
             normal_annotation  = annotate_this_line && !pp_annotation
             if exception_on_line && annotate_this_line
-              [comment.whitespace, FormatComment.call(comment.text_col, value_marker, exception_result, @options)]
+              [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, exception_result, @options)]
             elsif exception_on_line
               whitespace = comment.whitespace
               whitespace = " " if whitespace.empty?
-              [whitespace, FormatComment.call(0, exception_marker, exception_result, @options)]
+              [whitespace, FormatComment.call(0, exception_prefix, exception_result, @options)]
             elsif normal_annotation
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, FormatComment.call(comment.text_col, value_marker, result, @options)]
+              [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, result, @options)]
             elsif pp_annotation
               # result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              # CommentFormatter.call(line.size, exception_marker, result, options)
+              # CommentFormatter.call(line.size, exception_prefix, result, options)
               # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
               result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
               comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
-                  FormatComment.call(comment.whitespace_col, value_marker, comment_line.chomp, @options)
+                  FormatComment.call(comment.whitespace_col, value_prefix, comment_line.chomp, @options)
                 else
-                  FormatComment.call(comment.whitespace_col, nextline_marker, comment_line.chomp, @options)
+                  FormatComment.call(comment.whitespace_col, nextline_prefix, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]
@@ -108,16 +108,16 @@ class SeeingIsBelieving
         end
       end
 
-      def value_marker
-        @value_marker ||= @options[:markers][:value][:text]
+      def value_prefix
+        @value_prefix ||= @options[:markers][:value][:prefix]
       end
 
-      def nextline_marker
-        @xnextline_marker ||= ('#' + ' '*value_marker.size.pred)
+      def nextline_prefix
+        @nextline_prefix ||= ('#' + ' '*value_prefix.size.pred)
       end
 
-      def exception_marker
-        @exception_marker ||= @options[:markers][:exception][:text]
+      def exception_prefix
+        @exception_prefix ||= @options[:markers][:exception][:prefix]
       end
 
       def value_regex

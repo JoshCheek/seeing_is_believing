@@ -16,10 +16,10 @@ class SeeingIsBelieving
   module Binary
     class Config < HashStruct
       class Markers < HashStruct
-        attribute(:value)     { Marker.new text: '# => ', regex: '^#\s*=>\s*' }
-        attribute(:exception) { Marker.new text: '# ~> ', regex: '^#\s*~>\s*' }
-        attribute(:stdout)    { Marker.new text: '# >> ', regex: '^#\s*>>\s*' }
-        attribute(:stderr)    { Marker.new text: '# !> ', regex: '^#\s*!>\s*' }
+        attribute(:value)     { Marker.new prefix: '# => ', regex: '^#\s*=>\s*' }
+        attribute(:exception) { Marker.new prefix: '# ~> ', regex: '^#\s*~>\s*' }
+        attribute(:stdout)    { Marker.new prefix: '# >> ', regex: '^#\s*>>\s*' }
+        attribute(:stderr)    { Marker.new prefix: '# !> ', regex: '^#\s*!>\s*' }
       end
 
       # passed to annotator.call
@@ -249,8 +249,8 @@ class SeeingIsBelieving
   end
 
   def Binary.help_screen(include_examples, markers)
-    value  = markers[:value][:text]
-    stdout = markers[:stdout][:text]
+    value  = markers[:value][:prefix]
+    stdout = markers[:stdout][:prefix]
 
     <<FLAGS + (include_examples ? <<EXAMPLES : '')
 Usage: seeing_is_believing [options] [filename]

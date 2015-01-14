@@ -27,8 +27,8 @@ class SeeingIsBelieving
         @new_body ||= begin
           require 'seeing_is_believing/binary/comment_lines'
           require 'seeing_is_believing/binary/format_comment'
-          exception_text = @options[:markers][:exception][:text] # TODO: rename text to prefix?
-          value_text     = @options[:markers][:value][:text]
+          exception_text = @options[:markers][:exception][:prefix]
+          value_text     = @options[:markers][:value][:prefix]
 
           alignment_strategy = @options[:alignment_strategy].new(@body)
           exception_lineno   = @results.has_exception? ? @results.exception.line_number : -1

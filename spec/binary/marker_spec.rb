@@ -45,21 +45,21 @@ RSpec.describe SeeingIsBelieving::Binary::Marker do
     end
   end
 
-  it 'requires text and a regex' do
-    described_class.new text: '', regex: //
+  it 'requires prefix and a regex' do
+    described_class.new prefix: '', regex: //
     expect { described_class.new }.to raise_error
-    expect { described_class.new text: ''  }.to raise_error
-    expect { described_class.new regex: // }.to raise_error
+    expect { described_class.new prefix: ''  }.to raise_error
+    expect { described_class.new regex:  // }.to raise_error
   end
 
-  it 'stores the text and a regex' do
-    marker = described_class.new(text: 't', regex: /r/)
-    expect(marker.text).to eq 't'
+  it 'stores the prefix and a regex' do
+    marker = described_class.new(prefix: 't', regex: /r/)
+    expect(marker.prefix).to eq 't'
     expect(marker.regex).to eq /r/
   end
 
   it 'converts strings to rgexes when they are set' do
-    marker = described_class.new text: 't', regex: 'r1'
+    marker = described_class.new prefix: 't', regex: 'r1'
     expect(marker[:regex]).to eq /r1/
 
     marker.regex = '/r2/i'

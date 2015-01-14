@@ -484,16 +484,16 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
 
       specify 'each default marker regex can re-find the the marker' do
         default_markers.each do |name, marker|
-          comment   = "#{marker.text}abc"
+          comment   = "#{marker.prefix}abc"
           extracted = comment[marker.regex]
-          expect(extracted).to eq(marker.text)
+          expect(extracted).to eq(marker.prefix)
         end
       end
 
-      it('defaults :value     to "# => "') { expect(default_markers.value    .text).to eq "# => " }
-      it('defaults :exception to "# ~> "') { expect(default_markers.exception.text).to eq "# ~> " }
-      it('defaults :stdout    to "# >> "') { expect(default_markers.stdout   .text).to eq "# >> " }
-      it('defaults :stderr    to "# !> "') { expect(default_markers.stderr   .text).to eq "# !> " }
+      it('defaults :value     to "# => "') { expect(default_markers.value    .prefix).to eq "# => " }
+      it('defaults :exception to "# ~> "') { expect(default_markers.exception.prefix).to eq "# ~> " }
+      it('defaults :stdout    to "# >> "') { expect(default_markers.stdout   .prefix).to eq "# >> " }
+      it('defaults :stderr    to "# !> "') { expect(default_markers.stderr   .prefix).to eq "# !> " }
 
       # TODO: When things get a little more stable, don't feel like adding all the cukes to play with this right now
       it 'overrides :value     with --value-marker'

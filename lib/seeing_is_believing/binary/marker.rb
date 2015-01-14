@@ -16,8 +16,8 @@ class SeeingIsBelieving
         Regexp.new body, flags
       end
 
-      attribute :text  # text, e.g. "# => "
-      attribute :regex # identify text in a comment, e.g. /^# => /
+      attribute :prefix  # e.g. "# => "
+      attribute :regex   # identify prefix in a comment, e.g. /^# => /
 
       def []=(key, value)
         value = Marker.to_regex(value) if key == :regex
