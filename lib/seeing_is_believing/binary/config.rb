@@ -14,8 +14,8 @@ require 'seeing_is_believing/binary/annotate_marked_lines'
 
 class SeeingIsBelieving
   module Binary
-    class Config < StrictHash
-      class Markers < StrictHash
+    class Config < HashStruct
+      class Markers < HashStruct
         attribute(:value)     { Marker.new text: '# => ', regex: '^#\s*=>\s*' }
         attribute(:exception) { Marker.new text: '# ~> ', regex: '^#\s*~>\s*' }
         attribute(:stdout)    { Marker.new text: '# >> ', regex: '^#\s*>>\s*' }
@@ -23,7 +23,7 @@ class SeeingIsBelieving
       end
 
       # passed to annotator.call
-      class AnnotatorOptions < StrictHash
+      class AnnotatorOptions < HashStruct
         attribute(:alignment_strategy) { AlignChunk }
         attribute(:markers)            { Markers.new }
         attribute(:max_line_length)    { Float::INFINITY }
@@ -77,7 +77,7 @@ class SeeingIsBelieving
           end
         end
 
-        deprecated_arg = Class.new StrictHash do
+        deprecated_arg = Class.new HashStruct do
           attributes :args, :explanation
           def to_s
             "Deprecated: `#{args.join ' '}` #{explanation}"

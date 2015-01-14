@@ -1,8 +1,8 @@
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/hash_struct'
 
 class SeeingIsBelieving
   module Binary
-    class Marker < StrictHash
+    class Marker < HashStruct
       def self.to_regex(string)
         return string if string.kind_of? Regexp
         flag_to_bit = {
@@ -18,6 +18,7 @@ class SeeingIsBelieving
 
       attribute :text  # text, e.g. "# => "
       attribute :regex # identify text in a comment, e.g. /^# => /
+
       def []=(key, value)
         value = Marker.to_regex(value) if key == :regex
         super key, value

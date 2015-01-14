@@ -1,11 +1,11 @@
 class SeeingIsBelieving
-  StrictHash = Class.new
+  HashStruct = Class.new
 
   # TODO: dynamic attributes
   # TODO: Rename to HashStruct
   # TODO: new vs new! one validates arg presence, maybe a separate #validate!
   # method for that, this way it's easier to have an invalid hash while constructing it (the block thing is kinda whatever)
-  class << StrictHash
+  class << HashStruct
     NoDefault = Module.new
 
     def init_blocks
@@ -71,7 +71,7 @@ class SeeingIsBelieving
     end
   end
 
-  class StrictHash
+  class HashStruct
     class Attr
       def initialize(value=nil, &block)
         @block = block if block
@@ -87,7 +87,7 @@ class SeeingIsBelieving
       @attributes = self
         .class
         .ancestors
-        .take_while { |ancestor| ancestor != StrictHash }
+        .take_while { |ancestor| ancestor != HashStruct }
         .map(&:init_blocks)
         .reverse
         .inject({}, :merge)
@@ -137,7 +137,7 @@ class SeeingIsBelieving
     def inspect
       classname = self.class.name || 'subclass'
       inspected_attrs = map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
-      "#<StrictHash #{classname}: {#{inspected_attrs}}>"
+      "#<HashStruct #{classname}: {#{inspected_attrs}}>"
     end
 
     def key?(potential_key)

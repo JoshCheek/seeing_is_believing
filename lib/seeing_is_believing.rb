@@ -4,11 +4,11 @@ require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/annotate'
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
 
 class SeeingIsBelieving
-  class Options < StrictHash
+  class Options < HashStruct
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
@@ -17,11 +17,10 @@ class SeeingIsBelieving
     attribute(:timeout_seconds)   { 0 }
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
-    attribute(:annotate)          { Annotate }
-    # TODO: this is something like...
-    # wrap_expressions   (but that conflicts with the WrapExpressions class)
-    # record_expressions (kinda like this, wrapping expressions is generic, we are specifically wrapping them in recording code)
-    # we output it to debugging as "TRANSLATED PROGRAM"
+    attribute(:annotate)          { Annotate } # TODO: this is something like...
+                                               # wrap_expressions   (but that conflicts with the WrapExpressions class)
+                                               # record_expressions (kinda like this, wrapping expressions is generic, we are specifically wrapping them in recording code)
+                                               # we output it to debugging as "TRANSLATED PROGRAM"
   end
 
   def self.call(*args)

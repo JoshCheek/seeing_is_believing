@@ -1,6 +1,6 @@
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/hash_struct'
 
-RSpec.describe SeeingIsBelieving::StrictHash do
+RSpec.describe SeeingIsBelieving::HashStruct do
   let(:klass) { described_class.anon }
 
   def eq!(expected, actual, *message)
@@ -100,7 +100,7 @@ RSpec.describe SeeingIsBelieving::StrictHash do
   end
 
   describe 'anonymous subclasses try to be generally terse and useful to be valid replacements over Struct' do
-    specify '.anon / .for / .for? return a subclass of StrictHash' do
+    specify '.anon / .for / .for? return a subclass of HashStruct' do
       klass = described_class.anon
       neq! described_class, klass
       eq!  described_class, klass.superclass
@@ -282,9 +282,9 @@ RSpec.describe SeeingIsBelieving::StrictHash do
         attributes a: 1, b: "c"
       end
       it 'inspects prettily' do
-        eq! '#<StrictHash Example: {a: 1, b: "c"}>', Example.new.inspect
+        eq! '#<HashStruct Example: {a: 1, b: "c"}>', Example.new.inspect
         klass.attributes(c: /d/)
-        eq! '#<StrictHash subclass: {c: /d/}>', klass.new.inspect
+        eq! '#<HashStruct subclass: {c: /d/}>', klass.new.inspect
       end
     end
 

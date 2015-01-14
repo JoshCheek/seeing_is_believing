@@ -1,8 +1,8 @@
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/hash_struct'
 
 class SeeingIsBelieving
   module EventStream
-    Event = StrictHash.anon # one superclass to rule them all!
+    Event = HashStruct.anon # one superclass to rule them all!
 
     module Events
       # actually, it might make sense for the consumer to emit a finish event when it knows there are no more
