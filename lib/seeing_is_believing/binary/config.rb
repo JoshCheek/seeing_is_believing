@@ -36,7 +36,6 @@ class SeeingIsBelieving
       predicate(:result_as_json)      { false }
       predicate(:inherit_exit_status) { false }
       predicate(:debug)               { false }
-
       attribute(:body)                { nil }
       attribute(:filename)            { nil }
       attribute(:errors)              { [] }
@@ -77,8 +76,7 @@ class SeeingIsBelieving
           end
         end
 
-        deprecated_arg = Class.new HashStruct do
-          attributes :args, :explanation
+        deprecated_arg = HashStruct.for :args, :explanation do
           def to_s
             "Deprecated: `#{args.join ' '}` #{explanation}"
           end

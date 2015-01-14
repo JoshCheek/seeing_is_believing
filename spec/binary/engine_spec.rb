@@ -4,10 +4,13 @@ require 'seeing_is_believing/binary/config'
 class SeeingIsBelieving
   module Binary
     RSpec.describe Engine do
+      class Options < HashStruct
+        attribute :timeout, 0
+      end
+
       def call(body, options={})
-        timeout = options.delete(:timeout)
-        options.empty? || raise("Unexpected options: #{options.inspect}")
-        config = Config.new body: body, timeout_seconds: timeout
+        timeout = Options.new(options).timeout
+        config  = Config.new body: body, timeout_seconds: timeout
         config.lib_options.timeout_seconds = timeout
         Engine.new config
       end

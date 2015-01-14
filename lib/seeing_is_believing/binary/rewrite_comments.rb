@@ -4,13 +4,15 @@ require 'seeing_is_believing/binary/commentable_lines'
 class SeeingIsBelieving
   module Binary
     module RewriteComments
+      Options = HashStruct.anon do
+        attribute(:include_lines) { [] }
+      end
+
       def self.call(raw_code, options={}, &mapping)
-        code          = Code.new(raw_code)
-        comments      = code.inline_comments
-        buffer        = code.buffer
-        options       = options.dup
-        extra_lines   = options.delete(:include_lines) || []
-        raise ArgumentError, "Unknown options: #{options.inspect}" if options.any?
+        code        = Code.new(raw_code)
+        comments    = code.inline_comments
+        buffer      = code.buffer
+        extra_lines = Options.new(options).include_lines
 
         # update existing comments
         comments.each do |comment|
