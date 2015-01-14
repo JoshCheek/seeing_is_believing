@@ -473,6 +473,16 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['--json']).result_as_json?).to eq true
         expect(parse(['-j']).result_as_json?).to eq true
       end
+
+      it 'sets an error if specified with xmpfilter' do
+        expect(parse(['--json'])).to_not have_error /json/
+        expect(parse(['--json', '-x'])).to have_error /json/
+        expect(parse(['--json', '--xmpfilter-style'])).to have_error /json/
+        expect(parse(['-x', '--json'])).to have_error /json/
+        expect(parse(['--xmpfilter-style', '--json'])).to have_error /json/
+        expect(parse(['-j', '-x'])).to have_error /json/
+        expect(parse(['-j', '-x'])).to have_error /xmpfilter/
+      end
     end
 
     describe 'markers' do

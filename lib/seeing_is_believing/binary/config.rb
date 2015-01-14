@@ -215,6 +215,9 @@ class SeeingIsBelieving
         filenames.size > 1 &&
           errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
 
+        result_as_json && annotator == AnnotateMarkedLines &&
+          errors << "SiB does not currently support output with both json and xmpfilter... maybe v4 :)"
+
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
         self.lib_options.rewrite_code  = annotator.expression_wrapper(markers)
