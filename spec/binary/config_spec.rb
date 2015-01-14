@@ -205,8 +205,8 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'print_help? and help_screen' do
-      let(:help_screen)          { SeeingIsBelieving::Binary.help_screen false, SeeingIsBelieving::Binary::Config::Markers.new }
-      let(:help_screen_extended) { SeeingIsBelieving::Binary.help_screen true,  SeeingIsBelieving::Binary::Config::Markers.new }
+      let(:help_screen)          { SeeingIsBelieving::Binary.help_screen SeeingIsBelieving::Binary::Config::Markers.new }
+      let(:help_screen_extended) { SeeingIsBelieving::Binary.help_screen_extended SeeingIsBelieving::Binary::Config::Markers.new }
 
       specify 'print_help? defaults to false' do
         expect(parse([]).print_help?).to eq false

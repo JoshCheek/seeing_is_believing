@@ -44,7 +44,7 @@ class SeeingIsBelieving
       attribute(:annotator)           { AnnotateEveryLine }
       attribute(:debugger)            { Debugger::Null }
       attribute(:markers)             { Markers.new }
-      attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
+      attribute(:help_screen)         { |c| Binary.help_screen c.markers }
       attribute(:lib_options)         { SeeingIsBelieving::Options.new }
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
@@ -112,10 +112,11 @@ class SeeingIsBelieving
 
           when '-h', '--help'
             self.print_help = true
+            self.help_screen = Binary.help_screen(markers)
 
           when '-h+', '--help+'
             self.print_help  = true
-            self.help_screen = Binary.help_screen(true, markers)
+            self.help_screen = Binary.help_screen_extended(markers)
 
           when '-g', '--debug'
             self.debug                = true
@@ -248,11 +249,11 @@ class SeeingIsBelieving
     end
   end
 
-  def Binary.help_screen(include_examples, markers)
+  def Binary.help_screen(markers)
     value  = markers[:value][:prefix]
     stdout = markers[:stdout][:prefix]
 
-    <<FLAGS + (include_examples ? <<EXAMPLES : '')
+    <<FLAGS
 Usage: seeing_is_believing [options] [filename]
 
   seeing_is_believing is a program and library that will evaluate a Ruby file and capture/display the results.
@@ -295,7 +296,12 @@ Options:
   -h,  --help                    # help screen without examples
   -h+, --help+                   # help screen with examples
 FLAGS
+  end
 
+  def Binary.help_screen_extended(markers)
+    value  = markers[:value][:prefix]
+    stdout = markers[:stdout][:prefix]
+    help_screen(markers) << <<EXAMPLES
 Examples: A few examples, for a more comprehensive set of examples, check out features/flags.feature
   NOTE: $'1\\n2' is the bash string literal for Ruby's "1\\n2"
 
