@@ -263,7 +263,6 @@ class SeeingIsBelieving
           end
         end
 
-        # TODO: double check this stuff is unit tested
         self.filename = filenames.first
         filenames.size > 1 &&
           errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"

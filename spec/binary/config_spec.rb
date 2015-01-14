@@ -3,7 +3,6 @@ require 'seeing_is_believing/binary/config'
 
 
 RSpec.describe SeeingIsBelieving::Binary::Config do
-  # TODO: double check that this works
   RSpec::Matchers.define :have_error do |error_assertion|
     match do |config|
       config.errors.find do |error|
@@ -397,8 +396,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do
-        pending 'implement me' # TODO: ugh, make a pending! method
-        raise 'implement me'
+        # not a great test, but the cukes hit its actual behaviour
         expect(lib_opts(xmpfilter_style: true)[:annotate]).to be_a_kind_of Proc
       end
     end
