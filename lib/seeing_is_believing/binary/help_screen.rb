@@ -1,7 +1,6 @@
 # encoding: utf-8
 require 'seeing_is_believing/version'
 
-# TODO: go through extended help screen again, make sure it still makes sense
 class SeeingIsBelieving
   module Binary
     def self.help_screen(include_examples, markers)
@@ -15,8 +14,17 @@ Usage: seeing_is_believing [options] [filename]
 
   seeing_is_believing is a program and library that will evaluate a Ruby file and capture/display the results.
 
-  If no filename is provided, the binary will read the program from standard input.
+Notes:
 
+  * If no filename or program (-e flag) are provided, the program will read from standard input.
+  * The process's stdin will be passed to the program unless the program body is on stdin.
+  * The exit status will be:
+    0 - No errors
+    1 - Displayable error (e.g. code raises an exception while running)
+    2 - Non-displayable error (e.g. a syntax error, a timeout)
+    n - The program's exit status if the --inherit-exit-status flag is set
+
+Options:
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
   -D,  --result-length n         # max length of the portion after the "#{value_marker}"
   -n,  --max-line-captures n     # how many results to capture for a given line
@@ -35,7 +43,7 @@ Usage: seeing_is_believing [options] [filename]
   -K,  --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a,  --as filename             # run the program as if it was the specified filename
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
-  -g,  --debug                   # print debugging information (useful if program is fucking up, or to better understand what SiB does)
+  -g,  --debug                   # print debugging information
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exit-status     # exit with the exit status of the program being evaluated
@@ -46,86 +54,70 @@ Usage: seeing_is_believing [options] [filename]
 FLAGS
 
 Examples: A few examples, for a more comprehensive set of examples, check out features/flags.feature
+  NOTE: $'1\\n2' is the bash string literal for Ruby's "1\\n2"
 
-  Run the file f.rb
-    $ echo __FILE__ > f.rb; seeing_is_believing f.rb
-    __FILE__  #{value_marker}"f.rb"
+  Run the file myfile.rb
+    $ echo __FILE__ > myfile.rb; seeing_is_believing myfile.rb
+    __FILE__  #{value_marker}"myfile.rb"
+
+  Run against standard input
+    $ echo ':program' | seeing_is_believing
+    :program  #{value_marker}:program
+
+  Pass the program in an argument
+    $ seeing_is_believing -e ':program'
+    :program  #{value_marker}:program
+
+  Remove previous output
+    $ seeing_is_believing -e ":program" | seeing_is_believing --clean
+    :program
 
   Aligning comments
-    $ ruby -e 'puts "123\\n4\\n\\n567890"' > f.rb
-
-
-    $ seeing_is_believing f.rb -s line
+    $ seeing_is_believing -s line -e $'123\\n4\\n\\n567890'
     123  #{value_marker}123
     4  #{value_marker}4
 
     567890  #{value_marker}567890
 
 
-    $ seeing_is_believing f.rb -s chunk
+    $ seeing_is_believing -s chunk -e $'123\\n4\\n\\n567890'
     123  #{value_marker}123
     4    #{value_marker}4
 
     567890  #{value_marker}567890
 
 
-    $ seeing_is_believing f.rb -s file
+    $ seeing_is_believing -s file -e $'123\\n4\\n\\n567890'
     123     #{value_marker}123
     4       #{value_marker}4
 
     567890  #{value_marker}567890
 
-  Run against standard input
-    $ echo '3.times { |i| puts i }' | seeing_is_believing
-    2.times { |i| puts i }  #{value_marker}2
-
-    #{stdout_marker}0
-    #{stdout_marker}1
-
   Run against a library you're working on by fixing the load path
-    $ seeing_is_believing -I lib f.rb
+    $ seeing_is_believing -I ./lib f.rb
 
-  Load up some library (can be used in tandem with -I)
-    $ seeing_is_believing -r pp -e 'pp [[*1..15],[*15..30]]; nil'
-    pp [[*1..15],[*15..30]]; nil  #{value_marker}nil
+  Require a file before yours is run (can be used in tandem with -I)
+    $ seeing_is_believing -r pp -e 'pp [[*1..5]]*5'
+    pp [[*1..5]]*5  #{value_marker}[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
 
-    #{stdout_marker}[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-    #{stdout_marker} [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]]
+    #{stdout_marker}[[1, 2, 3, 4, 5],
+    #{stdout_marker} [1, 2, 3, 4, 5],
+    #{stdout_marker} [1, 2, 3, 4, 5],
+    #{stdout_marker} [1, 2, 3, 4, 5],
+    #{stdout_marker} [1, 2, 3, 4, 5]]
 
   Only update the lines you've marked
-    $ ruby -e 'puts "1\\n2 # =>\\n3"' | seeing_is_believing -x
+    $ seeing_is_believing -x -e $'1\\n2 # =>\\n3' |
     1
     2 #{value_marker}2
     3
 
-  Set a timeout (especially useful if running via an editor)
-    $ seeing_is_believing -e 'loop { sleep 1 }' -t 3.5
-    Timeout Error after 3.5 seconds!
-
-  Set the encoding to utf-8
-    $ seeing_is_believing -Ku -e '"⛄ "'
-    "⛄ "  #{value_marker}"⛄ "
-
-  The exit status will be 1 if the error is displayable inline
-    $ seeing_is_believing -e 'raise "omg"'; echo $?
-    raise "omg"  #{exception_marker}RuntimeError: omg
-    1
-
-  The exit status will be 2 if the error is not displayable
-    $ seeing_is_believing -e 'a='; echo $status
-    -:1: syntax error, unexpected $end
-    2
-
-  Run with previous output
-    $ echo "1+1  #{value_marker}old-value" | seeing_is_believing
-    1+1  #{value_marker}2
-
-    $ echo "1+1  #{value_marker}old-value" | seeing_is_believing --clean
-    1+1
-
-  If your Ruby binary is named something else (e.g. ruby2.0)
-    $ ruby2.0 -S seeing_is_believing --shebang ruby2.0 -e '123'
-    123  #{value_marker}123
+  Display a complex structure across multiple lines
+    $ seeing_is_believing -x -e $'{foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}\\n#{value_marker}'
+    {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
+    #{value_marker} {:foo=>42,
+    #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+    #     :wibble=>{:magic_word=>"xyzzy"}}
 EXAMPLES
     end
   end
