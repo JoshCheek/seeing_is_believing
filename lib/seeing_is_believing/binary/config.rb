@@ -200,13 +200,7 @@ class SeeingIsBelieving
             self.errors << "Unknown option: #{arg.inspect}"
 
           when /^-[^-]/
-            shortflags = arg[1..-1].chars.to_a # TODO: look for a sweet regex instead of this annoying algorithm
-            plusidx    = shortflags.index('+') || 0
-            if 0 < plusidx
-              shortflags[plusidx-1] << '+'
-              shortflags.delete_at plusidx
-            end
-            args.unshift *shortflags.map { |flag| "-#{flag}" }
+            args.unshift *arg.scan(/[^-]\+?/).map { |flag| "-#{flag}" }
 
           else
             filenames << arg
