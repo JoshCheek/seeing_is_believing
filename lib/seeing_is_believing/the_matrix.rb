@@ -1,6 +1,7 @@
 require_relative 'version'
 require_relative 'event_stream/producer'
 
+# TODO: rename event_stream_fd -> sib_event_stream_fd
 event_stream = IO.open(ENV['event_stream_fd'].to_i, "w")
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 

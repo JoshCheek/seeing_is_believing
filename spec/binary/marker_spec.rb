@@ -59,10 +59,10 @@ RSpec.describe SeeingIsBelieving::Binary::Marker do
   end
 
   it 'converts strings to rgexes when they are set' do
-    marker = described_class.new text: 't', regex: "r1"
+    marker = described_class.new text: 't', regex: 'r1'
     expect(marker[:regex]).to eq /r1/
 
-    marker.regex = "/r2/i"
+    marker.regex = '/r2/i'
     expect(marker.regex).to eq /r2/i
 
     marker[:regex] = 'r3'

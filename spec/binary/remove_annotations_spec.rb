@@ -1,17 +1,17 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/binary/config'  # for marker info
+require 'seeing_is_believing/binary/config'
 
 RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
+  def regexes
+    SeeingIsBelieving::Binary::Config::Markers.new
+  end
+
   def call(code, should_clean_values=true)
     indentation = code[/\A */]
     code        = code.gsub /^#{indentation}/, ''
     code << "\n" unless code.end_with? "\n"
     described_class.call(code, should_clean_values, regexes).chomp
-  end
-
-  def regexes
-    SeeingIsBelieving::Binary::Config::MarkerRegexes.new
   end
 
   context 'when there are lines that are just normal comments' do

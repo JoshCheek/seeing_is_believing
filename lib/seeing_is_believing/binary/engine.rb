@@ -1,20 +1,6 @@
 require 'seeing_is_believing/binary/remove_annotations'
 require 'seeing_is_believing/code'
 
-# From config, it uses:
-#   body
-#   filename
-#   lib_options
-#   annotator
-#   marker_regexes     (entirely for annotator)
-#   annotator_options
-# Should be able to do this job with just:
-#   body
-#   filename
-#   prepare_body(body)       <-- uhm, what's this for again?
-#   evaluate(prepared_body)
-#   annotate(body)
-
 class SeeingIsBelieving
   module Binary
     class MustEvaluateFirst < SeeingIsBelievingError
@@ -41,17 +27,21 @@ class SeeingIsBelieving
         "#{syntax.line_number}: #{syntax.error_message}"
       end
 
+      # TODO: needs a better name
+      # this is like the cleaned body for AnnotateEveryLine
+      # and the body that is cleaned, except for annotatoins with xmpfilter
+      # maybe they should be consolidated into just cleaned_body, and there is no toplevel cleaning?
       def prepared_body
         @prepared_body ||= begin
           body_with_nl = config.body
           body_with_nl += "\n" if missing_newline?
-          config.annotator.prepare_body body_with_nl, config.marker_regexes
+          config.annotator.prepare_body body_with_nl, config.markers
         end
       end
 
       def cleaned_body
         @cleaned_body ||= begin
-          cleaned_body = RemoveAnnotations.call prepared_body, true, config.marker_regexes
+          cleaned_body = RemoveAnnotations.call prepared_body, true, config.markers
           cleaned_body.chomp! if missing_newline?
           cleaned_body
         end

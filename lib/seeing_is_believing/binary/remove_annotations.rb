@@ -88,23 +88,19 @@ class SeeingIsBelieving
       end
 
       def value_regex
-        markers.fetch(:value)
+        markers.fetch(:value).fetch(:regex)
       end
 
       def exception_regex
-        markers.fetch(:exception)
+        markers.fetch(:exception).fetch(:regex)
       end
 
       def stdout_regex
-        markers.fetch(:stdout)
+        markers.fetch(:stdout).fetch(:regex)
       end
 
       def stderr_regex
-        markers.fetch(:stderr)
-      end
-
-      def nextline_regex
-        markers.fetch(:nextline)
+        markers.fetch(:stderr).fetch(:regex)
       end
     end
   end

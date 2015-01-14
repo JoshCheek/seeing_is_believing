@@ -1,10 +1,13 @@
 # encoding: utf-8
 require 'seeing_is_believing'
+require 'seeing_is_believing/binary/marker'
 
+# one of these will be the alignment strategy
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
 
+# one of these will annotate the bdoy
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_marked_lines'
 
@@ -12,34 +15,17 @@ require 'seeing_is_believing/binary/annotate_marked_lines'
 class SeeingIsBelieving
   module Binary
     class Config < StrictHash
-
-      # TODO: Should probably object-ify these
       class Markers < StrictHash
-        attributes value:     '# => '.freeze,
-                   exception: '# ~> '.freeze,
-                   stdout:    '# >> '.freeze,
-                   stderr:    '# !> '.freeze
-      end
-
-      class MarkerRegexes < StrictHash
-        def self.to_regex(string)
-          flag_to_bit = {'i' => 0b001, 'x' => 0b010, 'm' => 0b100}
-          string =~ %r{\A/(.*)/([mxi]*)\Z}
-          Regexp.new ($1||string),
-                     ($2||"").each_char.inject(0) { |bits, flag| bits|flag_to_bit[flag] }
-        end
-
-        attributes value:     to_regex('^#\s*=>\s*'),
-                   exception: to_regex('^#\s*~>\s*'),
-                   stdout:    to_regex('^#\s*>>\s*'),
-                   stderr:    to_regex('^#\s*!>\s*')
+        attribute(:value)     { Marker.new text: '# => ', regex: '^#\s*=>\s*' }
+        attribute(:exception) { Marker.new text: '# ~> ', regex: '^#\s*~>\s*' }
+        attribute(:stdout)    { Marker.new text: '# >> ', regex: '^#\s*>>\s*' }
+        attribute(:stderr)    { Marker.new text: '# !> ', regex: '^#\s*!>\s*' }
       end
 
       # passed to annotator.call
       class AnnotatorOptions < StrictHash
         attribute(:alignment_strategy) { AlignChunk }
         attribute(:markers)            { Markers.new }
-        attribute(:marker_regexes)     { MarkerRegexes.new }
         attribute(:max_line_length)    { Float::INFINITY }
         attribute(:max_result_length)  { Float::INFINITY }
       end
@@ -59,7 +45,6 @@ class SeeingIsBelieving
       attribute(:annotator)           { AnnotateEveryLine }
       attribute(:debugger)            { Debugger.new stream: nil } # TODO: Debugger.null
       attribute(:markers)             { Markers.new }
-      attribute(:marker_regexes)      { MarkerRegexes.new }
       attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
       attribute(:lib_options)         { SeeingIsBelieving::Options.new }       # passed to SeeingIsBelieving.new
       attribute(:annotator_options)   { AnnotatorOptions.new }
@@ -230,16 +215,14 @@ class SeeingIsBelieving
           end
         end
 
-        self.filename = filenames.first
         filenames.size > 1 &&
           errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
 
-        self.lib_options.filename = as || filename
-        self.lib_options.annotate = annotator.expression_wrapper(markers, marker_regexes)
-        self.lib_options.debugger = debugger
-
-        self.annotator_options.markers        = markers
-        self.annotator_options.marker_regexes = marker_regexes
+        self.filename                  = filenames.first
+        self.lib_options.filename      = as || filename
+        self.lib_options.annotate      = annotator.expression_wrapper(markers)
+        self.lib_options.debugger      = debugger
+        self.annotator_options.markers = markers
 
         self
       end
@@ -266,8 +249,8 @@ class SeeingIsBelieving
   end
 
   def Binary.help_screen(include_examples, markers)
-    value  = markers.fetch(:value)
-    stdout = markers.fetch(:stdout)
+    value  = markers[:value][:text]
+    stdout = markers[:stdout][:text]
 
     <<FLAGS + (include_examples ? <<EXAMPLES : '')
 Usage: seeing_is_believing [options] [filename]

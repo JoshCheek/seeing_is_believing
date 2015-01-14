@@ -4,17 +4,18 @@ class SeeingIsBelieving
   module Binary
     # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
     class AnnotateMarkedLines
-      def self.prepare_body(uncleaned_body, marker_regexes)
+      def self.prepare_body(uncleaned_body, markers)
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, false, marker_regexes
+        RemoveAnnotations.call uncleaned_body, false, markers
       end
 
-      def self.expression_wrapper(markers, marker_regexes)
+      def self.expression_wrapper(markers)
         lambda do |program, filename, max_line_captures|
           inspect_linenos = []
           pp_linenos      = []
+          value_regex     = markers[:value][:regex]
           Code.new(program).inline_comments.each do |c|
-            next unless c.text[marker_regexes[:value]]
+            next unless c.text[value_regex]
             c.whitespace_col == 0 ? pp_linenos      << c.line_number - 1
                                   : inspect_linenos << c.line_number
           end
@@ -108,7 +109,7 @@ class SeeingIsBelieving
       end
 
       def value_marker
-        @value_marker ||= @options.fetch(:markers).fetch(:value)
+        @value_marker ||= @options[:markers][:value][:text]
       end
 
       def nextline_marker
@@ -116,11 +117,11 @@ class SeeingIsBelieving
       end
 
       def exception_marker
-        @exception_marker ||= @options.fetch(:markers).fetch(:exception)
+        @exception_marker ||= @options[:markers][:exception][:text]
       end
 
       def value_regex
-        @value_regex ||= @options.fetch(:marker_regexes).fetch(:value)
+        @value_regex ||= @options[:markers][:value][:regex]
       end
     end
   end

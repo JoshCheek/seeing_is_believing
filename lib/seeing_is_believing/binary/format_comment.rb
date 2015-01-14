@@ -13,10 +13,10 @@ class SeeingIsBelieving
       end
 
       def initialize(line_length, separator, result, options)
-       self.line_length = line_length
-       self.separator   = separator
-       self.result      = result
-       self.options     = options
+        self.line_length = line_length
+        self.separator   = separator
+        self.result      = result
+        self.options     = options
       end
 
       def call

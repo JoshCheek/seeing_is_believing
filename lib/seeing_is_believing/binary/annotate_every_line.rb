@@ -1,12 +1,14 @@
+require 'seeing_is_believing/binary/config'
+
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine
-      def self.prepare_body(uncleaned_body, marker_regexes)
+      def self.prepare_body(uncleaned_body, markers)
         require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, true, marker_regexes
+        RemoveAnnotations.call uncleaned_body, true, markers
       end
 
-      def self.expression_wrapper(markers, marker_regexes)
+      def self.expression_wrapper(markers)
         require 'seeing_is_believing/annotate'
         Annotate
       end
@@ -25,6 +27,8 @@ class SeeingIsBelieving
         @new_body ||= begin
           require 'seeing_is_believing/binary/comment_lines'
           require 'seeing_is_believing/binary/format_comment'
+          exception_text = @options[:markers][:exception][:text] # TODO: rename text to prefix?
+          value_text     = @options[:markers][:value][:text]
 
           alignment_strategy = @options[:alignment_strategy].new(@body)
           exception_lineno   = @results.has_exception? ? @results.exception.line_number : -1
@@ -32,10 +36,10 @@ class SeeingIsBelieving
             options = @options.merge pad_to: alignment_strategy.line_length_for(line_number)
             if exception_lineno == line_number
               result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              FormatComment.call(line.size, exception_marker, result, options)
+              FormatComment.call(line.size, exception_text, result, options)
             elsif @results[line_number].any?
               result  = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              FormatComment.call(line.size, value_marker, result, options)
+              FormatComment.call(line.size, value_text, result, options)
             else
               ''
             end
@@ -46,16 +50,6 @@ class SeeingIsBelieving
 
           new_body
         end
-      end
-
-      private
-
-      def value_marker
-        @value_marker ||= @options.fetch(:markers).fetch(:value)
-      end
-
-      def exception_marker
-        @xnextline_marker ||= @options.fetch(:markers).fetch(:exception)
       end
     end
   end

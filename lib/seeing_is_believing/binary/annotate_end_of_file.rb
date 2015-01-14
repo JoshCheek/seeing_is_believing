@@ -7,7 +7,6 @@ class SeeingIsBelieving
     module AnnotateEndOfFile
       extend self
 
-      # TODO: Switch options to markers
       def add_stdout_stderr_and_exceptions_to(new_body, results, options)
         output = stdout_ouptut_for(results, options)    <<
                  stderr_ouptut_for(results, options)    <<
@@ -22,7 +21,7 @@ class SeeingIsBelieving
         return '' unless results.has_stdout?
         output = "\n"
         results.stdout.each_line do |line|
-          output << FormatComment.call(0, options[:markers][:stdout], line.chomp, options) << "\n"
+          output << FormatComment.call(0, options[:markers][:stdout][:text], line.chomp, options) << "\n"
         end
         output
       end
@@ -31,14 +30,14 @@ class SeeingIsBelieving
         return '' unless results.has_stderr?
         output = "\n"
         results.stderr.each_line do |line|
-          output << FormatComment.call(0, options[:markers][:stderr], line.chomp, options) << "\n"
+          output << FormatComment.call(0, options[:markers][:stderr][:text], line.chomp, options) << "\n"
         end
         output
       end
 
       def exception_output_for(results, options)
         return '' unless results.has_exception?
-        exception_marker = options[:markers][:exception]
+        exception_marker = options[:markers][:exception][:text]
         exception = results.exception
         output = "\n"
         output << FormatComment.new(0, exception_marker, exception.class_name, options).call << "\n"

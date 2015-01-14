@@ -398,7 +398,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do
         config = parse []
         expect(config.lib_options.annotate)
-          .to eq config.annotator.expression_wrapper(config.markers, config.marker_regexes)
+          .to eq config.annotator.expression_wrapper(config.markers)
 
         # not a great test, but the cukes hit its actual behaviour
         expect(parse(['-x']).lib_options.annotate).to be_a_kind_of Proc
@@ -475,77 +475,31 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe ':markers' do
+    describe 'markers' do
+      let(:default_markers) { parse([]).markers }
+
       it 'defaults to a hash with :value, :exception, :stdout, and :stderr' do
-        expect(parse([]).markers.keys).to eq [:value, :exception, :stdout, :stderr]
+        expect(default_markers.keys).to eq [:value, :exception, :stdout, :stderr]
       end
 
-      def assert_default(marker_name, value)
-        expect(parse([])[:markers][marker_name]).to eq value
+      specify 'each default marker regex can re-find the the marker' do
+        default_markers.each do |name, marker|
+          comment   = "#{marker.text}abc"
+          extracted = comment[marker.regex]
+          expect(extracted).to eq(marker.text)
+        end
       end
 
-      it('defaults :value     to "# => "') { assert_default :value     , "# => " }
-      it('defaults :exception to "# ~> "') { assert_default :exception , "# ~> " }
-      it('defaults :stdout    to "# >> "') { assert_default :stdout    , "# >> " }
-      it('defaults :stderr    to "# !> "') { assert_default :stderr    , "# !> " }
+      it('defaults :value     to "# => "') { expect(default_markers.value    .text).to eq "# => " }
+      it('defaults :exception to "# ~> "') { expect(default_markers.exception.text).to eq "# ~> " }
+      it('defaults :stdout    to "# >> "') { expect(default_markers.stdout   .text).to eq "# >> " }
+      it('defaults :stderr    to "# !> "') { expect(default_markers.stderr   .text).to eq "# !> " }
 
       # TODO: When things get a little more stable, don't feel like adding all the cukes to play with this right now
       it 'overrides :value     with --value-marker'
       it 'overrides :exception with --exception-marker'
       it 'overrides :stdout    with --stdout-marker'
       it 'overrides :stderr    with --stderr-marker'
-    end
-
-    describe ':marker_regexes' do
-      it 'is a hash with the same keys as the markers' do
-        marker_keys = parse([])[:markers].keys
-        marker_regexes_keys = parse([])[:marker_regexes].keys
-        expect(marker_regexes_keys).to eq marker_keys
-      end
-
-      it 'overrides :value     with --value-regex'
-      it 'overrides :exception with --exception-regex'
-      it 'overrides :stdout    with --stdout-regex'
-      it 'overrides :stderr    with --stderr-regex'
-    end
-  end
-
-  describe 'MarkerRegexes.to_regex' do
-    def assert_parses(input, regex)
-      expect(described_class::MarkerRegexes.to_regex input).to eq regex
-    end
-
-    it 'converts strings into regexes' do
-      assert_parses '',    %r()
-      assert_parses 'a',   %r(a)
-    end
-
-    it 'ignores surrounding slashes' do
-      assert_parses '//',  %r()
-      assert_parses '/a/', %r(a)
-    end
-
-    it 'respects flags after the trailing slash in surrounding slashes' do
-      assert_parses '/a/',     %r(a)
-      assert_parses '/a//',    %r(a/)
-      assert_parses '//a/',    %r(/a)
-      assert_parses '/a/i',    %r(a)i
-      assert_parses '/a/im',   %r(a)im
-      assert_parses '/a/xim',  %r(a)xim
-      assert_parses '/a/mix',  %r(a)mix
-      assert_parses '/a/mixi', %r(a)mixi
-    end
-
-    it 'isn\'t fooled by strings that kinda look regexy' do
-      assert_parses '/a',  %r(/a)
-      assert_parses 'a/',  %r(a/)
-      assert_parses '/',   %r(/)
-      assert_parses '/i',  %r(/i)
-    end
-
-    it 'does not escape the content' do
-      assert_parses 'a\\s+',   %r(a\s+)
-      assert_parses '/a\\s+/', %r(a\s+)
     end
   end
 
