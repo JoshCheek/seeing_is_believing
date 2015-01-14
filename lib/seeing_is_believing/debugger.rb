@@ -4,10 +4,6 @@ class SeeingIsBelieving
     CONTEXT_COLOUR = "\e[37;44m" # background blue
     RESET_COLOUR   = "\e[0m"
 
-    # TODO: CI debugger
-    #   add a ci debugger, which writes each debugger info to a log file
-    #   if it fails, read that log file?
-
     def initialize(options={})
       @coloured = options[:colour]
       @stream   = options[:stream]

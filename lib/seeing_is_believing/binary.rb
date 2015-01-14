@@ -44,7 +44,7 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # TODO: it feels like there should be a printer object?
+      # kinda feels like there should be a printer object?
       # ie shouldn't all the outputs be json if they specified json?
       if config.result_as_json?
         require 'json'
@@ -53,7 +53,7 @@ class SeeingIsBelieving
       end
 
       config.debugger.context("OUTPUT") { engine.annotated_body }
-      stdout.print engine.annotated_body unless config.debug? # TODO: once we allow debug to file, it should print unless debugging to stderr
+      stdout.print engine.annotated_body unless config.debug? # once we allow debug to file, it should print unless debugging to stderr
 
       if config.inherit_exit_status?
         engine.results.exitstatus
