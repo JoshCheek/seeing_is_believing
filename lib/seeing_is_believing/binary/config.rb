@@ -53,7 +53,7 @@ class SeeingIsBelieving
       end
 
       # passed to annotator.call
-      # todo move AnnotatorOptions to uhm, annotator or something
+      # TODO: move AnnotatorOptions to uhm, annotator or something
       class AnnotatorOptions < StrictHash
         attribute(:alignment_strategy) { AlignChunk }
         attribute(:markers)            { Markers.new }
@@ -85,12 +85,6 @@ class SeeingIsBelieving
       attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
       attribute(:lib_options)         { LibOptions.new }
       attribute(:annotator_options)   { AnnotatorOptions.new }
-
-      def self.from_args(args, stdin, debug_stream)
-        new.parse_args(args, debug_stream)
-           .finalize(stdin, File)
-      end
-
 
       # TODO: allow debugger to take a filename
 
@@ -269,6 +263,7 @@ class SeeingIsBelieving
           end
         end
 
+        # TODO: double check this stuff is unit tested
         self.filename = filenames.first
         filenames.size > 1 &&
           errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
@@ -294,7 +289,9 @@ class SeeingIsBelieving
           errors << "#{filename} does not exist!"
         elsif body
           self.lib_options.stdin = stdin
-        elsif !print_version? && !print_cleaned? && !print_help? # skip the side effect of reading stdin when we won't be evaluating
+        elsif print_version? || print_help? || errors.any?
+          self.body = ""
+        else
           self.body = stdin.read
         end
         self

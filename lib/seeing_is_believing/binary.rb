@@ -9,7 +9,7 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      config = Config.from_args argv, stdin, stderr
+      config = Config.new.parse_args(argv, stderr).finalize(stdin, File)
       engine = Engine.new config
 
       if config.print_help?

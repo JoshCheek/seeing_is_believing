@@ -3,9 +3,10 @@ require 'seeing_is_believing/binary/config'
 
 
 RSpec.describe SeeingIsBelieving::Binary::Config do
+  # TODO: double check that this works
   RSpec::Matchers.define :have_error do |error_assertion|
-    match do |options|
-      options[:errors].find do |error|
+    match do |config|
+      config.errors.find do |error|
         case error_assertion
         when Regexp
           error_assertion =~ error
@@ -24,14 +25,11 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
   end
 
-  let(:debug_stream) { double(:debug_stream) }
+  let(:debug_stream) { double :debug_stream }
+  let(:matrix_file)  { 'seeing_is_believing/the_matrix' }
 
   def parse(args)
     described_class.new.parse_args(args, debug_stream)
-  end
-
-  def matrix_file
-    'seeing_is_believing/the_matrix'
   end
 
   def assert_deprecated(flag, *args)
@@ -251,13 +249,15 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it 'sets an error if -e and --program are not given an arg' do
         expect(parse([])).to_not have_error /-e/
         expect(parse([])).to_not have_error /--program/
-        expect(parse(['-e'])).to have_error /-e/
-        expect(parse(['--program'])).to have_error /--program/
+        expect(parse(['-e', 'body'])).to_not have_error /-e/
+        expect(parse(['-e'        ])).to     have_error /-e/
+        expect(parse(['--program', 'body'])).to_not have_error /--program/
+        expect(parse(['--program'        ])).to     have_error /--program/
       end
     end
 
     describe'lib_options.load_path' do
-      let(:lib_path) { File.expand_path('../../../lib', __FILE__) }
+      let(:lib_path) { File.expand_path '../../../lib', __FILE__ }
 
       it 'defaults to sib\'s lib path' do
         expect(parse([]).lib_options.load_path).to eq [lib_path]
@@ -320,12 +320,14 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'lib_options.timeout_seconds' do
+    describe 'timeout and lib_options.timeout_seconds' do
       it 'defaults to 0 (never timeout)' do
+        expect(parse([]).timeout_seconds).to eq 0
         expect(parse([]).lib_options.timeout_seconds).to eq 0
       end
 
       it 'can be set with -t and --timeout-seconds' do
+        expect(parse(['-t', '1.1']).timeout_seconds).to eq 1.1
         expect(parse(['-t', '1.1']).lib_options.timeout_seconds).to eq 1.1
         expect(parse(['--timeout-seconds', '1.2']).lib_options.timeout_seconds).to eq 1.2
       end
@@ -366,6 +368,11 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['-s'])).to have_error /-s/
         expect(parse(['-s', 'file'])).to_not have_error /-s/
       end
+
+      it 'sets an error if provided with an unknown alignment strategy' do
+        expect(parse(['-s', 'file'])).to_not have_error '-s'
+        expect(parse(['-s', 'unknown'])).to_not have_error '-s'
+      end
     end
 
     describe 'inherit_exit_status?' do
@@ -379,14 +386,20 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'annotator' do
-      it 'defaults to AnnotateEveryLine' do
+    describe 'annotator and lib_options.annotate' do
+      specify 'annotator defaults to AnnotateEveryLine' do
         expect(parse([]).annotator).to be SeeingIsBelieving::Binary::AnnotateEveryLine
       end
 
-      it 'can be set to AnnotateXmpfilterStyle with --xmpfilter-style or -x' do
+      specify 'annotator can be set to AnnotateXmpfilterStyle with --xmpfilter-style or -x' do
         expect(parse(['--xmpfilter-style']).annotator).to eq SeeingIsBelieving::Binary::AnnotateXmpfilterStyle
         expect(parse(['-x']).annotator).to eq SeeingIsBelieving::Binary::AnnotateXmpfilterStyle
+      end
+
+      specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do
+        pending 'implement me' # TODO: ugh, make a pending! method
+        raise 'implement me'
+        expect(lib_opts(xmpfilter_style: true)[:annotate]).to be_a_kind_of Proc
       end
     end
 
@@ -409,14 +422,12 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         config = parse ['--debug']
         expect(config.debugger).to be_enabled
         expect(config.debugger.stream).to eq debug_stream
-        expect(config.lib_options.debugger).to be_enabled
-        expect(config.lib_options.debugger.stream).to eq debug_stream
+        expect(config.lib_options.debugger).to equal config.debugger
 
         config = parse ['-g']
         expect(config.debugger).to be_enabled
         expect(config.debugger.stream).to eq debug_stream
-        expect(config.lib_options.debugger).to be_enabled
-        expect(config.lib_options.debugger.stream).to eq debug_stream
+        expect(config.lib_options.debugger).to equal config.debugger
       end
     end
 
@@ -494,6 +505,138 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it 'overrides :exception with --exception-regex'
       it 'overrides :stdout    with --stdout-regex'
       it 'overrides :stderr    with --stderr-regex'
+    end
+  end
+
+  describe 'MarkerRegexes.to_regex' do
+    def assert_parses(input, regex)
+      expect(described_class::MarkerRegexes.to_regex input).to eq regex
+    end
+
+    it 'converts strings into regexes' do
+      assert_parses '',    %r()
+      assert_parses 'a',   %r(a)
+    end
+
+    it 'ignores surrounding slashes' do
+      assert_parses '//',  %r()
+      assert_parses '/a/', %r(a)
+    end
+
+    it 'respects flags after the trailing slash in surrounding slashes' do
+      assert_parses '/a/',     %r(a)
+      assert_parses '/a//',    %r(a/)
+      assert_parses '//a/',    %r(/a)
+      assert_parses '/a/i',    %r(a)i
+      assert_parses '/a/im',   %r(a)im
+      assert_parses '/a/xim',  %r(a)xim
+      assert_parses '/a/mix',  %r(a)mix
+      assert_parses '/a/mixi', %r(a)mixi
+    end
+
+    it 'isn\'t fooled by strings that kinda look regexy' do
+      assert_parses '/a',  %r(/a)
+      assert_parses 'a/',  %r(a/)
+      assert_parses '/',   %r(/)
+      assert_parses '/i',  %r(/i)
+    end
+
+    it 'does not escape the content' do
+      assert_parses 'a\\s+',   %r(a\s+)
+      assert_parses '/a\\s+/', %r(a\s+)
+    end
+  end
+
+
+  describe '.finalize' do
+    let(:stdin_data) { 'stdin data' }
+    let(:stdin)      { object_double $stdin, read: stdin_data }
+
+    let(:file_class)           { class_double File }
+    let(:nonexisting_filename) { 'badfilename'    }
+    let(:existing_filename)    { 'goodfilename'   }
+    let(:file_body)            { 'good file body' }
+
+    before do
+      allow(file_class).to receive(:exist?).with(existing_filename).and_return(true)
+      allow(file_class).to receive(:exist?).with(nonexisting_filename).and_return(false)
+      allow(file_class).to receive(:read).with(existing_filename).and_return(file_body)
+    end
+
+    def call(attrs={})
+      described_class.new(attrs).finalize(stdin, file_class)
+    end
+
+    describe 'additional errors' do
+      it 'sets an error if given a filename and a program body -- cannot have two body sources' do
+        allow(file_class).to receive(:exist?).with('f')
+        matcher = /program body and a filename/
+        expect(call filename: 'f', body: 'b').to     have_error matcher
+        expect(call filename: 'f', body: 'b').to     have_error matcher
+        expect(call filename: nil, body: 'b').to_not have_error matcher
+        expect(call filename: 'f', body: nil).to_not have_error matcher
+      end
+
+      it 'sets an error if the provided filename DNE' do
+        expect(call filename: existing_filename).to_not have_error /filename/
+        expect(call filename: nonexisting_filename).to  have_error /filename/
+      end
+    end
+
+    describe 'setting the body' do
+      it 'does not override the if already set e.g. with -e' do
+        expect(call(body: 'b', filename: nil).body).to eq 'b'
+      end
+
+      it 'is the file body if the filename is provded and exists' do
+        expect(call(body: nil, filename: existing_filename).body)
+          .to eq file_body
+      end
+
+      it 'is an empty string if the filename is provided but DNE' do
+        expect(call(body: nil, filename: nonexisting_filename).body)
+          .to eq nil
+      end
+
+      it 'reads the body from stdin if not given a filename or body' do
+        expect(call(body: nil, filename: nil).body).to eq stdin_data
+      end
+
+      it 'is set to an empty string when we aren\'t evaluating (e.g. when printing version info)' do
+        expect(call(                    ).body).to be_a_kind_of String
+        expect(call(print_version:  true).body).to eq ''
+        expect(call(print_help:     true).body).to eq ''
+        expect(call(errors:        ['e']).body).to eq ''
+      end
+    end
+
+    describe 'lib_options.stdin' do
+      let(:default) { described_class::LibOptions.new.stdin }
+
+      it 'is the default when we aren\'t evaluating' do
+        [ {errors: ['e']},
+          {filename: existing_filename, body: 'b'},
+          {filename: nonexisting_filename},
+          {print_version: true},
+          {print_help: true},
+        ].each do |overrides|
+          expect(call(overrides).lib_options.stdin).to eq default
+        end
+      end
+
+      it 'is the default when the program was taken off stdin' do
+        expect(call.lib_options.stdin).to eq default
+        expect(call(body: 'b').lib_options.stdin).to_not eq default
+      end
+
+      it 'is the stdin stream when the program body was provided' do
+        expect(call(body: 'b').lib_options.stdin).to eq stdin
+      end
+
+      it 'is the stdin stream when the program was pulled from a file' do
+        expect(call(filename: existing_filename).lib_options.stdin).to eq stdin
+        expect(call(filename: nonexisting_filename).lib_options.stdin).to eq default
+      end
     end
   end
 end
