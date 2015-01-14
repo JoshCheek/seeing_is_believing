@@ -167,6 +167,14 @@ RSpec.describe SeeingIsBelieving::HashStruct do
 
       raises!(ArgumentError) { c2.attribute :a } # still can't redefine their own
     end
+
+    specify '.inspect returns HashStruct.anon when it does not have a name' do
+      expect(klass.anon.inspect).to eq 'HashStruct.anon'
+
+      named_class = klass.anon
+      allow(named_class).to receive(:name).and_return("SomeClass")
+      expect(named_class.inspect).to eq 'SomeClass'
+    end
   end
 
 
@@ -224,6 +232,10 @@ RSpec.describe SeeingIsBelieving::HashStruct do
           eq! 1, instance[:a]
           eq! 2, instance.b
         }
+      end
+      it 'gives you a helpful message when you pass it a non-enumerable argument (ie when used to normal Struct)' do
+        klass.attributes(a: 1)
+        expect { klass.new 1 }.to raise_error ArgumentError, /\b1\b/
       end
     end
 
@@ -299,7 +311,7 @@ RSpec.describe SeeingIsBelieving::HashStruct do
       it 'inspects prettily' do
         eq! '#<HashStruct Example: {a: 1, b: "c"}>', Example.new.inspect
         klass.attributes(c: /d/)
-        eq! '#<HashStruct subclass: {c: /d/}>', klass.new.inspect
+        eq! '#<HashStruct.anon: {c: /d/}>', klass.new.inspect
       end
     end
 

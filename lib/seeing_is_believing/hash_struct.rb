@@ -66,6 +66,10 @@ class SeeingIsBelieving
   end
 
   class HashStruct
+    def self.inspect
+      name || "HashStruct.anon"
+    end
+
     # This could support dynamic attributes very easily
     # ie they are calculated, but appear as a value (e.g. in to_hash)
     # not sure how to deal with the fact that they could be assigned, though
@@ -85,6 +89,8 @@ class SeeingIsBelieving
     # maybe new vs new! one validates arg presence,
     # maybe a separate #validate! method for that?
     def initialize(initial_values={}, &initializer)
+      initial_values.respond_to?(:each) ||
+        raise(ArgumentError, "#{self.class.inspect} expects to be initialized with a hash-like object, but got #{initial_values.inspect}")
       @attributes = self
         .class
         .ancestors
@@ -136,9 +142,9 @@ class SeeingIsBelieving
     end
 
     def inspect
-      classname = self.class.name || 'subclass'
+      classname = self.class.name ? "HashStruct #{self.class.name}" : self.class.inspect
       inspected_attrs = map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
-      "#<HashStruct #{classname}: {#{inspected_attrs}}>"
+      "#<#{classname}: {#{inspected_attrs}}>"
     end
 
     def key?(potential_key)
