@@ -244,7 +244,6 @@ class SeeingIsBelieving
         self
       end
 
-      # needs testing
       def finalize(stdin, file_class)
         if filename && body
           errors << "Cannot give a program body and a filename to get the program body from."
@@ -267,10 +266,8 @@ class SeeingIsBelieving
   end
 
   def Binary.help_screen(include_examples, markers)
-    value_marker     = markers.fetch(:value)
-    exception_marker = markers.fetch(:exception)
-    stdout_marker    = markers.fetch(:stdout)
-    stderr_marker    = markers.fetch(:stderr)
+    value  = markers.fetch(:value)
+    stdout = markers.fetch(:stdout)
 
     <<FLAGS + (include_examples ? <<EXAMPLES : '')
 Usage: seeing_is_believing [options] [filename]
@@ -289,7 +286,7 @@ Notes:
 
 Options:
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
-  -D,  --result-length n         # max length of the portion after the "#{value_marker}"
+  -D,  --result-length n         # max length of the portion after the "#{value}"
   -n,  --max-line-captures n     # how many results to capture for a given line
                                    if you had 1 million results on a line, it could take a long time to record
                                    and serialize them, you might limit it to 1000 results as an optimization
@@ -321,15 +318,15 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Run the file myfile.rb
     $ echo __FILE__ > myfile.rb; seeing_is_believing myfile.rb
-    __FILE__  #{value_marker}"myfile.rb"
+    __FILE__  #{value}"myfile.rb"
 
   Run against standard input
     $ echo ':program' | seeing_is_believing
-    :program  #{value_marker}:program
+    :program  #{value}:program
 
   Pass the program in an argument
     $ seeing_is_believing -e ':program'
-    :program  #{value_marker}:program
+    :program  #{value}:program
 
   Remove previous output
     $ seeing_is_believing -e ":program" | seeing_is_believing --clean
@@ -337,48 +334,48 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
 
   Aligning comments
     $ seeing_is_believing -s line -e $'123\\n4\\n\\n567890'
-    123  #{value_marker}123
-    4  #{value_marker}4
+    123  #{value}123
+    4  #{value}4
 
-    567890  #{value_marker}567890
+    567890  #{value}567890
 
 
     $ seeing_is_believing -s chunk -e $'123\\n4\\n\\n567890'
-    123  #{value_marker}123
-    4    #{value_marker}4
+    123  #{value}123
+    4    #{value}4
 
-    567890  #{value_marker}567890
+    567890  #{value}567890
 
 
     $ seeing_is_believing -s file -e $'123\\n4\\n\\n567890'
-    123     #{value_marker}123
-    4       #{value_marker}4
+    123     #{value}123
+    4       #{value}4
 
-    567890  #{value_marker}567890
+    567890  #{value}567890
 
   Run against a library you're working on by fixing the load path
     $ seeing_is_believing -I ./lib f.rb
 
   Require a file before yours is run (can be used in tandem with -I)
     $ seeing_is_believing -r pp -e 'pp [[*1..5]]*5'
-    pp [[*1..5]]*5  #{value_marker}[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+    pp [[*1..5]]*5  #{value}[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
 
-    #{stdout_marker}[[1, 2, 3, 4, 5],
-    #{stdout_marker} [1, 2, 3, 4, 5],
-    #{stdout_marker} [1, 2, 3, 4, 5],
-    #{stdout_marker} [1, 2, 3, 4, 5],
-    #{stdout_marker} [1, 2, 3, 4, 5]]
+    #{stdout}[[1, 2, 3, 4, 5],
+    #{stdout} [1, 2, 3, 4, 5],
+    #{stdout} [1, 2, 3, 4, 5],
+    #{stdout} [1, 2, 3, 4, 5],
+    #{stdout} [1, 2, 3, 4, 5]]
 
   Only update the lines you've marked
     $ seeing_is_believing -x -e $'1\\n2 # =>\\n3' |
     1
-    2 #{value_marker}2
+    2 #{value}2
     3
 
   Display a complex structure across multiple lines
-    $ seeing_is_believing -x -e $'{foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}\\n#{value_marker}'
+    $ seeing_is_believing -x -e $'{foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}\\n#{value}'
     {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
-    #{value_marker} {:foo=>42,
+    #{value} {:foo=>42,
     #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
     #     :wibble=>{:magic_word=>"xyzzy"}}
 EXAMPLES
