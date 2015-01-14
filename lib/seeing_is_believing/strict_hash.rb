@@ -12,6 +12,7 @@ class SeeingIsBelieving
       init_blocks.key?(name) && raise(ArgumentError, "#{name} was already defined")
       name.kind_of?(Symbol)  || raise(ArgumentError, "#{name.inspect} should have been a symbol")
 
+      # TODO: init block receives the instance as an arg
       init_block ||= lambda do
         if value == NoDefault
           raise ArgumentError, "Must provide a value for #{name.inspect}"
@@ -52,6 +53,7 @@ class SeeingIsBelieving
       self
     end
 
+    # TODO: these three should take bodies for a class_eval
     def anon
       Class.new self
     end

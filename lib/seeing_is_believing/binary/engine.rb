@@ -8,7 +8,6 @@ require 'seeing_is_believing/code'
 #   annotator
 #   marker_regexes     (entirely for annotator)
 #   annotator_options
-#   debugger
 # Should be able to do this job with just:
 #   body
 #   filename
@@ -62,7 +61,7 @@ class SeeingIsBelieving
         return if @evaluate
         @evaluated = true
         @timed_out = false
-        @results   = SeeingIsBelieving.call prepared_body, options.lib_options
+        @results   = SeeingIsBelieving.call prepared_body, options.lib_options.to_h
       rescue Timeout::Error
         @timed_out = true
       ensure return self
@@ -82,9 +81,8 @@ class SeeingIsBelieving
           @evaluated || raise(MustEvaluateFirst.new __method__)
           annotated = options.annotator.call prepared_body,
                                              results,
-                                             options.annotator_options
+                                             options.annotator_options.to_h
           annotated.chomp! if missing_newline?
-          options[:debugger].context("ANNOTATED CODE") { annotated }
           annotated
         end
       end

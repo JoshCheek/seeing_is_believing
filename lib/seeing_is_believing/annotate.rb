@@ -1,6 +1,7 @@
 require 'seeing_is_believing/wrap_expressions'
 class SeeingIsBelieving
   module Annotate
+    # TODO: this is not annotation.... this is part of wrapping
     def self.call(program, filename, max_line_captures, options={})
       # TODO: much of this is duplicated in annotate_xmpfilter_stle
       max_line_captures_as_str = max_line_captures.inspect

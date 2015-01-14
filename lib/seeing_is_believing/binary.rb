@@ -10,8 +10,8 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      options = Options.init(ParseArgs.call(argv), stdin, stdout, stderr)
-      engine  = Engine.new options
+      options = Options.from_args(argv, stdin, stdout, stderr)
+      engine  = Engine.new options # TODO: rename to Config
 
       if options.print_help?
         stdout.puts options.help_screen
@@ -53,7 +53,8 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
-      stdout.print engine.annotated_body
+      options.debugger.context("OUTPUT") { engine.annotated_body }
+      stdout.print engine.annotated_body unless options.debug? # don't need to print it 2x
 
       if options.inherit_exit_status?
         engine.results.exitstatus

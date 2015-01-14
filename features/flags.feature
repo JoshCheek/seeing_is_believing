@@ -424,7 +424,6 @@ Feature: Using flags
     Then the exit status is 10
 
 
-  # TODO: Weird confusion between what should go to stderr and what to stdout (e.g. its trying to print the program itself as if it is part of the debugging info
   Scenario: --debug
     Given the file "simple_program.rb":
     """
@@ -433,14 +432,14 @@ Feature: Using flags
     2
     """
     When I run "seeing_is_believing --debug simple_program.rb"
-    # Then stdout is empty
+    Then stdout is empty
     And the exit status is 0
     And stderr includes "TRANSLATED PROGRAM:"
     And stderr includes "$SiB"
     And stderr includes "RESULT:"
     And stderr includes "@results="
     And stderr includes "OUTPUT:"
-    And stdout includes:
+    And stderr includes:
     """
     # encoding: utf-8
     1# 123

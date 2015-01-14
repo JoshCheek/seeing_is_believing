@@ -35,10 +35,10 @@ class SeeingIsBelieving
 
     # TODO: can we determine how many lines there are and then explicitly stick that on the result?
 
-    def initialize(raw_code, name="SeeingIsBelieving")
+    def initialize(raw_code, name=nil)
       raw_code[-1] == "\n" || raise(SyntaxError, "Code must end in a newline for the sake of consistency (sanity)")
       @raw             = raw_code
-      @buffer          = Parser::Source::Buffer.new(name)
+      @buffer          = Parser::Source::Buffer.new(name||"SeeingIsBelieving")
       @buffer.source   = raw
       builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @rewriter        = Parser::Source::Rewriter.new buffer
