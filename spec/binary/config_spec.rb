@@ -396,8 +396,12 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do
+        config = parse []
+        expect(config.lib_options.annotate)
+          .to eq config.annotator.expression_wrapper(config.markers, config.marker_regexes)
+
         # not a great test, but the cukes hit its actual behaviour
-        expect(lib_opts(xmpfilter_style: true)[:annotate]).to be_a_kind_of Proc
+        expect(parse(['-x']).lib_options.annotate).to be_a_kind_of Proc
       end
     end
 
