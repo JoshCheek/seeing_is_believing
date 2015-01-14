@@ -1,7 +1,7 @@
 require 'seeing_is_believing/binary/remove_annotations'
 require 'seeing_is_believing/code'
 
-# From options, it uses:
+# From config, it uses:
 #   body
 #   filename
 #   lib_options
@@ -24,12 +24,12 @@ class SeeingIsBelieving
     end
 
     class Engine
-      def initialize(options)
-        self.options = options
+      def initialize(config)
+        self.config = config
       end
 
       def missing_newline?
-        @missing_newline ||= !options.body.end_with?("\n")
+        @missing_newline ||= !config.body.end_with?("\n")
       end
 
       def syntax_error?
@@ -43,15 +43,15 @@ class SeeingIsBelieving
 
       def prepared_body
         @prepared_body ||= begin
-          body_with_nl = options.body
+          body_with_nl = config.body
           body_with_nl += "\n" if missing_newline?
-          options.annotator.prepare_body body_with_nl, options.marker_regexes
+          config.annotator.prepare_body body_with_nl, config.marker_regexes
         end
       end
 
       def cleaned_body
         @cleaned_body ||= begin
-          cleaned_body = RemoveAnnotations.call prepared_body, true, options.marker_regexes
+          cleaned_body = RemoveAnnotations.call prepared_body, true, config.marker_regexes
           cleaned_body.chomp! if missing_newline?
           cleaned_body
         end
@@ -61,7 +61,7 @@ class SeeingIsBelieving
         return if @evaluate
         @evaluated = true
         @timed_out = false
-        @results   = SeeingIsBelieving.call prepared_body, options.lib_options.to_h
+        @results   = SeeingIsBelieving.call prepared_body, config.lib_options.to_h
       rescue Timeout::Error
         @timed_out = true
       ensure return self
@@ -79,9 +79,9 @@ class SeeingIsBelieving
       def annotated_body
         @annotated_body ||= begin
           @evaluated || raise(MustEvaluateFirst.new __method__)
-          annotated = options.annotator.call prepared_body,
-                                             results,
-                                             options.annotator_options.to_h
+          annotated = config.annotator.call prepared_body,
+                                            results,
+                                            config.annotator_options.to_h
           annotated.chomp! if missing_newline?
           annotated
         end
@@ -99,10 +99,10 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :options
+      attr_accessor :config
 
       def code
-        @code ||= Code.new(prepared_body, options.filename)
+        @code ||= Code.new(prepared_body, config.filename)
       end
 
       def syntax

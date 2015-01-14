@@ -1,26 +1,18 @@
-# Debugger initialization
 require 'seeing_is_believing/debugger'
+require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/binary/help_screen'
 
-# Alignment decision
 require 'seeing_is_believing/binary/align_file'
 require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
 
-# Evaluator decision
-require 'seeing_is_believing/evaluate_by_moving_files'
-
-# Annotator decision
 require 'seeing_is_believing/binary/annotate_every_line'
 require 'seeing_is_believing/binary/annotate_xmpfilter_style'
-
-# Options data structure
-require 'seeing_is_believing/strict_hash'
 
 
 class SeeingIsBelieving
   module Binary
-    # TODO: Can I move half of this into flags and the other half into engine?
-    class Options < StrictHash
+    class Config < StrictHash
 
       # TODO: Should probably object-ify these
       class Markers < StrictHash
@@ -45,7 +37,7 @@ class SeeingIsBelieving
       end
 
       # passed to SeeingIsBelieving.new
-      # TODO: make body an arg like these ones (ie all args are keyword)
+      # TODO: make program body an arg like these ones (ie all args are keyword)
       # TODO: Move LibOptions into library
       class LibOptions < StrictHash
         attribute(:filename)          { nil }
@@ -92,9 +84,9 @@ class SeeingIsBelieving
       attribute(:lib_options)         { LibOptions.new }
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
-      def self.from_args(args, instream, outstream, errstream)
-        new { |opts| opts.parse_args(args, errstream) }
-          .finalize(instream, File)
+      def self.from_args(args, stdin, debug_stream)
+        new { |opts| opts.parse_args(args, debug_stream) }
+          .finalize(stdin, File)
       end
 
 

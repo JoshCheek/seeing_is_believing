@@ -1,6 +1,5 @@
 require 'seeing_is_believing'
-require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/options'
+require 'seeing_is_believing/binary/config'
 require 'seeing_is_believing/binary/engine'
 
 class SeeingIsBelieving
@@ -10,25 +9,25 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      options = Options.from_args(argv, stdin, stdout, stderr)
-      engine  = Engine.new options # TODO: rename to Config
+      config = Config.from_args argv, stdin, stderr
+      engine = Engine.new config
 
-      if options.print_help?
-        stdout.puts options.help_screen
+      if config.print_help?
+        stdout.puts config.help_screen
         return SUCCESS_STATUS
       end
 
-      if options.print_version?
+      if config.print_version?
         stdout.puts SeeingIsBelieving::VERSION
         return SUCCESS_STATUS
       end
 
-      if options.errors.any?
-        stderr.puts *options.errors, *options.deprecations
+      if config.errors.any?
+        stderr.puts *config.errors, *config.deprecations
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      if options.print_cleaned?
+      if config.print_cleaned?
         stdout.print engine.cleaned_body
         return SUCCESS_STATUS
       end
@@ -41,22 +40,22 @@ class SeeingIsBelieving
       engine.evaluate!
 
       if engine.timed_out?
-        stderr.puts "Timeout Error after #{options.timeout_seconds} seconds!"
+        stderr.puts "Timeout Error after #{config.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
       # TODO: it feels like there should be a printer object?
       # ie shouldn't all the outputs be json if they specified json?
-      if options.result_as_json?
+      if config.result_as_json?
         require 'json'
         stdout.puts JSON.dump(result_as_data_structure(engine.results))
         return SUCCESS_STATUS
       end
 
-      options.debugger.context("OUTPUT") { engine.annotated_body }
-      stdout.print engine.annotated_body unless options.debug? # don't need to print it 2x
+      config.debugger.context("OUTPUT") { engine.annotated_body }
+      stdout.print engine.annotated_body unless config.debug? # TODO: once we allow debug to file, it should print unless debugging to stderr
 
-      if options.inherit_exit_status?
+      if config.inherit_exit_status?
         engine.results.exitstatus
       elsif engine.results.exitstatus.zero?
         SUCCESS_STATUS

@@ -1,7 +1,5 @@
 # encoding: utf-8
-
-require 'seeing_is_believing/version' # We print the version in the output
-require 'seeing_is_believing/strict_hash'
+require 'seeing_is_believing/version'
 
 class SeeingIsBelieving
   module Binary
@@ -11,7 +9,7 @@ class SeeingIsBelieving
       stdout_marker    = markers.fetch(:stdout)
       stderr_marker    = markers.fetch(:stderr)
 
-<<FLAGS + (include_examples ? <<EXAMPLES : '')
+      <<FLAGS + (include_examples ? <<EXAMPLES : '')
 Usage: seeing_is_believing [options] [filename]
 
   seeing_is_believing is a program and library that will evaluate a Ruby file and capture/display the results.
