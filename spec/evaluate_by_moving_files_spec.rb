@@ -16,14 +16,12 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   def null_options(overrides={})
-    {event_handler: lambda { |*| }}.merge(overrides)
+    { event_handler: lambda { |*| } }
   end
 
   def invoke(program, options={})
-    result  = SeeingIsBelieving::Result.new
-    options = null_options(
-      event_handler:  lambda { |event| SeeingIsBelieving::EventStream::UpdateResultHandler.call result, event },
-    ).merge(options)
+    result = SeeingIsBelieving::Result.new
+    options[:event_handler] ||= SeeingIsBelieving::EventStream::UpdateResultHandler.new(result)
     evaluator = described_class.new(program, filename, options)
     FileUtils.rm_f evaluator.backup_filename
     evaluator.call

@@ -42,8 +42,8 @@ class SeeingIsBelieving
 
       options.debugger.context("TRANSLATED PROGRAM") { new_program }
 
-      result = Result.new
-      event_handler = lambda { |event| EventStream::UpdateResultHandler.call result, event }
+      result        = Result.new
+      event_handler = EventStream::UpdateResultHandler.new(result)
       event_handler = EventStream::DebuggingHandler.new(options.debugger, event_handler)
       EvaluateByMovingFiles.call \
         new_program,
