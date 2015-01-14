@@ -43,7 +43,6 @@ class SeeingIsBelieving
         end
       end
 
-      # TODO: work with the debugger
       def initialize(streams)
         self.finish_criteria = FinishCriteria.new
         self.queue           = Queue.new
@@ -52,20 +51,35 @@ class SeeingIsBelieving
         stderr_stream        = streams.fetch :stderr
 
         Thread.new do
-          begin  stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
-          ensure queue << lambda { finish_criteria.stdout_thread_finished! }
+          begin
+            stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
+            queue << Events::StdoutClosed.new(side: :producer)
+          rescue IOError
+            queue << Events::StdoutClosed.new(side: :consumer)
+          ensure
+            queue << lambda { finish_criteria.stdout_thread_finished! }
           end
         end
 
         Thread.new do
-          begin  stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
-          ensure queue << lambda { finish_criteria.stderr_thread_finished! }
+          begin
+            stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
+            queue << Events::StderrClosed.new(side: :producer)
+          rescue IOError
+            queue << Events::StderrClosed.new(side: :consumer)
+          ensure
+            queue << lambda { finish_criteria.stderr_thread_finished! }
           end
         end
 
         Thread.new do
-          begin  event_stream.each_line { |line| queue << line }
-          ensure queue << lambda { finish_criteria.event_thread_finished! }
+          begin
+            event_stream.each_line { |line| queue << line }
+            queue << Events::EventStreamClosed.new(side: :producer)
+          rescue IOError
+            queue << Events::EventStreamClosed.new(side: :consumer)
+          ensure
+            queue << lambda { finish_criteria.event_thread_finished! }
           end
         end
       end
@@ -86,7 +100,9 @@ class SeeingIsBelieving
       # blocks, who will remove items from the queue?
       def process_exitstatus(status)
         queue << Events::Exitstatus.new(value: status)
-        queue << lambda { finish_criteria.process_exited! }
+        queue << lambda {
+          finish_criteria.process_exited!
+        }
       end
 
       private
@@ -94,15 +110,23 @@ class SeeingIsBelieving
       attr_accessor :queue, :finish_criteria
 
       def next_event
-        raise NoMoreEvents if finish_criteria.satisfied?
+        raise NoMoreEvents if @finished
         case element = queue.shift
         when String
           event_for element
         when Proc
           element.call
+          if finish_criteria.satisfied?
+            queue << Events::Finished.new
+          end
           next_event
+        when Events::Finished
+          @finished = true
+          element
         when Event
           element
+        else
+          p "WAT: #{element.inspect}"
         end
       end
 

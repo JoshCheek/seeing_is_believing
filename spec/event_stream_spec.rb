@@ -113,20 +113,19 @@ module SeeingIsBelieving::EventStream
         close_streams eventstream_producer, stdout_producer, stderr_producer
         producer.finish!
         consumer.process_exitstatus 0
-        consumer.call
+        consumer.each { }
         expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
       it 'gracefully handles its side of the streams getting closed' do
         close_streams eventstream_consumer, stdout_consumer, stderr_consumer
         consumer.process_exitstatus 0
-        consumer.call
+        consumer.each { }
         expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
       specify 'if an incomprehensible event is received, it raises an UnknownEvent' do
         eventstream_producer.puts "this is nonsense!"
-        eventstream_producer.close
         expect{ consumer.call }.to raise_error SeeingIsBelieving::UnknownEvent, /nonsense/
       end
     end
@@ -158,7 +157,10 @@ module SeeingIsBelieving::EventStream
         producer.record_sib_version('some ver')
         finish!
         expect(consumer.each.map { |e| e.class }.sort_by(&:to_s))
-          .to eq [Events::Exitstatus, Events::LineResult, Events::NumLines, Events::SiBVersion]
+          .to eq [ Events::EventStreamClosed, Events::Exitstatus,   Events::Finished,
+                   Events::LineResult,        Events::NumLines,     Events::SiBVersion,
+                   Events::StderrClosed,      Events::StdoutClosed,
+                 ]
       end
 
       it 'returns nil' do
@@ -525,13 +527,6 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'process_exitstatus' do
-      it 'emits an exitstatus event' do
-        consumer.process_exitstatus 92
-        expect(consumer.call).to eq Events::Exitstatus.new(value: 92)
-      end
-    end
-
     describe 'finish!' do
       def final_event(producer, consumer, event_class)
         finish!
@@ -570,6 +565,46 @@ module SeeingIsBelieving::EventStream
           producer.record_exception 100, e
           expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
         end
+      end
+    end
+
+    describe 'final events' do
+      it 'emits a StdoutClosed event when consumer side of stdout closes' do
+        stdout_consumer.close
+        expect(consumer.call).to eq Events::StdoutClosed.new(side: :consumer)
+      end
+      it 'emits a StdoutClosed event when producer side of stdout closes' do
+        stdout_producer.close
+        expect(consumer.call).to eq Events::StdoutClosed.new(side: :producer)
+      end
+
+      it 'emits a StderrClosed event when consumer side of stderr closes' do
+        stderr_consumer.close
+        expect(consumer.call).to eq Events::StderrClosed.new(side: :consumer)
+      end
+      it 'emits a StderrClosed event when producer side of stderr closes' do
+        stderr_producer.close
+        expect(consumer.call).to eq Events::StderrClosed.new(side: :producer)
+      end
+
+      it 'emits a EventStreamClosed event when consumer side of event_stream closes' do
+        eventstream_consumer.close
+        expect(consumer.call).to eq Events::EventStreamClosed.new(side: :consumer)
+      end
+      it 'emits a EventStreamClosed event when producer side of event_stream closes' do
+        eventstream_producer.close
+        expect(consumer.call).to eq Events::EventStreamClosed.new(side: :producer)
+      end
+
+      it 'emits a Exitstatus event on process_exitstatus' do
+        consumer.process_exitstatus 92
+        expect(consumer.call).to eq Events::Exitstatus.new(value: 92)
+      end
+
+      it 'emits a Finished event when all streams are closed and it has the exit status' do
+        finish!
+        event_classes = consumer.each.map(&:class)
+        expect(event_classes).to include Events::Finished
       end
     end
   end
