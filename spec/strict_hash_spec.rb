@@ -368,6 +368,27 @@ RSpec.describe SeeingIsBelieving::StrictHash do
       end
     end
 
+    specify '#eql? is an alias of #==' do
+      instance1 = described_class.for(a: 1, b: 2).new
+      instance2 = described_class.for(a: 1, b: 2).new
+      expect(instance1).to eql instance2
+    end
+
+    specify '#hash is the same as Hash#hash' do
+      instance = described_class.for(a: 1, b: 2).new
+      eq! instance.hash, {a: 1, b: 2}.hash
+    end
+
+    it 'can be used in set methods, e.g. as a hash key' do
+      instance1 = described_class.for(a: 1, b: 2).new
+      instance2 = described_class.for(a: 1, b: 2).new
+      eq! [], [instance1] - [instance2]
+      eq! [], [instance2] - [instance1]
+      eq! [], [instance1] - [{a: 1, b: 2}]
+      eq! [], [{a: 1, b: 2}] - [instance1]
+      eq! [instance1], [instance1, instance2].uniq
+    end
+
     specify 'accepts nil as a value (common edge case)' do
       klass.attributes default_is_nil: nil, default_is_1: 1
 

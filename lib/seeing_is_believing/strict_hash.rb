@@ -161,6 +161,12 @@ class SeeingIsBelieving
         false
       end
     end
+    alias eql? ==
+
+    # this might be pretty expensive
+    def hash
+      to_h.hash
+    end
 
     private
 
