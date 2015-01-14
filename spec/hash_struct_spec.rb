@@ -114,6 +114,17 @@ RSpec.describe SeeingIsBelieving::HashStruct do
       eq!  described_class, klass.superclass
     end
 
+    specify '.anon / .for / .for? take blocks which get class_eval\'d' do
+      klass = described_class.anon { def a; 1 end }
+      eq!  1, klass.new.a
+
+      klass = described_class.for { def b; 2 end }
+      eq!  2, klass.new.b
+
+      klass = described_class.for? { def c; 3 end }
+      eq!  3, klass.new.c
+    end
+
     specify '.for? passes its args to .predicates' do
       klass = described_class.for?(:a, b: 3)
       eq! 1,     klass.new(a: 1).a

@@ -12,9 +12,7 @@ require 'seeing_is_believing/hash_struct'
 class SeeingIsBelieving
   class Code
     InlineComment = HashStruct.for :line_number, :whitespace_col, :whitespace, :text_col, :text, :full_range, :whitespace_range, :comment_range
-
-    # TODO: once HashStruct can take a body, switch this over
-    Syntax = Struct.new :error_message, :line_number do
+    Syntax = HashStruct.for error_message: nil, line_number: nil do
       def valid?()   !error_message end
       def invalid?() !valid?        end
     end
@@ -36,7 +34,7 @@ class SeeingIsBelieving
         @root          = @parser.parse(@buffer)
         @syntax        = Syntax.new
       rescue Parser::SyntaxError
-        @syntax        = Syntax.new $!.message, index_to_linenum($!.diagnostic.location.begin_pos)
+        @syntax        = Syntax.new error_message: $!.message, line_number: index_to_linenum($!.diagnostic.location.begin_pos)
       ensure
         @root        ||= null_node
       end

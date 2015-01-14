@@ -56,17 +56,16 @@ class SeeingIsBelieving
       self
     end
 
-    # TODO: these three should take bodies for a class_eval
-    def anon
-      Class.new self
+    def anon(&block)
+      Class.new self, &block
     end
 
-    def for(*attributes_args)
-      anon.attributes(*attributes_args)
+    def for(*attributes_args, &block)
+      anon(&block).attributes(*attributes_args)
     end
 
-    def for?(*predicate_args)
-      anon.predicates(*predicate_args)
+    def for?(*predicate_args, &block)
+      anon(&block).predicates(*predicate_args)
     end
   end
 
