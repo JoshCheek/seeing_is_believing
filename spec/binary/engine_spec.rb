@@ -1,22 +1,16 @@
 require 'seeing_is_believing/binary/engine'
 require 'seeing_is_believing/binary/parse_args'
-require 'seeing_is_believing/binary/options'
+require 'seeing_is_believing/binary/config'
 
 class SeeingIsBelieving
   module Binary
     RSpec.describe Engine do
-      let(:stdin)  { double :stdin }
-      let(:stdout) { double :stdout }
-      let(:stderr) { double :stderr }
-
       def call(body, options={})
         timeout = options.delete(:timeout)
         options.empty? || raise("Unexpected options: #{options.inspect}")
-        flags   = ParseArgs.call []
-        flags[:program_from_args] = body
-        flags[:timeout_seconds]   = timeout
-        options = Options.init(flags, stdin, stdout, stderr)
-        Engine.new options
+        config = Config.new body: body, timeout_seconds: timeout
+        config.lib_options.timeout_seconds = timeout
+        Engine.new config
       end
 
       context 'syntax' do
