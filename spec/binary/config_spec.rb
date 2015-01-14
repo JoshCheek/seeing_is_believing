@@ -494,12 +494,6 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it('defaults :exception to "# ~> "') { expect(default_markers.exception.prefix).to eq "# ~> " }
       it('defaults :stdout    to "# >> "') { expect(default_markers.stdout   .prefix).to eq "# >> " }
       it('defaults :stderr    to "# !> "') { expect(default_markers.stderr   .prefix).to eq "# !> " }
-
-      # TODO: When things get a little more stable, don't feel like adding all the cukes to play with this right now
-      it 'overrides :value     with --value-marker'
-      it 'overrides :exception with --exception-marker'
-      it 'overrides :stdout    with --stdout-marker'
-      it 'overrides :stderr    with --stderr-marker'
     end
   end
 

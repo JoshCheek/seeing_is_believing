@@ -132,6 +132,7 @@ Version 4
 * More alignment strategies e.g. `min=40` would align to 40, unless that was too short.
   Could have fallback strategies, so e.g. `-s min=40,fallback=line`
 * Package Ruby with the editor downloads so that they don't require you to know so fkn much to set it up.
+* Allow user to set marker
 
 Inspiration
 ===========

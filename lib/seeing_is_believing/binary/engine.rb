@@ -27,10 +27,6 @@ class SeeingIsBelieving
         "#{syntax.line_number}: #{syntax.error_message}"
       end
 
-      # TODO: needs a better name
-      # this is like the cleaned body for AnnotateEveryLine
-      # and the body that is cleaned, except for annotatoins with xmpfilter
-      # maybe they should be consolidated into just cleaned_body, and there is no toplevel cleaning?
       def prepared_body
         @prepared_body ||= begin
           body_with_nl = config.body
@@ -39,12 +35,16 @@ class SeeingIsBelieving
         end
       end
 
+      # kinda dumb, the prepared_body is really the cleaned body
+      # but b/c of the newline thing, have to keep them separate
+      # so either come up with a better name for this method
+      # or a better name for prepared_body
       def cleaned_body
-        @cleaned_body ||= begin
-          cleaned_body = RemoveAnnotations.call prepared_body, true, config.markers
-          cleaned_body.chomp! if missing_newline?
-          cleaned_body
-        end
+        @cleaned_body ||= if missing_newline?
+                            prepared_body.chomp!
+                          else
+                            prepared_body
+                          end
       end
 
       def evaluate!
