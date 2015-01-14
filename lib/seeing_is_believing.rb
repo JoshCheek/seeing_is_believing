@@ -3,7 +3,7 @@ require 'tmpdir'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/annotate'
+require 'seeing_is_believing/rewrite_code'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/debugging_handler'
@@ -19,10 +19,7 @@ class SeeingIsBelieving
     attribute(:timeout_seconds)   { 0 }
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
-    attribute(:annotate)          { Annotate } # TODO: this is something like...
-                                               # wrap_expressions   (but that conflicts with the WrapExpressions class)
-                                               # record_expressions (kinda like this, wrapping expressions is generic, we are specifically wrapping them in recording code)
-                                               # we output it to debugging as "TRANSLATED PROGRAM"
+    attribute(:rewrite_code)      { RewriteCode }
   end
 
   def self.call(*args)
@@ -39,9 +36,9 @@ class SeeingIsBelieving
   def call
     @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
       options.filename ||= File.join(dir, 'program.rb')
-      new_program = options.annotate.call @program,
-                                          options.filename,
-                                          options.max_line_captures
+      new_program = options.rewrite_code.call @program,
+                                              options.filename,
+                                              options.max_line_captures
 
       options.debugger.context("TRANSLATED PROGRAM") { new_program }
 

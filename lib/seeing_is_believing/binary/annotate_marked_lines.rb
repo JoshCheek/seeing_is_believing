@@ -20,27 +20,29 @@ class SeeingIsBelieving
                                   : inspect_linenos << c.line_number
           end
 
-          Annotate.call program,
-                        filename,
-                        max_line_captures,
-                        before_all: -> {
-                          # TODO: this is duplicated with the InspectExpressions class
-                          max_line_captures_as_str = max_line_captures.inspect
-                          max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
-                          "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
-                        },
-                        after_each: -> line_number {
-                          should_inspect = inspect_linenos.include?(line_number)
-                          should_pp      = pp_linenos.include?(line_number)
-                          inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-                          pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value? Prob not, I think it's 80(default width) - 1(comment width) - 5(" => {"), but if I allow indented `# => `, then that would need to be less than 74 (idk if I actually do this or not, though :P)
+          require 'seeing_is_believing/rewrite_code'
+          RewriteCode.call \
+            program,
+            filename,
+            max_line_captures,
+            before_all: -> {
+              # TODO: this is duplicated with the InspectExpressions class
+              max_line_captures_as_str = max_line_captures.inspect
+              max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
+              "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
+            },
+            after_each: -> line_number {
+              should_inspect = inspect_linenos.include?(line_number)
+              should_pp      = pp_linenos.include?(line_number)
+              inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+              pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value? Prob not, I think it's 80(default width) - 1(comment width) - 5(" => {"), but if I allow indented `# => `, then that would need to be less than 74 (idk if I actually do this or not, though :P)
 
-                          if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
-                          elsif should_inspect              then ").tap { |v| #{inspect} }"
-                          elsif should_pp                   then ").tap { |v| #{pp} }"
-                          else                                   ")"
-                          end
-                        }
+              if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
+              elsif should_inspect              then ").tap { |v| #{inspect} }"
+              elsif should_pp                   then ").tap { |v| #{pp} }"
+              else                                   ")"
+              end
+            }
         end
       end
 

@@ -385,7 +385,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'annotator and lib_options.annotate' do
+    describe 'annotator and lib_options.rewrite_code' do
       specify 'annotator defaults to AnnotateEveryLine' do
         expect(parse([]).annotator).to be SeeingIsBelieving::Binary::AnnotateEveryLine
       end
@@ -395,13 +395,13 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['-x']).annotator).to eq SeeingIsBelieving::Binary::AnnotateMarkedLines
       end
 
-      specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do
+      specify 'lib_options.rewrite_code is set to the annotator\'s expression wrapper' do
         config = parse []
-        expect(config.lib_options.annotate)
+        expect(config.lib_options.rewrite_code)
           .to eq config.annotator.expression_wrapper(config.markers)
 
         # not a great test, but the cukes hit its actual behaviour
-        expect(parse(['-x']).lib_options.annotate).to be_a_kind_of Proc
+        expect(parse(['-x']).lib_options.rewrite_code).to be_a_kind_of Proc
       end
     end
 

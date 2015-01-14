@@ -220,7 +220,7 @@ class SeeingIsBelieving
 
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
-        self.lib_options.annotate      = annotator.expression_wrapper(markers)
+        self.lib_options.rewrite_code  = annotator.expression_wrapper(markers)
         self.lib_options.debugger      = debugger
         self.annotator_options.markers = markers
 

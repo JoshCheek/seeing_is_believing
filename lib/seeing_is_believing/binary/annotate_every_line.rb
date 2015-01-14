@@ -9,8 +9,8 @@ class SeeingIsBelieving
       end
 
       def self.expression_wrapper(markers)
-        require 'seeing_is_believing/annotate'
-        Annotate
+        require 'seeing_is_believing/rewrite_code'
+        RewriteCode
       end
 
       def self.call(body, results, options)
