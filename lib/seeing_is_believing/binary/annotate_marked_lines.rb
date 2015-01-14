@@ -2,7 +2,8 @@ require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   module Binary
-    class AnnotateXmpfilterStyle
+    # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
+    class AnnotateMarkedLines
       def self.prepare_body(uncleaned_body, marker_regexes)
         require 'seeing_is_believing/binary/remove_annotations'
         RemoveAnnotations.call uncleaned_body, false, marker_regexes

@@ -3,7 +3,7 @@ class SeeingIsBelieving
   module Annotate
     # TODO: this is not annotation.... this is part of wrapping
     def self.call(program, filename, max_line_captures, options={})
-      # TODO: much of this is duplicated in annotate_xmpfilter_stle
+      # TODO: much of this is duplicated in annotate_marked_lines
       max_line_captures_as_str = max_line_captures.inspect
       max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
 

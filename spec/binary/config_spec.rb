@@ -390,9 +390,9 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse([]).annotator).to be SeeingIsBelieving::Binary::AnnotateEveryLine
       end
 
-      specify 'annotator can be set to AnnotateXmpfilterStyle with --xmpfilter-style or -x' do
-        expect(parse(['--xmpfilter-style']).annotator).to eq SeeingIsBelieving::Binary::AnnotateXmpfilterStyle
-        expect(parse(['-x']).annotator).to eq SeeingIsBelieving::Binary::AnnotateXmpfilterStyle
+      specify 'annotator can be set to AnnotateMarkedLines with --xmpfilter-style or -x' do
+        expect(parse(['--xmpfilter-style']).annotator).to eq SeeingIsBelieving::Binary::AnnotateMarkedLines
+        expect(parse(['-x']).annotator).to eq SeeingIsBelieving::Binary::AnnotateMarkedLines
       end
 
       specify 'lib_options.annotate is set to the annotator\'s expression wrapper' do

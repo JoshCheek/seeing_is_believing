@@ -8,7 +8,7 @@ require 'seeing_is_believing/binary/align_line'
 require 'seeing_is_believing/binary/align_chunk'
 
 require 'seeing_is_believing/binary/annotate_every_line'
-require 'seeing_is_believing/binary/annotate_xmpfilter_style'
+require 'seeing_is_believing/binary/annotate_marked_lines'
 
 
 class SeeingIsBelieving
@@ -154,7 +154,7 @@ class SeeingIsBelieving
             self.print_version = true
 
           when '-x', '--xmpfilter-style'
-            self.annotator = AnnotateXmpfilterStyle
+            self.annotator = AnnotateMarkedLines
 
           when '-i', '--inherit-exit-status'
             self.inherit_exit_status = true

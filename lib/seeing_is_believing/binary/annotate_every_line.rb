@@ -1,6 +1,5 @@
 class SeeingIsBelieving
   module Binary
-    # TODO: Rename to AnnotateSiBStyle
     class AnnotateEveryLine
       def self.prepare_body(uncleaned_body, marker_regexes)
         require 'seeing_is_believing/binary/remove_annotations'
