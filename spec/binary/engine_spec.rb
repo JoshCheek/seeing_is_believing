@@ -1,5 +1,4 @@
 require 'seeing_is_believing/binary/engine'
-require 'seeing_is_believing/binary/parse_args'
 require 'seeing_is_believing/binary/config'
 
 class SeeingIsBelieving
