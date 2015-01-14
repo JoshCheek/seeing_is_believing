@@ -35,9 +35,7 @@ class SeeingIsBelieving
                    stderr:    to_regex('^#\s*!>\s*')
       end
 
-
       # passed to annotator.call
-      # TODO: move AnnotatorOptions to uhm, annotator or something
       class AnnotatorOptions < StrictHash
         attribute(:alignment_strategy) { AlignChunk }
         attribute(:markers)            { Markers.new }
@@ -46,10 +44,6 @@ class SeeingIsBelieving
         attribute(:max_result_length)  { Float::INFINITY }
       end
 
-      # TODO: just a thought here:
-      # the binary is goind to do one of four things:
-      #   print_version, print_cleaned, print_help, and evaluate
-      #   might make sense to implement a state machine on these rather than setting all these boolean flags and having to check them down in finalize
       predicate(:print_version)       { false }
       predicate(:print_cleaned)       { false }
       predicate(:print_help)          { false }
@@ -70,17 +64,6 @@ class SeeingIsBelieving
       attribute(:lib_options)         { SeeingIsBelieving::Options.new }       # passed to SeeingIsBelieving.new
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
-      # TODO: allow debugger to take a filename
-
-      # TODO: --cd dir | --cd :file:
-      #   when given a dir, cd to that dir before executing the code
-      #   when not given a dir, cd to the dir of the file being executed before executing it
-
-      # TODO: --only-show-lines
-      #   Output only on specified lines (doesn't change stdout/stderr/exceptions)
-
-      # TODO: --alignment-strategy n-or-line / n-or-chunk / n-or-file (help-file should prob just link to cuke examples)
-      # add default to number of captures (1000), require user to explicitly set it to infinity
       def parse_args(args, debug_stream)
         as        = nil
         filenames = []

@@ -99,13 +99,39 @@ Known Issues
   This code will be wrapped. But using the value is syntactically invalid in Ruby, because it constitutes a "void value expression" (aka a nightmare for anyone working with code).
   I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge taht I don't think it's worth worrying about.
 
-Shit that will probably never get done (or if it does, won't be until after 2.0)
-================================================================================
+Version 2
+=========
+
+Feature complete, I'll fix bugs in it until version 3 is released, though
+
+Version 3
+=========
+
+These need to be done before release:
+
+* Add default to number of captures (1000), require user to explicitly set it to infinity
+* Update changelog with all changes
+* Push the event stream up to the top level so we can expose it via the interface.
+* Get it working on JRuby and Rbx
+* Order frog stickers
+* Figure out how to handle markers
+
+Version 4
+=========
 
 * How about if begin/rescue/end was able to record the result on the rescue section
-* How about if you could configure which kinds of results ou were interested in (e.g. turn on/off recording of method definitions, and other results)
-* What about recording the result of a line inside of a string interpolation, e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
-* If given a file with a Unicode character, but not set Unicode, inform the user
+* How about if you could configure which kinds of results you were interested in
+  (e.g. turn on/off recording of method definitions, and other results)
+* What about recording the result of a line inside of a string interpolation,
+  e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
+  This would require smarter annotators.
+* Allow debugger to take a filename (ie debug to a file insteaad of to stderr)
+* `--cd dir` cd to that dir before executing the code
+* `--cd -` cd to the dir of the file being executed before executing it
+* `--only-show-lines` output only on specified lines (doesn't change stdout/stderr/exceptions)
+* More alignment strategies e.g. `min=40` would align to 40, unless that was too short.
+  Could have fallback strategies, so e.g. `-s min=40,fallback=line`
+* Package Ruby with the editor downloads so that they don't require you to know so fkn much to set it up.
 
 Inspiration
 ===========
