@@ -56,17 +56,19 @@ class SeeingIsBelieving
       # todo move AnnotatorOptions to uhm, annotator or something
       class AnnotatorOptions < StrictHash
         attribute(:alignment_strategy) { AlignChunk }
-        attribute(:debugger)           { Debugger.new stream: nil } # TODO: Debugger.null
         attribute(:markers)            { Markers.new }
         attribute(:marker_regexes)     { MarkerRegexes.new }
         attribute(:max_line_length)    { Float::INFINITY }
         attribute(:max_result_length)  { Float::INFINITY }
       end
 
+      # TODO: just a thought here:
+      # the binary is goind to do one of four things:
+      #   print_version, print_cleaned, print_help, and evaluate
+      #   might make sense to implement a state machine on these rather than setting all these boolean flags and having to check them down in finalize
       predicate(:print_version)       { false }
       predicate(:print_cleaned)       { false }
       predicate(:print_help)          { false }
-      predicate(:print_extended_help) { false }
       predicate(:result_as_json)      { false }
       predicate(:inherit_exit_status) { false }
       predicate(:debug)               { false }
@@ -80,13 +82,13 @@ class SeeingIsBelieving
       attribute(:debugger)            { Debugger.new stream: nil } # TODO: Debugger.null
       attribute(:markers)             { Markers.new }
       attribute(:marker_regexes)      { MarkerRegexes.new }
-      attribute(:help_screen)         { Binary.help_screen false, Markers.new }
+      attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
       attribute(:lib_options)         { LibOptions.new }
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
       def self.from_args(args, stdin, debug_stream)
-        new { |opts| opts.parse_args(args, debug_stream) }
-          .finalize(stdin, File)
+        new.parse_args(args, debug_stream)
+           .finalize(stdin, File)
       end
 
 
@@ -112,7 +114,7 @@ class SeeingIsBelieving
           if int.to_s == string && 0 < int
             on_success.call int
           else
-            self.errors << "#{flag} expects a positive integer argument"
+            self.errors << "#{flagname} expects a positive integer argument"
           end
           string
         end
@@ -125,7 +127,7 @@ class SeeingIsBelieving
             on_success.call float
             string
           rescue
-            flags[:errors] << "#{flagname} expects a positive float or integer argument"
+            errors << "#{flagname} expects a positive float or integer argument"
           end
         end
 
@@ -150,22 +152,34 @@ class SeeingIsBelieving
 
         until args.empty?
           case (arg = args.shift)
-          when '-h',  '--help'                  then self.print_help          = true
-                                                     Binary.help_screen(false, markers)
-          when '-h+', '--help+'                 then self.print_help          = true
-                                                     self.help_screen         = Binary.help_screen(true, markers)
-          when '-c',  '--clean'                 then self.print_cleaned       = true
-          when '-v',  '--version'               then self.print_version       = true
-          when '-x',  '--xmpfilter-style'       then self.annotator           = AnnotateXmpfilterStyle
-          when '-i',  '--inherit-exit-status'   then self.inherit_exit_status = true
-          when '-j',  '--json'                  then self.result_as_json      = true
-          when '-g',  '--debug'
-            self.debug                      = true
-            self.debugger                   = Debugger.new stream: debug_stream, colour: true
-            self.lib_options.debugger       = debugger
-            self.annotator_options.debugger = debugger
+          when '-c', '--clean'
+            self.print_cleaned = true
 
-          when '-d',  '--line-length'
+          when '-v', '--version'
+            self.print_version = true
+
+          when '-x', '--xmpfilter-style'
+            self.annotator = AnnotateXmpfilterStyle
+
+          when '-i', '--inherit-exit-status'
+            self.inherit_exit_status = true
+
+          when '-j', '--json'
+            self.result_as_json = true
+
+          when '-h', '--help'
+            self.print_help = true
+
+          when '-h+', '--help+'
+            self.print_help  = true
+            self.help_screen = Binary.help_screen(true, markers)
+
+          when '-g', '--debug'
+            self.debug                = true
+            self.debugger             = Debugger.new stream: debug_stream, colour: true
+            self.lib_options.debugger = debugger
+
+          when '-d', '--line-length'
             extract_positive_int_for.call arg do |n|
               self.annotator_options.max_line_length = n
             end
@@ -179,7 +193,9 @@ class SeeingIsBelieving
             extracted = extract_positive_int_for.call arg do |n|
               self.lib_options.max_line_captures = n
             end
-            '--number-of-captures' == arg && saw_deprecated.call("use --max-line-captures instead", arg, extracted)
+            seen = [arg]
+            seen << extracted if extracted
+            '--number-of-captures' == arg && saw_deprecated.call("use --max-line-captures instead", *seen)
 
           when '-t', '--timeout-seconds', '--timeout'
             extracted = extract_non_negative_float_for.call arg do |n|
@@ -209,7 +225,7 @@ class SeeingIsBelieving
             end
 
           when '-s', '--alignment-strategy'
-            strategies = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
+            strategies     = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
             strategy_names = strategies.keys.join(', ')
             next_arg.call "#{arg} expected an alignment strategy as the following argument but did not see one (choose from: #{strategy_names})" do |name|
               if strategies[name]
@@ -230,17 +246,17 @@ class SeeingIsBelieving
           when '--shebang'
             executable = args.shift
             if executable
-              saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg, [executable]
+              saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg, executable
             else
               errors << "#{arg} expected an arg: path to a ruby executable"
-              saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg, []
+              saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg
             end
 
           when /^(-.|--.*)$/
             self.errors << "Unknown option: #{arg.inspect}"
 
           when /^-[^-]/
-            shortflags = arg[1..-1].chars.to_a
+            shortflags = arg[1..-1].chars.to_a # TODO: look for a sweet regex instead of this annoying algorithm
             plusidx    = shortflags.index('+') || 0
             if 0 < plusidx
               shortflags[plusidx-1] << '+'
@@ -258,16 +274,16 @@ class SeeingIsBelieving
           errors << "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}"
 
         self.lib_options.filename = as || filename
-        self.lib_options.annotate = annotator.expression_wrapper(markers, marker_regexes) # TODO: rename to wrap_expressions
+        self.lib_options.annotate = annotator.expression_wrapper(markers, marker_regexes)
         self.lib_options.debugger = debugger
 
-        self.annotator_options.debugger       = debugger
         self.annotator_options.markers        = markers
         self.annotator_options.marker_regexes = marker_regexes
 
         self
       end
 
+      # needs testing
       def finalize(stdin, file_class)
         if filename && body
           errors << "Cannot give a program body and a filename to get the program body from."
@@ -278,7 +294,7 @@ class SeeingIsBelieving
           errors << "#{filename} does not exist!"
         elsif body
           self.lib_options.stdin = stdin
-        else
+        elsif !print_version? && !print_cleaned? && !print_help? # skip the side effect of reading stdin when we won't be evaluating
           self.body = stdin.read
         end
         self

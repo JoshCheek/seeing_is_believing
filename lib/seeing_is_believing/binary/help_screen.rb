@@ -1,6 +1,7 @@
 # encoding: utf-8
 require 'seeing_is_believing/version'
 
+# TODO: go through extended help screen again, make sure it still makes sense
 class SeeingIsBelieving
   module Binary
     def self.help_screen(include_examples, markers)
