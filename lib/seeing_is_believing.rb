@@ -15,7 +15,7 @@ class SeeingIsBelieving
     attribute(:require)           { ['seeing_is_believing/the_matrix'] } # TODO: should rename to requires ?
     attribute(:load_path)         { [File.expand_path('..', __FILE__)] } # TODO: should rename to load_path_dirs ?
     attribute(:timeout_seconds)   { 0 }
-    attribute(:debugger)          { Debugger.new stream: nil } # TODO: Debugger.null
+    attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
     attribute(:annotate)          { Annotate }
     # TODO: this is something like...

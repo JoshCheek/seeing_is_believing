@@ -38,4 +38,8 @@ RSpec.describe SeeingIsBelieving::Debugger do
       described_class.new.context('C') { fail }
     end
   end
+
+  specify '::Null is a disabled debugger' do
+    expect(described_class::Null).to_not be_enabled
+  end
 end

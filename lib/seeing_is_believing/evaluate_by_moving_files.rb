@@ -34,7 +34,7 @@ class SeeingIsBelieving
       self.encoding        = options.delete(:encoding)
       self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 = never timeout
       self.provided_input  = options.delete(:provided_input)  || String.new
-      self.debugger        = options.delete(:debugger)        || Debugger.new(stream: nil)
+      self.debugger        = options.delete(:debugger)        || Debugger::Null
       self.event_handler   = options.delete(:event_handler)   || raise("must provide an event handler") # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
       self.load_path_flags = (options.delete(:load_path)      || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags   = (options.delete(:require)        || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten

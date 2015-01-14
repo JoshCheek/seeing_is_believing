@@ -86,8 +86,6 @@ class SeeingIsBelieving
         .each { |child| wrap_recursive child }
     end
 
-    # todo: is this actually add_wrappings
-    #       and add_wrappings is actually add_wrapping?
     def wrap_recursive(ast)
       return wrappings unless ast.kind_of? ::AST::Node
       case ast.type

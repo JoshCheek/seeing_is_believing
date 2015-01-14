@@ -43,7 +43,7 @@ class SeeingIsBelieving
       attribute(:deprecations)        { [] }
       attribute(:timeout_seconds)     { 0 }
       attribute(:annotator)           { AnnotateEveryLine }
-      attribute(:debugger)            { Debugger.new stream: nil } # TODO: Debugger.null
+      attribute(:debugger)            { Debugger::Null }
       attribute(:markers)             { Markers.new }
       attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
       attribute(:lib_options)         { SeeingIsBelieving::Options.new }       # passed to SeeingIsBelieving.new

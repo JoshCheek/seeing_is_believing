@@ -1,6 +1,5 @@
 class SeeingIsBelieving
   class Debugger
-
     CONTEXT_COLOUR = "\e[37;44m" # background blue
     RESET_COLOUR   = "\e[0m"
 
@@ -8,6 +7,8 @@ class SeeingIsBelieving
       @coloured = options[:colour]
       @stream   = options[:stream]
     end
+
+    Null = new stream: nil
 
     def coloured?
       @coloured
@@ -32,6 +33,6 @@ class SeeingIsBelieving
       return false unless other.respond_to? :stream
       coloured? == other.coloured? && stream == other.stream
     end
-
   end
+
 end
