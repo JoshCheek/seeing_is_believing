@@ -4,15 +4,15 @@ require 'seeing_is_believing/code'   # We have to parse the file to find the com
 class SeeingIsBelieving
   module Binary
     class RemoveAnnotations
-      def self.call(raw_code, should_clean_values, markers)
-        new(raw_code, should_clean_values, markers).call
+      def self.call(raw_code, remove_value_prefixes, markers)
+        new(raw_code, remove_value_prefixes, markers).call
       end
 
-      def initialize(raw_code, should_clean_values, markers)
-        self.should_clean_values = should_clean_values
-        self.raw_code            = raw_code
-        self.markers             = markers # TECHNICALLY THESE ARE REGEXES RIGHT NOW
-        self.code                = Code.new(raw_code, 'strip_comments')
+      def initialize(raw_code, remove_value_prefixes, markers)
+        self.remove_value_prefixes = remove_value_prefixes
+        self.raw_code              = raw_code
+        self.markers               = markers
+        self.code                  = Code.new(raw_code, 'strip_comments')
       end
 
       def call
@@ -24,9 +24,13 @@ class SeeingIsBelieving
 
           case comment.text
           when value_regex
-            next unless should_clean_values
-            code.rewriter.remove comment.comment_range
-            remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, false
+            if remove_value_prefixes
+              code.rewriter.remove comment.comment_range
+              remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, false
+            else
+              prefix = comment.text[value_regex].rstrip
+              code.rewriter.replace comment.comment_range, prefix
+            end
           when exception_regex
             code.rewriter.remove comment.comment_range
             remove_whitespace_before comment.comment_range.begin_pos, code.buffer, code.rewriter, true
@@ -46,7 +50,7 @@ class SeeingIsBelieving
 
       private
 
-      attr_accessor :raw_code, :should_clean_values, :markers, :code
+      attr_accessor :raw_code, :remove_value_prefixes, :markers, :code
 
       # any whitespace before the index (on the same line) will be removed
       # if the preceding whitespace is at the beginning of the line, the newline will be removed
@@ -87,20 +91,24 @@ class SeeingIsBelieving
           }
       end
 
+      def value_prefix
+        @value_prefix ||= markers.fetch(:value).fetch(:prefix)
+      end
+
       def value_regex
-        markers.fetch(:value).fetch(:regex)
+        @value_regex ||= markers.fetch(:value).fetch(:regex)
       end
 
       def exception_regex
-        markers.fetch(:exception).fetch(:regex)
+        @exception_regex ||= markers.fetch(:exception).fetch(:regex)
       end
 
       def stdout_regex
-        markers.fetch(:stdout).fetch(:regex)
+        @stdout_regex ||= markers.fetch(:stdout).fetch(:regex)
       end
 
       def stderr_regex
-        markers.fetch(:stderr).fetch(:regex)
+        @stderr_regex ||= markers.fetch(:stderr).fetch(:regex)
       end
     end
   end

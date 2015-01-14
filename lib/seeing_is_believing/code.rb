@@ -10,6 +10,7 @@ end
 
 class SeeingIsBelieving
   class Code
+    # TODO: switch to HashStruct
     class InlineComment
       attr_accessor :line_number, :whitespace_col, :whitespace, :text_col, :text, :full_range, :whitespace_range, :comment_range
       def initialize(attributes)

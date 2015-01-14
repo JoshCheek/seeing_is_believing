@@ -30,17 +30,19 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
     example { expect(call "1  # => 1",  true).to eq "1"   }
     example { expect(call "1   # => 1", true).to eq "1"   }
     example { expect(call "1  # =>  1", true).to eq "1"   }
+    example { expect(call "1  #  => 1", true).to eq "1"   }
     example { expect(call "\n1 # => 1", true).to eq "\n1" }
   end
 
-  context 'when told not to clean out value annotations' do
-    example { expect(call "1# => 1",    false).to eq "1# => 1"    }
-    example { expect(call "1 # => 1",   false).to eq "1 # => 1"   }
-    example { expect(call "1  # => 1",  false).to eq "1  # => 1"  }
-    example { expect(call "1  # => 1",  false).to eq "1  # => 1"  }
-    example { expect(call "1   # => 1", false).to eq "1   # => 1" }
-    example { expect(call "1  # =>  1", false).to eq "1  # =>  1" }
-    example { expect(call "\n1 # => 1", false).to eq "\n1 # => 1" }
+  context 'when told not to clean out value markers, it leaves the marker, but removes the annotation and trailing whitespace' do
+    example { expect(call "1# => 1",    false).to eq "1# =>"    }
+    example { expect(call "1 # => 1",   false).to eq "1 # =>"   }
+    example { expect(call "1  # => 1",  false).to eq "1  # =>"  }
+    example { expect(call "1  # => 1",  false).to eq "1  # =>"  }
+    example { expect(call "1   # => 1", false).to eq "1   # =>" }
+    example { expect(call "1  # =>  1", false).to eq "1  # =>"  }
+    example { expect(call "1  #  => 1", false).to eq "1  #  =>" }
+    example { expect(call "\n1 # => 1", false).to eq "\n1 # =>" }
   end
 
   context 'cleaning inline exception annotations' do
@@ -142,7 +144,7 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
 
       expect(call "1# => 2\n"\
                   " #    3",
-                  false).to eq "1# => 2"
+                  false).to eq "1# =>"
     end
 
     it 'works on inline exceptions' do

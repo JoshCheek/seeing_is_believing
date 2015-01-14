@@ -149,7 +149,7 @@ Feature: Xmpfilter style
     """
 
 
-  Scenario: Cleaning previous output
+  Scenario: Cleaning previous output does not clean the xmpfilter annotations
     Given the file "xmpfilter_cleaning.rb":
     """
     # commented out # => previous annotation
@@ -157,14 +157,22 @@ Feature: Xmpfilter style
     # => "1111111111...
     #    "1111111111...
     # normal comment
-    # => 123
+
+    {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
+    # => {:foo=>42,
+    #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+    #     :wibble=>{:magic_word=>"xyzzy"}}
     """
     When I run "seeing_is_believing --xmpfilter-style --clean xmpfilter_cleaning.rb"
     Then stdout is:
     """
     # commented out # => previous annotation
-    1
+    1 # =>
+    # =>
     # normal comment
+
+    {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
+    # =>
     """
 
 
