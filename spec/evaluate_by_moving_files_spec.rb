@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
+require 'seeing_is_believing/event_stream/update_result'
 require 'fileutils'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do

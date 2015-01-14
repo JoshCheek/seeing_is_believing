@@ -500,7 +500,9 @@ RSpec.describe SeeingIsBelieving do
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
 
     def call
-      invoke "1", debugger: debugger
+      result = invoke "1", debugger: debugger
+      expect(result[1]).to eq ["1"]
+      result
     end
 
     it 'prints the pre-evaluated program' do
@@ -515,7 +517,11 @@ RSpec.describe SeeingIsBelieving do
       expect(stream.string).to include 'SIB::Result'
       expect(stream.string).to include '@results={'
     end
-    # should ProgramRewriter have some debug options?
+
+    it 'records eventstream information' do
+      call
+      expect(stream.string).to include "EVENTS"
+    end
   end
 
   describe 'exec' do

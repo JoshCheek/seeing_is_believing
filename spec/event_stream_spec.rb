@@ -2,6 +2,8 @@
 
 require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
+require 'seeing_is_believing/event_stream/debugging_handler'
+require 'seeing_is_believing/debugger'
 
 module SeeingIsBelieving::EventStream
   RSpec.describe SeeingIsBelieving::EventStream do
@@ -605,6 +607,51 @@ module SeeingIsBelieving::EventStream
         finish!
         event_classes = consumer.each.map(&:class)
         expect(event_classes).to include Events::Finished
+      end
+    end
+
+    describe DebuggingHandler do
+      specify 'to_proc returns the original handler when the stream is disabled' do
+        real_handler = lambda { }
+        expect(real_handler).to receive(:to_proc).and_return(real_handler)
+        to_proc = described_class.new(SeeingIsBelieving::Debugger::Null, real_handler).to_proc
+        expect(to_proc).to equal real_handler
+      end
+
+      let(:stream)            { "" }
+      let(:events_seen)       { [] }
+      let(:debugger)          { SeeingIsBelieving::Debugger.new stream: stream }
+      let(:real_handler)      { lambda { |event| events_seen << event } }
+      let(:debugging_handler) { described_class.new(debugger, real_handler).to_proc }
+
+      it 'passes events through to the real handler' do
+        event = Events::Stdout.new(value: "zomg")
+        debugging_handler.call(event)
+        expect(events_seen).to eq [event]
+      end
+
+      it 'generally prints things, prettily, wide and short' do
+        [ Events::Stdout.new(value: "short"),
+          Events::Stdout.new(value: "long"*1000),
+          Events::Exec.new(args: ["a", "b", "c"]),
+          Events::StdoutClosed.new(side: :consumer),
+          Events::Exception.new(line_number: 100,
+                                class_name:  "SomethingException",
+                                message:     "The things, they blew up!",
+                                backtrace:   ["a"*10,"b"*2000]),
+          Events::Finished.new,
+        ].each { |event| debugging_handler.call event }
+
+        expect(stream).to match /^Stdout\b/   # the events al made it
+        expect(stream).to match /^Exec\b/
+        expect(stream).to match /^StdoutClosed\b/
+        expect(stream).to match /^Exception\b/
+        expect(stream).to match /^Finished\b/
+        expect(stream).to match /^\| - a+/    # a backtrace in there
+        expect(stream).to match /\.{3}$/      # truncation indication
+        stream.each_line do |line|
+          expect(line.length).to be <= 151    # long lines got truncated (151 b/c newline is counted)
+        end
       end
     end
   end

@@ -19,9 +19,9 @@ class SeeingIsBelieving
 
     def context(name, &block)
       if enabled?
-        stream << CONTEXT_COLOUR          if coloured?
+        stream << CONTEXT_COLOUR if coloured?
         stream << "#{name}:"
-        stream << RESET_COLOUR            if coloured?
+        stream << RESET_COLOUR   if coloured?
         stream << "\n"
         stream << block.call.to_s << "\n" if block
       end

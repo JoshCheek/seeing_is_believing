@@ -17,7 +17,6 @@ require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
 require 'seeing_is_believing/event_stream/consumer'
-require 'seeing_is_believing/event_stream/update_result'
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
@@ -32,9 +31,8 @@ class SeeingIsBelieving
       self.program         = program
       self.filename        = filename
       self.encoding        = options.delete(:encoding)
-      self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 = never timeout
+      self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 is the new infinity
       self.provided_input  = options.delete(:provided_input)  || String.new
-      self.debugger        = options.delete(:debugger)        || Debugger::Null
       self.event_handler   = options.delete(:event_handler)   || raise("must provide an event handler") # e.g. lambda { |event| EventStream::UpdateResult.call result, event }
       self.load_path_flags = (options.delete(:load_path)      || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags   = (options.delete(:require)        || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
