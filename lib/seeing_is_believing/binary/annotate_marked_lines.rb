@@ -29,7 +29,7 @@ class SeeingIsBelieving
               # TODO: this is duplicated with the InspectExpressions class
               max_line_captures_as_str = max_line_captures.inspect
               max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
-              "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.num_lines = #{program.lines.count}; "
+              "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.record_num_lines #{program.lines.count}; "
             },
             after_each: -> line_number {
               should_inspect = inspect_linenos.include?(line_number)

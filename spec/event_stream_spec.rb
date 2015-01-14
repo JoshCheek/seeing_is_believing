@@ -160,8 +160,7 @@ module SeeingIsBelieving::EventStream
         finish!
         expect(consumer.each.map { |e| e.class }.sort_by(&:to_s))
           .to eq [ Events::EventStreamClosed, Events::Exitstatus,   Events::Finished,
-                   Events::LineResult,        Events::NumLines,     Events::SiBVersion,
-                   Events::StderrClosed,      Events::StdoutClosed,
+                   Events::LineResult,        Events::SiBVersion, Events::StderrClosed, Events::StdoutClosed,
                  ]
       end
 
@@ -529,44 +528,21 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe 'finish!' do
-      def final_event(producer, consumer, event_class)
-        finish!
-        consumer.each.find { |e| e.class == event_class }
+    describe 'record_num_lines' do
+      it 'interprets numbers' do
+        producer.record_num_lines 21
+        expect(consumer.call).to eq Events::NumLines.new(value: 21)
       end
+    end
 
+    describe 'finish!' do
       it 'stops the producer from producing' do
         read, write = IO.pipe
         producer = SeeingIsBelieving::EventStream::Producer.new write
         producer.finish!
-        read.gets
         producer.record_filename("zomg")
         write.close
         expect(read.gets).to eq nil
-      end
-
-      describe 'num_lines' do
-        it 'interprets numbers' do
-          producer.num_lines = 21
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 21
-        end
-
-        it 'is 0 by default' do
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 0
-        end
-
-        it 'updates its value if it sees a result from a line larger than its value' do
-          producer.num_lines = 2
-          producer.record_result :sometype, 100, :someval
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
-        end
-
-        it 'updates its value if it sees an exception from a line larger than its value' do
-          producer.num_lines = 2
-          begin; raise; rescue; e = $!; end
-          producer.record_exception 100, e
-          expect(final_event(producer, consumer, Events::NumLines).value).to eq 100
-        end
       end
     end
 

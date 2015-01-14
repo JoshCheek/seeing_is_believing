@@ -11,12 +11,11 @@ class SeeingIsBelieving
         def shift() end
       end
 
-      attr_accessor :max_line_captures, :num_lines, :filename
+      attr_accessor :max_line_captures, :filename
 
       def initialize(resultstream)
         self.filename          = nil
         self.max_line_captures = Float::INFINITY
-        self.num_lines         = 0
         self.recorded_results  = []
         self.queue             = Queue.new
         self.producer_thread   = Thread.new do
@@ -55,7 +54,6 @@ class SeeingIsBelieving
       StackErrors = [SystemStackError]
       StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)
-        self.num_lines = line_number if num_lines < line_number
         counts = recorded_results[line_number] ||= Hash.new(0)
         count  = counts[type]
         recorded_results[line_number][type] = count.next
@@ -84,13 +82,10 @@ class SeeingIsBelieving
 
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
-        # TODO: do record SystemExit, and just let caller choose to not append it to file
         return exception.status if exception.kind_of? SystemExit
-        if line_number
-          self.num_lines = line_number if num_lines < line_number
-        elsif filename
+        if !line_number && filename
           begin line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
-          rescue Exception
+          rescue Exception # <-- uhm...
           end
         end
         line_number ||= -1
@@ -114,9 +109,11 @@ class SeeingIsBelieving
         queue << "exec #{to_string_token args.inspect}"
       end
 
-      # TODO: do we even want to bother with the number of lines?
-      def finish!
+      def record_num_lines(num_lines)
         queue << "num_lines #{num_lines}"
+      end
+
+      def finish!
         queue << :break # note that consumer will continue reading until stream is closed
         producer_thread.join
       end

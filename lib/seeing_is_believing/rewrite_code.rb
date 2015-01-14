@@ -11,7 +11,7 @@ class SeeingIsBelieving
                                                                                   "$SiB.record_sib_version #{VERSION.inspect};"\
                                                                                   "$SiB.record_filename #{filename.inspect};"\
                                                                                   "$SiB.record_max_line_captures #{max_line_captures_as_str};"\
-                                                                                  "$SiB.num_lines = #{program.lines.count}; " }
+                                                                                  "$SiB.record_num_lines #{program.lines.count}; " }
       wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   -> { "" }
       wrap_expressions_callbacks[:before_each] = options.fetch :before_each, -> line_number { "(" }
       wrap_expressions_callbacks[:after_each]  = options.fetch :after_each,  -> line_number { ").tap { |v| $SiB.record_result(:inspect, #{line_number}, v) }" }
