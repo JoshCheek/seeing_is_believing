@@ -58,13 +58,15 @@ class SeeingIsBelieving
       end
 
       def evaluate!
-        return if @evaluate
-        @evaluated = true
-        @timed_out = false
-        @results   = SeeingIsBelieving.call prepared_body, config.lib_options.to_h
+        @evaluated || begin
+          @results   = SeeingIsBelieving.call prepared_body, config.lib_options.to_h
+          @timed_out = false
+          @evaluated = true
+        end
       rescue Timeout::Error
         @timed_out = true
-      ensure return self
+        @evaluated = true
+      ensure return self unless $! # idk, maybe too tricky, but was really annoying putting it in three places
       end
 
       def results

@@ -130,7 +130,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("begin\n1\n2\nend")).to eq "<begin\n<1>\n<2>\nend>"
     end
 
-    it 'does not wrap multiple expressions when they constitute a void value', t:true do
+    it 'does not wrap multiple expressions when they constitute a void value' do
       expect(wrap("def a\n1\nreturn 2\nend")).to eq "<def a\n<1>\nreturn <2>\nend>"
       expect(wrap("def a\nreturn 1\n2\nend")).to eq "<def a\nreturn <1>\n<2>\nend>"
       # BUG, but I'm skipping it, b/c it's borderline invalid.

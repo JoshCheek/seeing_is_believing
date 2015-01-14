@@ -13,6 +13,13 @@ class SeeingIsBelieving
         Engine.new config
       end
 
+      def assert_must_evaluate(message)
+        engine = call ''
+        expect { engine.__send__ message }.to raise_error MustEvaluateFirst, /#{message}/
+        engine.evaluate!
+        engine.__send__ message
+      end
+
       context 'syntax' do
         let(:valid_engine)   { call "1+1" }
         let(:invalid_engine) { call "1+"  }
@@ -52,12 +59,6 @@ class SeeingIsBelieving
       end
 
       context 'before evaluating it raises if asked for' do
-        def assert_must_evaluate(message)
-          engine = call ''
-          expect { engine.__send__ message }.to raise_error MustEvaluateFirst, /#{message}/
-          engine.evaluate!
-          engine.__send__ message
-        end
         specify('results')               { assert_must_evaluate :results }
         specify('timed_out?')            { assert_must_evaluate :timed_out? }
         specify('annotated_body')        { assert_must_evaluate :annotated_body }
@@ -71,7 +72,7 @@ class SeeingIsBelieving
           expect(status).to eq 55
         end
 
-        specify 'timed_out? true if the program it raised a Timeout::Error' do
+        specify 'timed_out? is true if the program raised a Timeout::Error' do
           expect(call('', timeout: 1).evaluate!.timed_out?).to eq false
           expect(call('sleep 1', timeout: 0.01).evaluate!.timed_out?).to eq true
         end
@@ -84,6 +85,15 @@ class SeeingIsBelieving
             expect(call("1").evaluate!.annotated_body).to eq "1  # => 1"
             expect(call("1\n").evaluate!.annotated_body).to eq "1  # => 1\n"
           end
+        end
+
+        it 'evaluation errors are raised up, and it behaves as if it was not evaluated' do
+          evaluated   = call('1').evaluate!
+          unevaluated = call '1'
+          expect(SeeingIsBelieving).to receive(:call).exactly(2).times.and_raise(ArgumentError)
+          evaluated.evaluate!
+          expect { unevaluated.evaluate! }.to raise_error ArgumentError
+          expect { unevaluated.evaluate! }.to raise_error ArgumentError
         end
       end
     end
