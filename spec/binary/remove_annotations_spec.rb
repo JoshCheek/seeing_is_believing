@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/binary/parse_args'  # for marker info
+require 'seeing_is_believing/binary/config'  # for marker info
 
 RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   def call(code, should_clean_values=true)
@@ -11,8 +11,7 @@ RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   end
 
   def regexes
-    SeeingIsBelieving::Binary::ParseArgs::MarkerRegexes.new
-      .each_with_object({}) { |(name, str), rs| rs[name] = Regexp.new str }
+    SeeingIsBelieving::Binary::Config::MarkerRegexes.new
   end
 
   context 'when there are lines that are just normal comments' do
