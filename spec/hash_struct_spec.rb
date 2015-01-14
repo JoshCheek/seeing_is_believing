@@ -172,19 +172,23 @@ RSpec.describe SeeingIsBelieving::HashStruct do
 
   describe 'use' do
     describe 'initialization' do
-      it 'sets all values to their defaults, calling the init blocks at that time' do
+      it 'sets all values to their defaults, calling the init blocks at that time, with the instance' do
         calls = []
         klass.attribute(:a) { calls << :a; 1 }.attribute(:b, 2).attributes(c: 3)
              .predicate(:d) { calls << :d; 4 }.predicate(:e, 5).predicates(f: 6)
+             .attribute(:g) { |i| i.b + i.c }
+             .predicate(:h) { |i| i.e + i.f }
         eq! [], calls
         instance = klass.new
         eq! [:a, :d], calls
-        eq! 1, instance.a
-        eq! 2, instance.b
-        eq! 3, instance.c
-        eq! 4, instance.d
-        eq! 5, instance.e
-        eq! 6, instance.f
+        eq! 1,  instance.a
+        eq! 2,  instance.b
+        eq! 3,  instance.c
+        eq! 4,  instance.d
+        eq! 5,  instance.e
+        eq! 6,  instance.f
+        eq! 5,  instance.g
+        eq! 11, instance.h
         eq! [:a, :d], calls
       end
       it 'accepts a hash of any declard attribute overrides' do

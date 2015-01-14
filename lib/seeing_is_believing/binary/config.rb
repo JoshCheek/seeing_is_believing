@@ -46,7 +46,7 @@ class SeeingIsBelieving
       attribute(:debugger)            { Debugger::Null }
       attribute(:markers)             { Markers.new }
       attribute(:help_screen)         { Binary.help_screen false, Markers.new } # TODO: how about help_screen and help_screen_extended
-      attribute(:lib_options)         { SeeingIsBelieving::Options.new }       # passed to SeeingIsBelieving.new
+      attribute(:lib_options)         { SeeingIsBelieving::Options.new }
       attribute(:annotator_options)   { AnnotatorOptions.new }
 
       def parse_args(args, debug_stream)
@@ -88,7 +88,6 @@ class SeeingIsBelieving
           self.deprecations << deprecated_arg.new(explanation: explanation, args: args)
         end
 
-        # TODO: next_arg(error_message, success: callback, failure: callback)
         next_arg = lambda do |error_message, &on_success|
           arg = args.shift
           arg ? on_success.call(arg) :

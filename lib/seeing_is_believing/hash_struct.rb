@@ -1,9 +1,6 @@
 class SeeingIsBelieving
   HashStruct = Class.new
 
-  # TODO: dynamic attributes
-  # TODO: new vs new! one validates arg presence, maybe a separate #validate!
-  # method for that, this way it's easier to have an invalid hash while constructing it (the block thing is kinda whatever)
   class << HashStruct
     NoDefault = Module.new
 
@@ -15,8 +12,7 @@ class SeeingIsBelieving
       init_blocks.key?(name) && raise(ArgumentError, "#{name} was already defined")
       name.kind_of?(Symbol)  || raise(ArgumentError, "#{name.inspect} should have been a symbol")
 
-      # TODO: init block receives the instance as an arg
-      init_block ||= lambda do
+      init_block ||= lambda do |hash_struct|
         if value == NoDefault
           raise ArgumentError, "Must provide a value for #{name.inspect}"
         else
@@ -70,17 +66,24 @@ class SeeingIsBelieving
   end
 
   class HashStruct
+    # This could support dynamic attributes very easily
+    # ie they are calculated, but appear as a value (e.g. in to_hash)
+    # not sure how to deal with the fact that they could be assigned, though
     class Attr
-      def initialize(value=nil, &block)
-        @block = block if block
-        @value = value unless block
+      def initialize(instance, value=nil, &block)
+        @instance = instance
+        @block    = block if block
+        @value    = value unless block
       end
       def value
         return @value if defined? @value
-        @value = @block.call
+        @value = @block.call(@instance)
       end
     end
 
+    # The aggressivenes of this is kind of annoying when you're trying to build up a large hash of values
+    # maybe new vs new! one validates arg presence,
+    # maybe a separate #validate! method for that?
     def initialize(initial_values={}, &initializer)
       @attributes = self
         .class
@@ -89,7 +92,7 @@ class SeeingIsBelieving
         .map(&:init_blocks)
         .reverse
         .inject({}, :merge)
-        .each_with_object({}) { |(name, block), attrs| attrs[name] = Attr.new(&block) }
+        .each_with_object({}) { |(name, block), attrs| attrs[name] = Attr.new(self, &block) }
       initial_values.each { |key, value| self[key] = value }
       initializer.call self if initializer
       each { } # access each key to see if it blows up
@@ -108,7 +111,7 @@ class SeeingIsBelieving
     end
 
     def []=(key, value)
-      @attributes[internalize! key] = Attr.new(value)
+      @attributes[internalize! key] = Attr.new(self, value)
     end
 
     def fetch(key, ignored=nil)
