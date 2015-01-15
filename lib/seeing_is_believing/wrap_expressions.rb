@@ -101,7 +101,7 @@ class SeeingIsBelieving
           add_to_wrappings ast unless ast.children.any? { |child| code.void_value? child }
           add_children ast
         else
-          keyword = ast.location.keyword.source
+          keyword = ast.location.keyword.source # if, elsif, unless, else, ....
           if (keyword == 'if' || keyword == 'unless') && ast.children.none? { |child| code.void_value? child }
             add_to_wrappings ast
           end
