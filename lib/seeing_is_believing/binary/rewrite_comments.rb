@@ -11,7 +11,6 @@ class SeeingIsBelieving
       def self.call(raw_code, options={}, &mapping)
         code        = Code.new(raw_code)
         comments    = code.inline_comments
-        buffer      = code.buffer
         extra_lines = Options.new(options).include_lines
 
         # update existing comments

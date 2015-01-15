@@ -110,7 +110,7 @@ class SeeingIsBelieving
       when :when, :pair # pair is 1=>2
         wrap_recursive ast.children.last
       when :resbody
-        exception_type, variable_name, body = ast.children
+        _exception_type, _variable_name, body = ast.children
         wrap_recursive body
       when :array
         add_to_wrappings ast
@@ -179,8 +179,7 @@ class SeeingIsBelieving
           add_children ast, true
         end
       when :send
-        range = ast.location.expression
-        target, message, * = ast.children
+        _target, message, * = ast.children
         meta = (:total_fucking_failure if message == :__TOTAL_FUCKING_FAILURE__)
         add_to_wrappings ast, meta
         add_children ast

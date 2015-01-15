@@ -27,11 +27,11 @@ class SeeingIsBelieving
     end
 
     def attributes(*names_or_pairs)
-      names_or_pairs.each do |name_or_pairs|
-        name = pairs = name_or_pairs
-        name_or_pairs.kind_of?(Symbol) ?
-          attribute(name) :
-          pairs.each { |name, default| attribute name, default }
+      names_or_pairs.each do |norp|
+        case norp
+        when Symbol then attribute(norp)
+        else norp.each { |name, default| attribute name, default }
+        end
       end
       self
     end

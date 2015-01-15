@@ -91,8 +91,7 @@ class SeeingIsBelieving
 
       def each
         return to_enum :each unless block_given?
-        loop { yield call 1 }
-      rescue NoMoreEvents
+        yield call 1 until @finished
       end
 
       # NOTE: Note it's probably a bad plan to call this method
@@ -132,7 +131,7 @@ class SeeingIsBelieving
 
       def extract_token(line)
         event_name = line[/[^ ]+/]
-        line.sub! /^\s*[^ ]+\s*/, ''
+        line.sub!(/^\s*[^ ]+\s*/, '')
         event_name
       end
 

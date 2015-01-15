@@ -27,19 +27,16 @@ class SeeingIsBelieving
       end
 
       def observe(event)
-        name = event.class.name.split("::").last
+        name  = event.class.name.split("::").last
         lines = event.to_h
                      .map { |attribute, value|
-                       if attribute == :value
-                         value.to_s.chomp
-                       elsif attribute == :side
-                         "#{attribute}: #{value}"
-                       elsif attribute == :backtrace
-                         indented = value.map { |v| "- #{v}" }
-                         ["backtrace:", *indented]
-                       else
-                         "#{attribute}: #{value.inspect}"
-                       end
+                        case attribute
+                        when :side      then "#{attribute}: #{value}"
+                        when :value     then value.to_s.chomp
+                        when :backtrace then indented = value.map { |v| "- #{v}" }
+                                             ["backtrace:", *indented]
+                        else "#{attribute}: #{value.inspect}"
+                        end
                      }
                      .flatten
         joined = lines.join ", "

@@ -60,8 +60,8 @@ class SeeingIsBelieving
       # so it has no #begin
       ast.kind_of?(Parser::AST::Node)           &&
         (ast.type == :dstr || ast.type == :str) &&
-        (location  = ast.location)              &&
-        (ast.location.kind_of? Parser::Source::Map::Heredoc)
+        (location = ast.location)               &&
+        (location.kind_of? Parser::Source::Map::Heredoc)
     end
 
     def void_value?(ast)

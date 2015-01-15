@@ -85,7 +85,7 @@ class SeeingIsBelieving
         return exception.status if exception.kind_of? SystemExit
         if !line_number && filename
           begin line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
-          rescue Exception # <-- uhm...
+          rescue NoMethodError
           end
         end
         line_number ||= -1
