@@ -813,65 +813,100 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     #   <2>
     #   <3>]
     #
-    # idk, but then we also need to deal with the fact that we're changing result of __LINE__
-    # which we could do with some meta, just replacing it with the literal when we parse it
-    # but still, moving this out of here will be really annoying, and no one is going to use it, so fuck it
-    it 'does not record them', not_implemented: true do
-      pending 'not implemented, and probably never will be'
+    # Because not iw matters why you want to wrap it. Are you doing this because you want
+    # to catch an exception? then maybe your wrapping code needs to go around the inside of each begin block
+    # or maybe the begin blocks need to get consolidated into a single begin block.
+    # or maybe removed from the begin block and just stuck as normal fkn code at the top of the file?
+    # but we do need to rewrite __LINE__ expressions now, because they are changing.
+    # which... maybe that's fine.
+    #
+    # Or, you might just be interested in having your code execute first. In which case,
+    # it doesn't need to wrap the body, it just needs its own BEGIN block.
+    #
+    # note that there are also things line nested BEGINs and nested ENDs
+    # but you can't nest a BEGIN inside an END.
+    it 'does not record them' do
       expect(wrap("BEGIN {}")).to eq "BEGIN {}"
       expect(wrap("END {}")).to eq "END {}"
       expect(wrap("BEGIN {\n123\n}")).to eq "BEGIN {\n<123>\n}"
       expect(wrap("END {\n123\n}")).to eq "END {\n<123>\n}"
     end
+
+    it 'moves them out of the body', not_implemented: true do
+      expect(wrap_with_body(<<-HERE)).to eq(<<-THERE)
+        # encoding: utf-8
+        p [1, __LINE__]
+        BEGIN {
+          p [2, __LINE__]
+        }
+        p [3, __LINE__]
+        END {
+          p [4, __LINE__]
+        }
+        p [5, __LINE__]
+        BEGIN { p [6, __LINE__] }
+        END { p [7, __LINE__] }
+        p [8, __LINE__]
+      HERE
+        # encoding: utf-8
+        BEGIN {
+          <p [2, 4]>
+        }
+        BEGIN { <p [6, 11]> }
+        [<p [1, 2]>
+        <p [3, 6]>
+        <p [5, 10]>
+        <p [8, 13]>]
+        END {
+          <p [4, 8]>
+        }
+        END { <p [7, 12]> }
+      THERE
+    end
   end
 
-  describe 'Ruby 2 syntaxes', :'2.x' => true do
-    before do
-      # only checking on 2.2 b/c its hard to figure out when different pieces were introduced
-      # we'll assume that if it passes on 2.2, it will pass on 2.0 or 2.1, if the feature is available on that Ruby
-      major, minor, * = RUBY_VERSION.split(".").map(&:to_i)
-      if major < 2 || (major == 2 && minor < 2)
-        pending "only testing on Ruby 2.2+"
-        raise
+  # only checking on 2.2 b/c its hard to figure out when different pieces were introduced
+  # we'll assume that if it passes on 2.2, it will pass on 2.0 or 2.1, if the feature is available on that Ruby
+  major, minor, * = RUBY_VERSION.split(".").map(&:to_i)
+  if major > 2 || (major == 2 && minor >= 2)
+    describe 'Ruby 2 syntaxes', :'2.x' => true do
+      it 'respects __dir__ macro' do
+        expect(wrap('__dir__')).to eq '<__dir__>'
       end
-    end
 
-    it 'respects __dir__ macro' do
-      expect(wrap('__dir__')).to eq '<__dir__>'
-    end
+      it 'does not wrap keyword/keywordrest arguments' do
+        expect(wrap("def a(b,c=1,*d,e:,f:1,**g, &h)\n1\nend"))
+          .to eq "<def a(b,c=1,*d,e:,f:1,**g, &h)\n<1>\nend>"
+        expect(wrap("def a b:\n1\nend")).to eq "<def a b:\n<1>\nend>"
+        expect(wrap("def a b:\nreturn 1\nend")).to eq "<def a b:\nreturn <1>\nend>"
+        expect(wrap("def a b:\nreturn\nend")).to eq "<def a b:\nreturn\nend>"
+        expect(wrap("a b:1, **c")).to eq "<a b:1, **c>"
+        expect(wrap("{\na:1,\n**b\n}")).to eq "<{\na:<1>,\n**<b>\n}>"
+        expect(wrap("a(b:1,\n **c\n)")).to eq "<a(b:<1>,\n **<c>\n)>"
+        pending 'Fixed this in Parser, but it\'s not released yet https://github.com/whitequark/parser/commit/aeb95c776d11e212ed95b92c69e96d1cccdb6424'
+        expect(wrap("def a(*, **)\n1\nend")).to eq "<def a(*, **)\n<1>\nend>"
+      end
 
-    it 'does not wrap keyword/keywordrest arguments' do
-      expect(wrap("def a(b,c=1,*d,e:,f:1,**g, &h)\n1\nend"))
-        .to eq "<def a(b,c=1,*d,e:,f:1,**g, &h)\n<1>\nend>"
-      expect(wrap("def a b:\n1\nend")).to eq "<def a b:\n<1>\nend>"
-      expect(wrap("def a b:\nreturn 1\nend")).to eq "<def a b:\nreturn <1>\nend>"
-      expect(wrap("def a b:\nreturn\nend")).to eq "<def a b:\nreturn\nend>"
-      expect(wrap("a b:1, **c")).to eq "<a b:1, **c>"
-      expect(wrap("{\na:1,\n**b\n}")).to eq "<{\na:<1>,\n**<b>\n}>"
-      expect(wrap("a(b:1,\n **c\n)")).to eq "<a(b:<1>,\n **<c>\n)>"
-      pending 'Fixed this in Parser, but it\'s not released yet https://github.com/whitequark/parser/commit/aeb95c776d11e212ed95b92c69e96d1cccdb6424'
-      expect(wrap("def a(*, **)\n1\nend")).to eq "<def a(*, **)\n<1>\nend>"
-    end
+      it 'tags javascript style hashes' do
+        expect(wrap(%[{\na:1,\n'b':2,\n"c":3\n}])).to eq %[<{\na:<1>,\n'b':<2>,\n"c":<3>\n}>]
+        expect(wrap(%[a b: 1,\n'c': 2,\n"d": 3,\n:e => 4])).to eq %[<a b: <1>,\n'c': <2>,\n"d": <3>,\n:e => 4>]
+      end
 
-    it 'tags javascript style hashes' do
-      expect(wrap(%[{\na:1,\n'b':2,\n"c":3\n}])).to eq %[<{\na:<1>,\n'b':<2>,\n"c":<3>\n}>]
-      expect(wrap(%[a b: 1,\n'c': 2,\n"d": 3,\n:e => 4])).to eq %[<a b: <1>,\n'c': <2>,\n"d": <3>,\n:e => 4>]
-    end
+      it 'wraps symbol literals' do
+        expect(wrap("%i[abc]")).to eq "<%i[abc]>"
+        expect(wrap("%I[abc]")).to eq "<%I[abc]>"
+        expect(wrap("%I[a\nb\nc]")).to eq "<%I[a\nb\nc]>"
+      end
 
-    it 'wraps symbol literals' do
-      expect(wrap("%i[abc]")).to eq "<%i[abc]>"
-      expect(wrap("%I[abc]")).to eq "<%I[abc]>"
-      expect(wrap("%I[a\nb\nc]")).to eq "<%I[a\nb\nc]>"
-    end
-
-    it 'wraps complex and rational' do
-      expect(wrap("1i")).to eq "<1i>"
-      expect(wrap("5+1i")).to eq "<5+1i>"
-      expect(wrap("1r")).to eq "<1r>"
-      expect(wrap("1.5r")).to eq "<1.5r>"
-      expect(wrap("1/2r")).to eq "<1/2r>"
-      expect(wrap("2/1r")).to eq "<2/1r>"
-      expect(wrap("1ri")).to eq "<1ri>"
+      it 'wraps complex and rational' do
+        expect(wrap("1i")).to eq "<1i>"
+        expect(wrap("5+1i")).to eq "<5+1i>"
+        expect(wrap("1r")).to eq "<1r>"
+        expect(wrap("1.5r")).to eq "<1.5r>"
+        expect(wrap("1/2r")).to eq "<1/2r>"
+        expect(wrap("2/1r")).to eq "<2/1r>"
+        expect(wrap("1ri")).to eq "<1ri>"
+      end
     end
   end
 end

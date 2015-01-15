@@ -427,15 +427,20 @@ RSpec.describe SeeingIsBelieving do
   end
 
   describe 'BEGIN and END' do
+    it 'doesn\'t fuck up when the BEGIN block exits / raises' do
+      expect(invoke("BEGIN { exit 100 }").exitstatus).to eq 100
+      expect(invoke("BEGIN { exit! 100 }").exitstatus).to eq 100
+      expect(invoke("BEGIN { raise Exception, 'wat'}").exception.message).to eq 'wat'
+    end
+
     it 'Executes in the appropriate order' do
-      pending 'not implemented'
-      expect(invoke <<-CODE).stdout.to eq "1\n2\n3\n4\n5\n6\n7\n8\n9\n"
+      expect(invoke(<<-CODE).stdout).to eq "1\n2\n3\n4\n5\n6\n7\n8\n9\n"
         p 3
-        END   { p 8 }
+        END   { p 9 }
         p 4
         BEGIN { p 1 }
         p 5
-        END   { p 9 }
+        END   { p 8 }
         p 6
         BEGIN { p 2 }
         p 7
@@ -443,7 +448,6 @@ RSpec.describe SeeingIsBelieving do
     end
 
     it 'Maintains correct line numbers' do
-      pending 'not implemented'
       expected_values = [
         ['1'],
         [],

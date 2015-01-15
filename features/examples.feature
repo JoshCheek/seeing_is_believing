@@ -276,3 +276,84 @@ Feature: Running the binary successfully
       $1       # => "b"
     end        # => "b"
     """
+
+
+  Scenario: BEGIN and END blocks
+    Given the file "BEGIN_and_END.rb":
+    """
+    # encoding: utf-8
+    p [:a, __LINE__]
+    BEGIN {
+      p [:b, __LINE__]
+      BEGIN { p [:c, __LINE__] }
+    }
+    p [:d, __LINE__]
+    END {
+      p [:e, __LINE__]
+    }
+    p [:f, __LINE__]
+    BEGIN { p [:g, __LINE__] }
+    END { p [:h, __LINE__] }
+    p [:i, __LINE__]
+    "π"
+    """
+    When I run "seeing_is_believing BEGIN_and_END.rb"
+    Then stderr is empty
+    Then stdout is:
+    """
+    # encoding: utf-8
+    p [:a, __LINE__]              # => [:a, 2]
+    BEGIN {
+      p [:b, __LINE__]            # => [:b, 4]
+      BEGIN { p [:c, __LINE__] }  # => [:c, 5]
+    }
+    p [:d, __LINE__]              # => [:d, 7]
+    END {
+      p [:e, __LINE__]            # => [:e, 9]
+    }
+    p [:f, __LINE__]              # => [:f, 11]
+    BEGIN { p [:g, __LINE__] }    # => [:g, 12]
+    END { p [:h, __LINE__] }      # => [:h, 13]
+    p [:i, __LINE__]              # => [:i, 14]
+    "π"                           # => "π"
+
+    # >> [:c, 5]
+    # >> [:b, 4]
+    # >> [:g, 12]
+    # >> [:a, 2]
+    # >> [:d, 7]
+    # >> [:f, 11]
+    # >> [:i, 14]
+    # >> [:h, 13]
+    # >> [:e, 9]
+    """
+    When I run "seeing_is_believing BEGIN_and_END.rb --xmpfilter-style"
+    Then stderr is empty
+    Then stdout is:
+    """
+    # encoding: utf-8
+    p [:a, __LINE__]
+    BEGIN {
+      p [:b, __LINE__]
+      BEGIN { p [:c, __LINE__] }
+    }
+    p [:d, __LINE__]
+    END {
+      p [:e, __LINE__]
+    }
+    p [:f, __LINE__]
+    BEGIN { p [:g, __LINE__] }
+    END { p [:h, __LINE__] }
+    p [:i, __LINE__]
+    "π"
+
+    # >> [:c, 5]
+    # >> [:b, 4]
+    # >> [:g, 12]
+    # >> [:a, 2]
+    # >> [:d, 7]
+    # >> [:f, 11]
+    # >> [:i, 14]
+    # >> [:h, 13]
+    # >> [:e, 9]
+    """

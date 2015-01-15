@@ -93,7 +93,6 @@ or current buffer contents with the output of running it through
 Known Issues
 ============
 
-* `BEGIN/END` breaks things and I probably won't ever fix it, because it's annoying and it's really meant for command-line scripts... but there is currently a spec for it.
 * `begin; else; break; end` this code (an else without a resecue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
   As such, I doubt that anyone will ever write it. But if you were to write it, it would blow up, because SiB rewrites your code, wrapping every expression that could have a value.
   This code will be wrapped. But using the value is syntactically invalid in Ruby, because it constitutes a "void value expression" (aka a nightmare for anyone working with code).

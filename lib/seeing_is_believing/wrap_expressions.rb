@@ -199,7 +199,7 @@ class SeeingIsBelieving
         add_to_wrappings ast, meta if ast.location.begin
         add_children ast
 
-      when :block_pass
+      when :block_pass, :preexe, :postexe
         add_children ast # strange, I'm not too sure about this :/
 
       when :match_current_line # ie `if /abc/; ...; end`

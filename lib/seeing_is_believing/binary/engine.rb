@@ -37,6 +37,8 @@ class SeeingIsBelieving
 
       # kinda dumb, the prepared_body is really the cleaned body
       # but b/c of the newline thing, have to keep them separate
+      # (when bin wangs cleaned_body, it wants consistente newlines,
+      # but when we want it in here, we always want a newline)
       # so either come up with a better name for this method
       # or a better name for prepared_body
       def cleaned_body
