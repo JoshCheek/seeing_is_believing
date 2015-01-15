@@ -201,7 +201,17 @@ Feature: Xmpfilter style
     """
 
 
-  @not-implemented
+  # Choosing this output style b/c it's what xmpfilter chooses,
+  # and it works conveniently with what's already in place.
+  #
+  # It looks better with the comma on the preceding line, but harder to identify the individual results.
+  #
+  # It looks better with an empty line between the results, but if the user strips trailing whitespace inbetween runs,
+  # it will confuse the annotations for normal comments.
+  #
+  # Might be cool to have it do a value comment before each result, instead of a comma.
+  # But at present, it doesn't wipe out "useless" value comments,
+  # e.g. cleaning this would leave three value markers after the hash.
   Scenario: Multiline output that is repeatedly invoked
     Given the file "mutltiline_output_repeatedly_invoked.rb":
     """
@@ -210,20 +220,34 @@ Feature: Xmpfilter style
       # =>
     end
     """
-    When I run "seeing_is_believing --xmpfilter-style mutltiline_output_repeatedly_invoked.rb"
+    When I run "seeing_is_believing -x mutltiline_output_repeatedly_invoked.rb"
     Then stdout is:
     """
-    Not sure what I want, but this is what xmpfilter does:
-
     3.times do
       {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
       # => {:foo=>42,
       #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
       #     :wibble=>{:magic_word=>"xyzzy"}}
-      #    , {:foo=>42,
+      #    ,{:foo=>42,
       #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
       #     :wibble=>{:magic_word=>"xyzzy"}}
-      #    , {:foo=>42,
+      #    ,{:foo=>42,
+      #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+      #     :wibble=>{:magic_word=>"xyzzy"}}
+    end
+    """
+    When I run "seeing_is_believing -x mutltiline_output_repeatedly_invoked.rb | seeing_is_believing -x"
+    Then stdout is:
+    """
+    3.times do
+      {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
+      # => {:foo=>42,
+      #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+      #     :wibble=>{:magic_word=>"xyzzy"}}
+      #    ,{:foo=>42,
+      #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
+      #     :wibble=>{:magic_word=>"xyzzy"}}
+      #    ,{:foo=>42,
       #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
       #     :wibble=>{:magic_word=>"xyzzy"}}
     end

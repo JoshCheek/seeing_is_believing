@@ -90,13 +90,14 @@ class SeeingIsBelieving
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
               [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, result, @options)]
             elsif pp_annotation
-              result = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(", ") # ["1\n2", "1\n2", ...
+              result = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join("\n,") # ["1\n2", "1\n2", ...
               swap_leading_whitespace_in_multiline_comment(result)
               comment_lines = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
                   FormatComment.call(comment.whitespace_col, value_prefix, comment_line.chomp, @options)
                 else
-                  FormatComment.call(comment.whitespace_col, nextline_prefix, comment_line.chomp, @options)
+                  leading_whitespace = " " * comment.text_col
+                  leading_whitespace << FormatComment.call(comment.whitespace_col, nextline_prefix, comment_line.chomp, @options)
                 end
               end
               [comment.whitespace, comment_lines.join("\n")]
