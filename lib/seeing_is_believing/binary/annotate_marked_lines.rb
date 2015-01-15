@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
@@ -58,11 +59,12 @@ class SeeingIsBelieving
         @results = results
       end
 
-      # TODO: I think that this should respect the alignment strategy
+      # TODO:
+      # Doesn't currently realign output markers, do we want to do that?
+      # I think that this should respect the alignment strategy
       # and we should just add a new alignment strategy for default xmpfilter style
       def call
         @new_body ||= begin
-          # TODO: doesn't currently realign output markers, do we want to do that?
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/format_comment'
           include_lines = []
@@ -88,11 +90,9 @@ class SeeingIsBelieving
               result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
               [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, result, @options)]
             elsif pp_annotation
-              # result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              # CommentFormatter.call(line.size, exception_prefix, result, options)
-              # TODO: check that having multiple mult-line output values here looks good (e.g. avdi's example in a loop)
-              result          = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(', ')
-              comment_lines   = result.each_line.map.with_index do |comment_line, result_offest|
+              result = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join(", ") # ["1\n2", "1\n2", ...
+              swap_leading_whitespace_in_multiline_comment(result)
+              comment_lines = result.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
                   FormatComment.call(comment.whitespace_col, value_prefix, comment_line.chomp, @options)
                 else
@@ -126,6 +126,13 @@ class SeeingIsBelieving
 
       def value_regex
         @value_regex ||= @options[:markers][:value][:regex]
+      end
+
+      def swap_leading_whitespace_in_multiline_comment(comment)
+        return if comment.lines.size < 2
+        return if comment[0] =~ /\S/
+        nonbreaking_space = " "
+        comment[0] = nonbreaking_space
       end
     end
   end

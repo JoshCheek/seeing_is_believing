@@ -229,28 +229,21 @@ Feature: Xmpfilter style
     end
     """
 
-  # Not sure how to handle this. Here are some ideas:
-  # * Store info within the file that we can use to identify tehse lines.
-  #   ie add a comment at the top of the file like "# SiB: remove 383282, 382321"
-  #   where these numbers are like the hashes of the the comments we added or something.
-  # * Mark successive lines with an annotation of their own
-  # * Store the info somewhere else like a tempfile (seems harder, b/c now the data is disociated from the file,
-  #   given that I usually run this unsaved, how would SiB figure out that these two were the same?)
-  # * In this one case (first line is outdented), annotate differently, like prepend pipes to the annotations or something.
-  @not-implemented
-  Scenario: Multiline values where the first line is indented more than the successive lines
+
+  Scenario: Multiline values where the first line is indented more than the successive lines use a nonbreaking space
     Given the file "inspect_tree.rb":
     """
     bst = Object.new
     def bst.inspect
-      "   4   \n"\
-      " 2   6 \n"\
+      "   4\n"\
+      " 2   6\n"\
       "1 3 5 7\n"
     end
     bst
     # =>
     """
     When I run "seeing_is_believing --xmpfilter-style inspect_tree.rb"
+    # NOTE: The first space after the => is a nonbreaking space
     Then stdout is:
     """
     bst = Object.new
@@ -260,11 +253,29 @@ Feature: Xmpfilter style
       "1 3 5 7\n"
     end
     bst
-    # =>    4
+    # =>    4
     #     2   6
     #    1 3 5 7
     """
-    When I run
+
+
+  Scenario: Leading whitespace on nextline, but not multiline uses normal spaces
+    Given the file "nextline_with_leading_whitespace_but_not_multiline.rb":
+    """
+    o = Object.new
+    def o.inspect; " o" end
+    o
+    # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style nextline_with_leading_whitespace_but_not_multiline.rb"
+    Then stdout is:
+    """
+    o = Object.new
+    def o.inspect; " o" end
+    o
+    # =>  o
+    """
+
 
 
   Scenario: Xmpfilter uses the same comment formatting as normal
