@@ -434,7 +434,7 @@ Feature: Using flags
     When I run "seeing_is_believing --debug simple_program.rb"
     Then stdout is empty
     And the exit status is 0
-    And stderr includes "TRANSLATED PROGRAM:"
+    And stderr includes "REWRITTEN PROGRAM:"
     And stderr includes "$SiB"
     And stderr includes "RESULT:"
     And stderr includes "@results="

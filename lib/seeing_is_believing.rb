@@ -40,7 +40,7 @@ class SeeingIsBelieving
                                               options.filename,
                                               options.max_line_captures
 
-      options.debugger.context("TRANSLATED PROGRAM") { new_program }
+      options.debugger.context("REWRITTEN PROGRAM") { new_program }
 
       result        = Result.new
       event_handler = EventStream::UpdateResultHandler.new(result)

@@ -35,7 +35,9 @@ class SeeingIsBelieving
               should_inspect = inspect_linenos.include?(line_number)
               should_pp      = pp_linenos.include?(line_number)
               inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-              pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }" # TODO: Is 74 the right value? Prob not, I think it's 80(default width) - 1(comment width) - 5(" => {"), but if I allow indented `# => `, then that would need to be less than 74 (idk if I actually do this or not, though :P)
+              # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
+              # 79 - "# => ".length # => 4
+              pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }"
 
               if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
               elsif should_inspect              then ").tap { |v| #{inspect} }"
