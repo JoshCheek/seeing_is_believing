@@ -1,6 +1,6 @@
 desc 'run specs'
 task :spec do
-  sh 'rspec -t ~not_implemented -cf d --fail-fast'
+  sh 'rspec -cf d --fail-fast'
 end
 
 desc 'run cukes'
