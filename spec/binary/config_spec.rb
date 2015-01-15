@@ -78,7 +78,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     it 'correctly parses multiple args' do
       config = parse(%w[filename -h -r torequire])
       expect(config.filename).to eq 'filename'
-      expect(config.lib_options.require).to include 'torequire'
+      expect(config.lib_options.require_files).to include 'torequire'
       expect(config.print_help?).to eq true
       expect(config.errors).to be_empty
     end
@@ -188,9 +188,9 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it_behaves_like 'it requires a positive int argument', ['-d', '--line-length']
     end
 
-    describe 'lib_options.require' do
+    describe 'lib_options.require_files' do
       it 'defaults to the matrix file array' do
-        expect(parse([]).lib_options.require).to eq [matrix_file]
+        expect(parse([]).lib_options.require_files).to eq [matrix_file]
       end
 
       specify '-r and --require set an error if not provided with a filename' do
@@ -200,7 +200,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       specify '-r and --require add the filename into the result array' do
-        expect(parse(%w[-r f1 --require f2]).lib_options.require).to eq [matrix_file, 'f1', 'f2']
+        expect(parse(%w[-r f1 --require f2]).lib_options.require_files).to eq [matrix_file, 'f1', 'f2']
       end
     end
 
@@ -255,15 +255,15 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe'lib_options.load_path' do
+    describe'lib_options.load_path_dirs' do
       let(:lib_path) { File.expand_path '../../../lib', __FILE__ }
 
       it 'defaults to sib\'s lib path' do
-        expect(parse([]).lib_options.load_path).to eq [lib_path]
+        expect(parse([]).lib_options.load_path_dirs).to eq [lib_path]
       end
 
       specify '-I and --load-path add their arguments to it' do
-        expect(parse(%w[-I f1 --load-path f2]).lib_options.load_path).to eq [lib_path, 'f1', 'f2']
+        expect(parse(%w[-I f1 --load-path f2]).lib_options.load_path_dirs).to eq [lib_path, 'f1', 'f2']
       end
 
       it 'sets an error if not provided with a dir' do

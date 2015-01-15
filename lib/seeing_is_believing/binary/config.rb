@@ -150,12 +150,12 @@ class SeeingIsBelieving
 
           when '-r', '--require'
             next_arg.call "#{arg} expected a filename as the following argument but did not see one" do |filename|
-              self.lib_options.require << filename
+              self.lib_options.require_files << filename
             end
 
           when '-I', '--load-path'
             next_arg.call "#{arg} expected a directory as the following argument but did not see one" do |dir|
-              self.lib_options.load_path << dir
+              self.lib_options.load_path_dirs << dir
             end
 
           when '-e', '--program'

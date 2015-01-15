@@ -99,13 +99,13 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     other_filename2 = File.join filedir, 'other2.rb'
     File.open(other_filename1, 'w') { |f| f.puts "puts 123" }
     File.open(other_filename2, 'w') { |f| f.puts "puts 456" }
-    result = invoke '', require: [matrix_file, other_filename1, other_filename2]
+    result = invoke '', require_files: [matrix_file, other_filename1, other_filename2]
     expect(result.stdout).to eq "123\n456\n"
   end
 
   it 'can set the load path' do
     File.open(File.join(filedir, 'other1.rb'), 'w') { |f| f.puts "puts 123" }
-    result = invoke '', require: [matrix_file, 'other1'], load_path: [filedir]
+    result = invoke '', require_files: [matrix_file, 'other1'], load_path_dirs: [filedir]
     expect(result.stdout).to eq "123\n"
   end
 

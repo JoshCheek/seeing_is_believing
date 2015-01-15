@@ -14,8 +14,8 @@ class SeeingIsBelieving
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
-    attribute(:require)           { ['seeing_is_believing/the_matrix'] } # TODO: should rename to require_files ?
-    attribute(:load_path)         { [File.expand_path('..', __FILE__)] } # TODO: should rename to load_path_dirs ?
+    attribute(:require_files)     { ['seeing_is_believing/the_matrix'] }
+    attribute(:load_path_dirs)    { [File.expand_path('..', __FILE__)] }
     attribute(:timeout_seconds)   { 0 }
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
@@ -50,8 +50,8 @@ class SeeingIsBelieving
         options.filename,
         event_handler:   event_handler,
         provided_input:  options.stdin,
-        require:         options.require,
-        load_path:       options.load_path,
+        require_files:   options.require_files,
+        load_path_dirs:  options.load_path_dirs,
         encoding:        options.encoding,
         timeout_seconds: options.timeout_seconds
 

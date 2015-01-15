@@ -34,8 +34,8 @@ class SeeingIsBelieving
       self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 is the new infinity
       self.provided_input  = options.delete(:provided_input)  || String.new
       self.event_handler   = options.delete(:event_handler)   || raise("must provide an event handler")
-      self.load_path_flags = (options.delete(:load_path)      || []).map { |dir| ['-I', dir] }.flatten
-      self.require_flags   = (options.delete(:require)        || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
+      self.load_path_flags = (options.delete(:load_path_dirs) || []).map { |dir| ['-I', dir] }.flatten
+      self.require_flags   = (options.delete(:require_files)  || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
