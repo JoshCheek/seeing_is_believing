@@ -33,11 +33,11 @@ class SeeingIsBelieving
               "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.record_num_lines #{program.lines.count}; "
             },
             after_each: -> line_number {
+              # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
+              # 79 - "# => ".length # => 4
               should_inspect = inspect_linenos.include?(line_number)
               should_pp      = pp_linenos.include?(line_number)
               inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
-              # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
-              # 79 - "# => ".length # => 4
               pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }"
 
               if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
