@@ -169,19 +169,35 @@ Feature: Xmpfilter style
     """
 
 
-  # this one needs a bit more thought put into it, but I'm kinda fading now
-  @not-implemented
-  Scenario: Error raised on an annotated line does not wipe it out
-    Given the file "error_on_annotated_line.rb":
+  # Not totally in love with this, but it'll do unless I can think of something better.
+  Scenario: Error raised on an annotated line preserves the annotation
+    Given the file "error_on_annotated_line.a.rb":
     """
-    a # =>
+    "a"+1 # =>
     # =>
     """
-    When I run "seeing_is_believing --xmpfilter-style error_on_annotated_line.rb"
+    When I run "seeing_is_believing --xmpfilter-style error_on_annotated_line.a.rb"
+    Then stdout includes:
+    """
+    "a"+1 # => TypeError: no implicit conversion of Fixnum into String
+    # =>
+
+    # ~> TypeError
+    # ~> no implicit conversion of Fixnum into String
+    """
+    Given the file "error_on_annotated_line.b.rb":
+    """
+    "a"+"1" # => TypeError: no implicit conversion of Fixnum into String
+    # =>
+
+    # ~> TypeError
+    # ~> no implicit conversion of Fixnum into String
+    """
+    When I run "seeing_is_believing --xmpfilter-style error_on_annotated_line.b.rb"
     Then stdout is:
     """
-    idk, but we need to be able to fix the thing and run it again
-    without losing the annotation
+    "a"+"1" # => "a1"
+    # => "a1"
     """
 
 

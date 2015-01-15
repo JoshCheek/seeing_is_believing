@@ -60,7 +60,6 @@ class SeeingIsBelieving
       end
 
       # TODO:
-      # Doesn't currently realign output markers, do we want to do that?
       # I think that this should respect the alignment strategy
       # and we should just add a new alignment strategy for default xmpfilter style
       def call
@@ -100,6 +99,7 @@ class SeeingIsBelieving
                   leading_whitespace << FormatComment.call(comment.whitespace_col, nextline_prefix, comment_line.chomp, @options)
                 end
               end
+              comment_lines = [value_prefix.rstrip] if comment_lines.empty?
               [comment.whitespace, comment_lines.join("\n")]
             else
               [comment.whitespace, comment.text]
