@@ -1,6 +1,7 @@
 require_relative 'version'
 require_relative 'event_stream/producer'
 
+STDOUT.sync = true
 event_stream = IO.open(ENV['SIB_EVENT_STREAM_FD'].to_i, "w")
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 
