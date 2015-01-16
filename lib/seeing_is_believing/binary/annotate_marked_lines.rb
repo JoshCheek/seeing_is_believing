@@ -130,7 +130,7 @@ class SeeingIsBelieving
       end
 
       def swap_leading_whitespace_in_multiline_comment(comment)
-        return if comment.lines.size < 2
+        return if comment.scan("\n").size < 2
         return if comment[0] =~ /\S/
         nonbreaking_space = " "
         comment[0] = nonbreaking_space

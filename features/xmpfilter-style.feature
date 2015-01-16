@@ -179,11 +179,13 @@ Feature: Xmpfilter style
     When I run "seeing_is_believing --xmpfilter-style error_on_annotated_line.a.rb"
     Then stdout includes:
     """
-    "a"+1 # => TypeError: no implicit conversion of Fixnum into String
+    "a"+1 # => TypeError:
+    """
+    And stdout includes:
+    """
     # =>
 
     # ~> TypeError
-    # ~> no implicit conversion of Fixnum into String
     """
     Given the file "error_on_annotated_line.b.rb":
     """
