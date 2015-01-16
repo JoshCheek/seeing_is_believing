@@ -128,7 +128,7 @@ class SeeingIsBelieving
       end
 
       def nextline_prefix
-        @nextline_prefix ||= ('#' + ' '*value_prefix.size.pred)
+        @nextline_prefix ||= ('#' + ' '*value_prefix.length.pred)
       end
 
       def exception_prefix
