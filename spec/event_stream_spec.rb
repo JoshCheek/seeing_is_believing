@@ -657,5 +657,35 @@ module SeeingIsBelieving::EventStream
         expect(Events::Stdout.new(value: "abc").as_json).to eq event: :stdout, value: "abc"
       end
     end
+
+    require 'seeing_is_believing/event_stream/emit_json_events_handler'
+    describe EmitJsonEventsHandler do
+      it 'writes each event\'s json representation to the stream' do
+        stream  = ""
+        handler = described_class.new stream
+
+        handler.call Events::Stdout.new(value: "abc")
+        expect(stream).to eq %'{"event":"stdout","value":"abc"}\n'
+
+        handler.call Events::Finished.new
+        expect(stream).to eq %'{"event":"stdout","value":"abc"}\n'+
+                             %'{"event":"finished"}\n'
+      end
+
+      it 'calls flush after each event, when the stream responds to it' do
+        stream = object_spy $stdout
+        flushcount = 0
+        allow(stream).to receive(:flush) { flushcount += 1 }
+
+        handler = described_class.new stream
+        expect(flushcount).to eq 0
+
+        handler.call Events::Stdout.new(value: "abc")
+        expect(flushcount).to eq 1
+
+        handler.call Events::Finished.new
+        expect(flushcount).to eq 2
+      end
+    end
   end
 end
