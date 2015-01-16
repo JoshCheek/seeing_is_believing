@@ -485,22 +485,13 @@ Feature: Using flags
     When I run "seeing_is_believing record_event_stream.rb --stream"
     Then stderr is empty
     And the exit status is 0
-    And stdout is:
+    And stdout includes:
     """
-    {"event":"stdout","value":"0\n"}
-    {"event":"stdout","value":"1\n"}
-    {"event":"stdout","value":"2\n"}
-    {"event":"ruby_version","value":"2.1.1"}
-    {"event":"sib_version","value":"3.0.0.beta.4"}
-    {"event":"filename","value":"record_event_stream.rb"}
-    {"event":"max_line_captures","value":Infinity}
-    {"event":"num_lines","value":1}
-    {"event":"line_result","type":"inspect","line_number":1,"inspected":"3"}
-    {"event":"event_stream_closed","side":"producer"}
-    {"event":"stdout_closed","side":"producer"}
-    {"event":"stderr_closed","side":"producer"}
-    {"event":"exitstatus","value":0}
-    {"event":"finished"}
+    ["stdout",{"value":"0\n"}]
+    """
+    And stdout includes:
+    """
+    ["exitstatus",{"value":0}]
     """
 
   Scenario: --stream respects the exit status

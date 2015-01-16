@@ -609,7 +609,7 @@ module SeeingIsBelieving::EventStream
         expect(Events::Finished.event_name         ).to eq :finished
       end
       specify 'their event_name and attributes are included in their as_json' do
-        expect(Events::Stdout.new(value: "abc").as_json).to eq event: :stdout, value: "abc"
+        expect(Events::Stdout.new(value: "abc").as_json).to eq [:stdout, {value: "abc"}]
       end
     end
 
@@ -620,11 +620,11 @@ module SeeingIsBelieving::EventStream
         handler = described_class.new stream
 
         handler.call Events::Stdout.new(value: "abc")
-        expect(stream).to eq %'{"event":"stdout","value":"abc"}\n'
+        expect(stream).to eq %'["stdout",{"value":"abc"}]\n'
 
         handler.call Events::Finished.new
-        expect(stream).to eq %'{"event":"stdout","value":"abc"}\n'+
-                             %'{"event":"finished"}\n'
+        expect(stream).to eq %'["stdout",{"value":"abc"}]\n'+
+                             %'["finished",{}]\n'
       end
 
       it 'calls flush after each event, when the stream responds to it' do

@@ -12,7 +12,7 @@ class SeeingIsBelieving
       end
 
       def as_json
-        {event: self.class.event_name}.merge(to_h)
+        [self.class.event_name, to_h]
       end
     end
 
