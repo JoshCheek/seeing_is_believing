@@ -61,14 +61,14 @@ Feature: Running the binary unsuccessfully
 
   Scenario: Passing a nonexistent file
     When I run "seeing_is_believing this_file_does_not_exist.rb"
-    Then stderr is "this_file_does_not_exist.rb does not exist!"
+    Then stderr is "Error: this_file_does_not_exist.rb does not exist!"
     And the exit status is 2
     And stdout is empty
 
   Scenario: Passing unknown options
     Given the file "some_file" "1"
     When I run "seeing_is_believing --unknown-option"
-    Then stderr is 'Unknown option: "--unknown-option"'
+    Then stderr is 'Error: Unknown option: "--unknown-option"'
     And the exit status is 2
     And stdout is empty
 

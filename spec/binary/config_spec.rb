@@ -8,9 +8,9 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       config.errors.find do |error|
         case error_assertion
         when Regexp
-          error_assertion =~ error
+          error_assertion =~ error.explanation
         else
-          error_assertion == error
+          error_assertion == error.explanation
         end
       end
     end

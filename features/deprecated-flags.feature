@@ -16,7 +16,7 @@ Feature: Flags that are deprecated
     Then stdout is empty
     And stderr is:
     """
-    not_a_file.rb does not exist!
+    Error: not_a_file.rb does not exist!
     Deprecated: `--shebang path/to/bin` SiB now uses the Ruby it was invoked with
     """
 
@@ -42,7 +42,7 @@ Feature: Flags that are deprecated
     Then stdout is empty
     And stderr is:
     """
-    not_a_file.rb does not exist!
+    Error: not_a_file.rb does not exist!
     Deprecated: `--shebang not/a/thing` SiB now uses the Ruby it was invoked with
     """
 
@@ -51,7 +51,7 @@ Feature: Flags that are deprecated
     Then stdout is empty
     And stderr is:
     """
-    not_a_file.rb does not exist!
+    Error: not_a_file.rb does not exist!
     Deprecated: `--number-of-captures 2` use --max-line-captures instead
     """
 
@@ -67,6 +67,6 @@ Feature: Flags that are deprecated
     Then stdout is empty
     And stderr is:
     """
-    not_a_file.rb does not exist!
+    Error: not_a_file.rb does not exist!
     Deprecated: `--inherit-exit-status` Dash has been removed for consistency, use --inherit-exitstatus
     """
