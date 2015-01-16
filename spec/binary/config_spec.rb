@@ -24,8 +24,9 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
   end
 
-  let(:debug_stream) { double :debug_stream }
-  let(:matrix_file)  { 'seeing_is_believing/the_matrix' }
+  let(:debug_stream)    { double :debug_stream }
+  let(:matrix_file)     { 'seeing_is_believing/the_matrix' }
+  let(:default_markers) { SeeingIsBelieving::Binary::Markers.new }
 
   def parse(args)
     described_class.new.parse_args(args, debug_stream)
@@ -205,8 +206,8 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'print_help? and help_screen' do
-      let(:help_screen)          { SeeingIsBelieving::Binary.help_screen SeeingIsBelieving::Binary::Config::Markers.new }
-      let(:help_screen_extended) { SeeingIsBelieving::Binary.help_screen_extended SeeingIsBelieving::Binary::Config::Markers.new }
+      let(:help_screen)          { SeeingIsBelieving::Binary.help_screen          default_markers }
+      let(:help_screen_extended) { SeeingIsBelieving::Binary.help_screen_extended default_markers }
 
       specify 'print_help? defaults to false' do
         expect(parse([]).print_help?).to eq false
@@ -491,8 +492,6 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'markers' do
-      let(:default_markers) { parse([]).markers }
-
       it 'defaults to a hash with :value, :exception, :stdout, and :stderr' do
         expect(default_markers.keys).to eq [:value, :exception, :stdout, :stderr]
       end

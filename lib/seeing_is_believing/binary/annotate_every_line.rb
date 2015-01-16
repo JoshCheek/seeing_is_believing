@@ -1,5 +1,3 @@
-require 'seeing_is_believing/binary/config'
-
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine

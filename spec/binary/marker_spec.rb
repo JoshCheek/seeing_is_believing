@@ -1,4 +1,4 @@
-require 'seeing_is_believing/binary/marker'
+require 'seeing_is_believing/binary/data_structures'
 
 RSpec.describe SeeingIsBelieving::Binary::Marker do
 

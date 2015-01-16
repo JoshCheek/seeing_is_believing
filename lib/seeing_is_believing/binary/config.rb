@@ -1,6 +1,6 @@
 # encoding: utf-8
 require 'seeing_is_believing'
-require 'seeing_is_believing/binary/marker'
+require 'seeing_is_believing/binary/data_structures'
 
 # one of these will be the alignment strategy
 require 'seeing_is_believing/binary/align_file'
@@ -15,33 +15,11 @@ require 'seeing_is_believing/binary/annotate_marked_lines'
 class SeeingIsBelieving
   module Binary
     class Config < HashStruct
-      class Markers < HashStruct
-        attribute(:value)     { Marker.new prefix: '# => ', regex: '^#\s*=>\s*' }
-        attribute(:exception) { Marker.new prefix: '# ~> ', regex: '^#\s*~>\s*' }
-        attribute(:stdout)    { Marker.new prefix: '# >> ', regex: '^#\s*>>\s*' }
-        attribute(:stderr)    { Marker.new prefix: '# !> ', regex: '^#\s*!>\s*' }
-      end
-
-      # passed to annotator.call
-      class AnnotatorOptions < HashStruct
-        attribute(:alignment_strategy) { AlignChunk }
-        attribute(:markers)            { Markers.new }
-        attribute(:max_line_length)    { Float::INFINITY }
-        attribute(:max_result_length)  { Float::INFINITY }
-      end
-
-      Error = HashStruct.for :explanation do
-        def to_s
-          "Error: #{explanation}"
-        end
-      end
-
-      DeprecatedArg = HashStruct.for :args, :explanation do
+      DeprecatedArg = Binary::Error.for :args do
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
         end
       end
-
 
       predicate(:print_version)      { false }
       predicate(:print_cleaned)      { false }

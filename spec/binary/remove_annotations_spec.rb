@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/binary/config'
+require 'seeing_is_believing/binary/data_structures'
 
 RSpec.describe SeeingIsBelieving::Binary::RemoveAnnotations do
   def regexes
-    SeeingIsBelieving::Binary::Config::Markers.new
+    SeeingIsBelieving::Binary::Markers.new
   end
 
   def call(code, should_clean_values=true)
