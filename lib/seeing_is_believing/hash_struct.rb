@@ -147,11 +147,8 @@ class SeeingIsBelieving
       "#<#{classname}: {#{inspected_attrs}}>"
     end
 
-    def key?(potential_key)
-      internalize! potential_key
-      return true
-    rescue KeyError
-      return false
+    def key?(key)
+      key.respond_to?(:to_sym) && @attributes.key?(key.to_sym)
     end
     alias has_key? key?
     alias include? key? # b/c Hash does this
