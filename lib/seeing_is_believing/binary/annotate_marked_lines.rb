@@ -1,6 +1,11 @@
 # encoding: utf-8
 require 'seeing_is_believing/code'
 
+
+# TODO: *sigh* need to fin a way to join the annotators.
+# They are sinful ugly, kinda hard to work with,
+# and absurdly duplicated.
+
 class SeeingIsBelieving
   module Binary
     # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
@@ -27,10 +32,15 @@ class SeeingIsBelieving
             filename,
             max_line_captures,
             before_all: -> {
-              # TODO: this is duplicated with the InspectExpressions class
               max_line_captures_as_str = max_line_captures.inspect
               max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
-              "require 'pp'; $SiB.record_filename #{filename.inspect}; $SiB.record_max_line_captures #{max_line_captures_as_str}; $SiB.record_num_lines #{program.lines.count}; "
+              "BEGIN { "\
+              "require 'pp';"\
+              "$SiB.record_ruby_version RUBY_VERSION;"\
+              "$SiB.record_sib_version #{VERSION.inspect};"\
+              "$SiB.record_filename #{filename.inspect};"\
+              "$SiB.record_max_line_captures #{max_line_captures_as_str};"\
+              "$SiB.record_num_lines #{program.lines.count} };"
             },
             after_each: -> line_number {
               # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and

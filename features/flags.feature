@@ -498,3 +498,10 @@ Feature: Using flags
     When I run "seeing_is_believing -ie 'exit 12' --stream"
     Then stderr is empty
     And the exit status is 12
+
+  Scenario: --stream sees leading data even with a hostile BEGIN block.
+    When I run "seeing_is_believing -e 'BEGIN { exit! }' --stream"
+    Then stdout includes:
+    """
+    ["sib_version",{"value":"{{SeeingIsBelieving::VERSION}}"}]
+    """
