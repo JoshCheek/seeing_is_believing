@@ -493,6 +493,10 @@ Feature: Using flags
     """
     ["exitstatus",{"value":0}]
     """
+    And stdout includes:
+    """
+    ["max_line_captures",{"value":-1,"is_infinity":true}]
+    """
 
   Scenario: --stream respects the exit status
     When I run "seeing_is_believing -ie 'exit 12' --stream"

@@ -611,6 +611,10 @@ module SeeingIsBelieving::EventStream
       specify 'their event_name and attributes are included in their as_json' do
         expect(Events::Stdout.new(value: "abc").as_json).to eq [:stdout, {value: "abc"}]
       end
+      specify 'MaxLineCaptures#as_json includes is_infinity, and sets value to -1 in this case' do
+        expect(Events::MaxLineCaptures.new(value: Float::INFINITY).as_json).to eq [:max_line_captures, {value: -1, is_infinity: true}]
+        expect(Events::MaxLineCaptures.new(value: 123).as_json).to eq [:max_line_captures, {value: 123, is_infinity: false}]
+      end
     end
 
     require 'seeing_is_believing/event_stream/emit_json_events_handler'

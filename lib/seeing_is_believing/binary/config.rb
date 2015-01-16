@@ -374,7 +374,7 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
     ["ruby_version",{"value":#{RUBY_VERSION.inspect}}]
     ["sib_version",{"value":#{SeeingIsBelieving::VERSION.inspect}}]
     ["filename",{"value":"/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20150116-49548-kr0xop/program.rb"}]
-    ["max_line_captures",{"value":Infinity}]
+    ["max_line_captures",{"value":-1,"is_infinity":true}]
     ["num_lines",{"value":3}]
     ["line_result",{"type":"inspect","line_number":1,"inspected":":a"}]
     ["line_result",{"type":"inspect","line_number":2,"inspected":":b"}]

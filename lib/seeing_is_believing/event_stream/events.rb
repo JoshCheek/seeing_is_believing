@@ -12,7 +12,7 @@ class SeeingIsBelieving
       end
 
       def as_json
-        [self.class.event_name, to_h]
+        [event_name, to_h]
       end
     end
 
@@ -35,12 +35,20 @@ class SeeingIsBelieving
 
       # The program will not record more results than this for a line.
       # Note that if this is hit, it will emit an unrecorded_result.
-      # TODO: should be renamed to MaxLineResults ?
       class MaxLineCaptures < Event
         def self.event_name
           :max_line_captures
         end
-        attributes :value
+        def as_json
+          if value == Float::INFINITY
+            value = -1
+            is_infinity = true
+          else
+            is_infinity = false
+          end
+          [event_name, {value: value, is_infinity: is_infinity}]
+        end
+        attribute :value
       end
 
       # Name of the file being evaluated.
