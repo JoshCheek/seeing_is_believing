@@ -10,7 +10,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         when Regexp
           error_assertion =~ error.explanation
         else
-          error_assertion == error.explanation
+          error.explanation.include? error_assertion
         end
       end
     end
@@ -94,10 +94,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     specify 'unknown options set an error' do
-      expect(parse(['--xyz'  ])).to have_error 'Unknown option: "--xyz"'
-      expect(parse(['-y'     ])).to have_error 'Unknown option: "-y"'
-      expect(parse(['-y', 'b'])).to have_error 'Unknown option: "-y"'
-      expect(parse(['-+h'    ])).to have_error 'Unknown option: "-+"'
+      expect(parse(['--xyz'  ])).to have_error '--xyz is not an option'
+      expect(parse(['-y'     ])).to have_error '-y is not an option'
+      expect(parse(['-y', 'b'])).to have_error '-y is not an option'
+      expect(parse(['-+h'    ])).to have_error '-+ is not an option'
     end
 
     describe 'filename and lib_options.filename' do
@@ -370,7 +370,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
 
       it 'sets an error if provided with an unknown alignment strategy' do
         expect(parse(['-s', 'file'])).to_not have_error '-s'
-        expect(parse(['-s', 'unknown'])).to_not have_error '-s'
+        expect(parse(['-s', 'unknown'])).to have_error '-s', 'expected one of'
       end
     end
 

@@ -93,10 +93,10 @@ class SeeingIsBelieving
           self.deprecations << DeprecatedArg.new(explanation: explanation, args: args)
         end
 
-        next_arg = lambda do |error_message, &on_success|
+        next_arg = lambda do |flagname, argtype, &on_success|
           arg = args.shift
           arg ? on_success.call(arg) :
-                self.errors << Error.new(explanation: error_message)
+                self.errors << Error.new(explanation: "#{flagname} needs an argument (#{argtype})")
           arg
         end
 
@@ -158,33 +158,33 @@ class SeeingIsBelieving
             '--timeout' == arg  && saw_deprecated.call("use --timeout-seconds instead", arg, extracted)
 
           when '-r', '--require'
-            next_arg.call "#{arg} expected a filename as the following argument but did not see one" do |filename|
+            next_arg.call arg, "a filename" do |filename|
               self.lib_options.require_files << filename
             end
 
           when '-I', '--load-path'
-            next_arg.call "#{arg} expected a directory as the following argument but did not see one" do |dir|
+            next_arg.call arg, "a directory" do |dir|
               self.lib_options.load_path_dirs << dir
             end
 
           when '-e', '--program'
-            next_arg.call "#{arg} expected a program as the following argument but did not see one" do |program|
+            next_arg.call arg, "the program body" do |program|
               self.body = program
             end
 
           when '-a', '--as'
-            next_arg.call "#{arg} expected a filename as the following argument but did not see one"  do |filename|
+            next_arg.call arg, "a filename"  do |filename|
               as = filename
             end
 
           when '-s', '--alignment-strategy'
             strategies     = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
-            strategy_names = strategies.keys.join(', ')
-            next_arg.call "#{arg} expected an alignment strategy as the following argument but did not see one (choose from: #{strategy_names})" do |name|
+            strategy_names = strategies.keys.inspect
+            next_arg.call arg, "one of these alignment strategies: #{strategy_names}" do |name|
               if strategies[name]
                 self.annotator_options.alignment_strategy = strategies[name]
               else
-                errors << Error.new(explanation: "#{arg} does not know #{name}, only knows: #{strategy_names}")
+                errors << Error.new(explanation: "#{arg} got the alignment strategy #{name.inspect}, expected one of: #{strategy_names}")
               end
             end
 
@@ -192,7 +192,7 @@ class SeeingIsBelieving
             self.lib_options.encoding = $1
 
           when '-K', '--encoding'
-            next_arg.call "#{arg} expects an encoding, see `man ruby` for possibile values" do |encoding|
+            next_arg.call arg, "an encoding" do |encoding|
               self.lib_options.encoding = encoding
             end
 
@@ -206,7 +206,7 @@ class SeeingIsBelieving
             end
 
           when /^(-.|--.*)$/
-            self.errors << Error.new(explanation: "Unknown option: #{arg.inspect}")
+            self.errors << Error.new(explanation: "#{arg} is not an option, see the help screen (-h) for a list of options")
 
           when /^-[^-]/
             args.unshift *arg.scan(/[^-]\+?/).map { |flag| "-#{flag}" }
@@ -217,7 +217,7 @@ class SeeingIsBelieving
         end
 
         filenames.size > 1 &&
-          errors << Error.new(explanation: "Can only have one filename, but had: #{filenames.map(&:inspect).join ', '}")
+          errors << Error.new(explanation: "Can only have one filename but found #{filenames.map(&:inspect).join ', '}")
 
         result_as_json && annotator == AnnotateMarkedLines &&
           errors << Error.new(explanation: "SiB does not currently support output with both json and xmpfilter... maybe v4 :)")

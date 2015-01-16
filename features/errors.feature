@@ -68,7 +68,7 @@ Feature: Running the binary unsuccessfully
   Scenario: Passing unknown options
     Given the file "some_file" "1"
     When I run "seeing_is_believing --unknown-option"
-    Then stderr is 'Error: Unknown option: "--unknown-option"'
+    Then stderr is 'Error: --unknown-option is not an option, see the help screen (-h) for a list of options'
     And the exit status is 2
     And stdout is empty
 
