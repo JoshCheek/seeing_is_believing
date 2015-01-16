@@ -485,7 +485,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     # not sure if I actually want this, or if it's just easier b/c it falls out of the current implementation
-    it 'wraps the conditional from an inline if, when it cannot wrap the entire if', t:true do
+    it 'wraps the conditional from an inline if, when it cannot wrap the entire if' do
       expect(wrap("def a\nreturn if 1\nend")).to eq "<def a\nreturn if <1>\nend>"
       # could maybe do this:
       # `return 1 if b` -> `return <1> if (b) || <nil>`

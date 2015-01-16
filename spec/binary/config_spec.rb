@@ -607,7 +607,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'lib_options.event_handler', t:true do
+    describe 'lib_options.event_handler' do
       it 'is an UpdateResultHandler when print_event_stream? is false' do
         expect(call(print_event_stream: false).lib_options.event_handler)
           .to be_an_instance_of SeeingIsBelieving::EventStream::UpdateResultHandler
