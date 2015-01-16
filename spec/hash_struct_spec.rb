@@ -15,6 +15,14 @@ RSpec.describe SeeingIsBelieving::HashStruct do
     expect(&block).to raise_error(*exception_class_and_matcher)
   end
 
+  def include!(needle, haystack)
+    expect(haystack).to include needle
+  end
+
+  def ninclude!(needle, haystack)
+    expect(haystack).to_not include needle
+  end
+
   describe 'declaration' do
     describe 'attributes' do
       specify 'can be individually declared, providing a default value or init block using .attribute' do
@@ -312,6 +320,54 @@ RSpec.describe SeeingIsBelieving::HashStruct do
         eq! '#<HashStruct Example: {a: 1, b: "c"}>', Example.new.inspect
         klass.attributes(c: /d/)
         eq! '#<HashStruct.anon: {c: /d/}>', klass.new.inspect
+      end
+    end
+
+    describe 'pretty printed' do
+      require 'pp'
+
+      def pretty_inspect(attrs)
+        klass.for(attrs.keys.map &:intern)
+             .new(attrs)
+             .pretty_inspect
+             .chomp
+      end
+
+      class EmptySubclass < SeeingIsBelieving::HashStruct
+      end
+      it 'begins with instantiation of the class or HashStruct.anon { ... }.new(' do
+        eq! "HashStruct.anon { ... }.new()", klass.new.pretty_inspect.chomp
+        eq! "EmptySubclass.new()", EmptySubclass.new.pretty_inspect.chomp
+      end
+
+      it "uses 1.9 hash syntax" do
+        include! "key:", pretty_inspect(key: :value)
+        ninclude! "=>",  pretty_inspect(key: :value)
+      end
+      it "puts the key/value pairs inline when they are short" do
+        include! "(key: :value)", pretty_inspect(key: :value)
+      end
+      it "puts the key/value pairs on their own indented line, when they are long" do
+        include! "(\n  #{"k"*30}: \"#{"v"*30}\"\n)",
+                 pretty_inspect("k"*30 => "v"*30)
+      end
+      it "indents the key/value pairs" do
+        attrs = {"a"*30 => "b"*30,
+                 "c"*30 => "d"*30}
+        include! "(\n"\
+                 "  #{"a"*30}: \"#{"b"*30}\",\n"\
+                 "  #{"c"*30}: \"#{"d"*30}\"\n"\
+                 ")",
+                 pretty_inspect(attrs)
+      end
+      it "breaks the value onto an indented next line when long" do
+        include! "  #{"a"*50}:\n    \"#{"b"*50}\"",
+                 pretty_inspect("a"*50 => "b"*50)
+      end
+      it "pretty prints the value" do
+        ary = [*1..25]
+        include! "  k:\n    [#{ary.map { |n| "     #{n}"}.join(",\n").lstrip}]",
+                 pretty_inspect(k: ary)
       end
     end
 

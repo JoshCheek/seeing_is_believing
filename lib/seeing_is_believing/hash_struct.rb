@@ -147,6 +147,27 @@ class SeeingIsBelieving
       "#<#{classname}: {#{inspected_attrs}}>"
     end
 
+    def pretty_print(pp)
+      pp.text self.class.name || 'HashStruct.anon { ... }'
+      pp.text '.new('
+      pp.group 2 do
+        pp.breakable '' # place inside so that if we break, we are indented
+        last_key = keys.last
+        each do |key, value|
+          # text-space-value, or text-neline-indent-value
+          pp.text "#{key}:"
+          pp.group 2 do
+            pp.breakable " "
+            pp.pp value
+          end
+          # all lines end in a comma, and can have a newline, except the last
+          pp.comma_breakable unless key == last_key
+        end
+      end
+      pp.breakable ''
+      pp.text ')'
+    end
+
     def key?(key)
       key.respond_to?(:to_sym) && @attributes.key?(key.to_sym)
     end
