@@ -5,13 +5,22 @@ Feature: Flags that are deprecated
   As such, these flags will continue to not blow up,
   even though they won't work anymore
 
-  Scenario: --shebang
-    When I run "seeing_is_believing -e 123 --shebang not/a/thing"
+  Scenario: --shebang with errors
+    When I run "seeing_is_believing -e 123 --shebang path/to/bin"
     Then stderr is empty
     And stdout is "123  # => 123"
     And the exit status is 0
 
-  Scenario: --number-of-captures
+  Scenario: --shebang with errors
+    When I run "seeing_is_believing not_a_file.rb --shebang path/to/bin"
+    Then stdout is empty
+    And stderr is:
+    """
+    not_a_file.rb does not exist!
+    Deprecated: `--shebang path/to/bin` SiB now uses the Ruby it was invoked with
+    """
+
+  Scenario: --number-of-captures without errors
     Given the file "number_of_captures.rb":
     """
     5.times do |i|
@@ -27,3 +36,37 @@ Feature: Flags that are deprecated
     end             # => 5
     """
     And the exit status is 0
+
+  Scenario: --shebang with errors
+    When I run "seeing_is_believing --shebang not/a/thing not_a_file.rb"
+    Then stdout is empty
+    And stderr is:
+    """
+    not_a_file.rb does not exist!
+    Deprecated: `--shebang not/a/thing` SiB now uses the Ruby it was invoked with
+    """
+
+  Scenario: --number-of-captures with errors
+    When I run "seeing_is_believing not_a_file.rb --number-of-captures 2"
+    Then stdout is empty
+    And stderr is:
+    """
+    not_a_file.rb does not exist!
+    Deprecated: `--number-of-captures 2` use --max-line-captures instead
+    """
+
+  Scenario: --inherit-exit-status without errors
+    Given the file "deprecated_inherit_exit_status.rb" "exit 123"
+    When I run "seeing_is_believing deprecated_inherit_exit_status.rb --inherit-exit-status"
+    Then stdout is "exit 123"
+    And stderr is empty
+    And the exit status is 123
+
+  Scenario: --inherit-exit-status with errors
+    When I run "seeing_is_believing not_a_file.rb --inherit-exit-status"
+    Then stdout is empty
+    And stderr is:
+    """
+    not_a_file.rb does not exist!
+    Deprecated: `--inherit-exit-status` Dash has been removed for consistency, use --inherit-exitstatus
+    """
