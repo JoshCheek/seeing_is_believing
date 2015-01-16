@@ -374,14 +374,19 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'inherit_exit_status?' do
+    describe 'inherit_exitstatus?' do
       it 'defaults to false' do
-        expect(parse([]).inherit_exit_status?).to eq false
+        expect(parse([]).inherit_exitstatus?).to eq false
       end
 
-      it 'can be set with --inherit-exit-status or -i' do
-        expect(parse(['--inherit-exit-status']).inherit_exit_status?).to be true
-        expect(parse(['-i']).inherit_exit_status?).to be true
+      it 'can be set with --inherit-exitstatus, -i' do
+        expect(parse(['--inherit-exitstatus']).inherit_exitstatus?).to be true
+        expect(parse(['-i']).inherit_exitstatus?).to be true
+      end
+
+      it 'can be set with the deprecated --inherit-exit-status' do
+        expect(parse(['--inherit-exit-status']).inherit_exitstatus?).to be true
+        assert_deprecated '--inherit-exit-status'
       end
     end
 

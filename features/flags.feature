@@ -367,21 +367,21 @@ Feature: Using flags
     """
 
 
-  Scenario: --inherit-exit-status causes SiB to exit with the status of the evaluated file
-    Given the file "exit_status.rb" "exit 123"
+  Scenario: --inherit-exitstatus causes SiB to exit with the status of the evaluated file
+    Given the file "exitstatus.rb" "exit 123"
 
-    When I run "seeing_is_believing exit_status.rb"
+    When I run "seeing_is_believing exitstatus.rb"
     Then the exit status is 1
     And  stderr is empty
     And stdout is "exit 123"
 
-    When I run "seeing_is_believing --inherit-exit-status exit_status.rb"
+    When I run "seeing_is_believing -i exitstatus.rb"
     Then the exit status is 123
     And  stderr is empty
     And stdout is "exit 123"
 
 
-  Scenario: --inherit-exit-status works with exit!
+  Scenario: --inherit-exitstatus works with exit!
     Given the file "exit_bang.rb":
     """
     :hello
@@ -397,7 +397,7 @@ Feature: Using flags
     exit! 100
     """
 
-    When I run "seeing_is_believing --inherit-exit-status exit_bang.rb"
+    When I run "seeing_is_believing -i exit_bang.rb"
     Then stderr is empty
     And the exit status is 100
     And stdout is:
@@ -407,20 +407,20 @@ Feature: Using flags
     """
 
 
-  # Show that Ruby exceptions exit with 1, and --inherit-exit-status does as well
-  Scenario: --inherit-exit-status
-    Given the file "exception_exit_status.rb" "raise Exception"
-    When I run "ruby exception_exit_status.rb"
+  # Show that Ruby exceptions exit with 1, and --inherit-exitstatus does as well
+  Scenario: --inherit-exitstatus
+    Given the file "exception_exitstatus.rb" "raise Exception"
+    When I run "ruby exception_exitstatus.rb"
     Then the exit status is 1
-    When I run "seeing_is_believing --inherit-exit-status exception_exit_status.rb"
+    When I run "seeing_is_believing -i exception_exitstatus.rb"
     Then the exit status is 1
 
 
-  Scenario: --inherit-exit-status in an at_exit block
-    Given the file "exit_status_in_at_exit_block.rb" "at_exit { exit 10 }"
-    When I run "seeing_is_believing exit_status_in_at_exit_block.rb"
+  Scenario: --inherit-exitstatus in an at_exit block
+    Given the file "exitstatus_in_at_exit_block.rb" "at_exit { exit 10 }"
+    When I run "seeing_is_believing exitstatus_in_at_exit_block.rb"
     Then the exit status is 1
-    When I run "seeing_is_believing --inherit-exit-status exit_status_in_at_exit_block.rb"
+    When I run "seeing_is_believing -i exitstatus_in_at_exit_block.rb"
     Then the exit status is 10
 
 
@@ -477,7 +477,7 @@ Feature: Using flags
         },
         "stdout": "b\n",
         "stderr": "c\n",
-        "exit_status": 1
+        "exitstatus": 1
       }
     """
 

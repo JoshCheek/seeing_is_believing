@@ -64,12 +64,12 @@ class SeeingIsBelieving
         backtrace:                exception.backtrace,
       }
 
-      { stdout:      stdout,
-        stderr:      stderr,
-        exit_status: exitstatus,
-        exception:   ex,
-        lines:       each.with_object(Hash.new)
-                         .with_index(1) { |(result, hash), line_number| hash[line_number] = result },
+      { stdout:     stdout,
+        stderr:     stderr,
+        exitstatus: exitstatus,
+        exception:  ex,
+        lines:      each.with_object(Hash.new)
+                        .with_index(1) { |(result, hash), line_number| hash[line_number] = result },
       }
     end
 

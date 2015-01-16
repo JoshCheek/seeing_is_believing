@@ -30,23 +30,23 @@ class SeeingIsBelieving
         attribute(:max_result_length)  { Float::INFINITY }
       end
 
-      predicate(:print_version)       { false }
-      predicate(:print_cleaned)       { false }
-      predicate(:print_help)          { false }
-      predicate(:result_as_json)      { false }
-      predicate(:inherit_exit_status) { false }
-      predicate(:debug)               { false }
-      attribute(:body)                { nil }
-      attribute(:filename)            { nil }
-      attribute(:errors)              { [] }
-      attribute(:deprecations)        { [] }
-      attribute(:timeout_seconds)     { 0 }
-      attribute(:annotator)           { AnnotateEveryLine }
-      attribute(:debugger)            { Debugger::Null }
-      attribute(:markers)             { Markers.new }
-      attribute(:help_screen)         { |c| Binary.help_screen c.markers }
-      attribute(:lib_options)         { SeeingIsBelieving::Options.new }
-      attribute(:annotator_options)   { AnnotatorOptions.new }
+      predicate(:print_version)      { false }
+      predicate(:print_cleaned)      { false }
+      predicate(:print_help)         { false }
+      predicate(:result_as_json)     { false }
+      predicate(:inherit_exitstatus) { false }
+      predicate(:debug)              { false }
+      attribute(:body)               { nil }
+      attribute(:filename)           { nil }
+      attribute(:errors)             { [] }
+      attribute(:deprecations)       { [] }
+      attribute(:timeout_seconds)    { 0 }
+      attribute(:annotator)          { AnnotateEveryLine }
+      attribute(:debugger)           { Debugger::Null }
+      attribute(:markers)            { Markers.new }
+      attribute(:help_screen)        { |c| Binary.help_screen c.markers }
+      attribute(:lib_options)        { SeeingIsBelieving::Options.new }
+      attribute(:annotator_options)  { AnnotatorOptions.new }
 
       def parse_args(args, debug_stream)
         as        = nil
@@ -104,8 +104,10 @@ class SeeingIsBelieving
           when '-x', '--xmpfilter-style'
             self.annotator = AnnotateMarkedLines
 
-          when '-i', '--inherit-exit-status'
-            self.inherit_exit_status = true
+          when '-i', '--inherit-exitstatus', '--inherit-exit-status'
+            self.inherit_exitstatus = true
+            arg.include?("exit-status") &&
+              saw_deprecated.call("Dash has been removed for consistency, use --inherit-exitstatus", arg)
 
           when '-j', '--json'
             self.result_as_json = true
@@ -260,7 +262,7 @@ Notes:
     0 - No errors
     1 - Displayable error (e.g. code raises an exception while running)
     2 - Non-displayable error (e.g. a syntax error, a timeout)
-    n - The program's exit status if the --inherit-exit-status flag is set
+    n - The program's exit status if the --inherit-exitstatus flag is set
 
 Options:
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
@@ -284,7 +286,7 @@ Options:
   -g,  --debug                   # print debugging information
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
-  -i,  --inherit-exit-status     # exit with the exit status of the program being evaluated
+  -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated
        --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
   -v,  --version                 # print the version (#{VERSION})
   -h,  --help                    # help screen without examples

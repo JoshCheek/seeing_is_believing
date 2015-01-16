@@ -56,7 +56,7 @@ class SeeingIsBelieving
         stdout.print engine.annotated_body
       end
 
-      if config.inherit_exit_status?
+      if config.inherit_exitstatus?
         engine.results.exitstatus
       elsif engine.results.exitstatus.zero?
         SUCCESS_STATUS
