@@ -287,7 +287,6 @@ Options:
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated
-       --shebang ruby-executable # if you want SiB to use some ruby other than the one in the path
   -v,  --version                 # print the version (#{VERSION})
   -h,  --help                    # help screen without examples
   -h+, --help+                   # help screen with examples
