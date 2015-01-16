@@ -44,7 +44,7 @@ class SeeingIsBelieving
         errors << ErrorMessage.new(explanation: explanation)
       end
 
-      def parse_args(args, debug_stream)
+      def parse_args(args)
         as        = nil
         filenames = []
         args      = args.dup
@@ -115,8 +115,6 @@ class SeeingIsBelieving
 
           when '-g', '--debug'
             self.debug                = true
-            self.debugger             = Debugger.new stream: debug_stream, colour: true
-            self.lib_options.debugger = debugger
 
           when '-d', '--line-length'
             extract_positive_int_for.call arg do |n|
@@ -220,7 +218,17 @@ class SeeingIsBelieving
         self
       end
 
-      def finalize(stdin, stdout, file_class)
+      def finalize(stdin, stdout, stderr, file_class)
+        if print_event_stream?
+          require 'seeing_is_believing/event_stream/emit_json_events_handler'
+          lib_options.event_handler = EventStream::EmitJsonEventsHandler.new(stdout)
+        end
+
+        if debug?
+          self.debugger             = Debugger.new stream: stderr, colour: true
+          self.lib_options.debugger = debugger
+        end
+
         if filename && body
           add_error("Cannot give a program body and a filename to get the program body from.")
         elsif filename && file_class.exist?(filename)
@@ -234,11 +242,6 @@ class SeeingIsBelieving
           self.body = ""
         else
           self.body = stdin.read
-        end
-
-        if print_event_stream?
-          require 'seeing_is_believing/event_stream/emit_json_events_handler'
-          lib_options.event_handler = EventStream::EmitJsonEventsHandler.new(stdout)
         end
 
         self

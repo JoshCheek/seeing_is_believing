@@ -24,12 +24,11 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
   end
 
-  let(:debug_stream)    { double :debug_stream }
   let(:matrix_file)     { 'seeing_is_believing/the_matrix' }
   let(:default_markers) { SeeingIsBelieving::Binary::Markers.new }
 
   def parse(args)
-    described_class.new.parse_args(args, debug_stream)
+    described_class.new.parse_args(args)
   end
 
   def assert_deprecated(flag, *args)
@@ -411,7 +410,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'debug?, debugger, lib_options.debugger' do
+    describe 'debug?' do
       specify 'debug? defaults to a false' do
         expect(parse([])[:debug]).to eq false
       end
@@ -419,23 +418,6 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       specify '-g and --debug set debug? to true' do
         expect(parse(['-g']).debug?).to eq true
         expect(parse(['--debug']).debug?).to eq true
-      end
-
-      specify 'debugger and lib_options.debugger default to a null debugger' do
-        expect(parse([]).debugger).to_not be_enabled
-        expect(parse([]).lib_options.debugger).to_not be_enabled
-      end
-
-      specify '-g and --debug set the debuggers to the error stream' do
-        config = parse ['--debug']
-        expect(config.debugger).to be_enabled
-        expect(config.debugger.stream).to eq debug_stream
-        expect(config.lib_options.debugger).to equal config.debugger
-
-        config = parse ['-g']
-        expect(config.debugger).to be_enabled
-        expect(config.debugger.stream).to eq debug_stream
-        expect(config.lib_options.debugger).to equal config.debugger
       end
     end
 
@@ -536,6 +518,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     let(:stdin_data) { 'stdin data' }
     let(:stdin)      { object_double $stdin, read: stdin_data }
     let(:stdout)     { object_double $stdout }
+    let(:stderr)     { object_double $stderr }
 
     let(:file_class)           { class_double File }
     let(:nonexisting_filename) { 'badfilename'    }
@@ -549,7 +532,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     def call(attrs={})
-      described_class.new(attrs).finalize(stdin, stdout, file_class)
+      described_class.new(attrs).finalize(stdin, stdout, stderr, file_class)
     end
 
     describe 'additional errors' do
@@ -624,7 +607,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'lib_options.event_handler' do
+    describe 'lib_options.event_handler', t:true do
       it 'is an UpdateResultHandler when print_event_stream? is false' do
         expect(call(print_event_stream: false).lib_options.event_handler)
           .to be_an_instance_of SeeingIsBelieving::EventStream::UpdateResultHandler
@@ -633,6 +616,21 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         handler = call(print_event_stream: true).lib_options.event_handler
         expect(handler).to be_an_instance_of SeeingIsBelieving::EventStream::EmitJsonEventsHandler
         expect(handler.stream).to eq stdout
+      end
+    end
+
+    describe 'debugger, lib_options.debugger' do
+      specify 'default to a null debugger' do
+        handler = call
+        expect(handler.debugger).to_not be_enabled
+        expect(handler.lib_options.debugger).to_not be_enabled
+      end
+
+      specify 'are set to debug to stderr when debug? is true' do
+        handler = call debug: true
+        expect(handler.debugger).to be_enabled
+        expect(handler.debugger.stream).to eq stderr
+        expect(handler.lib_options.debugger).to equal handler.debugger
       end
     end
   end
