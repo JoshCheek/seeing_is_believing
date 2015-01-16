@@ -15,7 +15,7 @@ require 'seeing_is_believing/binary/annotate_marked_lines'
 class SeeingIsBelieving
   module Binary
     class Config < HashStruct
-      DeprecatedArg = Binary::Error.for :args do
+      DeprecatedArgMessage = Binary::ErrorMessage.for :args do
         def to_s
           "Deprecated: `#{args.join ' '}` #{explanation}"
         end
@@ -39,6 +39,10 @@ class SeeingIsBelieving
       attribute(:lib_options)        { SeeingIsBelieving::Options.new }
       attribute(:annotator_options)  { AnnotatorOptions.new }
 
+      def add_error(explanation)
+        errors << ErrorMessage.new(explanation: explanation)
+      end
+
       def parse_args(args, debug_stream)
         as        = nil
         filenames = []
@@ -50,7 +54,7 @@ class SeeingIsBelieving
           if int.to_s == string && 0 < int
             on_success.call int
           else
-            self.errors << Error.new(explanation: "#{flagname} expects a positive integer argument")
+            add_error "#{flagname} expects a positive integer argument"
           end
           string
         end
@@ -63,18 +67,18 @@ class SeeingIsBelieving
             on_success.call float
             string
           rescue
-            errors << Error.new(explanation: "#{flagname} expects a positive float or integer argument")
+            add_error "#{flagname} expects a positive float or integer argument"
           end
         end
 
         saw_deprecated = lambda do |explanation, *args|
-          self.deprecations << DeprecatedArg.new(explanation: explanation, args: args)
+          self.deprecations << DeprecatedArgMessage.new(explanation: explanation, args: args)
         end
 
         next_arg = lambda do |flagname, argtype, &on_success|
           arg = args.shift
           arg ? on_success.call(arg) :
-                self.errors << Error.new(explanation: "#{flagname} needs an argument (#{argtype})")
+                add_error("#{flagname} needs an argument (#{argtype})")
           arg
         end
 
@@ -162,7 +166,7 @@ class SeeingIsBelieving
               if strategies[name]
                 self.annotator_options.alignment_strategy = strategies[name]
               else
-                errors << Error.new(explanation: "#{arg} got the alignment strategy #{name.inspect}, expected one of: #{strategy_names}")
+                add_error("#{arg} got the alignment strategy #{name.inspect}, expected one of: #{strategy_names}")
               end
             end
 
@@ -179,12 +183,12 @@ class SeeingIsBelieving
             if executable
               saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg, executable
             else
-              errors << Error.new(explanation: "#{arg} expected an arg: path to a ruby executable")
+              add_error("#{arg} expected an arg: path to a ruby executable")
               saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg
             end
 
           when /^(-.|--.*)$/
-            self.errors << Error.new(explanation: "#{arg} is not an option, see the help screen (-h) for a list of options")
+            add_error("#{arg} is not an option, see the help screen (-h) for a list of options")
 
           when /^-[^-]/
             args.unshift *arg.scan(/[^-]\+?/).map { |flag| "-#{flag}" }
@@ -195,10 +199,10 @@ class SeeingIsBelieving
         end
 
         filenames.size > 1 &&
-          errors << Error.new(explanation: "Can only have one filename but found #{filenames.map(&:inspect).join ', '}")
+          add_error("Can only have one filename but found #{filenames.map(&:inspect).join ', '}")
 
         result_as_json && annotator == AnnotateMarkedLines &&
-          errors << Error.new(explanation: "SiB does not currently support output with both json and xmpfilter... maybe v4 :)")
+          add_error("SiB does not currently support output with both json and xmpfilter... maybe v4 :)")
 
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
@@ -211,12 +215,12 @@ class SeeingIsBelieving
 
       def finalize(stdin, file_class)
         if filename && body
-          errors << Error.new(explanation: "Cannot give a program body and a filename to get the program body from.")
+          add_error("Cannot give a program body and a filename to get the program body from.")
         elsif filename && file_class.exist?(filename)
           self.lib_options.stdin = stdin
           self.body = file_class.read filename
         elsif filename
-          errors << Error.new(explanation: "#{filename} does not exist!")
+          add_error("#{filename} does not exist!")
         elsif body
           self.lib_options.stdin = stdin
         elsif print_version? || print_help? || errors.any?

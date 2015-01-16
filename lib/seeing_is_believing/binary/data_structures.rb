@@ -42,13 +42,13 @@ class SeeingIsBelieving
     end
 
 
-    class Error < HashStruct.for(:explanation)
+    class ErrorMessage < HashStruct.for(:explanation)
       def to_s
         "Error: #{explanation}"
       end
     end
 
-    class SyntaxError < Error.for(:line_number, :filename)
+    class SyntaxErrorMessage < ErrorMessage.for(:line_number, :filename)
       def to_s
         "Syntax Error: #{filename}:#{line_number}\n#{explanation}\n"
       end

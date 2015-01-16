@@ -25,10 +25,9 @@ class SeeingIsBelieving
 
       def syntax_error
         return unless syntax_error?
-        # TODO: rename SyntaxErrorMessage so doesn't look like an exception
-        SyntaxError.new(line_number: code.syntax.line_number,
-                        explanation: code.syntax.error_message,
-                        filename:    config.lib_options.filename)
+        SyntaxErrorMessage.new(line_number: code.syntax.line_number,
+                               explanation: code.syntax.error_message,
+                               filename:    config.lib_options.filename)
       end
 
       def prepared_body
