@@ -290,7 +290,11 @@ Feature:
     {{'.' * 100_000}}
     """
     When I run "seeing_is_believing long_invalid_data_segment.rb"
-    Then stderr includes "1: unterminated string meets end of file"
+    Then stderr is:
+    """
+    Syntax Error: long_invalid_data_segment.rb:1
+    unterminated string meets end of file
+    """
     And the exit status is 2
     And stdout is empty
 

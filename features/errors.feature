@@ -55,7 +55,11 @@ Feature: Running the binary unsuccessfully
     'this is not
     """
     When I run "seeing_is_believing invalid_syntax.rb"
-    Then stderr includes "2: unterminated string meets end of file"
+    Then stderr is:
+    """
+    Syntax Error: invalid_syntax.rb:2
+    unterminated string meets end of file
+    """
     And the exit status is 2
     And stdout is empty
 

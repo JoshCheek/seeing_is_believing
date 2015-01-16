@@ -34,19 +34,24 @@ class SeeingIsBelieving
     end
 
 
-    class Error < HashStruct
-      attribute :explanation
-      def to_s
-        "Error: #{explanation}"
-      end
-    end
-
-
     class AnnotatorOptions < HashStruct
       attribute(:alignment_strategy) { AlignChunk }
       attribute(:markers)            { Markers.new }
       attribute(:max_line_length)    { Float::INFINITY }
       attribute(:max_result_length)  { Float::INFINITY }
+    end
+
+
+    class Error < HashStruct.for(:explanation)
+      def to_s
+        "Error: #{explanation}"
+      end
+    end
+
+    class SyntaxError < Error.for(:line_number, :filename)
+      def to_s
+        "Syntax Error: #{filename}:#{line_number}\n#{explanation}\n"
+      end
     end
   end
 end

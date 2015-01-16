@@ -1,5 +1,6 @@
-require 'seeing_is_believing/binary/remove_annotations'
 require 'seeing_is_believing/code'
+require 'seeing_is_believing/binary/data_structures'
+require 'seeing_is_believing/binary/remove_annotations'
 
 class SeeingIsBelieving
   module Binary
@@ -19,12 +20,15 @@ class SeeingIsBelieving
       end
 
       def syntax_error?
-        syntax.invalid?
+        code.syntax.invalid?
       end
 
-      def syntax_error_message
-        return "" if syntax.valid?
-        "#{syntax.line_number}: #{syntax.error_message}"
+      def syntax_error
+        return unless syntax_error?
+        # TODO: rename SyntaxErrorMessage so doesn't look like an exception
+        SyntaxError.new(line_number: code.syntax.line_number,
+                        explanation: code.syntax.error_message,
+                        filename:    config.lib_options.filename)
       end
 
       def prepared_body
@@ -97,10 +101,6 @@ class SeeingIsBelieving
 
       def code
         @code ||= Code.new(prepared_body, config.filename)
-      end
-
-      def syntax
-        code.syntax
       end
     end
   end

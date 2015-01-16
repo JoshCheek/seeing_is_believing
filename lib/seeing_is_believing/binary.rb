@@ -33,7 +33,7 @@ class SeeingIsBelieving
       end
 
       if engine.syntax_error?
-        stderr.puts engine.syntax_error_message
+        stderr.puts engine.syntax_error
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

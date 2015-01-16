@@ -4,14 +4,12 @@ require 'seeing_is_believing/binary/config'
 class SeeingIsBelieving
   module Binary
     RSpec.describe Engine do
-      class Options < HashStruct
-        attribute :timeout, 0
-      end
-
       def call(body, options={})
-        timeout = Options.new(options).timeout
-        config  = Config.new body: body, timeout_seconds: timeout
+        timeout  = options.fetch :timeout, 0
+        filename = options.fetch :filename, "program.rb"
+        config   = Config.new body: body, timeout_seconds: timeout
         config.lib_options.timeout_seconds = timeout
+        config.lib_options.filename        = filename
         Engine.new config
       end
 
@@ -23,20 +21,21 @@ class SeeingIsBelieving
       end
 
       context 'syntax' do
-        let(:valid_engine)   { call "1+1" }
-        let(:invalid_engine) { call "1+"  }
+        let(:valid_engine)   { call "1+1", filename: "filename.rb" }
+        let(:invalid_engine) { call "1+",  filename: "filename.rb" }
 
         specify 'syntax_error? is true when the body was syntactically invalid' do
           expect(  valid_engine.syntax_error?).to eq false
           expect(invalid_engine.syntax_error?).to eq true
         end
 
-        specify 'syntax_error_message contains the syntax\'s error message with line information embedded into it' do
-          expect(valid_engine.syntax_error_message).to eq ""
+        specify 'syntax_error contains the syntax\'s error message with file and line information' do
+          expect(valid_engine.syntax_error).to eq nil
 
           allow_any_instance_of(Code::Syntax).to receive(:error_message).and_return "ERR!!"
           allow_any_instance_of(Code::Syntax).to receive(:line_number).and_return   123
-          expect(invalid_engine.syntax_error_message).to eq "123: ERR!!"
+          expect(invalid_engine.syntax_error)
+            .to eq SyntaxError.new(line_number: 123, filename: "filename.rb", explanation: "ERR!!")
         end
       end
 
