@@ -44,40 +44,25 @@ class SeeingIsBelieving
         return NONDISPLAYABLE_ERROR_STATUS
       end
 
-      # kinda feels like there should be a printer object?
-      # ie shouldn't all the outputs be json if they specified json?
       if config.result_as_json?
         require 'json'
-        stdout.puts JSON.dump(result_as_data_structure(engine.results))
+        stdout.puts JSON.dump(engine.results.as_json)
         return SUCCESS_STATUS
       end
 
-      config.debugger.context("OUTPUT") { engine.annotated_body }
-      stdout.print engine.annotated_body unless config.debug? # once we allow debug to file, it should print unless debugging to stderr
+      if config.debug?
+        config.debugger.context("OUTPUT") { engine.annotated_body }
+      else
+        stdout.print engine.annotated_body
+      end
 
       if config.inherit_exit_status?
         engine.results.exitstatus
       elsif engine.results.exitstatus.zero?
         SUCCESS_STATUS
       else
-        DISPLAYABLE_ERROR_STATUS # the error is rendered in the annotated body
+        DISPLAYABLE_ERROR_STATUS
       end
-    end
-
-    private
-
-    def self.result_as_data_structure(results)
-      exception = results.has_exception? && { line_number_in_this_file: results.exception.line_number,
-                                              class_name:               results.exception.class_name,
-                                              message:                  results.exception.message,
-                                              backtrace:                results.exception.backtrace,
-                                            }
-      { stdout:      results.stdout,
-        stderr:      results.stderr,
-        exit_status: results.exitstatus,
-        exception:   exception,
-        lines:       results.each.with_object(Hash.new).with_index(1) { |(result, hash), line_number| hash[line_number] = result },
-      }
     end
   end
 end

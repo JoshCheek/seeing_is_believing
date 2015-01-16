@@ -56,6 +56,23 @@ class SeeingIsBelieving
       @max_line_captures || Float::INFINITY
     end
 
+    def as_json
+      ex = has_exception? && {
+        line_number_in_this_file: exception.line_number,
+        class_name:               exception.class_name,
+        message:                  exception.message,
+        backtrace:                exception.backtrace,
+      }
+
+      { stdout:      stdout,
+        stderr:      stderr,
+        exit_status: exitstatus,
+        exception:   ex,
+        lines:       each.with_object(Hash.new)
+                         .with_index(1) { |(result, hash), line_number| hash[line_number] = result },
+      }
+    end
+
     private
 
     def results_for(line_number, type)
