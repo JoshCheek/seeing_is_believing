@@ -650,18 +650,11 @@ module SeeingIsBelieving::EventStream
     end
 
     describe DebuggingHandler do
-      specify 'to_proc returns the original handler when the stream is disabled' do
-        real_handler = lambda { }
-        expect(real_handler).to receive(:to_proc).and_return(real_handler)
-        to_proc = described_class.new(SeeingIsBelieving::Debugger::Null, real_handler).to_proc
-        expect(to_proc).to equal real_handler
-      end
-
       let(:stream)            { "" }
       let(:events_seen)       { [] }
       let(:debugger)          { SeeingIsBelieving::Debugger.new stream: stream }
       let(:real_handler)      { lambda { |event| events_seen << event } }
-      let(:debugging_handler) { described_class.new(debugger, real_handler).to_proc }
+      let(:debugging_handler) { described_class.new(debugger, real_handler) }
 
       it 'passes events through to the real handler' do
         event = Events::Stdout.new(value: "zomg")

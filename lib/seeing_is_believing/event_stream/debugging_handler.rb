@@ -5,24 +5,12 @@ class SeeingIsBelieving
         @debugger   = debugger
         @handler    = handler
         @seen       = ""
-        @enabled    = debugger.enabled?
         @line_width = 150 # debugger is basically for me, so giving it a nice wide width
         @name_width = 20
         @attr_width = @line_width - @name_width
       end
 
-      # TODO: this is dumb, move it up to the parent
-      def to_proc
-        return @handler.to_proc unless @enabled # no-op when there's no point
-        lambda { |event| call event }
-      end
-
-      def result
-        @handler.result
-      end
-
       def call(event)
-        return @handler.call event unless @enabled
         observe event
         finish if event.kind_of? Events::Finished
         @handler.call event
@@ -39,7 +27,7 @@ class SeeingIsBelieving
       private
 
       def finish
-        @debugger.context("EVENTS") { @seen }
+        @debugger.context("EVENTS:") { @seen }
       end
 
       def observe(event)

@@ -113,7 +113,7 @@ class SeeingIsBelieving
 
       # consume events
       consumer        = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
-      consumer_thread = Thread.new { consumer.each &event_handler }
+      consumer_thread = Thread.new { consumer.each { |e| event_handler.call e } }
 
       # wait for completion
       Timeout.timeout timeout_seconds do

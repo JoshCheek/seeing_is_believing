@@ -515,13 +515,6 @@ RSpec.describe SeeingIsBelieving do
       expect(stream.string).to include "$SiB.record_num_lines" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
-    it 'prints the result' do
-      call
-      expect(stream.string).to include "RESULT:"
-      expect(stream.string).to include 'SIB::Result'
-      expect(stream.string).to include '@results={'
-    end
-
     it 'records eventstream information' do
       call
       expect(stream.string).to include "EVENTS"
