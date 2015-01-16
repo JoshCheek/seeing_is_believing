@@ -292,6 +292,7 @@ Options:
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated
+       --stream                  # a JSON stream of every event ias it is seen (such as recording a line)
   -v,  --version                 # print the version (#{VERSION})
   -h,  --help                    # help screen without examples
   -h+, --help+                   # help screen with examples
@@ -367,6 +368,22 @@ Examples: A few examples, for a more comprehensive set of examples, check out fe
     #{value} {:foo=>42,
     #     :bar=>{:baz=>1, :buz=>2, :fuz=>3},
     #     :wibble=>{:magic_word=>"xyzzy"}}
+
+  Display a stream of events as they are seen
+    $ seeing_is_believing -e $':a\\n:b\\n:c' --stream
+    ["ruby_version",{"value":#{RUBY_VERSION.inspect}}]
+    ["sib_version",{"value":#{SeeingIsBelieving::VERSION.inspect}}]
+    ["filename",{"value":"/var/folders/7g/mbft22555w3_2nqs_h1kbglw0000gn/T/seeing_is_believing_temp_dir20150116-49548-kr0xop/program.rb"}]
+    ["max_line_captures",{"value":Infinity}]
+    ["num_lines",{"value":3}]
+    ["line_result",{"type":"inspect","line_number":1,"inspected":":a"}]
+    ["line_result",{"type":"inspect","line_number":2,"inspected":":b"}]
+    ["line_result",{"type":"inspect","line_number":3,"inspected":":c"}]
+    ["event_stream_closed",{"side":"producer"}]
+    ["stderr_closed",{"side":"producer"}]
+    ["stdout_closed",{"side":"producer"}]
+    ["exitstatus",{"value":0}]
+    ["finished",{}]
 EXAMPLES
   end
 end
