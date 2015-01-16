@@ -630,5 +630,32 @@ module SeeingIsBelieving::EventStream
         end
       end
     end
+
+    describe Events do
+      specify 'Event raises an error if .event_name was not overridden' do
+        expect { Event.event_name }.to raise_error NotImplementedError
+      end
+      specify 'all events have a reasonable event name' do
+        expect(Events::Stdout.event_name           ).to eq :stdout
+        expect(Events::Stderr.event_name           ).to eq :stderr
+        expect(Events::MaxLineCaptures.event_name  ).to eq :max_line_captures
+        expect(Events::Filename.event_name         ).to eq :filename
+        expect(Events::NumLines.event_name         ).to eq :num_lines
+        expect(Events::SiBVersion.event_name       ).to eq :sib_version
+        expect(Events::RubyVersion.event_name      ).to eq :ruby_version
+        expect(Events::Exitstatus.event_name       ).to eq :exitstatus
+        expect(Events::Exec.event_name             ).to eq :exec
+        expect(Events::UnrecordedResult.event_name ).to eq :unrecorded_result
+        expect(Events::LineResult.event_name       ).to eq :line_result
+        expect(Events::Exception.event_name        ).to eq :exception
+        expect(Events::StdoutClosed.event_name     ).to eq :stdout_closed
+        expect(Events::StderrClosed.event_name     ).to eq :stderr_closed
+        expect(Events::EventStreamClosed.event_name).to eq :event_stream_closed
+        expect(Events::Finished.event_name         ).to eq :finished
+      end
+      specify 'their event_name and attributes are included in their as_json' do
+        expect(Events::Stdout.new(value: "abc").as_json).to eq event: :stdout, value: "abc"
+      end
+    end
   end
 end

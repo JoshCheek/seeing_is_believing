@@ -153,6 +153,7 @@ class SeeingIsBelieving
         when :maxed_result
           line_number = extract_token(line).to_i
           type        = extract_token(line).intern
+          # TODO: rename to something like ResultsOmitted
           Events::UnrecordedResult.new(type: type, line_number: line_number)
         when :exception
           Events::Exception.new \
