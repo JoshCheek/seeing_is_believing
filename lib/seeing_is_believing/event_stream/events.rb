@@ -7,6 +7,10 @@ class SeeingIsBelieving
         raise NotImplementedError, "Subclass should have defined this!"
       end
 
+      def event_name
+        self.class.event_name
+      end
+
       def as_json
         {event: self.class.event_name}.merge(to_h)
       end

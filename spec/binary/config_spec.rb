@@ -511,10 +511,31 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
   end
 
+  describe 'print_event_stream?' do
+    it 'print_event_stream? is false by default' do
+      expect(parse([]).print_event_stream?).to eq false
+    end
+    it 'print_event_stream? can be turned on with --stream' do
+      expect(parse(['--stream']).print_event_stream?).to eq true
+    end
+    it 'adds an error if --stream is used with --json' do
+      expect(parse(['--stream'])).to_not have_error '--stream'
+      expect(parse(['--stream', '--json'])).to have_error '--stream'
+      expect(parse(['--json', '--stream'])).to have_error '--stream'
+    end
+    it 'adds an error if --stream is used with -x or --xmpfilter-style' do
+      expect(parse(['--stream'])).to_not have_error '--stream'
+      expect(parse(['--stream', '-x'])).to have_error '--stream'
+      expect(parse(['-x', '--stream'])).to have_error '--stream'
+      expect(parse(['--xmpfilter-style', '--stream'])).to have_error '--stream'
+    end
+  end
+
 
   describe '.finalize' do
     let(:stdin_data) { 'stdin data' }
     let(:stdin)      { object_double $stdin, read: stdin_data }
+    let(:stdout)     { object_double $stdout }
 
     let(:file_class)           { class_double File }
     let(:nonexisting_filename) { 'badfilename'    }
@@ -528,7 +549,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     def call(attrs={})
-      described_class.new(attrs).finalize(stdin, file_class)
+      described_class.new(attrs).finalize(stdin, stdout, file_class)
     end
 
     describe 'additional errors' do
@@ -600,6 +621,18 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it 'is the stdin stream when the program was pulled from a file' do
         expect(call(filename: existing_filename).lib_options.stdin).to eq stdin
         expect(call(filename: nonexisting_filename).lib_options.stdin).to eq default
+      end
+    end
+
+    describe 'lib_options.event_handler' do
+      it 'is an UpdateResultHandler when print_event_stream? is false' do
+        expect(call(print_event_stream: false).lib_options.event_handler)
+          .to be_an_instance_of SeeingIsBelieving::EventStream::UpdateResultHandler
+      end
+      it 'is an EmitJsonEventsHandler to stdout when print_event_stream? is true' do
+        handler = call(print_event_stream: true).lib_options.event_handler
+        expect(handler).to be_an_instance_of SeeingIsBelieving::EventStream::EmitJsonEventsHandler
+        expect(handler.stream).to eq stdout
       end
     end
   end

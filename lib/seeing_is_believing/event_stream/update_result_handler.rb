@@ -11,10 +11,6 @@ class SeeingIsBelieving
         @result = result
       end
 
-      def ==(other)
-        other.kind_of?(self.class) # this is dumb, it's b/c Result doesn't correctly implement ==
-      end
-
       def call(event)
         case event
         when LineResult       then result.record_result(event.type, event.line_number, event.inspected)
@@ -36,6 +32,14 @@ class SeeingIsBelieving
              # no op
         else raise "Unknown event: #{event.inspect}"
         end
+      end
+
+      def ==(other)
+        other.kind_of?(self.class) # this is dumb, it's b/c Result doesn't correctly implement ==
+      end
+
+      def return_value
+        result
       end
     end
   end

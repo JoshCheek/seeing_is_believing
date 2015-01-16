@@ -24,6 +24,7 @@ class SeeingIsBelieving
       predicate(:print_version)      { false }
       predicate(:print_cleaned)      { false }
       predicate(:print_help)         { false }
+      predicate(:print_event_stream) { false }
       predicate(:result_as_json)     { false }
       predicate(:inherit_exitstatus) { false }
       predicate(:debug)              { false }
@@ -101,6 +102,9 @@ class SeeingIsBelieving
           when '-j', '--json'
             self.result_as_json = true
 
+          when '--stream'
+            self.print_event_stream = true
+
           when '-h', '--help'
             self.print_help = true
             self.help_screen = Binary.help_screen(markers)
@@ -170,14 +174,6 @@ class SeeingIsBelieving
               end
             end
 
-          when /\A-K(.+)/
-            self.lib_options.encoding = $1
-
-          when '-K', '--encoding'
-            next_arg.call arg, "an encoding" do |encoding|
-              self.lib_options.encoding = encoding
-            end
-
           when '--shebang'
             executable = args.shift
             if executable
@@ -185,6 +181,14 @@ class SeeingIsBelieving
             else
               add_error("#{arg} expected an arg: path to a ruby executable")
               saw_deprecated.call "SiB now uses the Ruby it was invoked with", arg
+            end
+
+          when /\A-K(.+)/
+            self.lib_options.encoding = $1
+
+          when '-K', '--encoding'
+            next_arg.call arg, "an encoding" do |encoding|
+              self.lib_options.encoding = encoding
             end
 
           when /^(-.|--.*)$/
@@ -199,10 +203,13 @@ class SeeingIsBelieving
         end
 
         filenames.size > 1 &&
-          add_error("Can only have one filename but found #{filenames.map(&:inspect).join ', '}")
+          add_error("can only have one filename but found #{filenames.map(&:inspect).join ', '}")
 
-        result_as_json && annotator == AnnotateMarkedLines &&
+        result_as_json? && annotator == AnnotateMarkedLines &&
           add_error("SiB does not currently support output with both json and xmpfilter... maybe v4 :)")
+
+        print_event_stream? && (result_as_json? || annotator == AnnotateMarkedLines) &&
+          add_error("can only have one output format, --stream is not compatible with --json, -x, and --xmpfilter-style")
 
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
@@ -213,7 +220,7 @@ class SeeingIsBelieving
         self
       end
 
-      def finalize(stdin, file_class)
+      def finalize(stdin, stdout, file_class)
         if filename && body
           add_error("Cannot give a program body and a filename to get the program body from.")
         elsif filename && file_class.exist?(filename)
@@ -228,6 +235,12 @@ class SeeingIsBelieving
         else
           self.body = stdin.read
         end
+
+        if print_event_stream?
+          require 'seeing_is_believing/event_stream/emit_json_events_handler'
+          lib_options.event_handler = EventStream::EmitJsonEventsHandler.new(stdout)
+        end
+
         self
       end
 

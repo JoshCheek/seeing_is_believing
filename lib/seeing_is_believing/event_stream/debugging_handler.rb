@@ -20,6 +20,10 @@ class SeeingIsBelieving
         other.kind_of?(self.class) && other.handler == handler && other.debugger == debugger
       end
 
+      def return_value
+        @handler.return_value
+      end
+
       protected
 
       attr_reader :debugger, :handler

@@ -11,6 +11,7 @@ require 'seeing_is_believing/event_stream/update_result_handler'
 
 class SeeingIsBelieving
   class Options < HashStruct
+    predicate(:event_handler)     { EventStream::UpdateResultHandler.new Result.new }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
@@ -40,11 +41,12 @@ class SeeingIsBelieving
                                               options.filename,
                                               options.max_line_captures
 
-      options.debugger.context("REWRITTEN PROGRAM") { new_program }
+      event_handler = options.event_handler
+      if options.debugger.enabled?
+        options.debugger.context("REWRITTEN PROGRAM") { new_program }
+        event_handler = EventStream::DebuggingHandler.new options.debugger, event_handler
+      end
 
-      result        = Result.new
-      event_handler = EventStream::UpdateResultHandler.new(result)
-      event_handler = EventStream::DebuggingHandler.new(options.debugger, event_handler)
       EvaluateByMovingFiles.call \
         new_program,
         options.filename,
@@ -55,9 +57,7 @@ class SeeingIsBelieving
         encoding:        options.encoding,
         timeout_seconds: options.timeout_seconds
 
-      options.debugger.context("RESULT") { result.inspect }
-
-      result
+      event_handler.return_value
     }
   end
 end

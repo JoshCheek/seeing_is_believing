@@ -436,8 +436,7 @@ Feature: Using flags
     And the exit status is 0
     And stderr includes "REWRITTEN PROGRAM:"
     And stderr includes "$SiB"
-    And stderr includes "RESULT:"
-    And stderr includes "@results="
+    And stderr includes "EVENTS:"
     And stderr includes "OUTPUT:"
     And stderr includes:
     """
@@ -481,3 +480,30 @@ Feature: Using flags
       }
     """
 
+  Scenario: --stream prints events from the event stream as they are seen
+    Given the file "record_event_stream.rb" "3.times { |i| p i }"
+    When I run "seeing_is_believing record_event_stream.rb --stream"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    {"event":"stdout","value":"0\n"}
+    {"event":"stdout","value":"1\n"}
+    {"event":"stdout","value":"2\n"}
+    {"event":"ruby_version","value":"2.1.1"}
+    {"event":"sib_version","value":"3.0.0.beta.4"}
+    {"event":"filename","value":"record_event_stream.rb"}
+    {"event":"max_line_captures","value":Infinity}
+    {"event":"num_lines","value":1}
+    {"event":"line_result","type":"inspect","line_number":1,"inspected":"3"}
+    {"event":"event_stream_closed","side":"producer"}
+    {"event":"stdout_closed","side":"producer"}
+    {"event":"stderr_closed","side":"producer"}
+    {"event":"exitstatus","value":0}
+    {"event":"finished"}
+    """
+
+  Scenario: --stream respects the exit status
+    When I run "seeing_is_believing -ie 'exit 12' --stream"
+    Then stderr is empty
+    And the exit status is 12

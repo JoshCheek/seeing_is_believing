@@ -9,7 +9,7 @@ class SeeingIsBelieving
     NONDISPLAYABLE_ERROR_STATUS = 2 # e.g. SiB was invoked incorrectly
 
     def self.call(argv, stdin, stdout, stderr)
-      config = Config.new.parse_args(argv, stderr).finalize(stdin, File)
+      config = Config.new.parse_args(argv, stderr).finalize(stdin, stdout, File) # TODO: move debugger initialization to finalize, so that parsing only takes argv
       engine = Engine.new config
 
       if config.print_help?
@@ -48,9 +48,9 @@ class SeeingIsBelieving
         require 'json'
         stdout.puts JSON.dump(engine.results.as_json)
         return SUCCESS_STATUS
-      end
-
-      if config.debug?
+      elsif config.print_event_stream?
+        # no op, the event stream handler has been printing it all along
+      elsif config.debug?
         config.debugger.context("OUTPUT") { engine.annotated_body }
       else
         stdout.print engine.annotated_body
