@@ -11,14 +11,30 @@ class SeeingIsBelieving
         @attr_width = @line_width - @name_width
       end
 
+      # TODO: this is dumb, move it up to the parent
       def to_proc
         return @handler.to_proc unless @enabled # no-op when there's no point
-        lambda do |event|
-          observe event
-          finish if event.kind_of? Events::Finished
-          @handler.call event
-        end
+        lambda { |event| call event }
       end
+
+      def result
+        @handler.result
+      end
+
+      def call(event)
+        return @handler.call event unless @enabled
+        observe event
+        finish if event.kind_of? Events::Finished
+        @handler.call event
+      end
+
+      def ==(other)
+        other.kind_of?(self.class) && other.handler == handler && other.debugger == debugger
+      end
+
+      protected
+
+      attr_reader :debugger, :handler
 
       private
 
