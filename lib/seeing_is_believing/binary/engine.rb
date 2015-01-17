@@ -122,10 +122,6 @@ class SeeingIsBelieving
           @exitstatus = event.value if event.event_name == :exitstatus
           @next_observer.call(event)
         end
-
-        def return_value
-          @next_observer.return_value
-        end
       end
 
       def record_exitstatus

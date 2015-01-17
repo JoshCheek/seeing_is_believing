@@ -17,10 +17,6 @@ class SeeingIsBelieving
           record_outcome event
         end
 
-        def return_value
-          self
-        end
-
         def has_exception?
           true
         end

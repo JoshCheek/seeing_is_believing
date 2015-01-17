@@ -33,10 +33,6 @@ class SeeingIsBelieving
           else raise "Unknown event: #{event.inspect}"
           end
         end
-
-        def return_value
-          result
-        end
       end
     end
   end

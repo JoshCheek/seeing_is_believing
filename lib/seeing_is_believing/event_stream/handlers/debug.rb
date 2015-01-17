@@ -17,10 +17,6 @@ class SeeingIsBelieving
           @handler.call event
         end
 
-        def return_value
-          @handler.return_value
-        end
-
         protected
 
         attr_reader :debugger, :handler
