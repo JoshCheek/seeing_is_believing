@@ -40,12 +40,11 @@ class SeeingIsBelieving
           :max_line_captures
         end
         def as_json
-          if value == Float::INFINITY
-            value = -1
-            is_infinity = true
-          else
-            is_infinity = false
-          end
+          value, is_infinity = if self.value == Float::INFINITY
+                                 [-1, true]
+                               else
+                                 [self.value, false]
+                               end
           [event_name, {value: value, is_infinity: is_infinity}]
         end
         attribute :value
