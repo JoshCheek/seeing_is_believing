@@ -66,8 +66,7 @@ class SeeingIsBelieving
       ensure return self unless $! # idk, maybe too tricky, but was really annoying putting it in three places
       end
 
-      # TODO: rename result (not plural)
-      def results
+      def result
         @evaluated || raise(MustEvaluateFirst.new __method__)
         config.lib_options.event_handler.result
       end
@@ -86,7 +85,7 @@ class SeeingIsBelieving
         @annotated_body ||= begin
           @evaluated || raise(MustEvaluateFirst.new __method__)
           annotated = config.annotator.call prepared_body,
-                                            results,
+                                            result,
                                             config.annotator_options.to_h
           annotated.chomp! if missing_newline?
           annotated

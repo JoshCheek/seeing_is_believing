@@ -46,7 +46,7 @@ class SeeingIsBelieving
 
       if config.result_as_json?
         require 'json'
-        stdout.puts JSON.dump(engine.results.as_json)
+        stdout.puts JSON.dump(engine.result.as_json)
         return SUCCESS_STATUS
       elsif config.print_event_stream?
         # no op, the event stream handler has been printing it all along

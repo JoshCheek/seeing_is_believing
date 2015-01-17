@@ -60,7 +60,7 @@ class SeeingIsBelieving
       end
 
       context 'before evaluating it raises if asked for' do
-        specify('results')               { assert_must_evaluate :results }
+        specify('result')               { assert_must_evaluate :result }
         specify('exitstatus')            { assert_must_evaluate :exitstatus }
         specify('timed_out?')            { assert_must_evaluate :timed_out? }
         specify('annotated_body')        { assert_must_evaluate :annotated_body }
@@ -69,8 +69,8 @@ class SeeingIsBelieving
       end
 
       context 'after evaluating' do
-        specify 'results are the results of the evaluation' do
-          status = call('exit 55').evaluate!.results.exitstatus
+        specify 'result is the result of the evaluation' do
+          status = call('exit 55').evaluate!.result.exitstatus
           expect(status).to eq 55
         end
 
