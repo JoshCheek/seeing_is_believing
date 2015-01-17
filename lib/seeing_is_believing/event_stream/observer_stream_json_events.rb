@@ -1,19 +1,22 @@
 require 'json'
+require 'seeing_is_believing/event_stream/observer_null'
 class SeeingIsBelieving
   module EventStream
     class ObserverStreamJsonEvents
       attr_reader :stream
 
-      def initialize(stream)
+      def initialize(stream, next_observer=ObserverNull)
         @flush          = true if stream.respond_to? :flush
         @stream         = stream
         @has_exception  = false
         @exitstatus     = :not_yet_seen
+        @next_observer  = next_observer
       end
 
       def call(event)
         write_event    event
         record_outcome event
+        @next_observer.call event
       end
 
       def return_value
