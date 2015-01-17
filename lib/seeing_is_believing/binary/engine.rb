@@ -54,9 +54,9 @@ class SeeingIsBelieving
 
       def evaluate!
         @evaluated || begin
-          @results   = SeeingIsBelieving.call \
-                         prepared_body,
-                         config.lib_options.merge(event_handler: record_exitstatus)
+          SeeingIsBelieving.call \
+            prepared_body,
+            config.lib_options.merge(event_handler: record_exitstatus)
           @timed_out = false
           @evaluated = true
         end
@@ -66,8 +66,10 @@ class SeeingIsBelieving
       ensure return self unless $! # idk, maybe too tricky, but was really annoying putting it in three places
       end
 
+      # TODO: rename result (not plural)
       def results
-        @results || raise(MustEvaluateFirst.new __method__)
+        @evaluated || raise(MustEvaluateFirst.new __method__)
+        config.lib_options.event_handler.result
       end
 
       def exitstatus

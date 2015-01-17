@@ -20,7 +20,7 @@ RSpec.describe SeeingIsBelieving do
       options.delete :debug
       options[:debugger] = SeeingIsBelieving::Debugger.new(stream: $stderr, colour: true)
     end
-    described_class.new(input, options).call
+    described_class.new(input, options).call.result
   end
 
   def values_for(input, options={})
@@ -83,8 +83,8 @@ RSpec.describe SeeingIsBelieving do
 
   it 'can be invoked multiple times, returning the same result' do
     believer = described_class.new("$xyz||=1\n$xyz+=1")
-    expect(believer.call.to_a).to eq [['1'], ['2']]
-    expect(believer.call.to_a).to eq [['1'], ['2']]
+    expect(believer.call).to eq believer.call
+    expect(believer.call.result.to_a).to eq [['1'], ['2']]
   end
 
   it 'is evaluated at the toplevel' do

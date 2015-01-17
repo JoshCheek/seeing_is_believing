@@ -41,23 +41,30 @@ class SeeingIsBelieving
                                               options.filename,
                                               options.max_line_captures
 
-      event_handler = options.event_handler
-      if options.debugger.enabled?
-        options.debugger.context("REWRITTEN PROGRAM") { new_program }
-        event_handler = EventStream::Handlers::Debug.new options.debugger, event_handler
-      end
+      options.debugger.context("REWRITTEN PROGRAM") { new_program }
 
       EvaluateByMovingFiles.call \
         new_program,
         options.filename,
-        event_handler:   event_handler,
+        event_handler:   debugging_handler,
         provided_input:  options.stdin,
         require_files:   options.require_files,
         load_path_dirs:  options.load_path_dirs,
         encoding:        options.encoding,
         timeout_seconds: options.timeout_seconds
 
-      event_handler.return_value
+      options.event_handler
     }
+  end
+
+  private
+
+  # Even though the debugger can be disabled,
+  # Handlers::Debug is somewhat expensive, and there could be tens of millions of calls
+  # e.g. https://github.com/JoshCheek/seeing_is_believing/issues/12
+  # so just skip it in this case
+  def debugging_handler
+    return options.event_handler unless options.debugger.enabled?
+    EventStream::Handlers::Debug.new options.debugger, options.event_handler
   end
 end
