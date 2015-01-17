@@ -1,6 +1,6 @@
 class SeeingIsBelieving
   module EventStream
-    class DebuggingHandler
+    class ObserverDebug
       def initialize(debugger, handler)
         @debugger   = debugger
         @handler    = handler

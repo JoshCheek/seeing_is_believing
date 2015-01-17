@@ -6,7 +6,7 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/rewrite_code'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/event_stream/debugging_handler'
+require 'seeing_is_believing/event_stream/observer_debug'
 require 'seeing_is_believing/event_stream/update_result_handler'
 
 class SeeingIsBelieving
@@ -44,7 +44,7 @@ class SeeingIsBelieving
       event_handler = options.event_handler
       if options.debugger.enabled?
         options.debugger.context("REWRITTEN PROGRAM") { new_program }
-        event_handler = EventStream::DebuggingHandler.new options.debugger, event_handler
+        event_handler = EventStream::ObserverDebug.new options.debugger, event_handler
       end
 
       EvaluateByMovingFiles.call \

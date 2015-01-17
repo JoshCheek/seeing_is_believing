@@ -2,7 +2,7 @@
 
 require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
-require 'seeing_is_believing/event_stream/debugging_handler'
+require 'seeing_is_believing/event_stream/observer_debug'
 require 'seeing_is_believing/debugger'
 
 module SeeingIsBelieving::EventStream
@@ -653,16 +653,16 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe DebuggingHandler do
-      let(:stream)            { "" }
-      let(:events_seen)       { [] }
-      let(:debugger)          { SeeingIsBelieving::Debugger.new stream: stream }
-      let(:real_handler)      { lambda { |event| events_seen << event } }
-      let(:debugging_handler) { described_class.new(debugger, real_handler) }
+    describe ObserverDebug do
+      let(:stream)          { "" }
+      let(:events_seen)     { [] }
+      let(:debugger)        { SeeingIsBelieving::Debugger.new stream: stream }
+      let(:parent_observer) { lambda { |event| events_seen << event } }
+      let(:observer_debug)  { described_class.new(debugger, parent_observer) }
 
-      it 'passes events through to the real handler' do
+      it 'passes events through to the parent observer' do
         event = Events::Stdout.new(value: "zomg")
-        debugging_handler.call(event)
+        observer_debug.call(event)
         expect(events_seen).to eq [event]
       end
 
@@ -676,7 +676,7 @@ module SeeingIsBelieving::EventStream
                                 message:     "The things, they blew up!",
                                 backtrace:   ["a"*10,"b"*2000]),
           Events::Finished.new,
-        ].each { |event| debugging_handler.call event }
+        ].each { |event| observer_debug.call event }
 
         expect(stream).to match /^Stdout\b/   # the events al made it
         expect(stream).to match /^Exec\b/
@@ -691,22 +691,22 @@ module SeeingIsBelieving::EventStream
       end
 
       it 'is equal to another debugging handler if their debuggers are equal, and their handlers are equal' do
-        same_debugger            = SeeingIsBelieving::Debugger.new stream: "same"
-        different_debugger       = SeeingIsBelieving::Debugger.new stream: "different"
-        same_parent_handler      = lambda { |e| :same }
-        different_parent_handler = lambda { |e| :different }
+        same_debugger             = SeeingIsBelieving::Debugger.new stream: "same"
+        different_debugger        = SeeingIsBelieving::Debugger.new stream: "different"
+        same_parent_observer      = lambda { |e| :same }
+        different_parent_observer = lambda { |e| :different }
 
-        obj                    = described_class.new same_debugger, same_parent_handler
-        obj_equal              = described_class.new same_debugger, same_parent_handler
+        obj                    = described_class.new same_debugger, same_parent_observer
+        obj_equal              = described_class.new same_debugger, same_parent_observer
         obj_different_class    = Object.new
-        obj_different_debugger = described_class.new different_debugger, same_parent_handler
-        obj_different_handler  = described_class.new same_debugger,      different_parent_handler
+        obj_different_debugger = described_class.new different_debugger, same_parent_observer
+        obj_different_observer = described_class.new same_debugger,      different_parent_observer
 
         expect(obj).to     eq obj
         expect(obj).to     eq obj_equal
         expect(obj).to_not eq obj_different_class
         expect(obj).to_not eq obj_different_debugger
-        expect(obj).to_not eq obj_different_handler
+        expect(obj).to_not eq obj_different_observer
       end
     end
 
