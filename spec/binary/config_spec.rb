@@ -618,13 +618,13 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'lib_options.event_handler' do
-      it 'is an ObserverUpdateResult when print_event_stream? is false' do
+      it 'is an UpdateResult handler when print_event_stream? is false' do
         expect(call(print_event_stream: false).lib_options.event_handler)
-          .to be_an_instance_of SeeingIsBelieving::EventStream::ObserverUpdateResult
+          .to be_an_instance_of SeeingIsBelieving::EventStream::Handlers::UpdateResult
       end
-      it 'is an ObserverStreamJsonEvents to stdout when print_event_stream? is true' do
+      it 'is an StreamJsonEvents handler to stdout when print_event_stream? is true' do
         handler = call(print_event_stream: true).lib_options.event_handler
-        expect(handler).to be_an_instance_of SeeingIsBelieving::EventStream::ObserverStreamJsonEvents
+        expect(handler).to be_an_instance_of SeeingIsBelieving::EventStream::Handlers::StreamJsonEvents
         expect(handler.stream).to eq stdout
       end
     end

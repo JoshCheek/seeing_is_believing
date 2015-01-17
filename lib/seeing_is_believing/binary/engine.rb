@@ -56,7 +56,7 @@ class SeeingIsBelieving
         @evaluated || begin
           @results   = SeeingIsBelieving.call \
                          prepared_body,
-                         config.lib_options.merge(event_handler: observe_exitstatus)
+                         config.lib_options.merge(event_handler: record_exitstatus)
           @timed_out = false
           @evaluated = true
         end
@@ -72,7 +72,7 @@ class SeeingIsBelieving
 
       def exitstatus
         @evaluated || raise(MustEvaluateFirst.new __method__)
-        observe_exitstatus.exitstatus
+        record_exitstatus.exitstatus
       end
 
       def timed_out?
@@ -109,7 +109,7 @@ class SeeingIsBelieving
         @code ||= Code.new(prepared_body, config.filename)
       end
 
-      class ObserverRecordExitStatus
+      class RecordExitStatusHandler
         attr_reader :exitstatus
 
         def initialize(next_observer)
@@ -127,8 +127,8 @@ class SeeingIsBelieving
         end
       end
 
-      def observe_exitstatus
-        @observe_exitstatus ||= ObserverRecordExitStatus.new config.lib_options.event_handler
+      def record_exitstatus
+        @record_exitstatus ||= RecordExitStatusHandler.new config.lib_options.event_handler
       end
     end
   end

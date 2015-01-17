@@ -2,7 +2,7 @@
 
 require 'seeing_is_believing/event_stream/producer'
 require 'seeing_is_believing/event_stream/consumer'
-require 'seeing_is_believing/event_stream/observer_debug'
+require 'seeing_is_believing/event_stream/handlers/debug'
 require 'seeing_is_believing/debugger'
 
 module SeeingIsBelieving::EventStream
@@ -617,8 +617,8 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    require 'seeing_is_believing/event_stream/observer_stream_json_events'
-    describe ObserverStreamJsonEvents do
+    require 'seeing_is_believing/event_stream/handlers/stream_json_events'
+    describe Handlers::StreamJsonEvents do
       it 'writes each event\'s json representation to the stream' do
         stream  = ""
         handler = described_class.new stream
@@ -647,16 +647,16 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    describe ObserverDebug do
+    describe Handlers::Debug do
       let(:stream)          { "" }
       let(:events_seen)     { [] }
       let(:debugger)        { SeeingIsBelieving::Debugger.new stream: stream }
       let(:parent_observer) { lambda { |event| events_seen << event } }
-      let(:observer_debug)  { described_class.new(debugger, parent_observer) }
+      let(:debug_handler)   { described_class.new(debugger, parent_observer) }
 
       it 'passes events through to the parent observer' do
         event = Events::Stdout.new(value: "zomg")
-        observer_debug.call(event)
+        debug_handler.call(event)
         expect(events_seen).to eq [event]
       end
 
@@ -670,7 +670,7 @@ module SeeingIsBelieving::EventStream
                                 message:     "The things, they blew up!",
                                 backtrace:   ["a"*10,"b"*2000]),
           Events::Finished.new,
-        ].each { |event| observer_debug.call event }
+        ].each { |event| debug_handler.call event }
 
         expect(stream).to match /^Stdout\b/   # the events al made it
         expect(stream).to match /^Exec\b/

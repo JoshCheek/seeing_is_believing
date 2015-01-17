@@ -6,13 +6,12 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/rewrite_code'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
-require 'seeing_is_believing/event_stream/observer_debug'
-require 'seeing_is_believing/event_stream/observer_update_result'
+require 'seeing_is_believing/event_stream/handlers/debug'
+require 'seeing_is_believing/event_stream/handlers/update_result'
 
 class SeeingIsBelieving
   class Options < HashStruct
-    # TODO: rename event_handler -> event_observer
-    predicate(:event_handler)     { EventStream::ObserverUpdateResult.new Result.new }
+    predicate(:event_handler)     { EventStream::Handlers::UpdateResult.new Result.new }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
@@ -45,7 +44,7 @@ class SeeingIsBelieving
       event_handler = options.event_handler
       if options.debugger.enabled?
         options.debugger.context("REWRITTEN PROGRAM") { new_program }
-        event_handler = EventStream::ObserverDebug.new options.debugger, event_handler
+        event_handler = EventStream::Handlers::Debug.new options.debugger, event_handler
       end
 
       EvaluateByMovingFiles.call \
