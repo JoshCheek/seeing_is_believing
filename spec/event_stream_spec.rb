@@ -645,12 +645,6 @@ module SeeingIsBelieving::EventStream
         handler.call Events::Finished.new
         expect(flushcount).to eq 2
       end
-
-      it 'is equal to another object if that object is an ObserverStreamJsonEvents and their streams are equal' do
-        expect(described_class.new "").to     eq described_class.new("")
-        expect(described_class.new "").to_not eq described_class.new("x")
-        expect(described_class.new "").to_not eq Object.new
-      end
     end
 
     describe ObserverDebug do
@@ -688,42 +682,6 @@ module SeeingIsBelieving::EventStream
         stream.each_line do |line|
           expect(line.length).to be <= 151    # long lines got truncated (151 b/c newline is counted)
         end
-      end
-
-      it 'is equal to another debugging handler if their debuggers are equal, and their handlers are equal' do
-        same_debugger             = SeeingIsBelieving::Debugger.new stream: "same"
-        different_debugger        = SeeingIsBelieving::Debugger.new stream: "different"
-        same_parent_observer      = lambda { |e| :same }
-        different_parent_observer = lambda { |e| :different }
-
-        obj                    = described_class.new same_debugger, same_parent_observer
-        obj_equal              = described_class.new same_debugger, same_parent_observer
-        obj_different_class    = Object.new
-        obj_different_debugger = described_class.new different_debugger, same_parent_observer
-        obj_different_observer = described_class.new same_debugger,      different_parent_observer
-
-        expect(obj).to     eq obj
-        expect(obj).to     eq obj_equal
-        expect(obj).to_not eq obj_different_class
-        expect(obj).to_not eq obj_different_debugger
-        expect(obj).to_not eq obj_different_observer
-      end
-    end
-
-
-    # rest of its specs are just in the sense that fkn everything uses it and it doesn't blow up
-    require 'seeing_is_believing/result'
-    require 'seeing_is_believing/event_stream/observer_update_result'
-    describe ObserverUpdateResult do
-      it 'is equal if they\'re of the same class... stupif fkn result object doesn\'t implement equality -.-' do
-        expect(described_class.new SeeingIsBelieving::Result.new).to eq described_class.new(SeeingIsBelieving::Result.new)
-        expect(described_class.new SeeingIsBelieving::Result.new).to_not eq Object.new
-      end
-
-      xit 'is equal if the other object is also an ObserverUpdateResult, and their results are equal' do
-        expect(described_class.new "").to eq described_class.new("")
-        expect(described_class.new "").to_not eq Object.new
-        expect(described_class.new "").to_not eq described_class.new("different")
       end
     end
   end

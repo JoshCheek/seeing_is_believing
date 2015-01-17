@@ -33,10 +33,6 @@ class SeeingIsBelieving
         end
       end
 
-      def ==(other)
-        other.kind_of?(self.class) # this is dumb, it's b/c Result doesn't correctly implement ==
-      end
-
       def return_value
         result
       end

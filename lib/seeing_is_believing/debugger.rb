@@ -27,12 +27,6 @@ class SeeingIsBelieving
       end
       self
     end
-
-    def ==(other)
-      return false unless other.respond_to? :coloured?
-      return false unless other.respond_to? :stream
-      coloured? == other.coloured? && stream == other.stream
-    end
   end
 
 end

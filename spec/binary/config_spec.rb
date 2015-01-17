@@ -83,14 +83,24 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       expect(config.errors).to be_empty
     end
 
-    it 'can interpret conjoined short-flags' do
-      expect(parse(['-hjg'])).to eq parse(['-h', '-j', '-g'])
+    # This sill dance is b/c equality assertions are annoying and not relevant anywhere else
+    # Don't like having to go implement this stuff just for a few high-level tests.
+    def flat_options(config)
+      flat_keys = config.keys - [:lib_options, :annotator_options]
+      flat_keys.each_with_object({}) { |key, hash| hash[key] = config[key] }
     end
-
+    def assert_same_flat_opts(args1, args2)
+      flatopts1 = flat_options parse args1
+      flatopts2 = flat_options parse args2
+      expect(flatopts1).to eq flatopts2
+    end
+    it 'can interpret conjoined short-flags' do
+      assert_same_flat_opts ['-hjg'], ['-h', '-j', '-g'] # help, json, debug
+    end
     it 'can interpret conjoined short-flags where one of them is h+' do
-      expect(parse(['-h+jg'])).to eq parse(['-h+', '-j',  '-g'])
-      expect(parse(['-jh+g'])).to eq parse(['-j',  '-h+', '-g'])
-      expect(parse(['-jgh+'])).to eq parse(['-j',  '-g',  '-h+'])
+      assert_same_flat_opts ['-h+jg'], ['-h+', '-j',  '-g']
+      assert_same_flat_opts ['-jh+g'], ['-j',  '-h+', '-g']
+      assert_same_flat_opts ['-jgh+'], ['-j',  '-g',  '-h+']
     end
 
     specify 'unknown options set an error' do

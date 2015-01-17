@@ -16,10 +16,6 @@ class SeeingIsBelieving
         @handler.call event
       end
 
-      def ==(other)
-        other.kind_of?(self.class) && other.handler == handler && other.debugger == debugger
-      end
-
       def return_value
         @handler.return_value
       end

@@ -28,10 +28,6 @@ class SeeingIsBelieving
         @exitstatus
       end
 
-      def ==(other)
-        other.kind_of?(self.class) && other.stream == stream
-      end
-
       private
 
       def write_event(event)
