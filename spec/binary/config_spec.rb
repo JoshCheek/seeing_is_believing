@@ -421,7 +421,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'remove_value_prefixes?', t:true do
+    describe 'remove_value_prefixes?' do
       it 'defaults to true' do
         expect(parse([]).remove_value_prefixes?).to eq true
       end
