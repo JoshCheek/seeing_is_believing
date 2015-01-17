@@ -651,13 +651,6 @@ module SeeingIsBelieving::EventStream
         expect(described_class.new "").to_not eq described_class.new("x")
         expect(described_class.new "").to_not eq Object.new
       end
-
-      it 'delegates events to the parent stream' do
-        seen = []
-        described_class.new("", lambda { |e| seen << e })
-                       .call Events::Finished.new
-        expect(seen).to eq [Events::Finished.new]
-      end
     end
 
     describe ObserverDebug do
