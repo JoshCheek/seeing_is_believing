@@ -1,11 +1,13 @@
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine
+      # TODO: delete this, config can switch the one var or move to engine or some shit
       def self.prepare_body(uncleaned_body, markers)
         require 'seeing_is_believing/binary/remove_annotations'
         RemoveAnnotations.call uncleaned_body, true, markers
       end
 
+      # TODO: delete this, config can override for the xmpfilter case
       def self.expression_wrapper(markers)
         require 'seeing_is_believing/rewrite_code'
         RewriteCode

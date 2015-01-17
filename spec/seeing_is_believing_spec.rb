@@ -68,8 +68,9 @@ RSpec.describe SeeingIsBelieving do
 
   it 'allows uers to pass in their own inspection recorder' do
     wrapper = lambda { |program|
-      SeeingIsBelieving::RewriteCode.call program, after_each:
-        -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
+      SeeingIsBelieving::WrapExpressions.call program,
+        before_each: -> * { '(' },
+        after_each:  -> line_number { ").tap { $SiB.record_result(:inspect, #{line_number}, 'zomg') }" }
     }
     expect(invoke(':body', rewrite_code: wrapper)[1]).to eq ['"zomg"']
   end
