@@ -17,11 +17,9 @@ class SeeingIsBelieving
           @handler.call event
         end
 
-        protected
+        private
 
         attr_reader :debugger, :handler
-
-        private
 
         def finish
           @debugger.context("EVENTS:") { @seen }
