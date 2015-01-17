@@ -215,7 +215,7 @@ module SeeingIsBelieving::EventStream
         producer.record_result :type1, 123, 3
         producer.record_result :type1, 123, 4
         producer.record_result :type2, 123, 1
-        expect(consumer.call 2).to eq [Events::UnrecordedResult.new(type: :type1, line_number: 123),
+        expect(consumer.call 2).to eq [Events::ResultsTruncated.new(type: :type1, line_number: 123),
                                        Events::LineResult.new(type: :type2, line_number: 123, inspected: '1')]
       end
 
@@ -230,11 +230,11 @@ module SeeingIsBelieving::EventStream
         producer.record_result :type2, 1, 6
         expect(consumer.call 6).to eq [
           Events::LineResult.new(      type: :type1, line_number: 1, inspected: '1'),
-          Events::UnrecordedResult.new(type: :type1, line_number: 1),
+          Events::ResultsTruncated.new(type: :type1, line_number: 1),
           Events::LineResult.new(      type: :type1, line_number: 2, inspected: '3'),
-          Events::UnrecordedResult.new(type: :type1, line_number: 2),
+          Events::ResultsTruncated.new(type: :type1, line_number: 2),
           Events::LineResult.new(      type: :type2, line_number: 1, inspected: '5'),
-          Events::UnrecordedResult.new(type: :type2, line_number: 1),
+          Events::ResultsTruncated.new(type: :type2, line_number: 1),
         ]
       end
 
@@ -591,22 +591,29 @@ module SeeingIsBelieving::EventStream
         expect { Event.event_name }.to raise_error NotImplementedError
       end
       specify 'all events have a reasonable event name' do
-        expect(Events::Stdout.event_name           ).to eq :stdout
-        expect(Events::Stderr.event_name           ).to eq :stderr
-        expect(Events::MaxLineCaptures.event_name  ).to eq :max_line_captures
-        expect(Events::Filename.event_name         ).to eq :filename
-        expect(Events::NumLines.event_name         ).to eq :num_lines
-        expect(Events::SiBVersion.event_name       ).to eq :sib_version
-        expect(Events::RubyVersion.event_name      ).to eq :ruby_version
-        expect(Events::Exitstatus.event_name       ).to eq :exitstatus
-        expect(Events::Exec.event_name             ).to eq :exec
-        expect(Events::UnrecordedResult.event_name ).to eq :unrecorded_result
-        expect(Events::LineResult.event_name       ).to eq :line_result
-        expect(Events::Exception.event_name        ).to eq :exception
-        expect(Events::StdoutClosed.event_name     ).to eq :stdout_closed
-        expect(Events::StderrClosed.event_name     ).to eq :stderr_closed
-        expect(Events::EventStreamClosed.event_name).to eq :event_stream_closed
-        expect(Events::Finished.event_name         ).to eq :finished
+        pairs = [
+          [Events::Stdout           , :stdout],
+          [Events::Stderr           , :stderr],
+          [Events::MaxLineCaptures  , :max_line_captures],
+          [Events::Filename         , :filename],
+          [Events::NumLines         , :num_lines],
+          [Events::SiBVersion       , :sib_version],
+          [Events::RubyVersion      , :ruby_version],
+          [Events::Exitstatus       , :exitstatus],
+          [Events::Exec             , :exec],
+          [Events::ResultsTruncated , :results_truncated],
+          [Events::LineResult       , :line_result],
+          [Events::Exception        , :exception],
+          [Events::StdoutClosed     , :stdout_closed],
+          [Events::StderrClosed     , :stderr_closed],
+          [Events::EventStreamClosed, :event_stream_closed],
+          [Events::Finished         , :finished],
+        ]
+        pairs.each { |klass, name| expect(klass.event_name).to eq name }
+
+        events_we_tested = pairs.map(&:first).flatten
+        event_classes = Events.constants.map { |name| Events.const_get name }
+        expect(event_classes - events_we_tested).to eq []
       end
       specify 'their event_name and attributes are included in their as_json' do
         expect(Events::Stdout.new(value: "abc").as_json).to eq [:stdout, {value: "abc"}]

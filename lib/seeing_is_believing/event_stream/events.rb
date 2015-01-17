@@ -114,12 +114,12 @@ class SeeingIsBelieving
         attributes :type, :line_number, :inspected
       end
 
-      # There were more results for this type of recording.
+      # There were more results than we are emitting for this line / type of recording
       # See LineResult for explanation of types
       # This would occur because the line was executed more times than the max.
-      class UnrecordedResult < Event
+      class ResultsTruncated < Event
         def self.event_name
-          :unrecorded_result
+          :results_truncated
         end
         attributes :type, :line_number
       end

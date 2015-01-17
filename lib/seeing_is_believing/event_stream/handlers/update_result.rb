@@ -14,7 +14,7 @@ class SeeingIsBelieving
         def call(event)
           case event
           when LineResult       then result.record_result(event.type, event.line_number, event.inspected)
-          when UnrecordedResult then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
+          when ResultsTruncated then result.record_result(event.type, event.line_number, '...') # <-- is this really what I want?
           when Exception        then result.record_exception event.line_number, event.class_name, event.message, event.backtrace
           when Stdout           then result.stdout            << event.value
           when Stderr           then result.stderr            << event.value
