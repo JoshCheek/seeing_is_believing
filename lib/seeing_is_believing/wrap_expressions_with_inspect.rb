@@ -7,7 +7,7 @@ class SeeingIsBelieving
           "("
         },
         after_each:  -> line_number {
-          ").tap { |v| $SiB.record_result(:inspect, #{line_number}, v) }"
+          ").tap { |v| $SiB.record_result :inspect, #{line_number}, v }"
         }
     end
   end

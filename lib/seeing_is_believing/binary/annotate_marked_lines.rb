@@ -22,21 +22,25 @@ class SeeingIsBelieving
                                   : inspect_linenos << c.line_number
           end
 
+          should_inspect = false
+          should_pp      = false
           WrapExpressions.call \
             program,
-            before_each: -> line_number { '(' },
+            before_each: -> line_number {
+              should_inspect = inspect_linenos.include? line_number
+              should_pp      = pp_linenos.include?      line_number
+              should_inspect || should_pp ?  '(' : ''
+            },
             after_each:  -> line_number {
               # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
               # 79 - "# => ".length # => 4
-              should_inspect = inspect_linenos.include?(line_number)
-              should_pp      = pp_linenos.include?(line_number)
-              inspect        = "$SiB.record_result(:inspect, #{line_number}, v)"
+              inspect        = "$SiB.record_result :inspect, #{line_number}, v"
               pp             = "$SiB.record_result(:pp, #{line_number}, v) { PP.pp v, '', 74 }"
 
               if    should_inspect && should_pp then ").tap { |v| #{inspect}; #{pp} }"
               elsif should_inspect              then ").tap { |v| #{inspect} }"
               elsif should_pp                   then ").tap { |v| #{pp} }"
-              else                                   ")"
+              else                                   ""
               end
             }
         end
