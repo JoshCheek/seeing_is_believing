@@ -10,11 +10,6 @@ class SeeingIsBelieving
   module Binary
     # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
     class AnnotateMarkedLines
-      def self.prepare_body(uncleaned_body, markers)
-        require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, false, markers
-      end
-
       def self.code_rewriter(markers)
         lambda do |program|
           inspect_linenos = []

@@ -417,6 +417,15 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
+    describe 'remove_value_prefixes?', t:true do
+      it 'defaults to true' do
+        expect(parse([]).remove_value_prefixes?).to eq true
+      end
+      it 'is false when xmpfilter style is specified' do
+        expect(parse(['-x']).remove_value_prefixes?).to eq false
+      end
+    end
+
     describe 'debug?' do
       specify 'debug? defaults to a false' do
         expect(parse([])[:debug]).to eq false

@@ -1,12 +1,6 @@
 class SeeingIsBelieving
   module Binary
     class AnnotateEveryLine
-      # TODO: delete this, config can switch the one var or move to engine or some shit
-      def self.prepare_body(uncleaned_body, markers)
-        require 'seeing_is_believing/binary/remove_annotations'
-        RemoveAnnotations.call uncleaned_body, true, markers
-      end
-
       def self.call(body, results, options)
         new(body, results, options).call
       end

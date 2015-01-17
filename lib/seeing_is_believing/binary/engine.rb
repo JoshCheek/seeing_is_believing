@@ -35,7 +35,9 @@ class SeeingIsBelieving
         @prepared_body ||= begin
           body_with_nl = config.body
           body_with_nl += "\n" if missing_newline?
-          config.annotator.prepare_body body_with_nl, config.markers
+          RemoveAnnotations.call body_with_nl,
+                                 config.remove_value_prefixes,
+                                 config.markers
         end
       end
 

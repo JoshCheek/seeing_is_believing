@@ -21,24 +21,25 @@ class SeeingIsBelieving
         end
       end
 
-      predicate(:print_version)      { false }
-      predicate(:print_cleaned)      { false }
-      predicate(:print_help)         { false }
-      predicate(:print_event_stream) { false }
-      predicate(:result_as_json)     { false }
-      predicate(:inherit_exitstatus) { false }
-      predicate(:debug)              { false }
-      attribute(:body)               { nil }
-      attribute(:filename)           { nil }
-      attribute(:errors)             { [] }
-      attribute(:deprecations)       { [] }
-      attribute(:timeout_seconds)    { 0 }
-      attribute(:annotator)          { AnnotateEveryLine }
-      attribute(:debugger)           { Debugger::Null }
-      attribute(:markers)            { Markers.new }
-      attribute(:help_screen)        { |c| Binary.help_screen c.markers }
-      attribute(:lib_options)        { SeeingIsBelieving::Options.new }
-      attribute(:annotator_options)  { AnnotatorOptions.new }
+      predicate(:print_version)         { false }
+      predicate(:print_cleaned)         { false }
+      predicate(:print_help)            { false }
+      predicate(:print_event_stream)    { false }
+      predicate(:result_as_json)        { false }
+      predicate(:inherit_exitstatus)    { false }
+      predicate(:remove_value_prefixes) { true  }
+      predicate(:debug)                 { false }
+      attribute(:body)                  { nil }
+      attribute(:filename)              { nil }
+      attribute(:errors)                { [] }
+      attribute(:deprecations)          { [] }
+      attribute(:timeout_seconds)       { 0 }
+      attribute(:annotator)             { AnnotateEveryLine }
+      attribute(:debugger)              { Debugger::Null }
+      attribute(:markers)               { Markers.new }
+      attribute(:help_screen)           { |c| Binary.help_screen c.markers }
+      attribute(:lib_options)           { SeeingIsBelieving::Options.new }
+      attribute(:annotator_options)     { AnnotatorOptions.new }
 
       def add_error(explanation)
         errors << ErrorMessage.new(explanation: explanation)
@@ -92,8 +93,9 @@ class SeeingIsBelieving
             self.print_version = true
 
           when '-x', '--xmpfilter-style'
-            self.annotator = AnnotateMarkedLines
+            self.annotator                = AnnotateMarkedLines
             self.lib_options.rewrite_code = AnnotateMarkedLines.code_rewriter(markers)
+            self.remove_value_prefixes    = false
 
           when '-i', '--inherit-exitstatus', '--inherit-exit-status'
             self.inherit_exitstatus = true
