@@ -16,7 +16,7 @@ class SeeingIsBelieving
       end
 
       def self.expression_wrapper(markers)
-        lambda do |program, filename, max_line_captures|
+        lambda do |program|
           inspect_linenos = []
           pp_linenos      = []
           value_regex     = markers[:value][:regex]
@@ -29,19 +29,7 @@ class SeeingIsBelieving
           require 'seeing_is_believing/rewrite_code'
           RewriteCode.call \
             program,
-            filename,
-            max_line_captures,
-            before_all: -> {
-              max_line_captures_as_str = max_line_captures.inspect
-              max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
-              "BEGIN { "\
-              "require 'pp';"\
-              "$SiB.record_ruby_version RUBY_VERSION;"\
-              "$SiB.record_sib_version #{VERSION.inspect};"\
-              "$SiB.record_filename #{filename.inspect};"\
-              "$SiB.record_max_line_captures #{max_line_captures_as_str};"\
-              "$SiB.record_num_lines #{program.lines.count} };"
-            },
+            before_all: -> { "BEGIN { require 'pp' };" },
             after_each: -> line_number {
               # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
               # 79 - "# => ".length # => 4

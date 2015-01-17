@@ -1,12 +1,7 @@
 require 'seeing_is_believing/wrap_expressions'
 class SeeingIsBelieving
   module RewriteCode
-    def self.call(program, filename, max_line_captures, options={})
-      # TODO: much of this is duplicated in annotate_marked_lines
-      max_line_captures_as_str = max_line_captures.inspect
-      max_line_captures_as_str = 'Float::INFINITY' if max_line_captures == Float::INFINITY
-
-      # might be able to pass all this via environment variables and have the matrix record it instead of needing to add code before/after everything.
+    def self.call(program, options={})
       wrap_expressions_callbacks = {}
       wrap_expressions_callbacks[:before_all]  = options.fetch :before_all,  -> { "" }
       wrap_expressions_callbacks[:after_all]   = options.fetch :after_all,   -> { "" }

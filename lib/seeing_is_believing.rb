@@ -36,16 +36,14 @@ class SeeingIsBelieving
 
   def call
     @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
-      options.filename ||= File.join(dir, 'program.rb')
-      new_program = options.rewrite_code.call @program,
-                                              options.filename,
-                                              options.max_line_captures
+      filename = options.filename || File.join(dir, 'program.rb')
+      new_program = options.rewrite_code.call @program
 
       options.debugger.context("REWRITTEN PROGRAM") { new_program }
 
       EvaluateByMovingFiles.call \
         new_program,
-        options.filename,
+        filename,
         event_handler:     debugging_handler,
         provided_input:    options.stdin,
         require_files:     options.require_files,
