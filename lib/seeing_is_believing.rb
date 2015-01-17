@@ -3,7 +3,7 @@ require 'tmpdir'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/version'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/rewrite_code'
+require 'seeing_is_believing/wrap_expressions_with_inspect'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/handlers/debug'
@@ -20,7 +20,7 @@ class SeeingIsBelieving
     attribute(:timeout_seconds)   { 0 }
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
-    attribute(:rewrite_code)      { RewriteCode }
+    attribute(:rewrite_code)      { WrapExpressionsWithInspect }
   end
 
   def self.call(*args)

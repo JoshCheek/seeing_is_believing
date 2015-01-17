@@ -9,8 +9,8 @@ class SeeingIsBelieving
 
       # TODO: delete this, config can override for the xmpfilter case
       def self.expression_wrapper(markers)
-        require 'seeing_is_believing/rewrite_code'
-        RewriteCode
+        require 'seeing_is_believing/wrap_expressions_with_inspect'
+        WrapExpressionsWithInspect
       end
 
       def self.call(body, results, options)
