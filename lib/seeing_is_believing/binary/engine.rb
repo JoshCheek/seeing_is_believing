@@ -1,6 +1,7 @@
 require 'seeing_is_believing/code'
 require 'seeing_is_believing/binary/data_structures'
 require 'seeing_is_believing/binary/remove_annotations'
+require 'seeing_is_believing/event_stream/handlers/record_exitstatus'
 
 class SeeingIsBelieving
   module Binary
@@ -110,22 +111,8 @@ class SeeingIsBelieving
         @code ||= Code.new(prepared_body, config.filename)
       end
 
-      class RecordExitStatusHandler
-        attr_reader :exitstatus
-
-        def initialize(next_observer)
-          @next_observer = next_observer
-          @exitstatus    = 1
-        end
-
-        def call(event)
-          @exitstatus = event.value if event.event_name == :exitstatus
-          @next_observer.call(event)
-        end
-      end
-
       def record_exitstatus
-        @record_exitstatus ||= RecordExitStatusHandler.new config.lib_options.event_handler
+        @record_exitstatus ||= SeeingIsBelieving::EventStream::Handlers::RecordExitStatus.new config.lib_options.event_handler
       end
     end
   end
