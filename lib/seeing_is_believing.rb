@@ -11,6 +11,7 @@ require 'seeing_is_believing/event_stream/observer_update_result'
 
 class SeeingIsBelieving
   class Options < HashStruct
+    # TODO: rename event_handler -> event_observer
     predicate(:event_handler)     { EventStream::ObserverUpdateResult.new Result.new }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }

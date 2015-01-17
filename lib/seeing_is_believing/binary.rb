@@ -57,8 +57,8 @@ class SeeingIsBelieving
       end
 
       if config.inherit_exitstatus?
-        engine.results.exitstatus
-      elsif engine.results.exitstatus.zero?
+        engine.exitstatus
+      elsif engine.exitstatus.zero?
         SUCCESS_STATUS
       else
         DISPLAYABLE_ERROR_STATUS

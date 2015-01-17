@@ -61,6 +61,7 @@ class SeeingIsBelieving
 
       context 'before evaluating it raises if asked for' do
         specify('results')               { assert_must_evaluate :results }
+        specify('exitstatus')            { assert_must_evaluate :exitstatus }
         specify('timed_out?')            { assert_must_evaluate :timed_out? }
         specify('annotated_body')        { assert_must_evaluate :annotated_body }
         specify('unexpected_exception')  { assert_must_evaluate :unexpected_exception }
@@ -71,6 +72,12 @@ class SeeingIsBelieving
         specify 'results are the results of the evaluation' do
           status = call('exit 55').evaluate!.results.exitstatus
           expect(status).to eq 55
+        end
+
+        it 'has recorded the exitstatus' do
+          engine = call('exit 88')
+          engine.evaluate!
+          expect(engine.exitstatus).to eq 88
         end
 
         specify 'timed_out? is true if the program raised a Timeout::Error' do
