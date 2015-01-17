@@ -17,14 +17,6 @@ class SeeingIsBelieving
           record_outcome event
         end
 
-        def has_exception?
-          true
-        end
-
-        def exitstatus
-          @exitstatus
-        end
-
         private
 
         def write_event(event)

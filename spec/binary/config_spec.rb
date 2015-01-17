@@ -37,6 +37,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     deprecated = deprecated_args.first
     expect(deprecated.args).to eq [flag, *args]
     expect(deprecated.explanation).to be_a_kind_of String
+    expect(deprecated.to_s).to include "Deprecated"
   end
 
   shared_examples 'it requires a positive int argument' do |flags|

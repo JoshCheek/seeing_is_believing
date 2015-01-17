@@ -91,10 +91,6 @@ class SeeingIsBelieving
           }
       end
 
-      def value_prefix
-        @value_prefix ||= markers.fetch(:value).fetch(:prefix)
-      end
-
       def value_regex
         @value_regex ||= markers.fetch(:value).fetch(:regex)
       end

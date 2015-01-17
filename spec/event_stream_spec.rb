@@ -586,6 +586,7 @@ module SeeingIsBelieving::EventStream
       end
     end
 
+
     describe Events do
       specify 'Event raises an error if .event_name was not overridden' do
         expect { Event.event_name }.to raise_error NotImplementedError
@@ -689,6 +690,16 @@ module SeeingIsBelieving::EventStream
         stream.each_line do |line|
           expect(line.length).to be <= 151    # long lines got truncated (151 b/c newline is counted)
         end
+      end
+    end
+
+    # most tests are just in the sense that fkn everything uses it all over the place
+    # but they use the valid cases, so this is just hitting the invalid one
+    require 'seeing_is_believing/event_stream/handlers/update_result'
+    describe Handlers::UpdateResult do
+      it 'raises an error if it sees an event it doesn\'t know' do
+        expect { described_class.new(double :result).call("unknown event") }
+          .to raise_error /unknown event/
       end
     end
   end

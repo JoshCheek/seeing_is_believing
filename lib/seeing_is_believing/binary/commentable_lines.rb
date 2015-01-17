@@ -42,18 +42,13 @@ class SeeingIsBelieving
       end
 
       def line_nums_to_last_index_and_col(buffer)
-        line_num_to_location = code.each_char
-                                   .with_index
-                                   .select { |char, index| char == "\n" } # <-- is this okay? what about other OSes?
-                                   .each_with_object(Hash.new) do |(_, index), hash|
-                                     line, col = buffer.decompose_position index
-                                     hash[line] = [index, col]
-                                   end
-        if code[code.size-1] != "\n" # account for the fact that the last line wouldn't have been found above if it doesn't end in a newline
-          line, col = buffer.decompose_position code.size
-          line_num_to_location[line] = [code.size, col]
-        end
-        line_num_to_location
+        code.each_char
+            .with_index
+            .select { |char, index| char == "\n" }
+            .each_with_object(Hash.new) do |(_, index), hash|
+              line, col = buffer.decompose_position index
+              hash[line] = [index, col]
+            end
       end
 
       def remove_lines_whose_newline_is_escaped(line_num_to_location)

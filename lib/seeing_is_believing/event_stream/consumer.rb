@@ -115,9 +115,8 @@ class SeeingIsBelieving
           event_for element
         when Proc
           element.call
-          if finish_criteria.satisfied?
+          finish_criteria.satisfied? &&
             queue << Events::Finished.new
-          end
           next_event
         when Events::Finished
           @finished = true
@@ -125,7 +124,7 @@ class SeeingIsBelieving
         when Event
           element
         else
-          p "WAT: #{element.inspect}"
+          raise SeeingIsBelieving::UnknownEvent, "WAT IS THIS?: #{element.inspect}"
         end
       end
 
