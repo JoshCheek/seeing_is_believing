@@ -1,8 +1,7 @@
 require 'seeing_is_believing/event_stream/events'
 class SeeingIsBelieving
   module EventStream
-    # Adapter between EventStream and Result
-    class UpdateResultHandler
+    class ObserverUpdateResult
       include EventStream::Events
 
       attr_reader :result

@@ -713,14 +713,14 @@ module SeeingIsBelieving::EventStream
 
     # rest of its specs are just in the sense that fkn everything uses it and it doesn't blow up
     require 'seeing_is_believing/result'
-    require 'seeing_is_believing/event_stream/update_result_handler'
-    describe UpdateResultHandler do
+    require 'seeing_is_believing/event_stream/observer_update_result'
+    describe ObserverUpdateResult do
       it 'is equal if they\'re of the same class... stupif fkn result object doesn\'t implement equality -.-' do
         expect(described_class.new SeeingIsBelieving::Result.new).to eq described_class.new(SeeingIsBelieving::Result.new)
         expect(described_class.new SeeingIsBelieving::Result.new).to_not eq Object.new
       end
 
-      xit 'is equal if the other object is also an UpdateResultHandler, and their results are equal' do
+      xit 'is equal if the other object is also an ObserverUpdateResult, and their results are equal' do
         expect(described_class.new "").to eq described_class.new("")
         expect(described_class.new "").to_not eq Object.new
         expect(described_class.new "").to_not eq described_class.new("different")

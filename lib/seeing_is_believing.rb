@@ -7,11 +7,11 @@ require 'seeing_is_believing/rewrite_code'
 require 'seeing_is_believing/hash_struct'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/observer_debug'
-require 'seeing_is_believing/event_stream/update_result_handler'
+require 'seeing_is_believing/event_stream/observer_update_result'
 
 class SeeingIsBelieving
   class Options < HashStruct
-    predicate(:event_handler)     { EventStream::UpdateResultHandler.new Result.new }
+    predicate(:event_handler)     { EventStream::ObserverUpdateResult.new Result.new }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
