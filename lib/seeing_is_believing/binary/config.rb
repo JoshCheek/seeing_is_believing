@@ -220,8 +220,8 @@ class SeeingIsBelieving
 
       def finalize(stdin, stdout, stderr, file_class)
         if print_event_stream?
-          require 'seeing_is_believing/event_stream/emit_json_events_handler'
-          lib_options.event_handler = EventStream::EmitJsonEventsHandler.new(stdout)
+          require 'seeing_is_believing/event_stream/observer_stream_json_events'
+          lib_options.event_handler = EventStream::ObserverStreamJsonEvents.new(stdout)
         end
 
         if debug?

@@ -1,7 +1,7 @@
 require 'json'
 class SeeingIsBelieving
   module EventStream
-    class EmitJsonEventsHandler
+    class ObserverStreamJsonEvents
       attr_reader :stream
 
       def initialize(stream)

@@ -617,8 +617,8 @@ module SeeingIsBelieving::EventStream
       end
     end
 
-    require 'seeing_is_believing/event_stream/emit_json_events_handler'
-    describe EmitJsonEventsHandler do
+    require 'seeing_is_believing/event_stream/observer_stream_json_events'
+    describe ObserverStreamJsonEvents do
       it 'writes each event\'s json representation to the stream' do
         stream  = ""
         handler = described_class.new stream
@@ -646,7 +646,7 @@ module SeeingIsBelieving::EventStream
         expect(flushcount).to eq 2
       end
 
-      it 'is equal to another object if that object is an EmitJsonEventsHandler and their streams are equal' do
+      it 'is equal to another object if that object is an ObserverStreamJsonEvents and their streams are equal' do
         expect(described_class.new "").to     eq described_class.new("")
         expect(described_class.new "").to_not eq described_class.new("x")
         expect(described_class.new "").to_not eq Object.new
