@@ -1,9 +1,7 @@
 require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
-  # spec/binary/comment_lines_spec.rb
   module Binary
-
     # takes a body and a block
     # passes the block the line
     # the block returns the comment to add at the end of it

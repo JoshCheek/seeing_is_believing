@@ -3,6 +3,9 @@ require 'seeing_is_believing/binary/commentable_lines'
 
 class SeeingIsBelieving
   module Binary
+    # can this be joined into CommentLines?
+    # that one yields every commentable line, this one just lines which have comments
+    # what they yield is a little different, too, but their algorithms and domain are very similar
     module RewriteComments
       Options = HashStruct.anon do
         attribute(:include_lines) { [] }
