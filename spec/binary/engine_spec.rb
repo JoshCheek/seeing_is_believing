@@ -49,23 +49,11 @@ class SeeingIsBelieving
         end
       end
 
-      context 'prepared_body' do
-        it 'is the body after being run throught he annotator\'s prepare method' do
-          expect(call('1+1 # => ').prepared_body).to eq "1+1\n"
-        end
-        it 'ends in a newline, regardless of whether the body did' do
-          expect(call("1").prepared_body).to eq "1\n"
-          expect(call("1\n").prepared_body).to eq "1\n"
-        end
-      end
-
       context 'before evaluating it raises if asked for' do
         specify('result')               { assert_must_evaluate :result }
         specify('exitstatus')            { assert_must_evaluate :exitstatus }
         specify('timed_out?')            { assert_must_evaluate :timed_out? }
         specify('annotated_body')        { assert_must_evaluate :annotated_body }
-        specify('unexpected_exception')  { assert_must_evaluate :unexpected_exception }
-        specify('unexpected_exception?') { assert_must_evaluate :unexpected_exception? }
       end
 
       context 'after evaluating' do

@@ -2,7 +2,7 @@
 require 'seeing_is_believing/code'
 
 
-# TODO: *sigh* need to fin a way to join the annotators.
+# *sigh* need to fin a way to join the annotators.
 # They are sinful ugly, kinda hard to work with,
 # and absurdly duplicated.
 
