@@ -93,6 +93,7 @@ class SeeingIsBelieving
 
           when '-x', '--xmpfilter-style'
             self.annotator = AnnotateMarkedLines
+            self.lib_options.rewrite_code = AnnotateMarkedLines.code_rewriter(markers)
 
           when '-i', '--inherit-exitstatus', '--inherit-exit-status'
             self.inherit_exitstatus = true
@@ -211,7 +212,6 @@ class SeeingIsBelieving
 
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
-        self.lib_options.rewrite_code  = annotator.expression_wrapper(markers)
         self.lib_options.debugger      = debugger
         self.annotator_options.markers = markers
 

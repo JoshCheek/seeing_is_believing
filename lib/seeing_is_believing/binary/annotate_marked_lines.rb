@@ -15,7 +15,7 @@ class SeeingIsBelieving
         RemoveAnnotations.call uncleaned_body, false, markers
       end
 
-      def self.expression_wrapper(markers)
+      def self.code_rewriter(markers)
         lambda do |program|
           inspect_linenos = []
           pp_linenos      = []

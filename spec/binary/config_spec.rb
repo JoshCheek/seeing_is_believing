@@ -410,13 +410,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['-x']).annotator).to eq SeeingIsBelieving::Binary::AnnotateMarkedLines
       end
 
-      specify 'lib_options.rewrite_code is set to the annotator\'s expression wrapper' do
-        config = parse []
-        expect(config.lib_options.rewrite_code)
-          .to eq config.annotator.expression_wrapper(config.markers)
-
+      specify 'lib_options.rewrite_code is set to the xmpfilter rewriter on -x and --xmpfilter-style' do
         # not a great test, but the cukes hit its actual behaviour
-        expect(parse(['-x']).lib_options.rewrite_code).to be_a_kind_of Proc
+        expect(parse([]).lib_options.rewrite_code.call("1 # =>\n")).to_not include "pp"
+        expect(parse(['-x']).lib_options.rewrite_code.call("1 # =>\n")).to include "pp"
       end
     end
 
