@@ -24,18 +24,19 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
 
     def initialize(program, filename,  options={})
       options = options.dup
-      self.program         = program
-      self.filename        = filename
-      self.encoding        = options.delete(:encoding)
-      self.timeout_seconds = options.delete(:timeout_seconds) || 0 # 0 is the new infinity
-      self.provided_input  = options.delete(:provided_input)  || String.new
-      self.event_handler   = options.delete(:event_handler)   || raise("must provide an event handler")
-      self.load_path_flags = (options.delete(:load_path_dirs) || []).map { |dir| ['-I', dir] }.flatten
-      self.require_flags   = (options.delete(:require_files)  || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
+      self.program           = program
+      self.filename          = filename
+      self.encoding          = options.delete(:encoding)
+      self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
+      self.provided_input    = options.delete(:provided_input)     || String.new
+      self.event_handler     = options.delete(:event_handler)      || raise("must provide an event handler")
+      self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
+      self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
+      self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
@@ -93,10 +94,21 @@ class SeeingIsBelieving
       stderr,      child_stderr      = IO.pipe
       child_stdin, stdin             = IO.pipe
 
+      # setup environment variables
+      env = ENV.to_hash.merge 'SIB_VARIABLES.MARSHAL.B64' =>
+                                [Marshal.dump(
+                                  event_stream_fd:   child_eventstream.to_i,
+                                  max_line_captures: max_line_captures,
+                                  num_lines:         program.lines.count,
+                                  filename:          filename
+                                )].pack('m0')
+
       # evaluate the code in a child process
-      env   = ENV.to_hash.merge('SIB_EVENT_STREAM_FD' => child_eventstream.to_i.to_s)
-      opts  = {in: child_stdin, out: child_stdout, err: child_stderr, child_eventstream => child_eventstream}
-      child = Process.detach spawn(env, *popen_args, opts)
+      opts = { in:                  child_stdin,
+               out:                 child_stdout,
+               err:                 child_stderr,
+               child_eventstream => child_eventstream }
+      child = Process.detach Kernel.spawn(env, *popen_args, opts)
 
       # close b/c we won't get EOF until all fds are closed
       child_eventstream.close

@@ -1,10 +1,16 @@
 require_relative 'version'
 require_relative 'event_stream/producer'
 
-STDOUT.sync = true
-event_stream = IO.open(ENV['SIB_EVENT_STREAM_FD'].to_i, "w")
+sib_vars     = Marshal.load ENV["SIB_VARIABLES.MARSHAL.B64"].unpack('m0').first
+event_stream = IO.open sib_vars.fetch(:event_stream_fd), "w"
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
+$SiB.record_ruby_version      RUBY_VERSION
+$SiB.record_sib_version       SeeingIsBelieving::VERSION
+$SiB.record_filename          sib_vars.fetch(:filename)
+$SiB.record_num_lines         sib_vars.fetch(:num_lines)
+$SiB.record_max_line_captures sib_vars.fetch(:max_line_captures)
 
+STDOUT.sync = true
 stdout, stderr = STDOUT, STDERR
 finish = lambda do
   $SiB.finish!

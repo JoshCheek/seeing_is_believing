@@ -512,7 +512,7 @@ RSpec.describe SeeingIsBelieving do
     it 'prints the pre-evaluated program' do
       call
       expect(stream.string).to include "REWRITTEN PROGRAM:"
-      expect(stream.string).to include "$SiB.record_num_lines" # there is more, but we're just interested in showing that it wound up in the stream
+      expect(stream.string).to include "$SiB.record_result" # there is more, but we're just interested in showing that it wound up in the stream
     end
 
     it 'records eventstream information' do

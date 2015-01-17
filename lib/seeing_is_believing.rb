@@ -46,12 +46,13 @@ class SeeingIsBelieving
       EvaluateByMovingFiles.call \
         new_program,
         options.filename,
-        event_handler:   debugging_handler,
-        provided_input:  options.stdin,
-        require_files:   options.require_files,
-        load_path_dirs:  options.load_path_dirs,
-        encoding:        options.encoding,
-        timeout_seconds: options.timeout_seconds
+        event_handler:     debugging_handler,
+        provided_input:    options.stdin,
+        require_files:     options.require_files,
+        load_path_dirs:    options.load_path_dirs,
+        encoding:          options.encoding,
+        timeout_seconds:   options.timeout_seconds,
+        max_line_captures: options.max_line_captures
 
       options.event_handler
     }
