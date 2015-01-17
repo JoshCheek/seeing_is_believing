@@ -2,13 +2,14 @@
 require 'seeing_is_believing/code'
 
 
-# *sigh* need to fin a way to join the annotators.
+# *sigh* need to find a way to join the annotators.
 # They are sinful ugly, kinda hard to work with,
 # and absurdly duplicated.
 
 class SeeingIsBelieving
   module Binary
     # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
+    # See https://github.com/JoshCheek/seeing_is_believing/issues/44 for more details
     class AnnotateMarkedLines
       def self.code_rewriter(markers)
         lambda do |program|
@@ -52,8 +53,7 @@ class SeeingIsBelieving
         @results = results
       end
 
-      # TODO:
-      # I think that this should respect the alignment strategy
+      # seems like maybe this should respect the alignment strategy (not what xmpfilter does, but there are other ways I'd like to deviate anyway)
       # and we should just add a new alignment strategy for default xmpfilter style
       def call
         @new_body ||= begin
