@@ -24,7 +24,6 @@ class SeeingIsBelieving
 
           WrapExpressions.call \
             program,
-            before_all:  -> { "BEGIN { require 'pp' };" },
             before_each: -> line_number { '(' },
             after_each:  -> line_number {
               # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and

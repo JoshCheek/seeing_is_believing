@@ -93,9 +93,10 @@ class SeeingIsBelieving
             self.print_version = true
 
           when '-x', '--xmpfilter-style'
-            self.annotator                = AnnotateMarkedLines
-            self.lib_options.rewrite_code = AnnotateMarkedLines.code_rewriter(markers)
-            self.remove_value_prefixes    = false
+            self.annotator                 = AnnotateMarkedLines
+            self.lib_options.rewrite_code  = AnnotateMarkedLines.code_rewriter(markers)
+            self.remove_value_prefixes     = false
+            self.lib_options.require_files << 'pp'
 
           when '-i', '--inherit-exitstatus', '--inherit-exit-status'
             self.inherit_exitstatus = true

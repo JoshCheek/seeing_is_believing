@@ -203,6 +203,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse([]).lib_options.require_files).to eq [matrix_file]
       end
 
+      it 'appends pp for xmpfilter style' do
+        expect(parse(['-x']).lib_options.require_files).to eq [matrix_file, 'pp']
+      end
+
       specify '-r and --require set an error if not provided with a filename' do
         expect(parse(['--require', 'f'])).to_not have_error /-r/
         expect(parse(['-r'])).to have_error /-r\b/
@@ -413,7 +417,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       specify 'lib_options.rewrite_code is set to the xmpfilter rewriter on -x and --xmpfilter-style' do
         # not a great test, but the cukes hit its actual behaviour
         expect(parse([]).lib_options.rewrite_code.call("1 # =>\n")).to_not include "pp"
-        expect(parse(['-x']).lib_options.rewrite_code.call("1 # =>\n")).to include "pp"
+        expect(parse(['-x']).lib_options.rewrite_code.call("1\n# =>\n")).to include "pp"
       end
     end
 
