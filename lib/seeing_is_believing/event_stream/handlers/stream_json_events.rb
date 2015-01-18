@@ -13,23 +13,9 @@ class SeeingIsBelieving
         end
 
         def call(event)
-          write_event    event
-          record_outcome event
-        end
-
-        private
-
-        def write_event(event)
           @stream << JSON.dump(event.as_json)
           @stream << "\n"
           @stream.flush if @flush
-        end
-
-        def record_outcome(event)
-          case event
-          when Events::Exception  then @has_exception = true
-          when Events::Exitstatus then @exitstatus = event.value
-          end
         end
       end
     end

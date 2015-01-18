@@ -36,6 +36,7 @@ class SeeingIsBelieving
           allow_any_instance_of(Code::Syntax).to receive(:line_number).and_return   123
           expect(invalid_engine.syntax_error)
             .to eq SyntaxErrorMessage.new(line_number: 123, filename: "filename.rb", explanation: "ERR!!")
+          expect(invalid_engine.syntax_error.to_s).to include "ERR!!"
         end
       end
 

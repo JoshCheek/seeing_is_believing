@@ -38,20 +38,6 @@ class SeeingIsBelieving
       (1..num_lines).each { |line_number| block.call self[line_number] }
     end
 
-    def inspect
-      results
-      variables = instance_variables.map do |name|
-        value = instance_variable_get(name)
-        inspected = if name.to_s == '@results'
-          "{#{value.sort_by(&:first).map { |k, v| "#{k.inspect}=>#{v.inspect}"}.join(",\n            ")}}"
-        else
-          value.inspect
-        end
-        "#{name}=#{inspected}"
-      end
-      "#<SIB::Result #{variables.join "\n  "}>"
-    end
-
     def max_line_captures
       @max_line_captures || Float::INFINITY
     end

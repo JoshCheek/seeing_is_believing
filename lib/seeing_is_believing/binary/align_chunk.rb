@@ -37,14 +37,6 @@ class SeeingIsBelieving
         end
       end
 
-      def trim_trailing_whitespace(line_nums_to_indexes)
-        line_nums_to_indexes.each do |num, indexes|
-          index_in_file = indexes[0]
-          num_to_trim   = amount_of_preceding_whitespace(index_in_file)
-          indexes.map! { |index| index - num_to_trim }
-        end
-      end
-
       def amount_of_preceding_whitespace(index_of_trailing_newline)
         index = index_of_trailing_newline - 1
         index -= 1 while 0 <= index && body[index] !~ /[\S\n]/
