@@ -390,12 +390,13 @@ module SeeingIsBelieving::EventStream
 
       example 'Example: Common edge case: name error' do
         backtrace_line  = record_exception(99) { not_a_local_or_meth }
-        backtrace_frame = 1 # b/c this one will get caught by rspec's method missing
+        backtrace_frame = 1                       # b/c this one will get caught by rspec's method missing
+        backtrace_frame += 1 if defined? Rubinius # their method missing goes into the kernel
         assert_exception consumer.call,
                          recorded_line_no:   99,
                          class_name_matcher: /^NameError$/,
                          message_matcher:    /\bnot_a_local_or_meth\b/,
-                         backtrace_index:    1,
+                         backtrace_index:    backtrace_frame,
                          backtrace_line:     backtrace_line,
                          backtrace_filename: __FILE__
       end
