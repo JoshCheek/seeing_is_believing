@@ -106,6 +106,11 @@ module SeeingIsBelieving::EventStream
         expect(consumer.call.value).to eq "a� å"          # space just so its easier to see
       end
 
+      it 'scrubs any invalid bytes to "�" when encoding was already UTF8, but was invalid' do
+        producer.record_sib_version("\xff√")
+        expect(consumer.call.value).to eq "�√"
+      end
+
       it 'raises NoMoreEvents if input is closed before it finishes reading the number of requested inputs' do
         finish!
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::NoMoreEvents
