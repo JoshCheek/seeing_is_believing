@@ -109,11 +109,7 @@ Version 3
 These need to be done before release:
 
 * Add default to number of captures (1000), require user to explicitly set it to infinity
-* Update changelog with all changes
-* Push the event stream up to the top level so we can expose it via the interface.
-* Get it working on JRuby and Rbx
-* Order frog stickers
-* Figure out how to handle markers
+* Expose markers via the CLI
 
 Version 4
 =========
