@@ -68,24 +68,26 @@ class SeeingIsBelieving
       def annotation_chunks_in(code)
         code
           .inline_comments
-          .map { |comment| [ (comment.text[value_regex]     ||     # associates each comment to its annotation
-                              comment.text[exception_regex] ||
-                              comment.text[stdout_regex]    ||
-                              comment.text[stderr_regex]
-                             ),
-                             comment]}
-          .slice_before { |annotation, comment| annotation }       # annotations begin chunks
-          .select       { |(annotation, start), *| annotation }    # discard chunks not beginning with an annotation (probably can only happens on first comment)
-          .map { |(annotation, start), *rest|                      # end the chunk if the comment doesn't meet nextline criteria
+          .map { |comment| # associate each annotation to its comment
+            annotation = comment.text[value_regex]     ||
+                         comment.text[exception_regex] ||
+                         comment.text[stdout_regex]    ||
+                         comment.text[stderr_regex]
+            [annotation, comment]
+          }
+          .slice_before { |annotation, comment| annotation }    # annotations begin chunks
+          .select       { |(annotation, start), *| annotation } # discard chunks not beginning with an annotation (probably can only happens on first comment)
+          .map { |(annotation, start), *rest|                   # end the chunk if the comment doesn't meet nextline criteria
             nextline_comments = []
-            prev = start
+            prev              = start
             rest.each { |_, potential_nextline|
-              break unless prev.line_number.next == potential_nextline.line_number &&
-                             start.text_col == potential_nextline.text_col         &&
-                             potential_nextline.whitespace_col.zero?               &&
-                             annotation.length <= potential_nextline.text[/#\s*/].length
-              prev = potential_nextline
+              sequential                   = (prev.line_number.next == potential_nextline.line_number)
+              vertically_aligned           = start.text_col == potential_nextline.text_col
+              only_preceded_by_whitespace  = potential_nextline.whitespace_col.zero?
+              indention_matches_annotation = annotation.length <= potential_nextline.text[/#\s*/].length
+              break unless sequential && vertically_aligned && only_preceded_by_whitespace && indention_matches_annotation
               nextline_comments << potential_nextline
+              prev = potential_nextline
             }
             [start, nextline_comments]
           }
