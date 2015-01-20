@@ -33,7 +33,7 @@ class SeeingIsBelieving
       self.encoding          = options.delete(:encoding)
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
       self.provided_input    = options.delete(:provided_input)     || String.new
-      self.event_handler     = options.delete(:event_handler)      || raise("must provide an event handler")
+      self.event_handler     = options.delete(:event_handler)      || raise(ArgumentError, "must provide an :event_handler")
       self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
@@ -110,7 +110,8 @@ class SeeingIsBelieving
                child_eventstream => child_eventstream }
       child = Process.detach Kernel.spawn(env, *popen_args, opts)
 
-      # close b/c we won't get EOF until all fds are closed
+      # close child streams b/c they won't emit EOF
+      # until both child and parent references are closed
       child_eventstream.close
       child_stdout.close
       child_stderr.close
@@ -123,8 +124,8 @@ class SeeingIsBelieving
         stdin.close
       }
 
-      # consume events
-      consumer        = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
+      # set up the event consumer
+      consumer = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
       consumer_thread = Thread.new { consumer.each { |e| event_handler.call e } }
 
       # wait for completion
@@ -134,8 +135,9 @@ class SeeingIsBelieving
         consumer_thread.join
       end
     rescue Timeout::Error
-      Process.kill "TERM", child.pid
-      raise
+      Process.kill "KILL", child.pid
+      consumer.process_timeout timeout_seconds
+      consumer_thread.join # finish consuming events
     ensure
       [stdin, stdout, stderr, eventstream].each { |io| io.close unless io.closed? }
     end

@@ -66,7 +66,7 @@ RSpec.describe SeeingIsBelieving do
     expect(invoke('').ruby_version).to eq RUBY_VERSION
   end
 
-  it 'allows uers to pass in their own inspection recorder' do
+  it 'allows users to pass in their own rewrite_code' do
     wrapper = lambda { |program|
       SeeingIsBelieving::WrapExpressions.call program,
         before_each: -> * { '(' },
@@ -348,8 +348,14 @@ RSpec.describe SeeingIsBelieving do
                                                                      ['6']]
   end
 
-  it 'times out if the timeout limit is exceeded' do
-    expect { invoke "sleep 0.2", timeout_seconds: 0.1 }.to raise_error Timeout::Error
+  it 'records the timeouts on the result' do
+    result = invoke "1"
+    expect(result).to_not be_timeout
+    expect(result.timeout_seconds).to eq nil
+
+    result = invoke "sleep 0.2", timeout_seconds: 0.1
+    expect(result).to be_timeout
+    expect(result.timeout_seconds).to eq 0.1
   end
 
   it 'records the exit status' do

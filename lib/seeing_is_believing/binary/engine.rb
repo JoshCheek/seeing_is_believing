@@ -1,7 +1,7 @@
 require 'seeing_is_believing/code'
 require 'seeing_is_believing/binary/data_structures'
 require 'seeing_is_believing/binary/remove_annotations'
-require 'seeing_is_believing/event_stream/handlers/record_exitstatus'
+require 'seeing_is_believing/event_stream/handlers/record_exit_events'
 
 class SeeingIsBelieving
   module Binary
@@ -38,7 +38,7 @@ class SeeingIsBelieving
       def evaluate!
         @evaluated || begin
           SeeingIsBelieving.call normalized_cleaned_body,
-                                 config.lib_options.merge(event_handler: record_exitstatus)
+                                 config.lib_options.merge(event_handler: record_exit_events)
           @timed_out = false
           @evaluated = true
         end
@@ -50,7 +50,7 @@ class SeeingIsBelieving
 
       def timed_out?
         @evaluated || raise(MustEvaluateFirst.new __method__)
-        @timed_out
+        !!record_exit_events.timeout_seconds
       end
 
       def result
@@ -71,7 +71,7 @@ class SeeingIsBelieving
 
       def exitstatus
         @evaluated || raise(MustEvaluateFirst.new __method__)
-        record_exitstatus.exitstatus
+        record_exit_events.exitstatus
       end
 
       private
@@ -86,8 +86,8 @@ class SeeingIsBelieving
         @code ||= Code.new(normalized_cleaned_body, config.filename)
       end
 
-      def record_exitstatus
-        @record_exitstatus ||= SeeingIsBelieving::EventStream::Handlers::RecordExitStatus.new config.lib_options.event_handler
+      def record_exit_events
+        @record_exit_events ||= SeeingIsBelieving::EventStream::Handlers::RecordExitEvents.new config.lib_options.event_handler
       end
 
       def normalized_cleaned_body

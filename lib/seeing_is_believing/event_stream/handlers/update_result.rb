@@ -24,6 +24,7 @@ class SeeingIsBelieving
           when SiBVersion       then result.sib_version       = event.value
           when RubyVersion      then result.ruby_version      = event.value
           when Filename         then result.filename          = event.value
+          when Timeout          then result.timeout_seconds   = event.seconds
           when Exec,
                Finished,
                StdoutClosed,

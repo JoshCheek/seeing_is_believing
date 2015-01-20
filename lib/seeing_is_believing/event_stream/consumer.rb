@@ -119,10 +119,6 @@ class SeeingIsBelieving
         yield call 1 until @finished
       end
 
-      def finished?
-        @finished
-      end
-
       # NOTE: Note it's probably a bad plan to call these methods
       # from within the same thread as the consumer, because if it
       # blocks, who will remove items from the queue?

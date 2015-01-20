@@ -69,7 +69,7 @@ class SeeingIsBelieving
           expect(engine.exitstatus).to eq 88
         end
 
-        specify 'timed_out? is true if the program raised a Timeout::Error' do
+        specify 'timed_out? is true if a Timeout event was emitted' do
           expect(call('', timeout: 1).evaluate!.timed_out?).to eq false
           expect(call('sleep 1', timeout: 0.01).evaluate!.timed_out?).to eq true
         end

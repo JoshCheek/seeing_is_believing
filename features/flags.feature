@@ -509,3 +509,19 @@ Feature: Using flags
     """
     ["sib_version",{"value":"{{SeeingIsBelieving::VERSION}}"}]
     """
+
+  Scenario: --stream emits a timeout event and finishes successfully when the process times out.
+    Given the file "eternal_sleep.rb":
+    """
+    """
+    When I run "seeing_is_believing -e 'loop { sleep 1 }' -t 0.01 --stream"
+    Then the exit status is 2
+    And stderr is "Timeout Error after 0.01 seconds!"
+    And stdout includes:
+    """
+    ["finished",{}]
+    """
+    And stdout includes:
+    """
+    ["timeout",{"seconds":0.01}]
+    """

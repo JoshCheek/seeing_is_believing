@@ -130,11 +130,24 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(result.stdout).to eq %("b"\n)
   end
 
-  it 'can set a timeout' do
+  it 'must provide an event handler, which receives the process\'s events' do
+    # raises error
+    expect { described_class.new("", filename, {}) }
+      .to raise_error ArgumentError, /event_handler/
+
+    # sees all the events
+    seen = []
+    invoke '1', event_handler: lambda { |e| seen << e }
+    expect(seen).to_not be_empty
+    expect(seen.last).to eq SeeingIsBelieving::EventStream::Events::Finished.new
+  end
+
+  it 'can set a timeout, which KILL interrupts the process and then waits for the events to finish' do
     expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
-    expect(Process).to receive(:kill)
-    expect { expect(invoke('p gets', timeout_seconds: 123).stdout).to eq %("a"\n) }
-      .to raise_error Timeout::Error
+    expect(Process).to receive(:kill).with("KILL", an_instance_of(Fixnum))
+    result = invoke 'p gets', timeout_seconds: 123
+    expect(result.timeout?).to eq true
+    expect(result.timeout_seconds).to eq 123
   end
 
   it 'raises an ArgumentError if given arguments it doesn\'t know' do
