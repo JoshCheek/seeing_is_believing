@@ -40,7 +40,7 @@ class SeeingIsBelieving
       engine.evaluate!
 
       if engine.timed_out?
-        stderr.puts "Timeout Error after #{config.timeout_seconds} seconds!"
+        stderr.puts "Timeout Error after #{engine.timeout_seconds} seconds!"
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

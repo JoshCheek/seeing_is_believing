@@ -51,10 +51,11 @@ class SeeingIsBelieving
       end
 
       context 'before evaluating it raises if asked for' do
-        specify('result')               { assert_must_evaluate :result }
-        specify('exitstatus')            { assert_must_evaluate :exitstatus }
-        specify('timed_out?')            { assert_must_evaluate :timed_out? }
-        specify('annotated_body')        { assert_must_evaluate :annotated_body }
+        specify('result')          { assert_must_evaluate :result }
+        specify('exitstatus')      { assert_must_evaluate :exitstatus }
+        specify('timed_out?')      { assert_must_evaluate :timed_out? }
+        specify('timeout_seconds') { assert_must_evaluate :timeout_seconds }
+        specify('annotated_body')  { assert_must_evaluate :annotated_body }
       end
 
       context 'after evaluating' do
@@ -72,6 +73,11 @@ class SeeingIsBelieving
         specify 'timed_out? is true if a Timeout event was emitted' do
           expect(call('', timeout: 1).evaluate!.timed_out?).to eq false
           expect(call('sleep 1', timeout: 0.01).evaluate!.timed_out?).to eq true
+        end
+
+        specify 'timeout_seconds is nil, or the timeout duration' do
+          expect(call('', timeout: 1).evaluate!.timeout_seconds).to eq nil
+          expect(call('sleep 1', timeout: 0.01).evaluate!.timeout_seconds).to eq 0.01
         end
 
         context 'annotated_body' do

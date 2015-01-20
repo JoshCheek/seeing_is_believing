@@ -50,7 +50,12 @@ class SeeingIsBelieving
 
       def timed_out?
         @evaluated || raise(MustEvaluateFirst.new __method__)
-        !!record_exit_events.timeout_seconds
+        !!timeout_seconds
+      end
+
+      def timeout_seconds
+        @evaluated || raise(MustEvaluateFirst.new __method__)
+        record_exit_events.timeout_seconds
       end
 
       def result
