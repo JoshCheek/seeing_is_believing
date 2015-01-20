@@ -93,7 +93,9 @@ class SeeingIsBelieving
       end
 
       # The process timed out
-      # note that you will not receive an exitstatus if this occurs
+      # note that you will probably not receive an exitstatus
+      # if this occurs. Though it's hypothetically possible...
+      # this is all asynchronous.
       class Timeout < Event
         def self.event_name
           :timeout

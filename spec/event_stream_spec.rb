@@ -116,10 +116,16 @@ module SeeingIsBelieving::EventStream
         expect { consumer.call 10 }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
 
-      it 'raises NoMoreEvents once it its input streams are all closed and its seen the exit status' do
+      it 'raises NoMoreEvents once its input streams are all closed and its seen an exit status' do
         close_streams eventstream_producer, stdout_producer, stderr_producer
-        producer.finish!
         consumer.process_exitstatus 0
+        consumer.each { }
+        expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
+      end
+
+      it 'raises NoMoreEvents once its input streams are all closed and its seen a timeout' do
+        close_streams eventstream_producer, stdout_producer, stderr_producer
+        consumer.process_timeout 1
         consumer.each { }
         expect { consumer.call }.to raise_error SeeingIsBelieving::NoMoreEvents
       end
@@ -585,34 +591,21 @@ module SeeingIsBelieving::EventStream
         expect(consumer.call).to eq Events::Exitstatus.new(value: 92)
       end
 
-      it 'emits a Finished event when all streams are closed and it has the exit status' do
-        finish!
-        event_classes = consumer.each.map(&:class)
-        expect(event_classes).to include Events::Finished
+      it 'emits a Finished event when all streams are closed and it has an exit status' do
+        consumer.process_exitstatus 1
+        close_streams eventstream_producer, stdout_producer, stderr_producer
+        expect(consumer.each.to_a.last).to eq Events::Finished.new
       end
 
-      context 'when the process times out' do
-        it 'emits a Timeout event' do
-          consumer.process_timeout 1.23
-          expect(consumer.call).to eq Events::Timeout.new(seconds:1.23)
-        end
-        it 'emits a Finished event once its streams are closed' do
-          consumer.process_timeout 1
-          close_streams eventstream_producer, stdout_producer, stderr_producer
-          expect(consumer.each.to_a.last).to eq Events::Finished.new
-        end
-        it 'raises an error if given a timeout and then an exitstatus' do
-          consumer.process_timeout 1
-          consumer.process_exitstatus 2
-          expect { consumer.call 2 }
-            .to raise_error SeeingIsBelieving::IncompatibleEvents, /timeout.*?exitstatus/
-        end
-        it 'raises an error if given an exitstatus and then a timeout' do
-          consumer.process_exitstatus 2
-          consumer.process_timeout 1
-          expect { consumer.call 2 }
-            .to raise_error SeeingIsBelieving::IncompatibleEvents, /exitstatus.*?timeout/
-        end
+      it 'emits a Timeout event on process_timeout' do
+        consumer.process_timeout 1.23
+        expect(consumer.call).to eq Events::Timeout.new(seconds:1.23)
+      end
+
+      it 'emits a Finished event when all streams are closed and it has a timeout' do
+        consumer.process_timeout 1
+        close_streams eventstream_producer, stdout_producer, stderr_producer
+        expect(consumer.each.to_a.last).to eq Events::Finished.new
       end
     end
 

@@ -14,7 +14,6 @@ class SeeingIsBelieving
         ProcessExited        = Module.new
 
         def initialize
-          @exit_events = []
           @unmet_criteria = [
             EventThreadFinished,
             StdoutThreadFinished,
@@ -42,18 +41,10 @@ class SeeingIsBelieving
         end
 
         def received_exitstatus!
-          @exit_events << __method__
-          @exit_events.size != 1 &&
-            raise(IncompatibleEvents.new @exit_events)
-        ensure
           @unmet_criteria.delete ProcessExited
         end
 
         def received_timeout!
-          @exit_events << __method__
-          @exit_events.size != 1 &&
-            raise(IncompatibleEvents.new @exit_events)
-        ensure
           @unmet_criteria.delete ProcessExited
         end
       end
