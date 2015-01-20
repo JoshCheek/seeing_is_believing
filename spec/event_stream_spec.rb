@@ -590,6 +590,30 @@ module SeeingIsBelieving::EventStream
         event_classes = consumer.each.map(&:class)
         expect(event_classes).to include Events::Finished
       end
+
+      context 'when the process times out' do
+        it 'emits a Timeout event' do
+          consumer.process_timeout 1.23
+          expect(consumer.call).to eq Events::Timeout.new(seconds:1.23)
+        end
+        it 'emits a Finished event once its streams are closed' do
+          consumer.process_timeout 1
+          close_streams eventstream_producer, stdout_producer, stderr_producer
+          expect(consumer.each.to_a.last).to eq Events::Finished.new
+        end
+        it 'raises an error if given a timeout and then an exitstatus' do
+          consumer.process_timeout 1
+          consumer.process_exitstatus 2
+          expect { consumer.call 2 }
+            .to raise_error SeeingIsBelieving::IncompatibleEvents, /timeout.*?exitstatus/
+        end
+        it 'raises an error if given an exitstatus and then a timeout' do
+          consumer.process_exitstatus 2
+          consumer.process_timeout 1
+          expect { consumer.call 2 }
+            .to raise_error SeeingIsBelieving::IncompatibleEvents, /exitstatus.*?timeout/
+        end
+      end
     end
 
 
@@ -607,6 +631,7 @@ module SeeingIsBelieving::EventStream
           [Events::SiBVersion       , :sib_version],
           [Events::RubyVersion      , :ruby_version],
           [Events::Exitstatus       , :exitstatus],
+          [Events::Timeout          , :timeout],
           [Events::Exec             , :exec],
           [Events::ResultsTruncated , :results_truncated],
           [Events::LineResult       , :line_result],

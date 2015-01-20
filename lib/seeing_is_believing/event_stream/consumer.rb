@@ -8,23 +8,53 @@ class SeeingIsBelieving
   module EventStream
     class Consumer
       class FinishCriteria
-        CRITERIA = [
-          :event_thread_finished!,
-          :stdout_thread_finished!,
-          :stderr_thread_finished!,
-          :process_exited!,
-        ].freeze.each do |name|
-          define_method name do
-            @unmet_criteria.delete name
-            @satisfied = @unmet_criteria.empty?
-          end
-        end
+        EventThreadFinished  = Module.new
+        StdoutThreadFinished = Module.new
+        StderrThreadFinished = Module.new
+        ProcessExited        = Module.new
+
         def initialize
-          @satisfied      = false
-          @unmet_criteria = CRITERIA.dup
+          @exit_events = []
+          @unmet_criteria = [
+            EventThreadFinished,
+            StdoutThreadFinished,
+            StderrThreadFinished,
+            ProcessExited,
+          ]
         end
+
+        # finish criteria are satisfied,
+        # we can stop processing events
         def satisfied?
-          @satisfied
+          @unmet_criteria.empty?
+        end
+
+        def event_thread_finished!
+          @unmet_criteria.delete EventThreadFinished
+        end
+
+        def stdout_thread_finished!
+          @unmet_criteria.delete StdoutThreadFinished
+        end
+
+        def stderr_thread_finished!
+          @unmet_criteria.delete StderrThreadFinished
+        end
+
+        def received_exitstatus!
+          @exit_events << __method__
+          @exit_events.size != 1 &&
+            raise(IncompatibleEvents.new @exit_events)
+        ensure
+          @unmet_criteria.delete ProcessExited
+        end
+
+        def received_timeout!
+          @exit_events << __method__
+          @exit_events.size != 1 &&
+            raise(IncompatibleEvents.new @exit_events)
+        ensure
+          @unmet_criteria.delete ProcessExited
         end
       end
 
@@ -47,6 +77,7 @@ class SeeingIsBelieving
       end
 
       def initialize(streams)
+        @finished            = false
         self.finish_criteria = FinishCriteria.new
         self.queue           = Queue.new
         event_stream         = streams.fetch :events
@@ -97,15 +128,26 @@ class SeeingIsBelieving
         yield call 1 until @finished
       end
 
-      # NOTE: Note it's probably a bad plan to call this method
+      def finished?
+        @finished
+      end
+
+      # NOTE: Note it's probably a bad plan to call these methods
       # from within the same thread as the consumer, because if it
       # blocks, who will remove items from the queue?
       def process_exitstatus(status)
-        queue << Events::Exitstatus.new(value: status)
         queue << lambda {
-          finish_criteria.process_exited!
+          queue << Events::Exitstatus.new(value: status)
+          finish_criteria.received_exitstatus!
         }
       end
+      def process_timeout(seconds)
+        queue << lambda {
+          queue << Events::Timeout.new(seconds: seconds)
+          finish_criteria.received_timeout!
+        }
+      end
+
 
       private
 

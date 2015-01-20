@@ -12,6 +12,13 @@ class SeeingIsBelieving
   end
 
   # EventStream
-  NoMoreEvents = Class.new SeeingIsBelievingError
-  UnknownEvent = Class.new SeeingIsBelievingError
+  NoMoreEvents       = Class.new SeeingIsBelievingError
+  UnknownEvent       = Class.new SeeingIsBelievingError
+  IncompatibleEvents = Class.new SeeingIsBelievingError do
+    attr_accessor :events
+    def initialize(events)
+      self.events = events
+      super "Incompatible events: #{events.inspect}"
+    end
+  end
 end

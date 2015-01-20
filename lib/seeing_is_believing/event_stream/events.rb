@@ -92,6 +92,15 @@ class SeeingIsBelieving
         attributes :value
       end
 
+      # The process timed out
+      # note that you will not receive an exitstatus if this occurs
+      class Timeout < Event
+        def self.event_name
+          :timeout
+        end
+        attributes :seconds
+      end
+
       # Emitted when the process invokes exec.
       # Note that this could be a child process,
       # so it does not necessarily mean there won't be any more line results
