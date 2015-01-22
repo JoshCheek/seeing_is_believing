@@ -83,6 +83,12 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
         expect(heredoc_wrap "<<A.size <<B\nA\nB").to eq "[{<<A.size <<B}]\nA\nB"
         expect(heredoc_wrap "<<A.size(<<B)\nA\nB").to eq "[{<<A.size(<<B)}]\nA\nB"
       end
+
+      example 'heredocs withs spaces in the delimiter' do
+        expect(heredoc_wrap "<<'a b'\n1\na b").to eq "[{<<'a b'}]\n1\na b"
+        expect(heredoc_wrap "<<'a b'\n1\na b\n1").to eq "[{<<'a b'}\n1\na b\n{1}]"
+        expect(heredoc_wrap '<<"a b"'+"\n1\na b").to eq '[{<<"a b"}]'+"\n1\na b"
+      end
     end
 
     it 'identifies the last line of the body' do
