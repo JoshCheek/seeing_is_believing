@@ -2,3 +2,4 @@ proving_grounds/*
 *.gem
 Gemfile.lock
 todo
+coverage

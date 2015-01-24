@@ -1,3 +1,6 @@
+simplecov_file = File.expand_path 'spec/simplecov'
+ENV['RUBYOPT'] = "-r#{simplecov_file}"
+
 desc 'run specs'
 task :spec do
   sh 'rspec -cf d --fail-fast'
@@ -22,8 +25,19 @@ namespace :spec do
   end
 end
 
+desc 'Show most recent test run\'s code coverage'
+task :coverage do
+  require 'simplecov'
+  require 'simplecov-html'
+  SimpleCov.result.format!
+end
+
+task :reset_coverage do
+  rm_r 'coverage'
+end
+
 desc 'Run work in progress specs and cukes'
 task wip: ['spec:wip', 'cuke:wip']
 
 desc 'Run all specs and cukes'
-task default: [:spec, :cuke]
+task default: [:reset_coverage, :spec, :cuke, :coverage]
