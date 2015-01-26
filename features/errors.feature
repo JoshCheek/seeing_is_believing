@@ -69,10 +69,10 @@ Feature: Running the binary unsuccessfully
     And the exit status is 2
     And stdout is empty
 
-  Scenario: Passing unknown options
+  Scenario: Passing unknown flags
     Given the file "some_file" "1"
-    When I run "seeing_is_believing --unknown-option"
-    Then stderr is 'Error: --unknown-option is not an option, see the help screen (-h) for a list of options'
+    When I run "seeing_is_believing --unknown-flag"
+    Then stderr is 'Error: --unknown-flag is not a flag, see the help screen (-h) for a list of options'
     And the exit status is 2
     And stdout is empty
 

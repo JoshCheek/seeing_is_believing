@@ -29,6 +29,7 @@ class SeeingIsBelieving
       predicate(:inherit_exitstatus)    { false }
       predicate(:remove_value_prefixes) { true  }
       predicate(:debug)                 { false }
+      predicate(:ignore_unknown_flags)  { false }
       attribute(:body)                  { nil }
       attribute(:filename)              { nil }
       attribute(:errors)                { [] }
@@ -46,9 +47,10 @@ class SeeingIsBelieving
       end
 
       def parse_args(args)
-        as        = nil
-        filenames = []
-        args      = args.dup
+        args          = args.dup
+        as            = nil
+        filenames     = []
+        unknown_flags = []
 
         extract_positive_int_for = lambda do |flagname, &on_success|
           string = args.shift
@@ -91,6 +93,9 @@ class SeeingIsBelieving
 
           when '-v', '--version'
             self.print_version = true
+
+          when '--ignore-unknown-flags'
+            self.ignore_unknown_flags = true
 
           when '-x', '--xmpfilter-style'
             self.annotator                 = AnnotateMarkedLines
@@ -194,7 +199,7 @@ class SeeingIsBelieving
             end
 
           when /^(-.|--.*)$/
-            add_error("#{arg} is not an option, see the help screen (-h) for a list of options")
+            unknown_flags << arg
 
           when /^-[^-]/
             args.unshift *arg.scan(/[^-]\+?/).map { |flag| "-#{flag}" }
@@ -202,6 +207,11 @@ class SeeingIsBelieving
           else
             filenames << arg
           end
+        end
+
+        unknown_flags.each do |flag|
+          break if ignore_unknown_flags?
+          add_error "#{flag} is not a flag, see the help screen (-h) for a list of options"
         end
 
         filenames.size > 1 &&
@@ -264,13 +274,13 @@ Usage: seeing_is_believing [options] [filename]
 
 Notes:
 
-  * If no filename or program (-e flag) are provided, the program will read from standard input.
+  * If no filename or program (-e option) are provided, the program will read from standard input.
   * The process's stdin will be passed to the program unless the program body is on stdin.
   * The exit status will be:
     0 - No errors
     1 - Displayable error (e.g. code raises an exception while running)
     2 - Non-displayable error (e.g. a syntax error, a timeout)
-    n - The program's exit status if the --inherit-exitstatus flag is set
+    n - The program's exit status if the --inherit-exitstatus option is set
 
 Options:
   -d,  --line-length n           # max length of the entire line (only truncates results, not source lines)
@@ -296,6 +306,8 @@ Options:
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated
        --stream                  # a JSON stream of every event ias it is seen (such as recording a line)
+       --ignore-unknown-flags    # don't error when flag is not in this list
+                                   allows integrating code to support compatibility with future versions of SiB
   -v,  --version                 # print the version (#{VERSION})
   -h,  --help                    # help screen without examples
   -h+, --help+                   # help screen with examples

@@ -104,11 +104,27 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       assert_same_flat_opts ['-jgh+'], ['-j',  '-g',  '-h+']
     end
 
-    specify 'unknown options set an error' do
-      expect(parse(['--xyz'  ])).to have_error '--xyz is not an option'
-      expect(parse(['-y'     ])).to have_error '-y is not an option'
-      expect(parse(['-y', 'b'])).to have_error '-y is not an option'
-      expect(parse(['-+h'    ])).to have_error '-+ is not an option'
+    describe 'ignore_unknown_flags?' do
+      it 'is false by default' do
+        expect(parse([]).ignore_unknown_flags?).to eq false
+      end
+
+      it 'is set to true when it sees the --ignore-unknown-options flag' do
+        expect(parse(['--ignore-unknown-flags']).ignore_unknown_flags?).to eq true
+      end
+
+      specify 'when false, unknown flags set an error' do
+        expect(parse(['--xyz'  ])).to have_error '--xyz is not a flag'
+        expect(parse(['-y'     ])).to have_error '-y is not a flag'
+        expect(parse(['-y', 'b'])).to have_error '-y is not a flag'
+        expect(parse(['-+h'    ])).to have_error '-+ is not a flag'
+      end
+
+      specify 'when true, unknown flags do not set an error' do
+        expect(parse(['--zomg'])).to have_error /zomg/
+        expect(parse(['--ignore-unknown-flags', '--zomg'])).to_not have_error /zomg/
+        expect(parse(['--zomg', '--ignore-unknown-flags'])).to_not have_error /zomg/
+      end
     end
 
     describe 'filename and lib_options.filename' do

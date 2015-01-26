@@ -522,3 +522,9 @@ Feature: Using flags
     """
     ["timeout",{"seconds":0.01}]
     """
+
+  Scenario: --ignore-unknown-flags prevents errors on unknown flags for forward compatibility
+    When I run "seeing_is_believing -e '1' --ignore-unknown-flags --zomg-wat"
+    Then the exit status is 0
+    And stderr is empty
+    And stdout is "1  # => 1"
