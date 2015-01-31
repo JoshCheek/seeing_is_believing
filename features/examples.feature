@@ -259,6 +259,65 @@ Feature: Running the binary successfully
     And the exit status is 0
 
 
+  @not-implemented
+  Scenario: Fork records data in child until it execs, does not close parent.
+    Given the file "fork_exec_parent.rb":
+    """
+    :both
+    if fork #
+      :parent
+      exec 'echo', 'hello'
+    else
+      :child
+    end
+    :child
+
+    # >> hello
+    """
+    When I run "seeing_is_believing fork_exec_parent.rb"
+    Then stdout is:
+    """
+    :both                   # => :both
+    if fork #
+      :parent               # => :parent
+      exec 'echo', 'hello'
+    else
+      :child                # => :child
+    end
+    :child                  # => :child
+
+    # >> hello
+    """
+
+    Given the file "fork_exec_child.rb":
+    """
+    :both
+    if fork #
+      :parent
+    else
+      :child
+      exec 'echo', 'hello'
+    end
+    :parent
+
+    # >> hello
+    """
+    When I run "seeing_is_believing fork_exec_child.rb"
+    Then stdout is:
+    """
+    :both                   # => :both
+    if fork #
+      :parent               # => :parent
+    else
+      :child                # => :child
+      exec 'echo', 'hello'
+    end
+    :parent                 # => :parent
+
+    # >> hello
+    """
+
+
   Scenario: Implicit regexp conditional
     Given the stdin content "abc"
     And the file "implicit_regex_conditional.rb":
