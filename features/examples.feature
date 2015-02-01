@@ -260,7 +260,7 @@ Feature: Running the binary successfully
 
 
   @not-implemented
-  Scenario: Fork records data in child until it execs, does not close parent.
+  Scenario: Fork records data in parent and child, parent exec does not affect it.
     Given the file "fork_exec_parent.rb":
     """
     :both
@@ -268,6 +268,7 @@ Feature: Running the binary successfully
       :parent
       exec 'echo', 'hello'
     else
+      sleep 1
       :child
     end
     :child
@@ -282,6 +283,7 @@ Feature: Running the binary successfully
       :parent               # => :parent
       exec 'echo', 'hello'
     else
+      sleep 1               # => 1
       :child                # => :child
     end
     :child                  # => :child
@@ -289,10 +291,13 @@ Feature: Running the binary successfully
     # >> hello
     """
 
+  @not-implemented
+  Scenario: Fork records data in parent and child, child exec does not affect it.
     Given the file "fork_exec_child.rb":
     """
     :both
     if fork #
+      sleep 1
       :parent
     else
       :child
@@ -307,6 +312,7 @@ Feature: Running the binary successfully
     """
     :both                   # => :both
     if fork #
+      sleep 1               # => 1
       :parent               # => :parent
     else
       :child                # => :child
