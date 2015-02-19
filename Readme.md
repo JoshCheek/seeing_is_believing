@@ -64,19 +64,25 @@ Currently requires Ruby 1.9 or 2.x
 Editor Integration
 ==================
 
-* [sublime-text-2-seeing-is-believing](https://github.com/JoshCheek/sublime-text-2-seeing-is-believing)
+* [Atom](https://github.com/JoshCheek/atom-seeing-is-believing) (prob has best installation instructions, overall best integration, but config and filesystem events are iffy)
+* [Sublime 2 and 3](https://github.com/JoshCheek/sublime-text-2-and-3-seeing-is-believing) (works reasonably, but isn't integrated with the package manager)
 * [TextMate 1](https://github.com/JoshCheek/text_mate_1-seeing-is_believing)
-* [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing)
-* [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter) (has support for `seeing_is_believing`)
+* [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing) (TM2 is actually looking really nice these days -- Josh Cheek, 18 Feb 2015)
+
+Vim
+===
+
+I didn't write either of these, but they both support Seeing Is Beleiving. I've looked through the code, it works reasonably. One of them, I wound up having to edit the installed package, don't remember which.
+
+* [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter)
 * [vim-seeing-is-believing](https://github.com/hwartig/vim-seeing-is-believing)
-* [atom-seeing-is-believing](https://github.com/JoshCheek/atom-seeing-is-believing) (prob has best installation instructions)
 
 Emacs Integration
 =================
 
 Add this function to your Emacs configuration:
 
-~~~~ scheme
+```scheme
 (defun seeing-is-believing ()
   "Replace the current region (or the whole buffer, if none) with the output
 of seeing_is_believing."
@@ -84,7 +90,7 @@ of seeing_is_believing."
   (let ((beg (if (region-active-p) (region-beginning) (point-min)))
         (end (if (region-active-p) (region-end) (point-max))))
     (shell-command-on-region beg end "seeing_is_believing" nil 'replace)))
-~~~~
+```
 
 You can now call `seeing-is-believing` to replace the current region
 or current buffer contents with the output of running it through
@@ -95,8 +101,8 @@ Known Issues
 
 * `begin; else; break; end` this code (an else without a resecue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
   As such, I doubt that anyone will ever write it. But if you were to write it, it would blow up, because SiB rewrites your code, wrapping every expression that could have a value.
-  This code will be wrapped. But using the value is syntactically invalid in Ruby, because it constitutes a "void value expression" (aka a nightmare for anyone working with code).
-  I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge taht I don't think it's worth worrying about.
+  This code will be wrapped. But using the value is **syntactically** invalid in Ruby, because it constitutes a "void value expression" (aka a pointless timesink and the cause of many bugs in SiB).
+  Unfortunately, I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge that I don't think it's worth worrying about.
 
 Version 2
 =========
@@ -110,6 +116,13 @@ These need to be done before release:
 
 * Add default to number of captures (1000), require user to explicitly set it to infinity
 * Expose markers via the CLI
+* Spruce up editor integration
+  * Integrate with package managers where they are available
+  * Expose options to use the streaming API (update as events are seen)
+  * Ship with Traveling Ruby so that new users can just press a button and it works,
+    rather than having to figure out all the compmlex ecosystem around installing
+  * Would be nice to have real integration with Emacs
+  * Would be nice to support Ruby Mine
 
 Version 4
 =========
