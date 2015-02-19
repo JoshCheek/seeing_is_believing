@@ -891,7 +891,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
         expect(wrap("a b:1, **c")).to eq "<a b:1, **c>"
         expect(wrap("{\na:1,\n**b\n}")).to eq "<{\na:<1>,\n**<b>\n}>"
         expect(wrap("a(b:1,\n **c\n)")).to eq "<a(b:<1>,\n **<c>\n)>"
-        pending 'Fixed this in Parser, but it\'s not released yet https://github.com/whitequark/parser/commit/aeb95c776d11e212ed95b92c69e96d1cccdb6424'
         expect(wrap("def a(*, **)\n1\nend")).to eq "<def a(*, **)\n<1>\nend>"
       end
 

@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency             "parser",   ">= 2.2.0.2", "< 3.0"
+  s.add_dependency             "parser",   ">= 2.2.0.3", "< 3.0"
 
   s.add_development_dependency "haiti",    ">= 0.1", "< 0.3"
   s.add_development_dependency "rake",     "~> 10.0"
