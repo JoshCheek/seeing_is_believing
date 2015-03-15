@@ -2,7 +2,6 @@ desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its 
 file :bundle do
   # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
   sh 'bundle install --standalone --binstubs bundle/bin'
-  sh 'ruby --disable-gems -S bundle/bin/rspec'
 end
 
 
