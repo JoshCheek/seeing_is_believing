@@ -1,9 +1,25 @@
 desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
-file :bundle do
+task :build do
   # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
   sh 'bundle install --standalone --binstubs bundle/bin'
 end
 
+desc 'Remove generated and irrelevant files'
+task :clean do
+  rm_rf [
+    'bundle',
+    '.bundle',
+    'Gemfile.lock',
+    'proving_grounds',
+    *Dir['*.gem'],
+  ]
+end
+
+
+file :bundle do
+  $stderr.puts "\e[31mLooks like the gems aren\'t installed, run `rake build` to install them\e[39m"
+  exit 1
+end
 
 desc 'Run specs'
 task spec: :bundle do
