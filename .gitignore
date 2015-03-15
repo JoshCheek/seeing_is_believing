@@ -1,6 +1,19 @@
+# Transient test files
 proving_grounds/*
+
+# Don't accidentally commit gems generated from the source code
 *.gem
+
+# Since it's a gem, don't lock it down to specific versions
 Gemfile.lock
+
+# local notes about what I'm working on
 todo
+
+# Bundler stores its configuration information here
 .bundle
+
+# Where I'm vendoring gems for the standalone environment
+# Going with this location b/c Bundler winds up creating this dir anyway
+# to make `require "bundler/setup"` work
 bundle
