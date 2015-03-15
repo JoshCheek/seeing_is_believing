@@ -1,5 +1,5 @@
 language: ruby
-script: rake
+script: bundle install && rspec -cf d && cucumber -ct ~@not-implemented
 rvm:
   - 1.9.3
   - 2.0.0
