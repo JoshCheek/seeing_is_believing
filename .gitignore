@@ -2,3 +2,5 @@ proving_grounds/*
 *.gem
 Gemfile.lock
 todo
+.bundle
+bundle
