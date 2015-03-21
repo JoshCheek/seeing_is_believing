@@ -552,4 +552,23 @@ RSpec.describe SeeingIsBelieving do
       expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5
     end
   end
+
+  # Looked through the implementation of event_stream/producer to find a list of core behaviour it depends on
+  # this is a list of things to check that it can work without.
+  # based on this issue: https://github.com/JoshCheek/seeing_is_believing/issues/55
+  describe 'it works even in hostile environments' do
+    specify 'when IO does not have sync, <<, and flush'
+    specify 'when Queue does not have <<, shift, and clear'
+    specify 'when Symbol does not have ==, to_s, inspect'
+    specify 'when String does not have ==, to_s, inspect, to_i'
+    specify 'when Fixnum does not have <, next, =='
+    specify 'when Hash does not have [], []='
+    specify 'when Array does not have pack, <<, to_ary, grep, first, [], []='
+    specify 'when Marshal does not have dump'
+    specify 'when Kernel does not have defined?, kind_of?'
+    specify 'when SystemExit does not have status'
+    specify 'when Enumerable does not have map'
+    specify 'when Exception does not have status'
+    specify 'when Thread does not have new, join'
+  end
 end
