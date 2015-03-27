@@ -62,7 +62,7 @@ RSpec.describe SeeingIsBelieving do
     expect(result.filename).to eq 'abc.rb'
   end
 
-  it 'makes the Ruby versino info available' do
+  it 'makes the Ruby version info available' do
     expect(invoke('').ruby_version).to eq RUBY_VERSION
   end
 
