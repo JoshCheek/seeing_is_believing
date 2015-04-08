@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency             "parser",   ">= 2.2.0.3", "< 3.0"
 
+  s.add_development_dependency "what_weve_got_here_is_an_error_to_communicate"
   s.add_development_dependency "haiti",    ">= 0.1", "< 0.3"
   s.add_development_dependency "rake",     "~> 10.0"
   s.add_development_dependency "rspec",    "~>  3.2"
