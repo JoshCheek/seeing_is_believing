@@ -27,7 +27,8 @@ task spec: :bundle do
              '-S', 'bundle/bin/rspec', # rspec
              '--colour',
              '--fail-fast',
-             '--format', 'documentation'
+             '--require', 'error_to_communicate/rspec_formatter',
+             '--format',  'WhatWeveGotHereIsAnErrorToCommunicate::RSpecFormatter'
 end
 
 desc 'Run cukes'
