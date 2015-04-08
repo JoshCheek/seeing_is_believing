@@ -23,19 +23,13 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem',
-             '-S', 'bundle/bin/rspec', # rspec
-             '--colour',
-             '--fail-fast',
-             '--require', 'error_to_communicate/rspec_formatter',
-             '--format',  'WhatWeveGotHereIsAnErrorToCommunicate::RSpecFormatter'
+  sh 'ruby', '--disable-gem', '-S', 'bundle/bin/rspec'
 end
 
 desc 'Run cukes'
 task cuke: :bundle do
-  sh 'ruby', '--disable-gem',
-             '-S', 'bundle/bin/cucumber', # cucumber
-             '--tags', '~@not-implemented'
+  sh 'ruby', '--disable-gem', '-S',
+     'bundle/bin/cucumber', '--tags', '~@not-implemented'
 end
 
 desc 'Run all specs and cukes'
