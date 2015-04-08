@@ -34,3 +34,6 @@ end
 
 desc 'Run all specs and cukes'
 task default: [:spec, :cuke]
+
+desc 'Install dependencies and run tests (mainly for Travis CI)'
+task ci: [:build, :spec, :cuke]
