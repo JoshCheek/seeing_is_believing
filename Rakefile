@@ -24,12 +24,12 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem', '-I', File.expand_path('bundle'), *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/rspec'
+  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/rspec'
 end
 
 desc 'Run cukes'
 task cuke: :bundle do
-  sh 'ruby', '--disable-gem', '-I', File.expand_path('bundle'), *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/cucumber', '--tags', '~@not-implemented'
+  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/cucumber', '--tags', '~@not-implemented'
 end
 
 desc 'Run all specs and cukes'
