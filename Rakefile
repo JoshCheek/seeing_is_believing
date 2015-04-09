@@ -22,17 +22,13 @@ file :bundle do
   exit 1
 end
 
-task :load_env do
-  ENV['RUBYOPT'] = "-r#{File.expand_path 'bundle/bundler/setup'}"
-end
-
 desc 'Run specs'
-task spec: [:bundle, :load_env] do
+task spec: :bundle do
   sh 'ruby', '--disable-gem', '-I', File.expand_path('bundle'), *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/rspec'
 end
 
 desc 'Run cukes'
-task cuke: [:bundle, :load_env] do
+task cuke: :bundle do
   sh 'ruby', '--disable-gem', '-I', File.expand_path('bundle'), *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/cucumber', '--tags', '~@not-implemented'
 end
 
