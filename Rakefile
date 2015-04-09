@@ -15,19 +15,22 @@ task :clean do
   ]
 end
 
-
 file :bundle do
   $stderr.puts "\e[31mLooks like the gems aren\'t installed, run `rake build` to install them\e[39m"
   exit 1
 end
 
+task :load_env do
+  ENV['RUBYOPT'] = "-r#{File.expand_path 'bundle/bundler/setup'}"
+end
+
 desc 'Run specs'
-task spec: :bundle do
+task spec: [:bundle, :load_env] do
   sh 'ruby', '--disable-gem', '-S', 'bundle/bin/rspec'
 end
 
 desc 'Run cukes'
-task cuke: :bundle do
+task cuke: [:bundle, :load_env] do
   sh 'ruby', '--disable-gem', '-S',
      'bundle/bin/cucumber', '--tags', '~@not-implemented'
 end
