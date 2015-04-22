@@ -88,8 +88,10 @@ Add this function to your Emacs configuration:
 of seeing_is_believing."
   (interactive)
   (let ((beg (if (region-active-p) (region-beginning) (point-min)))
-        (end (if (region-active-p) (region-end) (point-max))))
-    (shell-command-on-region beg end "seeing_is_believing" nil 'replace)))
+        (end (if (region-active-p) (region-end) (point-max)))
+        (origin (point)))
+    (shell-command-on-region beg end "seeing_is_believing" nil 'replace)
+    (goto-char origin)))
 ```
 
 You can now call `seeing-is-believing` to replace the current region
