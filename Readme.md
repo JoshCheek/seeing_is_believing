@@ -72,7 +72,7 @@ Editor Integration
 Vim
 ===
 
-I didn't write either of these, but they both support Seeing Is Beleiving. I've looked through the code, it works reasonably. One of them, I wound up having to edit the installed package, don't remember which.
+I didn't write either of these, but they both support Seeing Is Believing. I've looked through the code, it works reasonably. One of them, I wound up having to edit the installed package, don't remember which.
 
 * [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter)
 * [vim-seeing-is-believing](https://github.com/hwartig/vim-seeing-is-believing)
