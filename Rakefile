@@ -24,7 +24,7 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/rspec'
+  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/mrspec'
 end
 
 desc 'Run cukes'
