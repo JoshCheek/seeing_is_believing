@@ -4,10 +4,10 @@ class SeeingIsBelieving
     def self.call(program)
       WrapExpressions.call program,
         before_each: -> line_number {
-          "("
+          "$SiB.record_result(:inspect, #{line_number}, "
         },
         after_each:  -> line_number {
-          ").tap { |v| $SiB.record_result :inspect, #{line_number}, v }"
+          ")"
         }
     end
   end

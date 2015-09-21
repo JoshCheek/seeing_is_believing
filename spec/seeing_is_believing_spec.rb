@@ -503,6 +503,10 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for "File.read(__FILE__).lines.count").to eq [['1']]
   end
 
+  it 'records instances of BasicObject', t:true do
+    expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
