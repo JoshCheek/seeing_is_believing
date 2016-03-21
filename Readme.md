@@ -80,7 +80,9 @@ I didn't write either of these, but they both support Seeing Is Believing. I've 
 Emacs Integration
 =================
 
-Add this function to your Emacs configuration:
+You can use my friend's configuration [file](https://github.com/jcinnamond/seeing-is-believing-mode).
+
+Or, adding this function to your Emacs configuration will get you pretty far:
 
 ```scheme
 (defun seeing-is-believing ()
