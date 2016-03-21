@@ -459,8 +459,7 @@ Feature:
     b"
 
     # ~> NoMethodError
-    # ~> undefined method `a
-    # ~> b' for 1:Fixnum
+    # ~> undefined method
     """
 
 
