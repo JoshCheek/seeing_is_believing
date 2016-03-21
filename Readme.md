@@ -5,7 +5,7 @@ Seeing Is Believing
 ===================
 
 Evaluates Ruby code, recording the results of each line.
-Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing#editor-integration).
+Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing#editor-integration)).
 
 ![example](https://s3.amazonaws.com/josh.cheek/images/scratch/sib-example1.gif)
 
@@ -80,7 +80,7 @@ I didn't write either of these, but they both support Seeing Is Believing. I've 
 Emacs Integration
 =================
 
-You can use my friend's configuration [file](https://github.com/jcinnamond/seeing-is-believing-mode).
+You can use my friend's configuration [file](https://github.com/jcinnamond/seeing-is-believing).
 
 Or, adding this function to your Emacs configuration will get you pretty far:
 
