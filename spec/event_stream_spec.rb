@@ -394,7 +394,7 @@ module SeeingIsBelieving::EventStream
                          backtrace_filename: __FILE__
       end
 
-      example 'Example: Common edge case: name error', t:true do
+      example 'Example: Common edge case: name error' do
         backtrace_line  = record_exception(99) { BasicObject.new.instance_eval { not_a_local_or_meth } }
         backtrace_frame = 0
         backtrace_frame += 1 if defined? Rubinius # their method missing goes into the kernel
