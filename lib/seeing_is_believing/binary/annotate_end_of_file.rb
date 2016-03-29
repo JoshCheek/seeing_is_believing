@@ -12,7 +12,7 @@ class SeeingIsBelieving
                  exception_output_for(results, options)
 
         code = Code.new(new_body)
-        code.rewriter.insert_after code.body_range, output
+        code.rewriter.insert_after_multi code.body_range, output
         new_body.replace code.rewriter.process
       end
 

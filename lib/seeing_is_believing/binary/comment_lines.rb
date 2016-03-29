@@ -22,7 +22,7 @@ class SeeingIsBelieving
             first_index -= 1 while first_index > 0 && raw_code[first_index-1] != "\n"
             comment_text = commenter.call raw_code[first_index...last_index], line_number
             range        = Parser::Source::Range.new(commentable_lines.buffer, first_index, last_index)
-            commentable_lines.rewriter.insert_after range, comment_text
+            commentable_lines.rewriter.insert_after_multi range, comment_text
           end
           commentable_lines.rewriter.process
         end
