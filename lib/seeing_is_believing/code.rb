@@ -24,20 +24,19 @@ class SeeingIsBelieving
       @raw             = raw_code
       @buffer          = Parser::Source::Buffer.new(name||"SeeingIsBelieving")
       @buffer.source   = raw
-      builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @rewriter        = Parser::Source::Rewriter.new buffer
-      @raw_comments, tokens = comments_and_tokens(builder, buffer)
-      @body_range      = body_range_from_tokens(tokens)
+      builder          = Parser::Builders::Default.new.tap { |b| b.emit_file_line_as_literals = false }
       @parser          = Parser::CurrentRuby.new builder
-      @inline_comments = raw_comments.select(&:inline?).map { |c| wrap_comment c }
-      begin
-        @root          = @parser.parse(@buffer)
-        @syntax        = Syntax.new
-      rescue Parser::SyntaxError
-        @syntax        = Syntax.new error_message: $!.message, line_number: index_to_linenum($!.diagnostic.location.begin_pos)
-      ensure
-        @root        ||= null_node
+      @syntax          = Syntax.new
+      parser.diagnostics.consumer = lambda do |diagnostic|
+        if :fatal == diagnostic.level || :error == diagnostic.level
+          @syntax = Syntax.new error_message: diagnostic.message, line_number: index_to_linenum(diagnostic.location.begin_pos)
+        end
       end
+      @root, @raw_comments, @tokens = parser.tokenize(@buffer, true)
+      @body_range                   = body_range_from_tokens(@tokens)
+      @inline_comments              = raw_comments.select(&:inline?).map { |c| wrap_comment c }
+      @root                       ||= null_node
     end
 
     def range_for(start_index, end_index)
@@ -91,32 +90,8 @@ class SeeingIsBelieving
     private
 
     def comments_and_tokens(builder, buffer)
-      # THIS IS SO WE CAN EXTRACT COMMENTS FROM INVALID FILES.
-      # We do it by telling Parser's diagnostic to not blow up.
-      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb
-      # However, this probably implies SiB won't work on Rbx/JRuby
-      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L129-134
-      # Ideally we could just do this
-      #   parser.diagnostics.all_errors_are_fatal = false
-      #   parser.diagnostics.ignore_warnings      = false
-      # But, the parser will still blow up on "fatal" errors (e.g. unterminated string) So we need to actually change it.
-      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/diagnostic/engine.rb#L99
-      # We could make a NullDiagnostics like this:
-      #   class NullDiagnostics < Parser::Diagnostic::Engine
-      #     def process(*)
-      #       # no op
-      #     end
-      #   end
-      # But we don't control initialization of the variable, and the value gets passed around, at least into the lexer.
-      #   https://github.com/whitequark/parser/blob/2d69a1b5f34ef15b3a8330beb036ac4bf4775e29/lib/parser/base.rb#L139
-      #   and since it's all private, it could change at any time (Parser is very state based),
-      #   so I think it's just generally safer to mutate that one object, as we do now.
       parser = Parser::CurrentRuby.new builder
-      diagnostics = parser.diagnostics
-      def diagnostics.process(*)
-        self
-      end
-      _, all_comments, tokens = parser.tokenize(@buffer)
+      _, all_comments, tokens = parser.tokenize(@buffer, true)
       [all_comments, tokens]
     end
 

@@ -23,6 +23,8 @@ class SeeingIsBelieving
       @called ||= begin
         wrap_recursive code.root
 
+        wrappings = wrappings().sort_by(&:first)
+
         wrappings.each do |line_num, (range, last_col, meta)|
           case meta
           when :total_fucking_failure
@@ -30,8 +32,14 @@ class SeeingIsBelieving
           when :match_current_line
             rewriter.insert_before_multi range, '~' # Regexp#~
           end
+        end
+
+        wrappings.each do |line_num, (range, last_col, meta)|
           rewriter.insert_before_multi range, before_each.call(line_num)
-          rewriter.insert_after_multi  range, after_each.call(line_num)
+        end
+
+        wrappings.each do |line_num, (range, last_col, meta)|
+          rewriter.insert_after_multi range, after_each.call(line_num)
         end
 
         rewriter.insert_before_multi root_range, before_all.call

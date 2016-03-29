@@ -104,13 +104,11 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   it 'passes the current line number to the before_each and after_each wrappers' do
-    pre_line_num = post_line_num = nil
-    described_class.call("\na\n",
-                         before_each: -> _pre_line_num  { pre_line_num  = _pre_line_num;  '<' },
-                         after_each:  -> _post_line_num { post_line_num = _post_line_num; '>' }
-                        )
-    expect(pre_line_num).to eq 2
-    expect(post_line_num).to eq 2
+    result = described_class.call("a.each { |b|\n}\n",
+      before_each: -> n { "(#{n})" },
+      after_each:  -> n { "<#{n}>" }
+    )
+    expect(result).to eq "(2)(1)a<1>.each { |b|\n}<2>\n"
   end
 
   it 'does nothing for an empty program' do
@@ -168,9 +166,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
          0b001_001
 
          ?a
-         ?\C-a
-         ?\M-a
-         ?\M-\C-a
+         ?\\C-a
 
          1..2
          1...2
