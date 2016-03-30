@@ -1,7 +1,7 @@
 require 'bundler'
 
 desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
-task :build do
+task :install do
   # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
   sh 'bundle install --standalone --binstubs bundle/bin'
 end
@@ -17,8 +17,8 @@ task :clean do
   ]
 end
 
-file :bundle do
-  $stderr.puts "\e[31mLooks like the gems aren\'t installed, run `rake build` to install them\e[39m"
+directory 'bundle' do
+  $stderr.puts "\e[31mLooks like the gems aren\'t installed, run `rake install` to install them\e[39m"
   exit 1
 end
 
@@ -36,4 +36,4 @@ desc 'Run all specs and cukes'
 task default: [:spec, :cuke]
 
 desc 'Install dependencies and run tests (mainly for Travis CI)'
-task ci: [:build, :spec, :cuke]
+task ci: [:install, :spec, :cuke]

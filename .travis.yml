@@ -1,4 +1,5 @@
 language: ruby
+install: rake build
 script: rake ci
 rvm:
   - 1.9.3
