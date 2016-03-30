@@ -1,6 +1,6 @@
 language: ruby
-install: rake install
-script: rake ci
+install: bundle exec rake install
+script: bundle exec rake ci
 rvm:
   - 1.9.3
   - 2.0.0
