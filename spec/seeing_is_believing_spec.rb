@@ -556,7 +556,7 @@ RSpec.describe SeeingIsBelieving do
       expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5
     end
 
-    it 'emits otuput on expicit invocations to warn', t:true do
+    it 'emits otuput on expicit invocations to warn' do
       expect(invoke('warn "hello"').stderr).to eq "hello\n"
     end
   end
