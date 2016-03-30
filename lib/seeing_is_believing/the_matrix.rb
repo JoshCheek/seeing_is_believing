@@ -24,6 +24,10 @@ real_exit_bang = method :exit!
 Kernel.module_eval do
   private
 
+  define_method :warn do |*args, &block|
+    $stderr.puts *args
+  end
+
   define_method :exec do |*args, &block|
     $SiB.record_exec(args)
     finish.call

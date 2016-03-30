@@ -555,6 +555,10 @@ RSpec.describe SeeingIsBelieving do
     it 'gets the exit status off of the child process' do
       expect(invoke('exec "ruby", "-e", "exit 5"').exitstatus).to eq 5
     end
+
+    it 'emits otuput on expicit invocations to warn', t:true do
+      expect(invoke('warn "hello"').stderr).to eq "hello\n"
+    end
   end
 
   # Looked through the implementation of event_stream/producer to find a list of core behaviour it depends on
