@@ -9,61 +9,26 @@ class SeeingIsBelieving
         extend self
         def <<(*)   end
         def shift() end
+        # TODO: this one doesn't have clear, but we can call that on the real one.
+        # find a way to test this situation?
       end
 
-      class SafeQueue
-        SHOVEL = Queue.instance_method(:<<)
-        SHIFT  = Queue.instance_method(:shift)
-        CLEAR  = Queue.instance_method(:clear)
-
-        def initialize(queue)
-          @shovel = SHOVEL.bind(queue)
-          @shift  = SHIFT.bind(queue)
-          @clear  = CLEAR.bind(queue)
-        end
-
-        def <<(*args)
-          @shovel.call(*args)
-        end
-
-        def shift(*args)
-          @shift.call(*args)
-        end
-
-        def clear(*args)
-          @clear.call(*args)
+      module SafeClass
+        def self.for(klass, *method_names)
+          Class.new klass do
+            methods = method_names.map { |name| [name, klass.instance_method(name)] }
+            define_method :initialize do |instance|
+              @methods = methods.map { |name, method| [name, method.bind(instance)] }.to_h
+            end
+            method_names.each do |name|
+              define_method(name) { |*args, &block| @methods[name].call(*args, &block) }
+            end
+          end
         end
       end
 
-      class SafeStream
-        SYNC   = IO.instance_method(:sync=)
-        SHOVEL = IO.instance_method(:<<)
-        FLUSH  = IO.instance_method(:flush)
-        CLOSE  = IO.instance_method(:close)
-
-        def initialize(stream)
-          @sync   = SYNC.bind(stream)
-          @shovel = SHOVEL.bind(stream)
-          @flush  = FLUSH.bind(stream)
-          @close  = CLOSE.bind(stream)
-        end
-
-        def sync=(*args)
-          @sync.call(*args)
-        end
-
-        def <<(*args)
-          @shovel.call(*args)
-        end
-
-        def flush(*args)
-          @flush.call(*args)
-        end
-
-        def close(*args)
-          @close.call(*args)
-        end
-      end
+      SafeQueue  = SafeClass.for Queue, :<<, :shift, :clear
+      SafeStream = SafeClass.for IO, :sync=, :<<, :flush, :close
 
       attr_accessor :max_line_captures, :filename
 
