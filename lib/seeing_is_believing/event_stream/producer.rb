@@ -11,14 +11,46 @@ class SeeingIsBelieving
         def shift() end
       end
 
+      class SafeStream
+        SYNC   = IO.instance_method(:sync=)
+        SHOVEL = IO.instance_method(:<<)
+        FLUSH  = IO.instance_method(:flush)
+        CLOSE  = IO.instance_method(:close)
+
+        def initialize(stream)
+          @sync   = SYNC.bind(stream)
+          @shovel = SHOVEL.bind(stream)
+          @flush  = FLUSH.bind(stream)
+          @close  = CLOSE.bind(stream)
+        end
+
+        def sync=(*args)
+          @sync.call(*args)
+        end
+
+        def <<(*args)
+          @shovel.call(*args)
+        end
+
+        def flush(*args)
+          @flush.call(*args)
+        end
+
+        def close(*args)
+          @close.call(*args)
+        end
+      end
+
       attr_accessor :max_line_captures, :filename
 
       def initialize(resultstream)
+        resultstream           = SafeStream.new(resultstream)
         self.filename          = nil
         self.max_line_captures = Float::INFINITY
         self.recorded_results  = []
         self.queue             = Queue.new
         self.producer_thread   = Thread.new do
+          Thread.current.abort_on_exception = true
           begin
             resultstream.sync = true
             loop do

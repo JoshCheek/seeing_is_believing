@@ -564,9 +564,26 @@ RSpec.describe SeeingIsBelieving do
   # Looked through the implementation of event_stream/producer to find a list of core behaviour it depends on
   # this is a list of things to check that it can work without.
   # based on this issue: https://github.com/JoshCheek/seeing_is_believing/issues/55
-  describe 'it works even in hostile environments' do
-    specify 'when IO does not have sync, <<, and flush'
-    specify 'when Queue does not have <<, shift, and clear'
+  # TODO: check the_matrix for more additions
+  describe 'it works even in hostile environments', t:true do
+    specify 'when IO does not have sync=, <<, flush, puts, close' do
+      expect(invoke('class IO
+                       undef sync
+                       undef <<
+                       undef flush
+                       undef puts
+                       undef close
+                     end').stderr).to eq ''
+    end
+
+    specify 'when Queue does not have <<, shift, and clear' do
+      pending
+      expect(invoke('class Queue
+                       undef <<
+                       undef shift
+                       undef clear
+                     end').stderr).to eq ''
+    end
     specify 'when Symbol does not have ==, to_s, inspect'
     specify 'when String does not have ==, to_s, inspect, to_i'
     specify 'when Fixnum does not have <, next, =='
@@ -578,5 +595,10 @@ RSpec.describe SeeingIsBelieving do
     specify 'when Enumerable does not have map'
     specify 'when Exception does not have status'
     specify 'when Thread does not have new, join'
+    specify 'when UnboundMethod does not have bind'
+    specify 'when Method does not have call'
+    specify 'when Proc does not have call, to_proc'
+    specify 'when Class does not have new, allocate'
+    specify 'when BasicObject does not ahve initialize'
   end
 end

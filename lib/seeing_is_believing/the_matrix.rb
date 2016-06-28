@@ -11,10 +11,14 @@ $SiB.record_num_lines         sib_vars.fetch(:num_lines)
 $SiB.record_max_line_captures sib_vars.fetch(:max_line_captures)
 
 STDOUT.sync = true
-stdout, stderr = STDOUT, STDERR
+stdout = SeeingIsBelieving::EventStream::Producer::SafeStream.new(STDOUT)
+stderr = SeeingIsBelieving::EventStream::Producer::SafeStream.new(STDERR)
+
 finish = lambda do
   $SiB.finish!
-  event_stream.close
+  SeeingIsBelieving::EventStream::Producer::SafeStream
+    .new(event_stream)
+    .close
   stdout.flush
   stderr.flush
 end
