@@ -577,7 +577,6 @@ RSpec.describe SeeingIsBelieving do
     end
 
     specify 'when Queue does not have <<, shift, and clear' do
-      pending
       expect(invoke('class Queue
                        undef <<
                        undef shift

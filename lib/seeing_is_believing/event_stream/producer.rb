@@ -11,6 +11,30 @@ class SeeingIsBelieving
         def shift() end
       end
 
+      class SafeQueue
+        SHOVEL = Queue.instance_method(:<<)
+        SHIFT  = Queue.instance_method(:shift)
+        CLEAR  = Queue.instance_method(:clear)
+
+        def initialize(queue)
+          @shovel = SHOVEL.bind(queue)
+          @shift  = SHIFT.bind(queue)
+          @clear  = CLEAR.bind(queue)
+        end
+
+        def <<(*args)
+          @shovel.call(*args)
+        end
+
+        def shift(*args)
+          @shift.call(*args)
+        end
+
+        def clear(*args)
+          @clear.call(*args)
+        end
+      end
+
       class SafeStream
         SYNC   = IO.instance_method(:sync=)
         SHOVEL = IO.instance_method(:<<)
@@ -48,7 +72,7 @@ class SeeingIsBelieving
         self.filename          = nil
         self.max_line_captures = Float::INFINITY
         self.recorded_results  = []
-        self.queue             = Queue.new
+        self.queue             = SafeQueue.new(Queue.new)
         self.producer_thread   = Thread.new do
           Thread.current.abort_on_exception = true
           begin
