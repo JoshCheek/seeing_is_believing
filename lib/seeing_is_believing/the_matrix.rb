@@ -1,4 +1,5 @@
 require_relative 'version'
+require_relative 'safe'
 require_relative 'event_stream/producer'
 
 sib_vars     = Marshal.load ENV["SIB_VARIABLES.MARSHAL.B64"].unpack('m0').first
@@ -11,14 +12,12 @@ $SiB.record_num_lines         sib_vars.fetch(:num_lines)
 $SiB.record_max_line_captures sib_vars.fetch(:max_line_captures)
 
 STDOUT.sync = true
-stdout = SeeingIsBelieving::EventStream::Producer::SafeStream.new(STDOUT)
-stderr = SeeingIsBelieving::EventStream::Producer::SafeStream.new(STDERR)
+stdout = SeeingIsBelieving::Safe::Stream.new(STDOUT)
+stderr = SeeingIsBelieving::Safe::Stream.new(STDERR)
 
 finish = lambda do
   $SiB.finish!
-  SeeingIsBelieving::EventStream::Producer::SafeStream
-    .new(event_stream)
-    .close
+  SeeingIsBelieving::Safe::Stream.new(event_stream).close
   stdout.flush
   stderr.flush
 end
