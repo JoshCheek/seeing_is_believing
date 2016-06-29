@@ -27,7 +27,7 @@ class SeeingIsBelieving
             resultstream.sync = true
             loop do
               to_publish = queue.shift
-              break if to_publish == :break
+              break if Safe::Symbol.new(:break) == to_publish
               resultstream << (to_publish << "\n")
             end
           rescue IOError, Errno::EPIPE

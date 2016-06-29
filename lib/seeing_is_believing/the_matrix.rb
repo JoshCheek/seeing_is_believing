@@ -43,7 +43,11 @@ Kernel.module_eval do
   end
 end
 
+# Do this Symbol thing b/c ruby C code calls it, so we can't wrap it
+symbol_to_s = Symbol.instance_method(:to_s)
 at_exit do
+  Symbol.class_eval { define_method :to_s, symbol_to_s }
+
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
   finish.call
   real_exit_bang.call(exitstatus) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)

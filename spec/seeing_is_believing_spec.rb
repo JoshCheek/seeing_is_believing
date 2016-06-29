@@ -583,7 +583,14 @@ RSpec.describe SeeingIsBelieving do
                        undef clear
                      end').stderr).to eq ''
     end
-    specify 'when Symbol does not have ==, to_s, inspect'
+
+    specify 'when Symbol does not have ==, to_s, inspect' do
+      expect(invoke('class Symbol
+                       undef ==
+                       undef to_s
+                       undef inspect
+                     end').stderr).to eq ''
+    end
     specify 'when String does not have ==, to_s, inspect, to_i'
     specify 'when Fixnum does not have <, next, =='
     specify 'when Hash does not have [], []='
