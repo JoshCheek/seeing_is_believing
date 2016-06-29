@@ -612,8 +612,14 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Hash does not have [], []='
-    specify 'when Array does not have pack, <<, to_ary, grep, first, [], []='
+    specify 'when Hash does not have [], []=' do
+      expect(invoke('class Hash
+                       undef []
+                       undef []=
+                     end').stderr).to eq ''
+    end
+
+    specify 'when Array does not have pack, <<, to_ary, grep, first, [], []=, each, map'
     specify 'when Marshal does not have dump'
     specify 'when Kernel does not have defined?, kind_of?'
     specify 'when SystemExit does not have status'

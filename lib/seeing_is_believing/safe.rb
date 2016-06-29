@@ -4,10 +4,12 @@ class SeeingIsBelieving
       Class.new do
         methods = method_names.map { |name| [name, klass.instance_method(name)] }
         define_method :initialize do |instance|
-          @methods = methods.map { |name, method| [name, method.bind(instance)] }.to_h
+          @_instance = instance
         end
-        method_names.each do |name|
-          define_method(name) { |*args, &block| @methods[name].call(*args, &block) }
+        methods.each do |name, method|
+          define_method(name) do |*args, &block|
+            method.bind(@_instance).call(*args, &block)
+          end
         end
       end
     end
