@@ -591,8 +591,27 @@ RSpec.describe SeeingIsBelieving do
                        undef inspect
                      end').stderr).to eq ''
     end
-    specify 'when String does not have ==, to_s, inspect, to_i'
-    specify 'when Fixnum does not have <, next, =='
+
+    specify 'when String does not have ==, to_s, inspect, to_i' do
+      expect(invoke('class String
+                       undef ==
+                       undef to_s
+                       undef inspect
+                       undef to_i
+                     end').stderr).to eq ''
+    end
+
+    specify 'when Fixnum does not have <, <<, next, ==, inspect, to_s' do
+      expect(invoke('class Fixnum
+                       undef <
+                       undef <<
+                       undef ==
+                       undef next
+                       undef to_s
+                       undef inspect
+                     end').stderr).to eq ''
+    end
+
     specify 'when Hash does not have [], []='
     specify 'when Array does not have pack, <<, to_ary, grep, first, [], []='
     specify 'when Marshal does not have dump'
@@ -605,6 +624,6 @@ RSpec.describe SeeingIsBelieving do
     specify 'when Method does not have call'
     specify 'when Proc does not have call, to_proc'
     specify 'when Class does not have new, allocate'
-    specify 'when BasicObject does not ahve initialize'
+    specify 'when BasicObject does not have initialize'
   end
 end

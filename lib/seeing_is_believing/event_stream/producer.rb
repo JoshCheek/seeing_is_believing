@@ -95,10 +95,10 @@ class SeeingIsBelieving
         line_number ||= -1
         queue << [
           "exception",
-          line_number,
+          Safe::Fixnum.new(line_number),
           to_string_token(exception.class.name),
           to_string_token(exception.message),
-          exception.backtrace.size,
+          Safe::Fixnum.new(exception.backtrace.size),
           *exception.backtrace.map { |line| to_string_token line }
         ].join(" ")
         1 # exit status
@@ -128,7 +128,7 @@ class SeeingIsBelieving
 
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
-        [Marshal.dump(string.to_s)].pack('m0')
+        [Marshal.dump(Safe::String.new(string).to_s)].pack('m0')
       end
     end
   end

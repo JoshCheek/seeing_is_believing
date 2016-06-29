@@ -15,5 +15,7 @@ class SeeingIsBelieving
     Queue  = build ::Queue, :<<, :shift, :clear
     Stream = build ::IO, :sync=, :<<, :flush, :close
     Symbol = build ::Symbol, :==
+    String = build ::String, :to_s
+    Fixnum = build ::Fixnum, :to_s
   end
 end
