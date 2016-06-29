@@ -19,5 +19,6 @@ class SeeingIsBelieving
     Symbol = build ::Symbol, :==
     String = build ::String, :to_s
     Fixnum = build ::Fixnum, :to_s
+    Array  = build ::Array, :pack, :map
   end
 end
