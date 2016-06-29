@@ -640,9 +640,31 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Kernel does not have defined?, kind_of?
-    specify 'when SystemExit does not have status'
-    specify 'when Enumerable does not have map'
+    specify 'when Kernel does not have defined?, kind_of?' do
+      expect(invoke('class Kernel
+                       undef defined?
+                       undef kind_of?
+                     end').stderr).to eq ''
+    end
+
+    specify 'when SystemExit does not have status' do
+      # its fine to blow up if they undefine it and then they call exit,
+      # that's probably the expected behaviour
+      # But our code should be as resilient as possible,
+      # so shouldn't blow up b/c some feature happened to call exit
+      expect(invoke('class SystemExit
+                       undef status
+                     end
+                    ').stderr).to eq ''
+    end
+
+    specify 'when Enumerable does not have map', c:true do
+      expect(invoke('class Module
+                       undef map
+                     end
+                    ').stderr).to eq ''
+    end
+
     specify 'when Exception does not have status'
     specify 'when Thread does not have new, join'
     specify 'when UnboundMethod does not have bind'
