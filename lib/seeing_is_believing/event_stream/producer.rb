@@ -128,7 +128,7 @@ class SeeingIsBelieving
 
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
-        Safe::Array.new([Marshal.dump(Safe::String.new(string).to_s)]).pack('m0')
+        Safe::Array.new([Safe::Marshal.dump(Safe::String.new(string).to_s)]).pack('m0')
       end
     end
   end

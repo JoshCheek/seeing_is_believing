@@ -619,7 +619,7 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Array does not have pack, <<, to_ary, grep, first, [], []=, each, map', c:true do
+    specify 'when Array does not have pack, <<, to_ary, grep, first, [], []=, each, map' do
       expect(invoke('class Array
                        undef pack
                        undef <<
@@ -633,8 +633,14 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Marshal does not have dump'
-    specify 'when Kernel does not have defined?, kind_of?'
+    specify 'when Marshal does not have dump, load' do
+      expect(invoke('class << Marshal
+                       undef dump
+                       undef load
+                     end').stderr).to eq ''
+    end
+
+    specify 'when Kernel does not have defined?, kind_of?
     specify 'when SystemExit does not have status'
     specify 'when Enumerable does not have map'
     specify 'when Exception does not have status'
@@ -642,7 +648,7 @@ RSpec.describe SeeingIsBelieving do
     specify 'when UnboundMethod does not have bind'
     specify 'when Method does not have call'
     specify 'when Proc does not have call, to_proc'
-    specify 'when Class does not have new, allocate'
+    specify 'when Class does not have new, allocate, singleton_class'
     specify 'when BasicObject does not have initialize'
     specify 'when Module does not have define_method, instance_method'
   end

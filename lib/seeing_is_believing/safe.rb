@@ -14,11 +14,12 @@ class SeeingIsBelieving
       end
     end
 
-    Queue  = build ::Queue, :<<, :shift, :clear
-    Stream = build ::IO, :sync=, :<<, :flush, :close
-    Symbol = build ::Symbol, :==
-    String = build ::String, :to_s
-    Fixnum = build ::Fixnum, :to_s
-    Array  = build ::Array, :pack, :map
+    Queue   = build ::Queue, :<<, :shift, :clear
+    Stream  = build ::IO, :sync=, :<<, :flush, :close
+    Symbol  = build ::Symbol, :==
+    String  = build ::String, :to_s
+    Fixnum  = build ::Fixnum, :to_s
+    Array   = build ::Array, :pack, :map
+    Marshal = build(::Marshal.singleton_class, :dump).new(::Marshal)
   end
 end
