@@ -154,7 +154,7 @@ Inspiration
 * My 8th Light mentor, [Doug Bradbury](http://blog.8thlight.com/doug-bradbury/archive.html) who asked me to make it for his Kids Ruby sessions (I don't think we ever finished integrating it, though >.<)
 
 Interestingly, [Swift playground](https://www.youtube.com/watch?v=oY6nQS3MiF8&t=25m51s)
-are very similar (though better integrated since they cerce you into using xcode).
+are very similar (though better integrated since they coerce you into using xcode).
 Released about a year and a half before them, but maybe I should take advantage of
 their marketing anyway: Swift Playgrounds for Ruby!! :P
 
