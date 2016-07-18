@@ -43,9 +43,16 @@ Kernel.module_eval do
   end
 end
 
-# Do this Symbol thing b/c ruby C code calls it, so we can't wrap it
-symbol_to_s = Symbol.instance_method(:to_s)
+# Some things need to just be recorded and readded as they are called from Ruby C code
+symbol_to_s         = Symbol.instance_method(:to_s)
+exception_message   = Exception.instance_method(:message)
+# exception_backtrace = Exception.instance_method(:backtrace)
+
 at_exit do
+  Exception.class_eval do
+    define_method :message,   exception_message
+    # define_method :backtrace, exception_backtrace
+  end
   Symbol.class_eval { define_method :to_s, symbol_to_s }
 
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)

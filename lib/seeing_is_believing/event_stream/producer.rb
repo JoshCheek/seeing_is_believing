@@ -86,7 +86,8 @@ class SeeingIsBelieving
 
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
-        return exception.status if exception.kind_of? SystemExit
+        return exception.status if SystemExit === exception
+        exception = Safe::Exception.new(exception)
         if !line_number && filename
           begin line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
           rescue NoMethodError

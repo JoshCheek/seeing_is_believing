@@ -647,6 +647,13 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
+    specify 'when Enumerable does not have map' do
+      expect(invoke('class Module
+                       undef map
+                     end
+                    ').stderr).to eq ''
+    end
+
     specify 'when SystemExit does not have status' do
       # its fine to blow up if they undefine it and then they call exit,
       # that's probably the expected behaviour
@@ -658,20 +665,28 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Enumerable does not have map', c:true do
-      expect(invoke('class Module
-                       undef map
-                     end
-                    ').stderr).to eq ''
+    specify 'when Exception does not have message, class (can\'t get backtrace to work)', c:true do
+      result = invoke('class Exception
+                         undef message
+                         # undef backtrace
+                         undef class
+                       end
+                       raise "hello"
+                      ')
+      expect(result.exception.message).to eq 'hello'
+      # expect(result.exception.backtrace).to eq 'hello'
+      expect(result.exception.class_name).to eq 'RuntimeError'
     end
 
-    specify 'when Exception does not have status'
     specify 'when Thread does not have new, join'
     specify 'when UnboundMethod does not have bind'
     specify 'when Method does not have call'
     specify 'when Proc does not have call, to_proc'
-    specify 'when Class does not have new, allocate, singleton_class'
+    specify 'when Class does not have new, allocate, singleton_class, class_eval'
     specify 'when BasicObject does not have initialize'
     specify 'when Module does not have define_method, instance_method'
   end
 end
+
+# Array#size
+# all of them together
