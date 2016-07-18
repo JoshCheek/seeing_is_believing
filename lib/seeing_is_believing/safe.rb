@@ -22,5 +22,7 @@ class SeeingIsBelieving
     Array     = build ::Array, :pack, :map
     Marshal   = build(::Marshal.singleton_class, :dump).new(::Marshal)
     Exception = build ::Exception, :message, :backtrace, :class
+
+    Thread    = build ::Thread, :join
   end
 end

@@ -21,7 +21,7 @@ class SeeingIsBelieving
         self.max_line_captures = Float::INFINITY
         self.recorded_results  = []
         self.queue             = Safe::Queue.new(Queue.new)
-        self.producer_thread   = Thread.new do
+        self.producer_thread   = Safe::Thread.new ::Thread.new {
           Thread.current.abort_on_exception = true
           begin
             resultstream.sync = true
@@ -36,7 +36,7 @@ class SeeingIsBelieving
             self.queue = NullQueue
             resultstream.flush rescue nil
           end
-        end
+        }
       end
 
       attr_reader :version

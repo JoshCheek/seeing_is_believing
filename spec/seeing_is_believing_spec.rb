@@ -665,7 +665,7 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Exception does not have message, class (can\'t get backtrace to work)', c:true do
+    specify 'when Exception does not have message, class (can\'t get backtrace to work)' do
       result = invoke('class Exception
                          undef message
                          # undef backtrace
@@ -678,7 +678,18 @@ RSpec.describe SeeingIsBelieving do
       expect(result.exception.class_name).to eq 'RuntimeError'
     end
 
-    specify 'when Thread does not have new, join'
+    specify 'when Thread does not have .new, .current, #join, #abort_on_exception' do
+      expect(invoke('class << Thread
+                       undef new
+                       undef current
+                     end
+                     class Thread
+                       undef join
+                       undef abort_on_exception
+                     end
+                    ').stderr).to eq ''
+    end
+
     specify 'when UnboundMethod does not have bind'
     specify 'when Method does not have call'
     specify 'when Proc does not have call, to_proc'
@@ -688,5 +699,6 @@ RSpec.describe SeeingIsBelieving do
   end
 end
 
+# Array#join
 # Array#size
 # all of them together
