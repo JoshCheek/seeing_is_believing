@@ -564,10 +564,19 @@ RSpec.describe SeeingIsBelieving do
   # Looked through the implementation of event_stream/producer to find a list of core behaviour it depends on
   # this is a list of things to check that it can work without.
   # based on this issue: https://github.com/JoshCheek/seeing_is_believing/issues/55
-  # TODO: check the_matrix for more additions
-  describe 'it works even in hostile environments', t:true do
+  describe 'it works even in hostile environments', crnt:true do
     specify 'when IO does not have sync=, <<, flush, puts, close' do
       expect(invoke('class IO
+                       undef sync
+                       undef <<
+                       undef flush
+                       undef puts
+                       undef close
+                     end').stderr).to eq ''
+    end
+
+    specify 'when File does not have sync=, <<, flush, puts, close' do
+      expect(invoke('class File
                        undef sync
                        undef <<
                        undef flush
@@ -596,6 +605,7 @@ RSpec.describe SeeingIsBelieving do
       expect(invoke('class String
                        undef ==
                        undef to_s
+                       undef to_str
                        undef inspect
                        undef to_i
                      end').stderr).to eq ''
@@ -612,10 +622,13 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Hash does not have [], []=' do
+    specify 'when Hash does not have [], []=, fetch' do
+      RUBY_VERSION == '2.0.0' and
+        skip '2.0.0 implements all the thread stuff in Ruby, with no obvious way to override its attempt to call removed methods'
       expect(invoke('class Hash
                        undef []
                        undef []=
+                       undef fetch
                      end').stderr).to eq ''
     end
 
