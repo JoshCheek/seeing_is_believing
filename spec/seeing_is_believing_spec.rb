@@ -690,7 +690,16 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Class does not have new, allocate, singleton_class, class_eval'
+    specify 'when Class does not have new, allocate, singleton_class, class_eval', x:true do
+      expect(invoke('class Class
+                       undef new
+                       undef allocate
+                       undef singleton_class
+                       undef class_eval
+                     end
+                    ').stderr).to eq ''
+    end
+
     specify 'when BasicObject does not have initialize'
     specify 'when Module does not have define_method, instance_method'
 

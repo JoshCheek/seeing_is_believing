@@ -12,12 +12,12 @@ $SiB.record_num_lines         sib_vars.fetch(:num_lines)
 $SiB.record_max_line_captures sib_vars.fetch(:max_line_captures)
 
 STDOUT.sync = true
-stdout = SeeingIsBelieving::Safe::Stream.new(STDOUT)
-stderr = SeeingIsBelieving::Safe::Stream.new(STDERR)
+stdout = SeeingIsBelieving::Safe::Stream[STDOUT]
+stderr = SeeingIsBelieving::Safe::Stream[STDERR]
 
 finish = lambda do
   $SiB.finish!
-  SeeingIsBelieving::Safe::Stream.new(event_stream).close
+  SeeingIsBelieving::Safe::Stream[event_stream].close
   stdout.flush
   stderr.flush
 end
@@ -49,11 +49,14 @@ exception_message   = Exception.instance_method(:message)
 # exception_backtrace = Exception.instance_method(:backtrace)
 
 at_exit do
-  Exception.class_eval do
+  SeeingIsBelieving::Safe::Exception.class_eval do
     define_method :message,   exception_message
     # define_method :backtrace, exception_backtrace
   end
-  Symbol.class_eval { define_method :to_s, symbol_to_s }
+
+  SeeingIsBelieving::Safe::Symbol.class_eval do
+    define_method :to_s, symbol_to_s
+  end
 
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
   finish.call

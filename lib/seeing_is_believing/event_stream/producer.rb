@@ -16,18 +16,18 @@ class SeeingIsBelieving
       attr_accessor :max_line_captures, :filename
 
       def initialize(resultstream)
-        resultstream           = Safe::Stream.new(resultstream)
+        resultstream           = Safe::Stream[resultstream]
         self.filename          = nil
         self.max_line_captures = Float::INFINITY
         self.recorded_results  = []
-        self.queue             = Safe::Queue.new(Queue.new)
-        self.producer_thread   = Safe::Thread.new ::Thread.new {
+        self.queue             = Safe::Queue[Queue.new]
+        self.producer_thread   = Safe::Thread[::Thread.new {
           Thread.current.abort_on_exception = true
           begin
             resultstream.sync = true
             loop do
               to_publish = queue.shift
-              break if Safe::Symbol.new(:break) == to_publish
+              break if Safe::Symbol[:break] == to_publish
               resultstream << (to_publish << "\n")
             end
           rescue IOError, Errno::EPIPE
@@ -36,7 +36,7 @@ class SeeingIsBelieving
             self.queue = NullQueue
             resultstream.flush rescue nil
           end
-        }
+        }]
       end
 
       attr_reader :version
@@ -87,7 +87,7 @@ class SeeingIsBelieving
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
         return exception.status if SystemExit === exception
-        exception = Safe::Exception.new(exception)
+        exception = Safe::Exception[exception]
         if !line_number && filename
           begin line_number = exception.backtrace.grep(/#{filename}/).first[/:\d+/][1..-1].to_i
           rescue NoMethodError
@@ -96,11 +96,11 @@ class SeeingIsBelieving
         line_number ||= -1
         queue << [
           "exception",
-          Safe::Fixnum.new(line_number),
+          Safe::Fixnum[line_number],
           to_string_token(exception.class.name),
           to_string_token(exception.message),
-          Safe::Fixnum.new(exception.backtrace.size),
-          *Safe::Array.new(exception.backtrace).map { |line| to_string_token line }
+          Safe::Fixnum[exception.backtrace.size],
+          *Safe::Array[exception.backtrace].map { |line| to_string_token line }
         ].join(" ")
         1 # exit status
       end
@@ -129,7 +129,7 @@ class SeeingIsBelieving
 
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
-        Safe::Array.new([Safe::Marshal.dump(Safe::String.new(string).to_s)]).pack('m0')
+        Safe::Array[[Safe::Marshal.dump(Safe::String[string].to_s)]].pack('m0')
       end
     end
   end
