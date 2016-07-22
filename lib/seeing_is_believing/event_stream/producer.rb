@@ -94,14 +94,16 @@ class SeeingIsBelieving
           end
         end
         line_number ||= -1
-        queue << [
+        queue << Safe::Array[[
           "exception",
           Safe::Fixnum[line_number],
           to_string_token(exception.class.name),
           to_string_token(exception.message),
-          Safe::Fixnum[exception.backtrace.size],
+          Safe::Fixnum[
+            Safe::Array[exception.backtrace].size
+          ],
           *Safe::Array[exception.backtrace].map { |line| to_string_token line }
-        ].join(" ")
+        ]].join(" ")
         1 # exit status
       end
 

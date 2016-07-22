@@ -34,10 +34,9 @@ class SeeingIsBelieving
     Symbol    = build ::Symbol, :==, class: [:define_method]
     String    = build ::String, :to_s
     Fixnum    = build ::Fixnum, :to_s
-    Array     = build ::Array, :pack, :map
+    Array     = build ::Array, :pack, :map, :size, :join
     Marshal   = build ::Marshal, class: [:dump]
     Exception = build ::Exception, :message, :backtrace, :class, class: [:define_method]
-
     Thread    = build ::Thread, :join
   end
 end

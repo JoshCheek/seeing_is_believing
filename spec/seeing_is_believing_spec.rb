@@ -630,6 +630,8 @@ RSpec.describe SeeingIsBelieving do
                        undef []=
                        undef each
                        undef map
+                       undef join
+                       undef size
                      end').stderr).to eq ''
     end
 
@@ -742,6 +744,4 @@ RSpec.describe SeeingIsBelieving do
   end
 end
 
-# Array#join
-# Array#size
 # all of them together
