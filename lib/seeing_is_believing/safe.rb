@@ -31,12 +31,12 @@ class SeeingIsBelieving
 
     Queue     = build ::Queue, :<<, :shift, :clear
     Stream    = build ::IO, :sync=, :<<, :flush, :close
-    Symbol    = build ::Symbol, :==, class: [:class_eval]
+    Symbol    = build ::Symbol, :==, class: [:define_method]
     String    = build ::String, :to_s
     Fixnum    = build ::Fixnum, :to_s
     Array     = build ::Array, :pack, :map
     Marshal   = build ::Marshal, class: [:dump]
-    Exception = build ::Exception, :message, :backtrace, :class, class: [:class_eval]
+    Exception = build ::Exception, :message, :backtrace, :class, class: [:define_method]
 
     Thread    = build ::Thread, :join
   end

@@ -707,7 +707,13 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Module does not have define_method, instance_method'
+    specify 'when Module does not have define_method, instance_method' do
+      expect(invoke('class Module
+                       undef define_method
+                       undef instance_method
+                     end
+                    ').stderr).to eq ''
+    end
 
     context 'not clear that there are good ways to deal with these' do
       before { skip }
