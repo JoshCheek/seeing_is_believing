@@ -725,7 +725,7 @@ RSpec.describe SeeingIsBelieving do
                        end
                        A.new 123')
       expect(result.exception).to eq nil
-      expect(result.to_a).to eq [[], [], ["123"], [":new"], [":new"], [], ['nil'], ["123"]]
+      expect(result[3]).to eq ["123"]
     end
 
     specify 'when BasicObject does not have initialize' do
