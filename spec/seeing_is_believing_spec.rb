@@ -690,12 +690,34 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when UnboundMethod does not have bind'
-    specify 'when Method does not have call'
-    specify 'when Proc does not have call, to_proc'
     specify 'when Class does not have new, allocate, singleton_class, class_eval'
     specify 'when BasicObject does not have initialize'
     specify 'when Module does not have define_method, instance_method'
+
+    context 'not clear that there are good ways to deal with these' do
+      before { skip }
+
+      specify 'when UnboundMethod does not have bind' do
+        expect(invoke('class UnboundMethod
+                         undef bind
+                       end
+                      ').stderr).to eq ''
+      end
+
+      specify 'when Method does not have call' do
+        expect(invoke('class Method
+                         undef call
+                       end
+                      ').stderr).to eq ''
+      end
+      specify 'when Proc does not have call, to_proc' do
+        expect(invoke('class Proc
+                         undef call
+                         undef to_proc
+                       end
+                      ').stderr).to eq ''
+      end
+    end
   end
 end
 
