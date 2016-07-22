@@ -564,7 +564,7 @@ RSpec.describe SeeingIsBelieving do
   # Looked through the implementation of event_stream/producer to find a list of core behaviour it depends on
   # this is a list of things to check that it can work without.
   # based on this issue: https://github.com/JoshCheek/seeing_is_believing/issues/55
-  describe 'it works even in hostile environments', crnt:true do
+  describe 'it works even in hostile environments' do
     specify 'when IO does not have sync=, <<, flush, puts, close' do
       expect(invoke('class IO
                        undef sync
@@ -713,6 +713,19 @@ RSpec.describe SeeingIsBelieving do
                        undef class_eval
                      end
                     ').stderr).to eq ''
+    end
+
+    specify 'when Class#new is overridden' do
+      result = invoke('class Class
+                         def new(arg)
+                           arg
+                         end
+                       end
+                       class A
+                       end
+                       A.new 123')
+      expect(result.exception).to eq nil
+      expect(result.to_a).to eq [[], [], ["123"], [":new"], [":new"], [], ['nil'], ["123"]]
     end
 
     specify 'when BasicObject does not have initialize' do

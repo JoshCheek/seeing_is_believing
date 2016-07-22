@@ -58,7 +58,7 @@ class SeeingIsBelieving
       StackErrors = [SystemStackError]
       StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)
-        counts = recorded_results[line_number] ||= Hash.new(0)
+        counts = recorded_results[line_number] ||= Safe::Hash.new(0)
         count  = counts[type]
         recorded_results[line_number][type] = count.next
         if count < max_line_captures

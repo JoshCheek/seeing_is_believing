@@ -2,7 +2,7 @@ class SeeingIsBelieving
   module Safe
     def self.build(klass, *method_names)
       options = {}
-      options = method_names.pop if method_names.last.kind_of? Hash
+      options = method_names.pop if method_names.last.kind_of? ::Hash
 
       Class.new do
         class << self
@@ -35,6 +35,7 @@ class SeeingIsBelieving
     String    = build ::String, :to_s
     Fixnum    = build ::Fixnum, :to_s
     Array     = build ::Array, :pack, :map, :size, :join
+    Hash      = build ::Hash, :[], :[]=, class: [:new]
     Marshal   = build ::Marshal, class: [:dump]
     Exception = build ::Exception, :message, :backtrace, :class, class: [:define_method]
     Thread    = build ::Thread, :join, class: [:current]
