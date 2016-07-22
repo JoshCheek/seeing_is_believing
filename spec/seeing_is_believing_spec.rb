@@ -683,7 +683,7 @@ RSpec.describe SeeingIsBelieving do
     specify 'when Thread does not have .new, .current, #join, #abort_on_exception' do
       expect(invoke('class << Thread
                        undef new
-                       undef current
+                       undef current unless "2.0.0" == RUBY_VERSION
                      end
                      class Thread
                        undef join

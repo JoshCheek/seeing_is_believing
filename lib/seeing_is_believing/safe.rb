@@ -37,6 +37,6 @@ class SeeingIsBelieving
     Array     = build ::Array, :pack, :map, :size, :join
     Marshal   = build ::Marshal, class: [:dump]
     Exception = build ::Exception, :message, :backtrace, :class, class: [:define_method]
-    Thread    = build ::Thread, :join
+    Thread    = build ::Thread, :join, class: [:current]
   end
 end

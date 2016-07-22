@@ -22,7 +22,7 @@ class SeeingIsBelieving
         self.recorded_results  = []
         self.queue             = Safe::Queue[Queue.new]
         self.producer_thread   = Safe::Thread[::Thread.new {
-          Thread.current.abort_on_exception = true
+          Safe::Thread.current.abort_on_exception = true
           begin
             resultstream.sync = true
             loop do
