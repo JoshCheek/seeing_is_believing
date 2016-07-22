@@ -690,7 +690,7 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Class does not have new, allocate, singleton_class, class_eval', x:true do
+    specify 'when Class does not have new, allocate, singleton_class, class_eval' do
       expect(invoke('class Class
                        undef new
                        undef allocate
@@ -700,7 +700,13 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when BasicObject does not have initialize'
+    specify 'when BasicObject does not have initialize' do
+      expect(invoke('class BasicObject
+                       undef initialize
+                     end
+                    ').stderr).to eq ''
+    end
+
     specify 'when Module does not have define_method, instance_method'
 
     context 'not clear that there are good ways to deal with these' do
