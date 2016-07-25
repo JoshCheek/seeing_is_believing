@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "mrspec",   "~>  0.3.0"
   s.add_development_dependency "rspec",    "~>  3.2"
   s.add_development_dependency "cucumber", "~>  1.2"
-  s.add_development_dependency "ichannel", "~>  5.1"
+  s.add_development_dependency "ichannel", "~>  8.1"
 
   s.post_install_message = <<'Omg, frogs <3'.gsub(/(gg+)/) { |capture| "\e[32m#{capture.gsub 'g', '.'}\e[0m" }.gsub("brown", "\e[33m").gsub("off", "\e[0m")
               .7

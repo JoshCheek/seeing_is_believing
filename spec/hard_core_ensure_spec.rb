@@ -43,7 +43,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
 
   it 'invokes the code even if an interrupt is sent and there is a default handler' do
     test = lambda do
-      channel = IChannel.new Marshal
+      channel = IChannel.unix
       pid = fork do
         old_handler = trap('INT') { channel.put "old handler invoked" }
         call code: -> { sleep 0.1 }, ensure: -> { channel.put "ensure invoked" }
@@ -66,7 +66,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
 
   it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
     test = lambda do
-      channel = IChannel.new Marshal
+      channel = IChannel.unix
       pid = fork do
         old_handler = trap 'INT', 'IGNORE'
         result = call code: -> { sleep 0.1; 'code result' }, ensure: -> { channel.put "ensure invoked" }
