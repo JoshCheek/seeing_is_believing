@@ -110,25 +110,21 @@ class SeeingIsBelieving
         in:                  child_stdin,
         out:                 child_stdout,
         err:                 child_stderr,
-        pgroup:              true,
+        pgroup:              true, # run it in its own process group so we can SIGINT the whole group
       }
       child_pid  = Kernel.spawn(env, *popen_args, opts)
-      child_thr  = Process.detach(child_pid)
       child_pgid = Process.getpgid(child_pid)
 
       # close child streams b/c they won't emit EOF
       # until both child and parent references are closed
-      child_eventstream.close
-      child_stdout.close
-      child_stderr.close
-      child_stdin.close
+      close_streams(child_eventstream, child_stdout, child_stderr, child_stdin)
       stdin.sync = true
 
-      # send stdin
-      Thread.new {
+      # send stdin (char at a time b/c input could come from a stream)
+      Thread.new do
         provided_input.each_char { |char| stdin.write char }
         stdin.close
-      }
+      end
 
       # set up the event consumer
       consumer = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
@@ -136,25 +132,16 @@ class SeeingIsBelieving
 
       # wait for completion
       Timeout.timeout timeout_seconds do
-        exitstatus = child_thr.value.exitstatus
-        consumer.process_exitstatus exitstatus
+        Process.wait child_pid
+        consumer.process_exitstatus($?.exitstatus)
         consumer_thread.join
       end
     rescue Timeout::Error
       consumer.process_timeout timeout_seconds
     ensure
-      if child_thr && child_thr.alive?
-        handler = trap("INT") { } # noop
-        begin
-          Process.kill "-INT", child_pgid # negative makes it apply to the group
-        ensure
-          trap "INT", handler
-        end
-      end
-      begin Process.wait child_pid # ffs -.-
-      rescue Errno::ESRCH, Errno::ECHILD # <-- which one should it be?
-      end
-      [stdin, stdout, stderr, eventstream].each { |io| io.close unless io.closed? }
+      allow_error(Errno::ESRCH)  { Process.kill "-INT", child_pgid } # negative makes it apply to the group
+      allow_error(Errno::ECHILD) { Process.wait child_pid } # I can't tell if this actually works, or just creates enough of a delay for the OS to finish cleaning up the thread
+      close_streams(stdin, stdout, stderr, eventstream)
       consumer_thread.join
     end
 
@@ -166,6 +153,15 @@ class SeeingIsBelieving
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]
+    end
+
+    def allow_error(error)
+      yield
+    rescue error
+    end
+
+    def close_streams(*streams)
+      streams.each { |io| io.close unless io.closed? }
     end
   end
 end
