@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
+require 'ichannel'
 
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
@@ -319,8 +320,27 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for("1+1\nDATA.read\n__END__\n....")).to eq [['2'], ['"....\n"'], [], []] # <-- should this actually write a newline on the end?
   end
 
-  it 'raises a SyntaxError when the whole program is invalid' do
-    expect { invoke '"' }.to raise_error SyntaxError
+  it 'raises a SyntaxError when the whole program is invalid', rspec_error:true do
+    # To run:
+    #
+    # $ gem install bundler
+    # $ bundle install
+    # $ rake rspec_error
+
+    # Original:
+    #
+    # expect { invoke '"' }.to raise_error SyntaxError
+
+
+    # Passes when we just use the body
+    #
+    # begin invoke '"'
+    # rescue SyntaxError
+    # end
+
+
+    # Fails when we just use the expectation
+    expect { raise SyntaxError }.to raise_error SyntaxError
   end
 
   it 'can be given a stdin stream' do
@@ -507,7 +527,7 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
-  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them', rspec_error:true do
     # https://github.com/JoshCheek/seeing_is_believing/issues/53
     result = invoke <<-RUBY, timeout_seconds: 0.1
       read, write = IO.pipe
@@ -519,6 +539,17 @@ RSpec.describe SeeingIsBelieving do
       expect { Process.kill 0, pid }.to raise_error(Errno::ESRCH)
     end
   end
+
+  # it 'does not kill parent processes', t:true do
+  #   channel = IChannel.unix
+  #   Process.spawn File.join('../bin/seeing_is_believing', '-e' '
+  #     Process.setpgid(pid) # so that we don't kill the test if it gets messed up
+  #     channel.put invoke('1'                  ).timeout_seconds
+  #     channel.put invoke('sleep', timeout: 0.1).timeout_seconds
+  #   end
+  #   expect(channel.get).to eq nil # child exited normally
+  #   expect(channel.get).to eq 0.1 # child timed out
+  # end
 
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }

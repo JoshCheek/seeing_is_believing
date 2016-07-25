@@ -11,6 +11,7 @@
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
 
+require 'rbconfig'
 require 'timeout'
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
@@ -104,11 +105,16 @@ class SeeingIsBelieving
                                 )].pack('m0')
 
       # evaluate the code in a child process
-      opts = { in:                  child_stdin,
-               out:                 child_stdout,
-               err:                 child_stderr,
-               child_eventstream => child_eventstream }
-      child = Process.detach Kernel.spawn(env, *popen_args, opts)
+      opts = {
+        child_eventstream => child_eventstream,
+        in:                  child_stdin,
+        out:                 child_stdout,
+        err:                 child_stderr,
+        pgroup:              true,
+      }
+      child_pid  = Kernel.spawn(env, *popen_args, opts)
+      child_thr  = Process.detach(child_pid)
+      child_pgid = Process.getpgid(child_pid)
 
       # close child streams b/c they won't emit EOF
       # until both child and parent references are closed
@@ -130,18 +136,23 @@ class SeeingIsBelieving
 
       # wait for completion
       Timeout.timeout timeout_seconds do
-        exitstatus = child.value.exitstatus
+        exitstatus = child_thr.value.exitstatus
         consumer.process_exitstatus exitstatus
         consumer_thread.join
       end
     rescue Timeout::Error
-      pgid = Process.getpgid(child.pid)
-      handler = trap("INT") { trap("INT", handler) } # noop
-      Process.kill "-INT", pgid
       consumer.process_timeout timeout_seconds
-      consumer_thread.join # finish consuming events
     ensure
+      if child_thr && child_thr.alive?
+        handler = trap("INT") { }       # noop
+        begin
+          Process.kill "-INT", child_pgid # negative makes it apply to the group
+        ensure
+          trap "INT", handler
+        end
+      end
       [stdin, stdout, stderr, eventstream].each { |io| io.close unless io.closed? }
+      consumer_thread.join
     end
 
     def popen_args
