@@ -507,6 +507,19 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
+    # https://github.com/JoshCheek/seeing_is_believing/issues/53
+    result = invoke <<-RUBY, timeout_seconds: 0.1
+      read, write = IO.pipe
+      fork               # child makes a grandchild
+      puts Process.pid   # print current pid
+      read.read          # block child and grandchild
+    RUBY
+    result.stdout.lines.map(&:to_i).each do |pid|
+      expect { Process.kill 0, pid }.to raise_error(Errno::ESRCH)
+    end
+  end
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }

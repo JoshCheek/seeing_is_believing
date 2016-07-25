@@ -135,7 +135,9 @@ class SeeingIsBelieving
         consumer_thread.join
       end
     rescue Timeout::Error
-      Process.kill "KILL", child.pid
+      pgid = Process.getpgid(child.pid)
+      handler = trap("INT") { trap("INT", handler) } # noop
+      Process.kill "-INT", pgid
       consumer.process_timeout timeout_seconds
       consumer_thread.join # finish consuming events
     ensure

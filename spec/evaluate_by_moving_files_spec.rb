@@ -142,9 +142,9 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(seen.last).to eq SeeingIsBelieving::EventStream::Events::Finished.new
   end
 
-  it 'can set a timeout, which KILL interrupts the process and then waits for the events to finish' do
+  it 'can set a timeout, which interrupts the process group and then waits for the events to finish' do
     expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
-    expect(Process).to receive(:kill).with("KILL", an_instance_of(Fixnum))
+    expect(Process).to receive(:kill).with("-INT", an_instance_of(Fixnum))
     result = invoke 'p gets', timeout_seconds: 123
     expect(result.timeout?).to eq true
     expect(result.timeout_seconds).to eq 123
