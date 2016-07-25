@@ -27,11 +27,6 @@ task spec: :bundle do
   sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/mrspec'
 end
 
-desc 'Run the spec and show the RSpec error'
-task rspec_error: :bundle do
-  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/mrspec', '-t', 'rspec_error'
-end
-
 desc 'Run cukes'
 task cuke: :bundle do
   sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/cucumber', '--tags', '~@not-implemented'

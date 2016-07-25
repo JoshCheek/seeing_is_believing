@@ -144,12 +144,15 @@ class SeeingIsBelieving
       consumer.process_timeout timeout_seconds
     ensure
       if child_thr && child_thr.alive?
-        handler = trap("INT") { }       # noop
+        handler = trap("INT") { } # noop
         begin
           Process.kill "-INT", child_pgid # negative makes it apply to the group
         ensure
           trap "INT", handler
         end
+      end
+      begin Process.wait child_pid # ffs -.-
+      rescue Errno::ESRCH, Errno::ECHILD # <-- which one should it be?
       end
       [stdin, stdout, stderr, eventstream].each { |io| io.close unless io.closed? }
       consumer_thread.join
