@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "haiti",    ">= 0.1", "< 0.3"
   s.add_development_dependency "rake",     "~> 10.0"
   s.add_development_dependency "mrspec",   "~>  0.3.0"
-  s.add_development_dependency "rspec",    "~>  3.2"
+  s.add_development_dependency "rspec",    "~>  3.5"
   s.add_development_dependency "cucumber", "~>  1.2"
   s.add_development_dependency "ichannel", "~>  8.1"
 
