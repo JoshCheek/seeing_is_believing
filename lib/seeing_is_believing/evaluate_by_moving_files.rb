@@ -141,8 +141,8 @@ class SeeingIsBelieving
     ensure
       allow_error(Errno::ESRCH)  { Process.kill "-INT", child_pgid } # negative makes it apply to the group
       allow_error(Errno::ECHILD) { Process.wait child_pid } # I can't tell if this actually works, or just creates enough of a delay for the OS to finish cleaning up the thread
-      close_streams(stdin, stdout, stderr, eventstream)
       consumer_thread.join
+      close_streams(stdin, stdout, stderr, eventstream)
     end
 
     def popen_args
