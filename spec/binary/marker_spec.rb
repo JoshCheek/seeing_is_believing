@@ -47,9 +47,9 @@ RSpec.describe SeeingIsBelieving::Binary::Marker do
 
   it 'requires prefix and a regex' do
     described_class.new prefix: '', regex: //
-    expect { described_class.new }.to raise_error
-    expect { described_class.new prefix: ''  }.to raise_error
-    expect { described_class.new regex:  // }.to raise_error
+    expect { described_class.new }.to raise_error ArgumentError
+    expect { described_class.new prefix: ''  }.to raise_error ArgumentError
+    expect { described_class.new regex:  // }.to raise_error ArgumentError
   end
 
   it 'stores the prefix and a regex' do

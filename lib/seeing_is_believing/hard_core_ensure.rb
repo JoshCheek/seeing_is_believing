@@ -33,8 +33,8 @@ class SeeingIsBelieving
 
     def invoke_ensure
       return if ensure_invoked
-      trap 'INT', old_handler
       self.ensure_invoked = true
+      trap 'INT', old_handler
       options[:ensure].call
     end
 

@@ -75,9 +75,11 @@ class SeeingIsBelieving
     end
 
     def set_back_to_initial_conditions
-      @was_backed_up ?
-        File.rename(backup_filename, filename) :
+      if @was_backed_up
+        File.rename(backup_filename, filename)
+      else
         File.delete(filename)
+      end
     end
 
     def write_program_to_file
@@ -98,7 +100,7 @@ class SeeingIsBelieving
       # setup environment variables
       env = ENV.to_hash.merge 'SIB_VARIABLES.MARSHAL.B64' =>
                                 [Marshal.dump(
-                                  event_stream_fd:   child_eventstream.to_i,
+                                  event_stream_fd:   4,
                                   max_line_captures: max_line_captures,
                                   num_lines:         program.lines.count,
                                   filename:          filename
@@ -106,11 +108,11 @@ class SeeingIsBelieving
 
       # evaluate the code in a child process
       opts = {
-        child_eventstream => child_eventstream,
-        in:                  child_stdin,
-        out:                 child_stdout,
-        err:                 child_stderr,
-        pgroup:              true, # run it in its own process group so we can SIGINT the whole group
+        4 =>    child_eventstream,
+        in:     child_stdin,
+        out:    child_stdout,
+        err:    child_stderr,
+        pgroup: true, # run it in its own process group so we can SIGINT the whole group
       }
       child_pid  = Kernel.spawn(env, *popen_args, opts)
       child_pgid = Process.getpgid(child_pid)
