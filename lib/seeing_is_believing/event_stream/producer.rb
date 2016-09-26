@@ -21,7 +21,25 @@ class SeeingIsBelieving
         self.max_line_captures = Float::INFINITY
         self.recorded_results  = []
         self.queue             = Safe::Queue[Queue.new]
-        self.producer_thread   = Safe::Thread[::Thread.new {
+        self.producer_thread   = Safe::Thread[
+          build_producer_thread(resultstream)
+        ]
+      end
+
+      def forking_occurred_and_you_are_the_child(resultstream)
+        # clear the queue b/c we don't want to report the same lines 2x,
+        # parent process can report them
+        queue << :fork
+        loop { break if queue.shift == :fork }
+
+        # recreate the thread since forking in Ruby kills threads
+        @producer_thread = Safe::Thread[
+          build_producer_thread(resultstream)
+        ]
+      end
+
+      private def build_producer_thread(resultstream)
+        ::Thread.new {
           Safe::Thread.current.abort_on_exception = true
           begin
             resultstream.sync = true
@@ -36,7 +54,7 @@ class SeeingIsBelieving
             self.queue = NullQueue
             resultstream.flush rescue nil
           end
-        }]
+        }
       end
 
       attr_reader :version

@@ -558,6 +558,76 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
+  describe 'fork' do
+    it 'records results from both parent and child, without double reporting items that may have been left in the queue at the time of forking' do
+      n = 10000
+      result = invoke <<-RUBY
+        n  = #{n}
+        as = '0' * n; 0
+        bs = '1' * n; 1
+
+        $$
+        if fork
+          $$
+          print as
+        else
+          $$
+          print bs
+        end
+        $$
+      RUBY
+
+      expect(result[1]).to eq [n.to_s]
+      expect(result[2]).to eq ['0']
+      expect(result[3]).to eq ['1']
+      expect(result[4]).to eq []
+      ppid = result[5][0]
+      pid, null = result[6].sort
+      expect(null).to eq 'nil'
+
+      expect(result[ 7]).to eq [ppid]
+      expect(result[10]).to eq [pid]
+      expect(result[13].sort).to eq [pid, ppid].sort
+
+      zeros, ones = result.stdout.split(/01|10/).sort
+      expect(zeros).to eq ("0"*(n-1)) # spent one on the split
+      expect(ones).to  eq ("1"*(n-1))
+    end
+
+    it 'works for Kernel#fork, Kernel.fork, Process.fork' do
+      result = invoke <<-RUBY
+        $$
+        if fork
+          $$
+        elsif Kernel.fork
+          $$
+        elsif Process.fork
+          $$
+        else
+          $$
+        end
+        $$
+      RUBY
+
+      pid_main = result[1][0]
+
+      pid_private, null = result[2].sort
+      expect(result[3]).to eq [pid_main]
+      expect(null).to eq 'nil'
+
+      pid_kernel,  null = result[4].sort
+      expect(result[5]).to eq [pid_private]
+      expect(null).to eq 'nil'
+
+      pid_process, null = result[6].sort
+      expect(result[7]).to eq [pid_kernel]
+      expect(null).to eq 'nil'
+
+      expect(result[9]).to eq [pid_process]
+      expect(result[11].sort).to eq [pid_main, pid_private, pid_kernel, pid_process].sort
+    end
+  end
+
   describe 'exec' do
     it 'passes stdin, stdout, stderr, and actually does exec the process' do
       result = invoke \

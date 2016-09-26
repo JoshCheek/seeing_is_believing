@@ -23,7 +23,14 @@ finish = lambda do
 end
 
 real_exec      = method :exec
+real_fork      = method :fork
 real_exit_bang = method :exit!
+fork_defn      = lambda do |*args|
+  result = real_fork.call(*args)
+  $SiB.forking_occurred_and_you_are_the_child(event_stream) unless result
+  result
+end
+
 Kernel.module_eval do
   private
 
@@ -41,7 +48,13 @@ Kernel.module_eval do
     finish.call
     real_exit_bang.call(status)
   end
+
+  define_method :fork, &fork_defn
 end
+
+Kernel.define_singleton_method  :fork, &fork_defn
+Process.define_singleton_method :fork, &fork_defn
+
 
 # Some things need to just be recorded and readded as they are called from Ruby C code
 symbol_to_s         = Symbol.instance_method(:to_s)

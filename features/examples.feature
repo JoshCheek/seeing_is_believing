@@ -258,8 +258,6 @@ Feature: Running the binary successfully
     """
     And the exit status is 0
 
-
-  @not-implemented
   Scenario: Fork records data in parent and child, parent exec does not affect it.
     Given the file "fork_exec_parent.rb":
     """
@@ -285,13 +283,12 @@ Feature: Running the binary successfully
     else
       sleep 1               # => 1
       :child                # => :child
-    end
+    end                     # => :child
     :child                  # => :child
 
     # >> hello
     """
 
-  @not-implemented
   Scenario: Fork records data in parent and child, child exec does not affect it.
     Given the file "fork_exec_child.rb":
     """
@@ -317,7 +314,7 @@ Feature: Running the binary successfully
     else
       :child                # => :child
       exec 'echo', 'hello'
-    end
+    end                     # => :parent
     :parent                 # => :parent
 
     # >> hello
