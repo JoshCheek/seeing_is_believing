@@ -669,6 +669,18 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(handler.debugger.stream).to eq stderr
         expect(handler.lib_options.debugger).to equal handler.debugger
       end
+
+      specify 'turn colour on if stderr is a tty' do
+        allow(stderr).to receive(:tty?).and_return(true)
+        handler = call debug: true
+        expect(handler.debugger).to be_coloured
+      end
+
+      specify 'turn colour off if stderr isn\'t a tty' do
+        allow(stderr).to receive(:tty?).and_return(false)
+        handler = call debug: true
+        expect(handler.debugger).to_not be_coloured
+      end
     end
   end
 end

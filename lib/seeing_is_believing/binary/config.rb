@@ -238,7 +238,7 @@ class SeeingIsBelieving
         end
 
         if debug?
-          self.debugger             = Debugger.new stream: stderr, colour: true
+          self.debugger             = Debugger.new stream: stderr, colour: stderr.tty?
           self.lib_options.debugger = debugger
         end
 
