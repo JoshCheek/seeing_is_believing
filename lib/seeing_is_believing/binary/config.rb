@@ -123,7 +123,12 @@ class SeeingIsBelieving
             self.help_screen = Binary.help_screen_extended(markers)
 
           when '-g', '--debug'
-            self.debug                = true
+            self.debug = true
+
+          when '--debug-to'
+            next_arg.call arg, "a filename" do |filename|
+              self.debug = filename
+            end
 
           when '-d', '--line-length'
             extract_positive_int_for.call arg do |n|
@@ -237,10 +242,14 @@ class SeeingIsBelieving
           lib_options.event_handler = EventStream::Handlers::StreamJsonEvents.new(stdout)
         end
 
-        if debug?
-          self.debugger             = Debugger.new stream: stderr, colour: stderr.tty?
-          self.lib_options.debugger = debugger
+        case debug
+        when String
+          debug_file    = File.open(debug, 'a').tap { |f| f.sync = true }
+          self.debugger = Debugger.new stream: debug_file, colour: false
+        when true
+          self.debugger = Debugger.new stream: stderr, colour: stderr.tty?
         end
+        self.lib_options.debugger = debugger
 
         if filename && body
           add_error("Cannot give a program body and a filename to get the program body from.")

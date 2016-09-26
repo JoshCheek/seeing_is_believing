@@ -447,14 +447,26 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
     end
 
-    describe 'debug?' do
-      specify 'debug? defaults to a false' do
+    describe '-g and --debug' do
+      specify 'set debug to true' do
+        expect(parse([])[:debug]).to          eq false
+        expect(parse([]).debug?).to           eq false
+        expect(parse(['-g'])[:debug]).to      eq true
+        expect(parse(['-g']).debug?).to       eq true
+        expect(parse(['--debug'])[:debug]).to eq true
+        expect(parse(['--debug']).debug?).to  eq true
+      end
+    end
+
+    describe '--debug-to FILE' do
+      specify 'sets debug to FILE' do
         expect(parse([])[:debug]).to eq false
+        expect(parse(['--debug-to', 'somefile'])[:debug]).to eq 'somefile'
       end
 
-      specify '-g and --debug set debug? to true' do
-        expect(parse(['-g']).debug?).to eq true
-        expect(parse(['--debug']).debug?).to eq true
+      specify 'sets an error if not given a next arg for the filename' do
+        expect(parse(['--debug-to', 'somefile'])).to_not have_error /--debug-to/
+        expect(parse(['--debug-to'])).to have_error /--debug-to/
       end
     end
 
@@ -555,7 +567,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     let(:stdin_data) { 'stdin data' }
     let(:stdin)      { object_double $stdin, read: stdin_data }
     let(:stdout)     { object_double $stdout }
-    let(:stderr)     { object_double $stderr }
+    let(:stderr)     { object_double $stderr, :tty? => true }
 
     let(:file_class)           { class_double File }
     let(:nonexisting_filename) { 'badfilename'    }
@@ -663,23 +675,50 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(handler.lib_options.debugger).to_not be_enabled
       end
 
-      specify 'are set to debug to stderr when debug? is true' do
-        handler = call debug: true
-        expect(handler.debugger).to be_enabled
-        expect(handler.debugger.stream).to eq stderr
-        expect(handler.lib_options.debugger).to equal handler.debugger
+      context 'when debug? is true' do
+        specify 'are the same debugger' do
+          handler = call debug: true
+          expect(handler.lib_options.debugger).to equal handler.debugger
+        end
+
+        specify 'print their output to stderr' do
+          handler = call debug: true
+          expect(handler.debugger).to be_enabled
+          expect(handler.debugger.stream).to eq stderr
+        end
+
+        specify 'turn colour on if stderr is a tty' do
+          handler = call debug: true
+          expect(handler.debugger).to be_coloured
+        end
+
+        specify 'turn colour off if stderr isn\'t a tty' do
+          allow(stderr).to receive(:tty?).and_return(false)
+          handler = call debug: true
+          expect(handler.debugger).to_not be_coloured
+        end
       end
 
-      specify 'turn colour on if stderr is a tty' do
-        allow(stderr).to receive(:tty?).and_return(true)
-        handler = call debug: true
-        expect(handler.debugger).to be_coloured
-      end
+      context 'when debug? is a string' do
+        let(:path) { File.expand_path '../../proving_grounds/test.log', __dir__ }
 
-      specify 'turn colour off if stderr isn\'t a tty' do
-        allow(stderr).to receive(:tty?).and_return(false)
-        handler = call debug: true
-        expect(handler.debugger).to_not be_coloured
+        specify 'are the same debugger' do
+          handler = call debug: path
+          expect(handler.lib_options.debugger).to equal handler.debugger
+        end
+
+        specify 'consider the string to be a filename, appending to it' do
+          File.write path, "pre"
+          debugger = call(debug: path).debugger
+          expect(debugger.stream.path).to eq path
+          debugger.context("test")
+          expect(File.read path).to match /pretest/
+        end
+
+        specify 'do not turn colour on' do
+          handler = call debug: path
+          expect(handler.debugger).to_not be_coloured
+        end
       end
     end
   end
