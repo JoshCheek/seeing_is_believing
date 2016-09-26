@@ -26,37 +26,6 @@ class SeeingIsBelieving
         ]
       end
 
-      def forking_occurred_and_you_are_the_child(resultstream)
-        # clear the queue b/c we don't want to report the same lines 2x,
-        # parent process can report them
-        queue << :fork
-        loop { break if queue.shift == :fork }
-
-        # recreate the thread since forking in Ruby kills threads
-        @producer_thread = Safe::Thread[
-          build_producer_thread(resultstream)
-        ]
-      end
-
-      private def build_producer_thread(resultstream)
-        ::Thread.new {
-          Safe::Thread.current.abort_on_exception = true
-          begin
-            resultstream.sync = true
-            loop do
-              to_publish = queue.shift
-              break if Safe::Symbol[:break] == to_publish
-              resultstream << (to_publish << "\n")
-            end
-          rescue IOError, Errno::EPIPE
-            queue.clear
-          ensure
-            self.queue = NullQueue
-            resultstream.flush rescue nil
-          end
-        }
-      end
-
       attr_reader :version
       alias ver version
       def record_sib_version(sib_version)
@@ -151,6 +120,38 @@ class SeeingIsBelieving
       def to_string_token(string)
         Safe::Array[[Safe::Marshal.dump(Safe::String[string].to_s)]].pack('m0')
       end
+
+      def build_producer_thread(resultstream)
+        ::Thread.new {
+          Safe::Thread.current.abort_on_exception = true
+          begin
+            resultstream.sync = true
+            loop do
+              to_publish = queue.shift
+              break if Safe::Symbol[:break] == to_publish
+              resultstream << (to_publish << "\n")
+            end
+          rescue IOError, Errno::EPIPE
+            queue.clear
+          ensure
+            self.queue = NullQueue
+            resultstream.flush rescue nil
+          end
+        }
+      end
+
+      def forking_occurred_and_you_are_the_child(resultstream)
+        # clear the queue b/c we don't want to report the same lines 2x,
+        # parent process can report them
+        queue << :fork
+        loop { break if queue.shift == :fork }
+
+        # recreate the thread since forking in Ruby kills threads
+        @producer_thread = Safe::Thread[
+          build_producer_thread(resultstream)
+        ]
+      end
+
     end
   end
 end

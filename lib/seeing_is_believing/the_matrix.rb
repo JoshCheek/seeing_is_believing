@@ -27,7 +27,7 @@ real_fork      = method :fork
 real_exit_bang = method :exit!
 fork_defn      = lambda do |*args|
   result = real_fork.call(*args)
-  $SiB.forking_occurred_and_you_are_the_child(event_stream) unless result
+  $SiB.send :forking_occurred_and_you_are_the_child, event_stream unless result
   result
 end
 
