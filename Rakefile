@@ -1,9 +1,14 @@
-require 'bundler'
-
 desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
 task :install do
-  # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
-  sh 'bundle install --standalone --binstubs bundle/bin'
+  `which bundle`
+  unless $?.success?
+    sh 'gem', 'install', 'bundler'
+  end
+
+  unless Dir.exist? 'bundle'
+    # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
+    sh 'bundle', 'install', '--standalone', '--binstubs', 'bundle/bin'
+  end
 end
 
 desc 'Remove generated and irrelevant files'
@@ -24,12 +29,19 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/mrspec'
+  require 'bundler'
+  sh 'ruby', '--disable-gem',
+             *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] },
+             '-S', 'bundle/bin/mrspec'
 end
 
 desc 'Run cukes'
 task cuke: :bundle do
-  sh 'ruby', '--disable-gem', *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] }, '-S', 'bundle/bin/cucumber', '--tags', '~@not-implemented'
+  require 'bundler'
+  sh 'ruby', '--disable-gem',
+             *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] },
+             '-S', 'bundle/bin/cucumber',
+             '--tags', '~@not-implemented'
 end
 
 desc 'Run all specs and cukes'

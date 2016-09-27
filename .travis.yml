@@ -1,5 +1,6 @@
 language: ruby
-install: gem install bundler && rake install
+before_install: gem install bundler
+install: rake install
 script: bundle exec rake ci
 rvm:
   - 1.9.3
