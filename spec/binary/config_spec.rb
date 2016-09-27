@@ -700,8 +700,9 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       context 'when debug? is a string' do
-        before(:all) { Dir.mkdir File.expand_path('../../../proving_grounds', __FILE__) }
-        let(:path)   { File.expand_path '../../../proving_grounds/test.log', __FILE__ }
+        let(:proving_grounds_dir) { File.expand_path '../../../proving_grounds', __FILE__  }
+        let(:path)                { File.join proving_grounds_dir, 'test.log' }
+        before                    { Dir.mkdir proving_grounds_dir unless Dir.exist? proving_grounds_dir }
 
         specify 'are the same debugger' do
           handler = call debug: path
