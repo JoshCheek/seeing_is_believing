@@ -1,5 +1,5 @@
 language: ruby
-install: gem install bundler && bundle install --standalone --binstubs bundle/bin
+install: gem install bundler && rake install
 script: bundle exec rake ci
 rvm:
   - 1.9.3
