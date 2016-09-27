@@ -266,7 +266,7 @@ Feature: Running the binary successfully
       :parent
       exec 'echo', 'hello'
     else
-      sleep 1
+      sleep 1 #
       :child
     end
     :child
@@ -281,7 +281,7 @@ Feature: Running the binary successfully
       :parent               # => :parent
       exec 'echo', 'hello'
     else
-      sleep 1               # => 1
+      sleep 1 #
       :child                # => :child
     end                     # => :child
     :child                  # => :child
