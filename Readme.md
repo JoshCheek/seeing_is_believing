@@ -6,17 +6,36 @@ Seeing Is Believing
 
 Evaluates Ruby code, recording the results of each line.
 Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing#editor-integration)).
+If you like Swift Playgrounds, you'll like SiB.
 
 ![example](https://s3.amazonaws.com/josh.cheek/images/scratch/sib-example1.gif)
 
 Watch a [longer video](http://vimeo.com/73866851).
 
-Works in Ruby 1.9, 2.0, 2.1, 2.2, rubinius (I **think**, need to make better tests), still trying to get it working with Jruby.
+Works in Ruby 2.x
+
+
+Install
+=======
+
+Requires Ruby 2.x
+
+```sh
+$ gem install seeing_is_believing
+```
+
+Verify the install with
+
+```sh
+$ seeing_is_believing -e '1 + 1'
+1 + 1  # => 2
+```
+
 
 Use The Binary
 ==============
 
-`cat simple_example.rb`
+Given the file `simple_example.rb`
 
 ```ruby
 5.times do |i|
@@ -24,25 +43,29 @@ Use The Binary
 end
 ```
 
-`seeing_is_believing simple_example.rb`
+`$ seeing_is_believing simple_example.rb` will print:
+
 ```ruby
+
 5.times do |i|  # => 5
   i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
 ```
+
 
 Use The Lib
 ===========
 
 ```ruby
 require 'seeing_is_believing'
-believer = SeeingIsBelieving.new("[:a, :b, :c].each do |i|
+
+# There are a lot of options you can pass here, including a custom handler
+handler = SeeingIsBelieving.call("[:a, :b, :c].each do |i|
                                     i.upcase
                                   end")
+result = handler.result
 
-result = believer.call # => #<SIB::Result @results={1=>#<SIB:Line["[:a, :b, :c]"] no exception>, 2=>#<SIB:Line[":A", ":B", ":C"] no exception>, 3=>#<SIB:Line["[:a, :b, :c]"] no exception>}\n  @stdout=""\n  @stderr=""\n  @exitstatus=0\n  @bug_in_sib=nil>
-
-result[2]            # => #<SIB:Line[":A", ":B", ":C"] no exception>
+result[2]            # => [":A", ":B", ":C"]
 result[2][0]         # => ":A"
 result[2][1]         # => ":B"
 result[2][2]         # => ":C"
@@ -53,12 +76,6 @@ result.stderr    # => ""
 result.exception # => nil
 ```
 
-Install
-=======
-
-Currently requires Ruby 1.9 or 2.x
-
-    $ gem install seeing_is_believing
 
 
 Editor Integration
@@ -69,20 +86,44 @@ Editor Integration
 * [TextMate 1](https://github.com/JoshCheek/text_mate_1-seeing-is_believing)
 * [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing) (TM2 is actually looking really nice these days -- Josh Cheek, 18 Feb 2015)
 
+
 Vim
-===
+---
 
-I didn't write either of these, but they both support Seeing Is Believing. I've looked through the code, it works reasonably. One of them, I wound up having to edit the installed package, don't remember which.
+These packages support SiB:
 
-* [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter)
 * [vim-seeing-is-believing](https://github.com/hwartig/vim-seeing-is-believing)
+* [vim-ruby-xmpfilter](https://github.com/t9md/vim-ruby-xmpfilter)
+
+Personally, I had difficulty with them, but this configuration has gotten me pretty far:
+
+```viml
+" ===== Seeing Is Believing =====
+" Assumes you have a Ruby with SiB available in the PATH
+" If it doesn't work, you may need to `gem install seeing_is_believing -v 3.0.0.beta.6`
+" ...yeah, current release is a beta, which won't auto-install
+
+" Annotate every line
+  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>;
+" Annotate marked lines
+  nmap <leader>n :%.!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>;
+" Remove annotations
+  nmap <leader>c :%.!seeing_is_believing --clean<CR>;
+" Mark the current line for annotation
+  nmap <leader>m A # => <Esc>
+" Mark the highlighted lines for annotation
+  vmap <leader>m :norm A # => <Esc>
+```
+
 
 Emacs Integration
-=================
+-----------------
 
 You can use my friend's configuration [file](https://github.com/jcinnamond/seeing-is-believing).
+You can see him use it in [this](http://brightonruby.com/2016/the-point-of-objects-john-cinnamond/?utm_source=rubyweekly&utm_medium=email)
+presentation at 10 minutes.
 
-Or, adding this function to your Emacs configuration will get you pretty far:
+Alternatively, adding this function to your Emacs configuration will get you pretty far:
 
 ```scheme
 (defun seeing-is-believing ()
@@ -100,6 +141,13 @@ You can now call `seeing-is-believing` to replace the current region
 or current buffer contents with the output of running it through
 `seeing_is_believing`.
 
+
+Features
+========
+
+Check the [features](features) directory.
+
+
 Known Issues
 ============
 
@@ -108,15 +156,22 @@ Known Issues
   This code will be wrapped. But using the value is **syntactically** invalid in Ruby, because it constitutes a "void value expression" (aka a pointless timesink and the cause of many bugs in SiB).
   Unfortunately, I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge that I don't think it's worth worrying about.
 
-Version 2
-=========
+Setting up Development
+======================
 
-Feature complete, I'll fix bugs in it until version 3 is released, though
+* Make sure you have Ruby (I use [chruby](https://github.com/postmodern/chruby) and [ruby-install](https://github.com/postmodern/ruby-install) for this).
+* Make sure you have bundler and rake (`gem install bundler rake`)
+* Fork the repo (there's a button on Github)
+* Clone your fork (`git clone git@github.com:YOUR_GITHUB_NAME/seeing_is_believing.git`)
+* Install the dependencies (`rake install`) This approach is painful, but it means the test suite is like 30s instead of 5min.
+* Get a list of rake tasks (`rake -T`)
+* Run the full test suite (`rake`)
+* Run the rspec tests `bundle exec rspec` from here you can pass options you want, such as a tag for the tests you're interested in.
+* Run the Cucumber tests `bundle exec cucumber` (these literally invoke the executable, as a user would)
 
-Version 3
-=========
 
-These need to be done before release:
+Some stuff that might happen one day
+====================================
 
 * Add default to number of captures (1000), require user to explicitly set it to infinity
 * Expose markers via the CLI
@@ -127,10 +182,6 @@ These need to be done before release:
     rather than having to figure out all the compmlex ecosystem around installing
   * Would be nice to have real integration with Emacs
   * Would be nice to support Ruby Mine
-
-Version 4
-=========
-
 * How about if begin/rescue/end was able to record the result on the rescue section
 * How about if you could configure which kinds of results you were interested in
   (e.g. turn on/off recording of method definitions, and other results)
@@ -145,6 +196,8 @@ Version 4
   Could have fallback strategies, so e.g. `-s min=40,fallback=line`
 * Package Ruby with the editor downloads so that they don't require you to know so fkn much to set it up.
 * Allow user to set marker
+* Maybe rename xmpfilter style, not many people know what that is, so the name doesn't help users
+
 
 Inspiration
 ===========
@@ -153,10 +206,6 @@ Inspiration
 * Bret Victor's completely inspiring talk [Inventing on Principle](https://www.youtube.com/watch?v=PUv66718DII).
 * My 8th Light mentor, [Doug Bradbury](http://blog.8thlight.com/doug-bradbury/archive.html) who asked me to make it for his Kids Ruby sessions (I don't think we ever finished integrating it, though >.<)
 
-Interestingly, [Swift playground](https://www.youtube.com/watch?v=oY6nQS3MiF8&t=25m51s)
-are very similar (though better integrated since they coerce you into using xcode).
-Released about a year and a half before them, but maybe I should take advantage of
-their marketing anyway: Swift Playgrounds for Ruby!! :P
 
 Shout outs
 ==========
