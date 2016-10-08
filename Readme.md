@@ -12,13 +12,11 @@ If you like Swift Playgrounds, you'll like SiB.
 
 Watch a [longer video](http://vimeo.com/73866851).
 
-Works in Ruby 2.x
-
 
 Install
 =======
 
-Requires Ruby 2.x
+Requires Ruby >= 2.1
 
 ```sh
 $ gem install seeing_is_believing
