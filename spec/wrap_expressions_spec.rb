@@ -709,20 +709,29 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
   end
 
   describe 'class definitions' do
-    it 'does not wrap the class definition, does wrap the body' do
+    it 'does wraps the class definition, and body' do
       expect(wrap("class A\n1\nend")).to eq "<class A\n<1>\nend>"
     end
 
-    it 'does not wrap the superclass definition' do
+    it 'does wraps the superclass definition' do
       expect(wrap("class A < B\nend")).to eq "<class A < <B>\nend>"
     end
 
-    it 'wraps the rescue body' do
+    it 'wraps the rescue, else, ensure body' do
+      expect(wrap("class A < B\n1\nrescue\n2\nelse\n3\nensure\n4\nend")).to eq "<class A < <B>\n<1>\nrescue\n<2>\nelse\n<3>\nensure\n<4>\nend>"
+    end
+
+    it 'wraps the else body' do
       expect(wrap("class A < B\n1\nrescue\n2\nend")).to eq "<class A < <B>\n<1>\nrescue\n<2>\nend>"
     end
 
-    it 'does not wrap the singleton class' do
+    it 'wraps the singleton class' do
       expect(wrap("class << self\n end")).to eq "<class << <self>\n end>"
+    end
+
+    it 'wraps the namespace' do
+      expect(wrap("class A::B\nend")).to eq "<class <A>::B\nend>"
+      expect(wrap("class (\n1\nObject\n)::String\nend")).to eq "<class <(\n<1>\n<Object>\n)>::String\nend>"
     end
   end
 

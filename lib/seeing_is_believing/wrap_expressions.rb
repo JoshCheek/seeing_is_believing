@@ -98,11 +98,17 @@ class SeeingIsBelieving
       case ast.type
       when :args, :redo, :retry, :alias, :undef, :null_node
         # no op
-      when :defs, :class, :module
+      when :defs, :module
         add_to_wrappings ast
         add_children ast, true
       when :rescue, :ensure, :return, :break, :next, :splat, :kwsplat
         add_children ast
+      when :class
+        name,      * = ast.children
+        namespace, * = name.children
+        add_to_wrappings ast
+        wrap_recursive namespace
+        add_children ast, true
       when :if
         if ast.location.kind_of? Parser::Source::Map::Ternary
           add_to_wrappings ast unless ast.children.any? { |child| code.void_value? child }
