@@ -82,9 +82,10 @@ class SeeingIsBelieving
       end
 
       def initialize(body, results, options={})
-        @options = options
-        @body    = body
-        @results = results
+        @options         = options
+        @body            = body
+        @results         = results
+        @interline_align = InterlineAlign.new(results)
       end
 
       # seems like maybe this should respect the alignment strategy (not what xmpfilter does, but there are other ways I'd like to deviate anyway)
@@ -114,8 +115,13 @@ class SeeingIsBelieving
               whitespace = " " if whitespace.empty?
               [whitespace, FormatComment.call(0, exception_prefix, exception_result, @options)]
             elsif normal_annotation
-              annotation = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, annotation, @options)]
+              if @options[:interline_align]
+                annotation = @interline_align.call comment.line_number, @results[comment.line_number].map { |result| result.gsub "\n", '\n' }
+                [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, annotation, @options)]
+              else
+                annotation = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+                [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, annotation, @options)]
+              end
             elsif pp_annotation
               result     = @results[pp_map[comment.line_number], :pp]
               annotation = result.map { |result| result.chomp }.join("\n,") # ["1\n2", "1\n2", ...
