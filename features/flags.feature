@@ -529,7 +529,8 @@ Feature: Using flags
     And stderr is empty
     And stdout is "1  # => 1"
 
-  Scenario: --align and --no-align determine whether adjacent lines with the same number of results get lined up, it defaults to --align
+  @wip
+  Scenario: --interline-align and --no-interline-align determine whether adjacent lines with the same number of results get lined up, it defaults to --align
     Given the file "interline_alignment.rb":
     """
     3.times do |num|

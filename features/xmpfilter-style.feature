@@ -410,3 +410,43 @@ Feature: Xmpfilter style
     # ~>
     # ~> xm...
     """
+
+  @not-implemented
+  Scenario: --interline-align and --no-interline-align determine whether adjacent lines with the same number of results get lined up, it defaults to --align
+    Given the file "interline_alignment.rb":
+    """
+    3.times do |num|
+      num     # =>
+        .to_s # =>
+    end
+    """
+    When I run "seeing_is_believing -x interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|
+      num     # => 0,   1,   2
+        .to_s # => "0", "1", "2"
+    end
+    """
+    When I run "seeing_is_believing -x --interline-align interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|
+      num     # => 0,   1,   2
+        .to_s # => "0", "1", "2"
+    end
+    """
+    When I run "seeing_is_believing -x --no-interline-align interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|
+      num     # => 0, 1, 2
+        .to_s # => "0", "1", "2"
+    end
+    """
