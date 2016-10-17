@@ -307,7 +307,7 @@ Options:
                                    chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                    file            =>  the entire file is at the same alignment
                                    line            =>  each line is at its own alignment
-       --[no-]align              # align results on adjacent lines when they have the same number of results
+       --[no-]-interline-align   # align results on adjacent lines when they have the same number of results
                                    defautls to --align
   -t,  --timeout-seconds s       # how long to evaluate the source file before timing out
                                    0 means it will never timeout (this is the default)
