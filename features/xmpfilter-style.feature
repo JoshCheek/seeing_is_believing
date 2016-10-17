@@ -319,6 +319,52 @@ Feature: Xmpfilter style
     """
 
 
+  Scenario: When there are no results for the previous line it looks further back (#77)
+    Given the file "heredocs_and_blank_lines.rb":
+    """
+    # =>
+
+    <<DOC
+    1
+    DOC
+    # =>
+
+    2
+
+    # =>
+
+    if true
+      3
+      # =>
+    else
+      4
+      # =>
+    end
+    """
+    When I run "seeing_is_believing --xmpfilter-style heredocs_and_blank_lines.rb"
+    Then stdout is:
+    """
+    # =>
+
+    <<DOC
+    1
+    DOC
+    # => "1\n"
+
+    2
+
+    # => 2
+
+    if true
+      3
+      # => 3
+    else
+      4
+      # =>
+    end
+    """
+
+
 
   Scenario: Xmpfilter uses the same comment formatting as normal
     Given the file "xmpfilter_result_lengths.rb":

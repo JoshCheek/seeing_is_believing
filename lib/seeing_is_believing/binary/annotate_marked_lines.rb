@@ -1,7 +1,6 @@
 # encoding: utf-8
 require 'seeing_is_believing/code'
 
-
 # *sigh* need to find a way to join the annotators.
 # They are sinful ugly, kinda hard to work with,
 # and absurdly duplicated.
@@ -11,16 +10,37 @@ class SeeingIsBelieving
     # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
     # See https://github.com/JoshCheek/seeing_is_believing/issues/44 for more details
     class AnnotateMarkedLines
+      def self.map_markers_to_linenos(program, markers)
+        value_regex      = markers[:value][:regex]
+        recordable_lines = []
+        inspect_linenos  = []
+        pp_map           = {}
+        WrapExpressions.call program, before_each: -> line_number {
+          recordable_lines << line_number
+          ''
+        }
+
+        Code.new(program).inline_comments.each do |c|
+          next unless c.text[value_regex]
+          if c.whitespace_col == 0
+            lineno = c.line_number
+            loop do
+              lineno -= 1
+              break if recordable_lines.include?(lineno) || lineno.zero?
+            end
+            pp_map[c.line_number] = lineno
+          else
+            inspect_linenos << c.line_number
+          end
+        end
+
+        return inspect_linenos, pp_map
+      end
+
       def self.code_rewriter(markers)
         lambda do |program|
-          inspect_linenos = []
-          pp_linenos      = []
-          value_regex     = markers[:value][:regex]
-          Code.new(program).inline_comments.each do |c|
-            next unless c.text[value_regex]
-            c.whitespace_col == 0 ? pp_linenos      << c.line_number - 1
-                                  : inspect_linenos << c.line_number
-          end
+          inspect_linenos, pp_map = map_markers_to_linenos(program, markers)
+          pp_linenos = pp_map.values
 
           should_inspect = false
           should_pp      = false
@@ -81,6 +101,7 @@ class SeeingIsBelieving
             include_lines << exception_lineno
           end
 
+          _, pp_map = self.class.map_markers_to_linenos(@body, @options[:markers])
           new_body = RewriteComments.call @body, include_lines: include_lines do |comment|
             exception_on_line  = exception_lineno == comment.line_number
             annotate_this_line = comment.text[value_regex]
@@ -93,12 +114,13 @@ class SeeingIsBelieving
               whitespace = " " if whitespace.empty?
               [whitespace, FormatComment.call(0, exception_prefix, exception_result, @options)]
             elsif normal_annotation
-              result = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
-              [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, result, @options)]
+              annotation = @results[comment.line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
+              [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, annotation, @options)]
             elsif pp_annotation
-              result = @results[comment.line_number-1, :pp].map { |result| result.chomp }.join("\n,") # ["1\n2", "1\n2", ...
-              swap_leading_whitespace_in_multiline_comment(result)
-              comment_lines = result.each_line.map.with_index do |comment_line, result_offest|
+              result     = @results[pp_map[comment.line_number], :pp]
+              annotation = result.map { |result| result.chomp }.join("\n,") # ["1\n2", "1\n2", ...
+              swap_leading_whitespace_in_multiline_comment(annotation)
+              comment_lines = annotation.each_line.map.with_index do |comment_line, result_offest|
                 if result_offest == 0
                   FormatComment.call(comment.whitespace_col, value_prefix, comment_line.chomp, @options)
                 else
