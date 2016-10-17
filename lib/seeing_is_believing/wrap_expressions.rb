@@ -202,8 +202,14 @@ class SeeingIsBelieving
           add_to_wrappings ast
         end
         add_children ast
-      when :str, :dstr, :xstr, :regexp
+      when :str
         add_to_wrappings ast
+
+      when :dstr, :regexp
+        add_to_wrappings ast
+        ast.children
+           .select { |child| child.type == :begin }
+           .each { |child| add_children child }
 
       when :hash
         # method arguments might not have braces around them

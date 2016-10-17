@@ -217,9 +217,9 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("alias $a $b")).to eq "alias $a $b"
     end
 
-    it 'wraps syscalls, but not code interpolated into them' do
+    it 'wraps syscalls, and the code interpolated into them' do
       expect(wrap("`a\nb`")).to eq "<`a\nb`>"
-      expect(wrap("`a\n\#{1\n2\n3}b`")).to eq "<`a\n\#{1\n2\n3}b`>"
+      expect(wrap("`a\n\#{1\n2\n3}b`")).to eq "<`a\n\#{<1>\n<2>\n3}b`>"
     end
   end
 
@@ -586,12 +586,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("/a\nb/i")).to eq "</a\nb/i>"
     end
 
-    # eventually it would be nice if it wraped the interpolated portion,
-    # when the end of the line was not back inside the regexp
-    it 'wraps regexes with interpolation, but not the interpolated portion' do
+    it 'wraps regexes with interpolation, including the interpolated portion' do
       expect(wrap("/a\#{1}/")).to eq "</a\#{1}/>"
-      expect(wrap("/a\n\#{1}\nb/")).to eq "</a\n\#{1}\nb/>"
-      expect(wrap("/a\n\#{1\n}b/")).to eq "</a\n\#{1\n}b/>"
+      expect(wrap("/a\n\#{1}\nb/")).to eq "</a\n\#{<1>}\nb/>"
+      expect(wrap("/a\n\#{1\n}b/")).to eq "</a\n\#{<1>\n}b/>"
     end
   end
 
@@ -612,12 +610,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap(%'"a\nb"')).to eq %'<"a\nb">'
     end
 
-    # eventually it would be nice if it wraped the interpolated portion,
-    # when the end of the line was not back inside the string
-    it 'wraps strings with interpolation, but not the interpolated portion' do
+    it 'wraps strings with interpolation, including the interpolated portion' do
       expect(wrap('"a#{1}"')).to eq '<"a#{1}">'
-      expect(wrap(%'"a\n\#{1}\nb"')).to eq %'<"a\n\#{1}\nb">'
-      expect(wrap(%'"a\n\#{1\n}b"')).to eq %'<"a\n\#{1\n}b">'
+      expect(wrap(%'"a\n\#{1}\nb"')).to eq %'<"a\n\#{<1>}\nb">'
+      expect(wrap(%'"a\n\#{1\n}b"')).to eq %'<"a\n\#{<1>\n}b">'
     end
 
     it 'wraps %, %q, %Q' do
