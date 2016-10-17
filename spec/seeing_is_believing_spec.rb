@@ -560,7 +560,7 @@ RSpec.describe SeeingIsBelieving do
 
   describe 'fork' do
     it 'records results from both parent and child, without double reporting items that may have been left in the queue at the time of forking' do
-      n = 10000
+      n = 100
       result = invoke <<-RUBY
         n  = #{n}
         as = '0' * n; 0
