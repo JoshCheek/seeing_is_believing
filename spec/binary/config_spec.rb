@@ -563,6 +563,21 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
   end
 
 
+  describe 'align_results?', t:true do
+    it 'defaults to true' do
+      expect(parse([]).annotator_options.interline_align?).to eq true
+    end
+    it 'can be turned on with --interline-align' do
+      expect(parse(['--interline-align'])).to_not have_error '--interline-align'
+      expect(parse(['--interline-align']).annotator_options.interline_align?).to eq true
+    end
+    it 'can be turned off with --no-interline-align' do
+      expect(parse(['--no-interline-align'])).to_not have_error '--no-interline-align'
+      expect(parse(['--no-interline-align']).annotator_options.interline_align?).to eq false
+    end
+  end
+
+
   describe '.finalize' do
     let(:stdin_data) { 'stdin data' }
     let(:stdin)      { object_double $stdin, read: stdin_data }

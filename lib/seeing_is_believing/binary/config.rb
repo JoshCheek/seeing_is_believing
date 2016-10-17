@@ -186,6 +186,12 @@ class SeeingIsBelieving
               end
             end
 
+          when '--interline-align'
+            self.annotator_options.interline_align = true
+
+          when '--no-interline-align'
+            self.annotator_options.interline_align = false
+
           when '--shebang'
             executable = args.shift
             if executable
@@ -301,6 +307,8 @@ Options:
                                    chunk (DEFAULT) =>  each chunk of code is at the same alignment
                                    file            =>  the entire file is at the same alignment
                                    line            =>  each line is at its own alignment
+       --[no-]align              # align results on adjacent lines when they have the same number of results
+                                   defautls to --align
   -t,  --timeout-seconds s       # how long to evaluate the source file before timing out
                                    0 means it will never timeout (this is the default)
                                    accepts floating point values (e.g. 0.5 would timeout after half a second)

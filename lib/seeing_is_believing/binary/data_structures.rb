@@ -39,6 +39,7 @@ class SeeingIsBelieving
       attribute(:markers)            { Markers.new }
       attribute(:max_line_length)    { Float::INFINITY }
       attribute(:max_result_length)  { Float::INFINITY }
+      predicate(:interline_align)    { true }
     end
 
 

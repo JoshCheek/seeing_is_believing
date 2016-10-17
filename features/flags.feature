@@ -528,3 +528,42 @@ Feature: Using flags
     Then the exit status is 0
     And stderr is empty
     And stdout is "1  # => 1"
+
+  Scenario: --align and --no-align determine whether adjacent lines with the same number of results get lined up, it defaults to --align
+    Given the file "interline_alignment.rb":
+    """
+    3.times do |num|
+      num
+        .to_s
+    end
+    """
+    When I run "seeing_is_believing interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|  # => 3
+      num             # => 0,   1,   2
+        .to_s         # => "0", "1", "2"
+    end               # => 3
+    """
+    When I run "seeing_is_believing --interline-align interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|  # => 3
+      num             # => 0,   1,   2
+        .to_s         # => "0", "1", "2"
+    end               # => 3
+    """
+    When I run "seeing_is_believing --no-interline-align interline_alignment.rb"
+    Then stderr is empty
+    And  the exit status is 0
+    And  stdout is:
+    """
+    3.times do |num|  # => 3
+      num             # => 0, 1, 2
+        .to_s         # => "0", "1", "2"
+    end               # => 3
+    """
