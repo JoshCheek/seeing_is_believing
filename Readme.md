@@ -55,6 +55,62 @@ end             # => 5
 {"stdout":"","stderr":"","exitstatus":0,"exception":null,"lines":{"1":["5"],"2":["0","2","4","6","8"],"3":["5"]}}
 ```
 
+Protips
+=======
+
+These things have been useful for integrating.
+
+If you want to execute from some specific dir (eg if your editor is in the wrong dir)
+try using `Dir.chdir` at the top of the script.
+Eg I used that [here](https://github.com/JoshCheek/seeing_is_believing/issues/58#issuecomment-91600783)
+so I could run with a full Rails app available in "Completely against the real env".
+
+If you want some specific file to be available in that environment, require the fullpath to the file.
+Eg I used that [here](https://github.com/JoshCheek/seeing_is_believing/issues/58#issuecomment-91600783)
+to load up the Rils schema in "Running against the real schema".
+
+You can also set the `$LOAD_PATH` to a gem you're working on and then require files as if
+it was installed.
+
+You work with `gets` by setting `$stdin` to the `DATA` segment and writing inputs there.
+
+```ruby
+$stdin = DATA
+
+puts "What's your name?"
+name = gets.chomp
+puts "What's your favourite colour?"
+colour = gets.chomp
+puts "#{name}'s favourite colour is #{colour}."
+
+# >> What's your name?
+# >> What's your favourite colour?
+# >> Josh's favourite colour is brown.
+
+__END__
+Josh
+brown
+```
+
+Rescue lines you expect to explode so that it displays the expected result and continues evaluating.
+
+```ruby
+lambda { |x| x }.call()     rescue $!  # => #<ArgumentError: wrong number of arguments (given 0, expected 1)>
+lambda { |x| x }.call(1)               # => 1
+lambda { |x| x }.call(1, 2) rescue $!  # => #<ArgumentError: wrong number of arguments (given 2, expected 1)>
+```
+
+Use `fork` to look at what a program does when run two different ways.
+
+```ruby
+class A
+  fork && raise("omg")  # => nil
+rescue
+  $!                    # => #<RuntimeError: omg>
+else
+  :nothing_raised       # => :nothing_raised
+end                     # => #<RuntimeError: omg>, :nothing_raised
+```
 
 Use The Lib
 ===========
