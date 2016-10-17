@@ -44,10 +44,15 @@ end
 `$ seeing_is_believing simple_example.rb` will print:
 
 ```ruby
-
 5.times do |i|  # => 5
   i * 2         # => 0, 2, 4, 6, 8
 end             # => 5
+```
+
+`$ seeing_is_believing simple_example.rb --json` will print:
+
+```json
+{"stdout":"","stderr":"","exitstatus":0,"exception":null,"lines":{"1":["5"],"2":["0","2","4","6","8"],"3":["5"]}}
 ```
 
 
