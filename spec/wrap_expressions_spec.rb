@@ -805,6 +805,31 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
+  describe 'interpolation wraps the whole value and interpolated values' do
+    def self.assert_interpolates(name, code, expected)
+      example(name) { expect(wrap code).to eq expected }
+    end
+
+    assert_interpolates 'backtick syscall',     "`a\#{\n1\n}\nb\n`",    "<`a\#{\n<1>\n}\nb\n`>"
+    assert_interpolates 'slash regex',          "/a\#{\n1\n}\nb\n/",    "</a\#{\n<1>\n}\nb\n/>"
+    assert_interpolates 'double quoted string', "\"a\#{\n1\n}\nb\n\"",  "<\"a\#{\n<1>\n}\nb\n\">"
+    assert_interpolates 'double quoted symbol', ":\"a\#{\n1\n}\nb\n\"", "<:\"a\#{\n<1>\n}\nb\n\">"
+
+    assert_interpolates 'symbol array with interpolation', "%I.a\#{\n1\n}\nb\n.", "<%I.a\#{\n<1>\n}\nb\n.>"
+    assert_interpolates '%x syscall',                      "%x.a\#{\n1\n}\nb\n.", "<%x.a\#{\n<1>\n}\nb\n.>"
+    assert_interpolates '% string',                        "%.a\#{\n1\n}\nb\n.",  "<%.a\#{\n<1>\n}\nb\n.>"
+    assert_interpolates 'string array with interpolation', "%W.a\#{\n1\n}\nb\n.", "<%W.a\#{\n<1>\n}\nb\n.>"
+    assert_interpolates '%r regex',                        "%r.a\#{\n1\n}\nb\n.", "<%r.a\#{\n<1>\n}\nb\n.>"
+    assert_interpolates '%Q string',                       "%Q.a\#{\n1\n}\nb\n.", "<%Q.a\#{\n<1>\n}\nb\n.>"
+
+    assert_interpolates '%s symbol',                          "%s.a\#{\n1\n}\nb\n.", "<%s.a\#{\n1\n}\nb\n.>"
+    assert_interpolates 'single quoted string',               "'a\#{\n1\n}\nb\n'",   "<'a\#{\n1\n}\nb\n'>"
+    assert_interpolates 'single quoted symbol',               ":'a\#{\n1\n}\nb\n'",  "<:'a\#{\n1\n}\nb\n'>"
+    assert_interpolates 'symbol array without interpolation', "%i.a\#{\n1\n}\nb\n.", "<%i.a\#{\n1\n}\nb\n.>"
+    assert_interpolates '%q string without interpolation',    "%q.a\#{\n1\n}\nb\n.", "<%q.a\#{\n1\n}\nb\n.>"
+    assert_interpolates 'string array without interpolation', "%w.a\#{\n1\n}\nb\n.", "<%w.a\#{\n1\n}\nb\n.>"
+  end
+
   describe 'BEGIN/END' do
     # not implemented b/c we cannot wrap around these either.
     # So what does it mean to wrap around?

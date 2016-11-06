@@ -563,7 +563,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
   end
 
 
-  describe 'align_results?', t:true do
+  describe 'align_results?' do
     it 'defaults to true' do
       expect(parse([]).annotator_options.interline_align?).to eq true
     end
