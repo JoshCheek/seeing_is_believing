@@ -637,6 +637,8 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(heredoc_wrap "<<A\n123\nA").to eq "[{<<A}]\n123\nA"
       expect(heredoc_wrap "<<-A\nA").to eq "[{<<-A}]\nA"
       expect(heredoc_wrap "<<-A\n123\nA").to eq "[{<<-A}]\n123\nA"
+      expect(heredoc_wrap "<<~A\nA").to eq "[{<<-A}]\nA"
+      expect(heredoc_wrap "<<~A\n123\nA").to eq "[{<<~A}]\n123\nA"
       expect(heredoc_wrap "1\n<<A\nA").to eq "[{1}\n{<<A}]\nA"
       expect(heredoc_wrap "<<A + <<B\n1\nA\n2\nB").to eq "[{<<A + <<B}]\n1\nA\n2\nB"
       expect(heredoc_wrap "<<A\n1\nA\n<<B\n2\nB").to eq "[{<<A}\n1\nA\n{<<B}]\n2\nB"
@@ -666,6 +668,12 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(heredoc_wrap "<<A.whatever <<B\nA\nB").to eq "[{<<A.whatever <<B}]\nA\nB"
       expect(heredoc_wrap "<<A.whatever(<<B)\nA\nB").to eq "[{<<A.whatever(<<B)}]\nA\nB"
       expect(heredoc_wrap "<<A.size()\nA").to eq "[{<<A.size()}]\nA"
+    end
+
+    it 'is not confused by external heredocs (backticks)' do
+      expect(heredoc_wrap "<<`A`\nA").to eq "[{<<`A`}]\nA"
+      expect(heredoc_wrap "<<-`A`\nA").to eq "[{<<-`A`}]\nA"
+      expect(heredoc_wrap "<<~`A`\nA").to eq "[{<<~`A`}]\nA"
     end
   end
 
