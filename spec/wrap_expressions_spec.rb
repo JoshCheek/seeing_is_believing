@@ -637,7 +637,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(heredoc_wrap "<<A\n123\nA").to eq "[{<<A}]\n123\nA"
       expect(heredoc_wrap "<<-A\nA").to eq "[{<<-A}]\nA"
       expect(heredoc_wrap "<<-A\n123\nA").to eq "[{<<-A}]\n123\nA"
-      expect(heredoc_wrap "<<~A\nA").to eq "[{<<-A}]\nA"
+      expect(heredoc_wrap "<<~A\nA").to eq "[{<<~A}]\nA"
       expect(heredoc_wrap "<<~A\n123\nA").to eq "[{<<~A}]\n123\nA"
       expect(heredoc_wrap "1\n<<A\nA").to eq "[{1}\n{<<A}]\nA"
       expect(heredoc_wrap "<<A + <<B\n1\nA\n2\nB").to eq "[{<<A + <<B}]\n1\nA\n2\nB"
