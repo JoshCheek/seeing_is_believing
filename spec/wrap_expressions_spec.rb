@@ -637,8 +637,10 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(heredoc_wrap "<<A\n123\nA").to eq "[{<<A}]\n123\nA"
       expect(heredoc_wrap "<<-A\nA").to eq "[{<<-A}]\nA"
       expect(heredoc_wrap "<<-A\n123\nA").to eq "[{<<-A}]\n123\nA"
-      expect(heredoc_wrap "<<~A\nA").to eq "[{<<~A}]\nA"
-      expect(heredoc_wrap "<<~A\n123\nA").to eq "[{<<~A}]\n123\nA"
+      if ruby_version >= '2.3'
+        expect(heredoc_wrap "<<~A\nA").to eq "[{<<~A}]\nA"
+        expect(heredoc_wrap "<<~A\n123\nA").to eq "[{<<~A}]\n123\nA"
+      end
       expect(heredoc_wrap "1\n<<A\nA").to eq "[{1}\n{<<A}]\nA"
       expect(heredoc_wrap "<<A + <<B\n1\nA\n2\nB").to eq "[{<<A + <<B}]\n1\nA\n2\nB"
       expect(heredoc_wrap "<<A\n1\nA\n<<B\n2\nB").to eq "[{<<A}\n1\nA\n{<<B}]\n2\nB"
@@ -673,7 +675,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'is not confused by external heredocs (backticks)' do
       expect(heredoc_wrap "<<`A`\nA").to eq "[{<<`A`}]\nA"
       expect(heredoc_wrap "<<-`A`\nA").to eq "[{<<-`A`}]\nA"
-      expect(heredoc_wrap "<<~`A`\nA").to eq "[{<<~`A`}]\nA"
+      expect(heredoc_wrap "<<~`A`\nA").to eq "[{<<~`A`}]\nA" if ruby_version >= '2.3'
     end
   end
 
