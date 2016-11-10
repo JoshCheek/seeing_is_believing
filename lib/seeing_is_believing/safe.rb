@@ -31,6 +31,8 @@ class SeeingIsBelieving
 
     refine ::Fixnum do
       alias to_s to_s
+      alias next next
+      alias <    <
     end
 
     # to_s

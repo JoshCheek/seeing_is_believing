@@ -711,14 +711,19 @@ RSpec.describe SeeingIsBelieving do
     end
 
     specify 'when Fixnum does not have <, <<, next, ==, inspect, to_s' do
-      expect(invoke('class Fixnum
-                       undef <
-                       undef <<
-                       undef ==
-                       undef next
-                       undef to_s
-                       undef inspect
-                     end').stderr).to eq ''
+      result = invoke('class Fixnum
+                         undef <
+                         undef <<
+                         undef ==
+                         def next
+                           "redefining instead of undefing b/c it comes from Integer"
+                         end
+                         undef to_s
+                         undef inspect
+                       end
+                       "a"')
+      expect(result.stderr).to eq ''
+      expect(result.to_a.last).to eq ['"a"']
     end
 
     specify 'when Hash does not have [], []=, fetch' do
@@ -786,8 +791,7 @@ RSpec.describe SeeingIsBelieving do
                          class Exception
                            undef message
                            undef backtrace
-                           def class; end # <-- uhhh, I can\'t undef `class` w/o defining it first, this a bug in Ruby?
-                           undef class
+                           def class; "totally the wrong thing" end
                          end
                        end
                       ')

@@ -63,7 +63,7 @@ class SeeingIsBelieving
           rescue Exception
             inspected = "#<no inspect available>"
           end
-          queue << "result #{line_number} #{type} #{to_string_token inspected}"
+          queue << "result #{line_number.to_s} #{type} #{to_string_token inspected}"
         elsif count == max_line_captures
           queue << "maxed_result #{line_number} #{type}"
         end
