@@ -1,43 +1,76 @@
+# require this before anything else, b/c it expects the world to be sane when it is loaded
 class SeeingIsBelieving
   module Safe
-    def self.build(klass, *method_names)
-      options = {}
-      options = method_names.pop if method_names.last.kind_of? ::Hash
-
-      Class.new do
-        class << self
-          alias [] new
-        end
-
-        define_method :initialize do |instance|
-          @_instance = instance
-        end
-
-        methods = method_names.map { |name| [name, klass.instance_method(name)] }
-        methods.each do |name, method|
-          define_method(name) do |*args, &block|
-            method.bind(@_instance).call(*args, &block)
-          end
-        end
-
-        singleton_methods = options.fetch(:class, []).map { |name| [name, klass.method(name)] }
-        singleton_methods.each do |name, method|
-          define_singleton_method name do |*args, &block|
-            method.call(*args, &block)
-          end
-        end
-      end
+    refine ::Queue do
+      alias << <<
+      alias shift shift
+      alias clear clear
     end
 
-    Queue     = build ::Queue, :<<, :shift, :clear
-    Stream    = build ::IO, :sync=, :<<, :flush, :close
-    Symbol    = build ::Symbol, :==, class: [:define_method]
-    String    = build ::String, :to_s
-    Fixnum    = build ::Fixnum, :to_s
-    Array     = build ::Array, :pack, :map, :size, :join
-    Hash      = build ::Hash, :[], :[]=, class: [:new]
-    Marshal   = build ::Marshal, class: [:dump]
-    Exception = build ::Exception, :message, :backtrace, :class, class: [:define_method]
-    Thread    = build ::Thread, :join, class: [:current]
+    refine ::IO do
+      alias sync= sync=
+      alias << <<
+      alias flush flush
+      alias close close
+    end
+
+    refine ::Symbol do
+      alias == ==
+      alias to_s to_s
+      alias inspect inspect
+    end
+
+    refine ::Symbol.singleton_class do
+      alias define_method define_method
+      alias class_eval class_eval
+    end
+
+    refine ::String do
+      alias to_s to_s
+    end
+
+    refine ::Fixnum do
+      alias to_s to_s
+    end
+
+    # to_s
+    refine ::Array do
+      alias pack pack
+      alias map map
+      alias size size
+      alias join join
+    end
+
+    refine ::Hash do
+      alias [] []
+      alias []= []=
+    end
+
+    refine ::Hash.singleton_class do
+      alias new new
+    end
+
+    refine ::Marshal.singleton_class do
+      alias dump dump
+    end
+
+    refine ::Exception do
+      alias message message
+      alias backtrace backtrace
+      alias class class
+    end
+
+    refine ::Exception.singleton_class do
+      alias define_method define_method
+      alias class_eval class_eval
+    end
+
+    refine ::Thread do
+      alias join join
+    end
+
+    refine ::Thread.singleton_class do
+      alias current current
+    end
   end
 end

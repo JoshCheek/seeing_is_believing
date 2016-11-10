@@ -783,6 +783,7 @@ RSpec.describe SeeingIsBelieving do
       result = invoke('class Exception
                          undef message
                          # undef backtrace
+                         def class; end # <-- uhhh, I can\'t undef `class` w/o defining it first, this a bug in Ruby?
                          undef class
                        end
                        raise "hello"
