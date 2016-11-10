@@ -780,16 +780,20 @@ RSpec.describe SeeingIsBelieving do
     end
 
     specify 'when Exception does not have message, class (can\'t get backtrace to work)' do
-      result = invoke('class Exception
-                         undef message
-                         # undef backtrace
-                         def class; end # <-- uhhh, I can\'t undef `class` w/o defining it first, this a bug in Ruby?
-                         undef class
+      result = invoke('begin
+                         raise "hello"
+                       ensure
+                         class Exception
+                           undef message
+                           undef backtrace
+                           def class; end # <-- uhhh, I can\'t undef `class` w/o defining it first, this a bug in Ruby?
+                           undef class
+                         end
                        end
-                       raise "hello"
                       ')
       expect(result.exception.message).to eq 'hello'
-      # expect(result.exception.backtrace).to eq 'hello'
+      expect(result.exception.backtrace.length).to eq 1
+      expect(result.exception.backtrace[0]).to match /program\.rb:\d/
       expect(result.exception.class_name).to eq 'RuntimeError'
     end
 
@@ -802,6 +806,8 @@ RSpec.describe SeeingIsBelieving do
                        undef join
                        undef abort_on_exception
                      end
+                     fork
+                     1
                     ').stderr).to eq ''
     end
 
@@ -843,31 +849,26 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    context 'not clear that there are good ways to deal with these' do
-      before { skip }
+    specify 'when UnboundMethod does not have bind' do
+      expect(invoke('class UnboundMethod
+                       undef bind
+                     end
+                    ').stderr).to eq ''
+    end
 
-      specify 'when UnboundMethod does not have bind' do
-        expect(invoke('class UnboundMethod
-                         undef bind
-                       end
-                      ').stderr).to eq ''
-      end
+    specify 'when Method does not have call' do
+      expect(invoke('class Method
+                       undef call
+                     end
+                    ').stderr).to eq ''
+    end
 
-      specify 'when Method does not have call' do
-        expect(invoke('class Method
-                         undef call
-                       end
-                      ').stderr).to eq ''
-      end
-      specify 'when Proc does not have call, to_proc' do
-        expect(invoke('class Proc
-                         undef call
-                         undef to_proc
-                       end
-                      ').stderr).to eq ''
-      end
+    specify 'when Proc does not have call, to_proc' do
+      expect(invoke('class Proc
+                       undef call
+                       undef to_proc
+                     end
+                    ').stderr).to eq ''
     end
   end
 end
-
-# all of them together

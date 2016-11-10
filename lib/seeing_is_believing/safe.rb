@@ -72,5 +72,14 @@ class SeeingIsBelieving
     refine ::Thread.singleton_class do
       alias current current
     end
+
+    refine ::Method do
+      alias call call
+    end
+
+    refine ::Proc do
+      alias call call
+      # alias to_proc to_proc
+    end
   end
 end

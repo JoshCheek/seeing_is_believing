@@ -58,12 +58,14 @@ Process.define_singleton_method :fork, &fork_defn
 
 
 # Some things need to be recorded and readded as they are called from Ruby C code and it blows up in really difficult to dianose ways -.-
-symbol_to_s       = Symbol.instance_method(:to_s)
-exception_message = Exception.instance_method(:message)
+symbol_to_s         = Symbol.instance_method(:to_s)
+exception_message   = Exception.instance_method(:message)
+exception_backtrace = Exception.instance_method(:backtrace)
 
 at_exit do
-  Exception.class_eval { define_method :message, exception_message }
-  Symbol.class_eval    { define_method    :to_s,    symbol_to_s }
+  Exception.class_eval { define_method :message,   exception_message }
+  Exception.class_eval { define_method :backtrace, exception_backtrace }
+  Symbol.class_eval    { define_method :to_s,      symbol_to_s }
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
   finish.call
   real_exit_bang.call(exitstatus) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)
