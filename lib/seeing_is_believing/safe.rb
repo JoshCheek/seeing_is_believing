@@ -2,27 +2,27 @@
 class SeeingIsBelieving
   module Safe
     refine ::Queue do
-      alias << <<
+      alias <<    <<
       alias shift shift
       alias clear clear
     end
 
     refine ::IO do
       alias sync= sync=
-      alias << <<
+      alias <<    <<
       alias flush flush
       alias close close
     end
 
     refine ::Symbol do
-      alias == ==
-      alias to_s to_s
+      alias ==      ==
+      alias to_s    to_s
       alias inspect inspect
     end
 
     refine ::Symbol.singleton_class do
       alias define_method define_method
-      alias class_eval class_eval
+      alias class_eval    class_eval
     end
 
     refine ::String do
@@ -38,13 +38,13 @@ class SeeingIsBelieving
     # to_s
     refine ::Array do
       alias pack pack
-      alias map map
+      alias map  map
       alias size size
       alias join join
     end
 
     refine ::Hash do
-      alias [] []
+      alias []  []
       alias []= []=
     end
 
@@ -57,14 +57,14 @@ class SeeingIsBelieving
     end
 
     refine ::Exception do
-      alias message message
+      alias message   message
       alias backtrace backtrace
-      alias class class
+      alias class     class
     end
 
     refine ::Exception.singleton_class do
       alias define_method define_method
-      alias class_eval class_eval
+      alias class_eval    class_eval
     end
 
     refine ::Thread do
@@ -81,7 +81,6 @@ class SeeingIsBelieving
 
     refine ::Proc do
       alias call call
-      # alias to_proc to_proc
     end
   end
 end

@@ -874,5 +874,13 @@ RSpec.describe SeeingIsBelieving do
                      end
                     ').stderr).to eq ''
     end
+
+    specify 'when nil does not have to_proc, to_s' do
+      expect(invoke('class NilClass
+                       undef to_proc
+                       undef to_s
+                     end
+                    ').stderr).to eq ''
+    end
   end
 end
