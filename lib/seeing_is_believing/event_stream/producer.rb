@@ -104,7 +104,7 @@ class SeeingIsBelieving
       end
 
       def finish!
-        queue << :break # note that consumer will continue reading until stream is closed
+        queue << :break # note that consumer will continue reading until stream is closed, which is not the responsibility of the producer
         producer_thread.join
       end
 

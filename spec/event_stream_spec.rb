@@ -20,6 +20,7 @@ module SeeingIsBelieving::EventStream
       producer.finish!
       consumer.process_exitstatus(0)
       close_streams eventstream_producer, stdout_producer, stderr_producer
+      consumer.join
     end
 
     before do

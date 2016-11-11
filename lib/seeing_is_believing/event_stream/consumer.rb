@@ -74,39 +74,40 @@ class SeeingIsBelieving
         event_stream         = streams.fetch :events
         stdout_stream        = streams.fetch :stdout
         stderr_stream        = streams.fetch :stderr
+        self.threads         = [
+          Thread.new do
+            begin
+              stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
+              queue << Events::StdoutClosed.new(side: :producer)
+            rescue IOError
+              queue << Events::StdoutClosed.new(side: :consumer)
+            ensure
+              queue << lambda { finish_criteria.stdout_thread_finished! }
+            end
+          end,
 
-        Thread.new do
-          begin
-            stdout_stream.each_line { |line| queue << Events::Stdout.new(value: line) }
-            queue << Events::StdoutClosed.new(side: :producer)
-          rescue IOError
-            queue << Events::StdoutClosed.new(side: :consumer)
-          ensure
-            queue << lambda { finish_criteria.stdout_thread_finished! }
-          end
-        end
+          Thread.new do
+            begin
+              stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
+              queue << Events::StderrClosed.new(side: :producer)
+            rescue IOError
+              queue << Events::StderrClosed.new(side: :consumer)
+            ensure
+              queue << lambda { finish_criteria.stderr_thread_finished! }
+            end
+          end,
 
-        Thread.new do
-          begin
-            stderr_stream.each_line { |line| queue << Events::Stderr.new(value: line) }
-            queue << Events::StderrClosed.new(side: :producer)
-          rescue IOError
-            queue << Events::StderrClosed.new(side: :consumer)
-          ensure
-            queue << lambda { finish_criteria.stderr_thread_finished! }
-          end
-        end
-
-        Thread.new do
-          begin
-            event_stream.each_line { |line| queue << line }
-            queue << Events::EventStreamClosed.new(side: :producer)
-          rescue IOError
-            queue << Events::EventStreamClosed.new(side: :consumer)
-          ensure
-            queue << lambda { finish_criteria.event_thread_finished! }
-          end
-        end
+          Thread.new do
+            begin
+              event_stream.each_line { |line| queue << line }
+              queue << Events::EventStreamClosed.new(side: :producer)
+            rescue IOError
+              queue << Events::EventStreamClosed.new(side: :consumer)
+            ensure
+              queue << lambda { finish_criteria.event_thread_finished! }
+            end
+          end,
+        ]
       end
 
       def call(n=1)
@@ -135,10 +136,13 @@ class SeeingIsBelieving
         }
       end
 
+      def join
+        threads.each(&:join)
+      end
 
       private
 
-      attr_accessor :queue, :finish_criteria
+      attr_accessor :queue, :finish_criteria, :threads
 
       def next_event
         raise NoMoreEvents if @finished
