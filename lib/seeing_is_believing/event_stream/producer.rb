@@ -9,10 +9,9 @@ class SeeingIsBelieving
     class Producer
       module NullQueue
         extend self
-        def <<(*)   end
-        def shift() end
-        # TODO: this one doesn't have clear, but we can call that on the real one.
-        # find a way to test this situation?
+        Queue.instance_methods.each do |name|
+          define_method(name) { |*| }
+        end
       end
 
       attr_accessor :max_line_captures, :filename
