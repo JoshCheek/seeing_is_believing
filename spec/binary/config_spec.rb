@@ -220,8 +220,8 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse([]).lib_options.require_files).to eq [matrix_file]
       end
 
-      it 'appends pp for xmpfilter style' do
-        expect(parse(['-x']).lib_options.require_files).to eq [matrix_file, 'pp']
+      it 'appends pp and our customizations for xmpfilter style' do
+        expect(parse(['-x']).lib_options.require_files).to eq [matrix_file, 'pp', 'seeing_is_believing/customize_pp']
       end
 
       specify '-r and --require set an error if not provided with a filename' do

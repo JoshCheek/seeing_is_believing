@@ -72,6 +72,24 @@ Feature: Xmpfilter style
     #     :wibble=>{:magic_word=>"xyzzy"}}
     """
 
+  Scenario: --xmpfilter-style, when displayed on the next line, prints the string across multiple lines
+    Given the file "xmpfilter-prev-line-is-multiline-string.rb":
+    """
+    "0123456789\nabcdefghij\n0123456789\n0123456789\n0123456789\n0123456789\n" # =>
+    # =>
+    """
+    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line-is-multiline-string.rb"
+    Then stdout is:
+    """
+    "0123456789\nabcdefghij\n0123456789\n0123456789\n0123456789\n0123456789\n" # => "0123456789\nabcdefghij\n0123456789\n0123456789\n0123456789\n0123456789\n"
+    # => "0123456789\n" +
+    #    "abcdefghij\n" +
+    #    "0123456789\n" +
+    #    "0123456789\n" +
+    #    "0123456789\n" +
+    #    "0123456789\n"
+    """
+
   Scenario: --xmpfilter-style overrides previous multiline results
     Given the file "xmpfilter-prev-line2.rb":
     """

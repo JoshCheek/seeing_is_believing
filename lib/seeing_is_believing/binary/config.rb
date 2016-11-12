@@ -102,6 +102,7 @@ class SeeingIsBelieving
             self.lib_options.rewrite_code  = AnnotateMarkedLines.code_rewriter(markers)
             self.remove_value_prefixes     = false
             self.lib_options.require_files << 'pp'
+            self.lib_options.require_files << 'seeing_is_believing/customize_pp'
 
           when '-i', '--inherit-exitstatus', '--inherit-exit-status'
             self.inherit_exitstatus = true
