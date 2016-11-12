@@ -503,3 +503,20 @@ Feature:
     __END__
     """
 
+  @not-implemented
+  Scenario: Interpolating in a heredoc and walking backwards with xmpfilter style to figure out which expression to record (#83)
+    Given the file "heredoc_woes.rb":
+    """
+    <<-HERE # =>
+    1#{1+1}3
+    HERE
+    # =>
+    """
+    When I run "seeing_is_believing -x heredoc_woes.rb"
+    Then stdout is:
+    """
+    <<-HERE # => "123\n"
+    1#{1+1}3
+    HERE
+    # => "123\n"
+    """
