@@ -674,16 +674,6 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when File does not have sync=, <<, flush, puts, close' do
-      expect(invoke('class File
-                       undef sync
-                       undef <<
-                       undef flush
-                       undef puts
-                       undef close
-                     end').stderr).to eq ''
-    end
-
     specify 'when Queue does not have <<, shift, and clear' do
       expect(invoke('class Queue
                        undef <<
@@ -759,15 +749,16 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when Kernel does not have defined?, kind_of?' do
-      expect(invoke('class Kernel
-                       undef defined?
+    # defined? is a macro, not a method, otherwise I'd test that here
+    specify 'when Kernel does not have kind_of?' do
+      expect(invoke('module Kernel
                        undef kind_of?
-                     end').stderr).to eq ''
+                     end
+                     1').to_a).to eq [[], [], ['nil'], ['1']]
     end
 
     specify 'when Enumerable does not have map' do
-      expect(invoke('class Module
+      expect(invoke('module Enumerable
                        undef map
                      end
                     ').stderr).to eq ''
@@ -875,9 +866,9 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when nil does not have to_proc, to_s' do
+    # Apparently it doesn't have a to_proc method, they must check to see if it's nil in the code that implements &
+    specify 'when nil does not have to_s' do
       expect(invoke('class NilClass
-                       undef to_proc
                        undef to_s
                      end
                     ').stderr).to eq ''

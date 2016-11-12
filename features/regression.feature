@@ -520,3 +520,140 @@ Feature:
     HERE
     # => "123\n"
     """
+
+  Scenario: Executing correctly in a hostile world
+    Given the file "hostile_world.rb":
+    """
+    # SiB works, but Ruby will explode while trying to make the exception
+    # if we do it later, so we'll make it up here
+    zde = (1/0 rescue $!)
+
+    if RUBY_VERSION != "2.0.0" # this breaks Ruby itself on v2.0.0
+      class Hash
+        undef []
+        undef []=
+        undef fetch
+      end
+    end
+    class IO
+      undef sync
+      undef <<
+      undef flush
+      undef puts
+      undef close
+    end
+    class Queue
+      undef <<
+      undef shift
+      undef clear
+    end
+    class Symbol
+      undef ==
+      undef to_s
+      undef inspect
+    end
+    class String
+      undef ==
+      undef to_s
+      undef to_str
+      undef inspect
+      undef to_i
+    end
+    class Fixnum
+      undef <
+      undef <<
+      undef ==
+      def next # "redefining instead of undefing b/c it comes from Integer"
+      end
+      undef to_s
+      undef inspect
+    end
+    class Array
+      undef pack
+      undef <<
+      undef to_ary
+      undef grep
+      undef first
+      undef []
+      undef []=
+      undef each
+      undef map
+      undef join
+      undef size
+      undef to_s
+    end
+    class << Marshal
+      undef dump
+      undef load
+    end
+    module Kernel
+      undef kind_of?
+      undef block_given?
+    end
+    module Enumerable
+      undef map
+    end
+    class SystemExit
+      undef status
+    end
+    class Exception
+      undef message
+      # undef backtrace # https://bugs.ruby-lang.org/issues/12925
+      def class
+        "totally the wrong thing"
+      end
+    end
+    class << Thread
+      undef new
+      undef current
+    end
+    class Thread
+      undef join
+      undef abort_on_exception
+    end
+    class Class
+      undef new
+      undef allocate
+      undef singleton_class
+      undef class_eval
+    end
+    class BasicObject
+      undef initialize
+    end
+    class Module
+      undef ===
+      undef define_method
+      undef instance_method
+    end
+    class UnboundMethod
+      undef bind
+    end
+    class Method
+      undef call
+    end
+    class Proc
+      undef call
+      undef to_proc
+    end
+    class NilClass
+      undef to_s
+    end
+
+    # ---
+
+    class Zomg
+    end
+
+    Zomg                       # =>
+    class << Zomg
+      attr_accessor :inspect
+    end
+    Zomg.inspect = "lolol"
+    Zomg                       # =>
+    raise zde
+    """
+    When I run "seeing_is_believing -x hostile_world.rb"
+    Then stdout includes 'Zomg                       # => Zomg'
+    And  stdout includes 'Zomg                       # => lolol'
+    And  stdout includes '# ~> ZeroDivisionError'
+    And  stdout includes '# ~> divided by 0'
