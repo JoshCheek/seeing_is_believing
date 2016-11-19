@@ -56,7 +56,15 @@ class SeeingIsBelieving
         rescue EncodingError
           str = str.force_encoding(Encoding::UTF_8)
         end
-        str.scrub '�'
+        return str.scrub('�') if str.respond_to? :scrub
+        # basically reimplement scrub, b/c it's not implemented on 1.9.3
+        str.each_char.inject("") do |new_str, char|
+          if char.valid_encoding?
+            new_str << char
+          else
+            new_str << '�'
+          end
+        end
       end
 
       def initialize(streams)
