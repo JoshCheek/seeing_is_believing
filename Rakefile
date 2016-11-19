@@ -27,21 +27,28 @@ directory 'bundle' do
   exit 1
 end
 
+def require_paths
+  require 'bundler'
+  requrable_paths = Bundler.load.specs.flat_map { |spec|
+    spec.require_paths.map do |path|
+      File.join(spec.full_gem_path, path)
+    end
+  }.flat_map { |p| ['-I', p ] }
+end
+
 desc 'Run specs'
 task spec: :bundle do
-  require 'bundler'
-  sh 'ruby', '--disable-gem',
-             *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] },
-             '-S', 'bundle/bin/mrspec'
+  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/mrspec'
 end
 
 desc 'Run cukes'
 task cuke: :bundle do
   require 'bundler'
   sh 'ruby', '--disable-gem',
-             *Bundler.load.specs.flat_map(&:full_require_paths).flat_map { |p| ['-I', p ] },
+             *require_paths,
              '-S', 'bundle/bin/cucumber',
-             '--tags', '~@not-implemented'
+             '--tags', '~@not-implemented',
+             '--tags', "~@not-#{RUBY_VERSION}"
 end
 
 desc 'Run all specs and cukes'

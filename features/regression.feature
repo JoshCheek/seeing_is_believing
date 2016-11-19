@@ -521,6 +521,7 @@ Feature:
     # => "123\n"
     """
 
+  @not-2.0.0
   Scenario: Executing correctly in a hostile world
     Given the file "hostile_world.rb":
     """
@@ -528,12 +529,10 @@ Feature:
     # if we do it later, so we'll make it up here
     zde = (1/0 rescue $!)
 
-    if RUBY_VERSION != "2.0.0" # this breaks Ruby itself on v2.0.0
-      class Hash
-        undef []
-        undef []=
-        undef fetch
-      end
+    class Hash
+      undef []
+      undef []=
+      undef fetch
     end
     class IO
       undef sync
