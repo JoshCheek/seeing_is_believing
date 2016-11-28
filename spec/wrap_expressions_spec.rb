@@ -475,6 +475,20 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("case\nwhen 2, 3 then\n4\n5\nend")).to eq "<case\nwhen 2, 3 then\n<4>\n<5>\nend>"
     end
 
+    it 'does not wrap flip flops in if-statement conditionals' do
+      # these match
+      expect(wrap("if (a==1)..(zomg.wtf?)\n  1\nend")).to eq "<if (a==1)..(zomg.wtf?)\n  <1>\nend>"
+      expect(wrap("if (a==1)...(zomg.wtf?)\n  1\nend")).to eq "<if (a==1)...(zomg.wtf?)\n  <1>\nend>"
+
+      # these match $_
+      expect(wrap("if /a/../b/\n  1\nend")).to eq "<if /a/../b/\n  <1>\nend>"
+      expect(wrap("if /a/.../b/\n  1\nend")).to eq "<if /a/.../b/\n  <1>\nend>"
+
+      # these are match $.
+      expect(wrap("if 1..2\n  1\nend")).to eq "<if 1..2\n  <1>\nend>"
+      expect(wrap("if 1...2\n  1\nend")).to eq "<if 1...2\n  <1>\nend>"
+    end
+
     it 'does not wrap if the last value in any portion is a void value expression' do
       expect(wrap("def a\nif true\nreturn 1\nend\nend")).to eq "<def a\nif <true>\nreturn <1>\nend\nend>"
       expect(wrap("def a\nif true\n1\nelse\nreturn 2\nend\nend")).to eq "<def a\nif <true>\n<1>\nelse\nreturn <2>\nend\nend>"
