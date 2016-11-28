@@ -1,6 +1,10 @@
 class SeeingIsBelieving
   module EventStream
     module Handlers
+      # Even though the debugger can be disabled, which would push the decision of
+      # whether to report or not into the debugger where it belongs, you should still
+      # avoid using this class if you don't need it since it is expensive and there
+      # could be tens of millions of events, eg https://github.com/JoshCheek/seeing_is_believing/issues/12
       class Debug
         def initialize(debugger, handler)
           @debugger   = debugger

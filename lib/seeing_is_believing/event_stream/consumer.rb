@@ -7,6 +7,10 @@ require 'thread'
 class SeeingIsBelieving
   module EventStream
     class Consumer
+      # Contemplated doing FinishCriteria in binary, but the cost of doing it with an array
+      # like this is negligible and it has the nice advantage that the elements in the array
+      # are named # so if I ever look at it, I don't have to tranlsate a number to figure out
+      # the names https://gist.github.com/JoshCheek/10deb07277b6c85efc7b5e65c007785d
       class FinishCriteria
         EventThreadFinished  = Module.new
         StdoutThreadFinished = Module.new

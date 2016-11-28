@@ -36,7 +36,7 @@ class SeeingIsBelieving
 
   def call
     @memoized_result ||= Dir.mktmpdir("seeing_is_believing_temp_dir") { |dir|
-      filename = options.filename || File.join(dir, 'program.rb')
+      filename    = options.filename || File.join(dir, 'program.rb')
       new_program = options.rewrite_code.call @program
 
       options.debugger.context("REWRITTEN PROGRAM") { new_program }
@@ -44,7 +44,7 @@ class SeeingIsBelieving
       EvaluateByMovingFiles.call \
         new_program,
         filename,
-        event_handler:     debugging_handler,
+        event_handler:     event_handler(options.debugger, options.event_handler),
         provided_input:    options.stdin,
         require_files:     options.require_files,
         load_path_dirs:    options.load_path_dirs,
@@ -58,12 +58,9 @@ class SeeingIsBelieving
 
   private
 
-  # Even though the debugger can be disabled,
-  # Handlers::Debug is somewhat expensive, and there could be tens of millions of calls
-  # e.g. https://github.com/JoshCheek/seeing_is_believing/issues/12
-  # so just skip it in this case
-  def debugging_handler
-    return options.event_handler unless options.debugger.enabled?
-    EventStream::Handlers::Debug.new options.debugger, options.event_handler
+  # If we need debugging, wrap a debugging handler around the current handler
+  def event_handler(debugger, current_handler)
+    return current_handler unless debugger.enabled?
+    EventStream::Handlers::Debug.new debugger, current_handler
   end
 end
