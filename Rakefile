@@ -36,6 +36,11 @@ def require_paths
   }.flat_map { |p| ['-I', p ] }
 end
 
+desc 'Print the require paths for arbitrary binary execution'
+task :require_paths, [:delimiter] => :bundle do |delimiter:' '|
+  puts require_paths.join(delimiter)
+end
+
 desc 'Run specs'
 task spec: :bundle do
   sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/mrspec'
