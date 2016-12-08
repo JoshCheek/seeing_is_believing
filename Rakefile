@@ -18,6 +18,7 @@ task :clean do
     '.bundle',
     'Gemfile.lock',
     'proving_grounds',
+    'tags',
     *Dir['*.gem'],
   ]
 end
@@ -55,6 +56,17 @@ task cuke: :bundle do
              '--tags', '~@not-implemented',
              '--tags', "~@not-#{RUBY_VERSION}"
 end
+
+desc 'Generate tags for quick navigation'
+task tags: :bundle do
+  excludes  = %w[tmp tmpgem bundle proving_grounds].map { |dir| "--exclude=#{dir}" }
+  sh 'ruby', '--disable-gem',
+             *require_paths,
+             '-S', 'bundle/bin/ripper-tags',
+             '-R', *excludes
+end
+task ctags: :tags # an alias
+
 
 desc 'Run all specs and cukes'
 task default: [:spec, :cuke]

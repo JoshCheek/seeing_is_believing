@@ -21,12 +21,13 @@ Gem::Specification.new do |s|
 
   s.add_dependency             "parser",   ">= 2.3.0.7", "< 3.0"
 
-  s.add_development_dependency "haiti",    ">= 0.1", "< 0.3"
-  s.add_development_dependency "rake",     "~> 11.2.2"
-  s.add_development_dependency "mrspec",   "~>  0.3.1"
-  s.add_development_dependency "rspec",    "~>  3.5"
-  s.add_development_dependency "cucumber", "~>  2.4"
-  s.add_development_dependency "ichannel", "~>  8.1"
+  s.add_development_dependency "haiti",       ">= 0.1", "< 0.3"
+  s.add_development_dependency "rake",        "~> 11.2.2"
+  s.add_development_dependency "mrspec",      "~>  0.3.1"
+  s.add_development_dependency "rspec",       "~>  3.5"
+  s.add_development_dependency "cucumber",    "~>  2.4"
+  s.add_development_dependency "ichannel",    "~>  8.1"
+  s.add_development_dependency "ripper-tags", "~>  0.3"
 
   s.post_install_message = <<'Omg, frogs <3'.gsub(/(gg+)/) { |capture| "\e[32m#{capture.gsub 'g', '.'}\e[0m" }.gsub("brown", "\e[33m").gsub("off", "\e[0m")
               .7
