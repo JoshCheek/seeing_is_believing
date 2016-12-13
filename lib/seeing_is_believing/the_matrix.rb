@@ -1,11 +1,12 @@
 require_relative 'safe'
 require_relative 'version'
 require_relative 'event_stream/producer'
+require 'socket'
 
 using SeeingIsBelieving::Safe
 
 sib_vars     = Marshal.load ENV["SIB_VARIABLES.MARSHAL.B64"].unpack('m0').first
-event_stream = IO.open sib_vars.fetch(:event_stream_fd), "w"
+event_stream = Socket.tcp("localhost", sib_vars.fetch(:event_stream_port))
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 $SiB.record_ruby_version      RUBY_VERSION
 $SiB.record_sib_version       SeeingIsBelieving::VERSION

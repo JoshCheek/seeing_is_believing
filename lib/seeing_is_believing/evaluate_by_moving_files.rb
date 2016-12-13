@@ -13,6 +13,7 @@
 
 require 'rbconfig'
 require 'timeout'
+require 'socket'
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
@@ -25,7 +26,7 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :port
 
     def initialize(program, filename,  options={})
       options = options.dup
@@ -38,6 +39,7 @@ class SeeingIsBelieving
       self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
+      self.port              = (options.delete(:port))             || 5158
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
@@ -91,8 +93,9 @@ class SeeingIsBelieving
     # https://bugs.ruby-lang.org/issues/10699  they opened an issue
     # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
     def evaluate_file
+      event_server = TCPServer.new(port)
+
       # setup streams
-      eventstream, child_eventstream = IO.pipe
       stdout,      child_stdout      = IO.pipe
       stderr,      child_stderr      = IO.pipe
       child_stdin, stdin             = IO.pipe
@@ -100,7 +103,7 @@ class SeeingIsBelieving
       # setup environment variables
       env = ENV.to_hash.merge 'SIB_VARIABLES.MARSHAL.B64' =>
                                 [Marshal.dump(
-                                  event_stream_fd:   4,
+                                  event_stream_port: port,
                                   max_line_captures: max_line_captures,
                                   num_lines:         program.lines.count,
                                   filename:          filename
@@ -108,7 +111,6 @@ class SeeingIsBelieving
 
       # evaluate the code in a child process
       opts = {
-        4 =>    child_eventstream,
         in:     child_stdin,
         out:    child_stdout,
         err:    child_stderr,
@@ -119,8 +121,11 @@ class SeeingIsBelieving
 
       # close child streams b/c they won't emit EOF
       # until both child and parent references are closed
-      close_streams(child_eventstream, child_stdout, child_stderr, child_stdin)
+      close_streams(child_stdout, child_stderr, child_stdin)
       stdin.sync = true
+
+      # Start receiving events from the child
+      eventstream = event_server.accept
 
       # send stdin (char at a time b/c input could come from a stream)
       Thread.new do
@@ -144,7 +149,7 @@ class SeeingIsBelieving
       allow_error(Errno::ESRCH)  { Process.kill "-INT", child_pgid } # negative makes it apply to the group
       allow_error(Errno::ECHILD) { Process.wait child_pid } # I can't tell if this actually works, or just creates enough of a delay for the OS to finish cleaning up the thread
       consumer_thread.join
-      close_streams(stdin, stdout, stderr, eventstream)
+      close_streams(stdin, stdout, stderr, eventstream, event_server)
     end
 
     def popen_args

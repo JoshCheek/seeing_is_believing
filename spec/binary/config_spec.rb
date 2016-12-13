@@ -290,11 +290,11 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       let(:lib_path) { File.expand_path '../../../lib', __FILE__ }
 
       it 'defaults to sib\'s lib path' do
-        expect(parse([]).lib_options.load_path_dirs).to eq [lib_path]
+        expect(parse([]).lib_options.load_path_dirs).to eq [File.realpath(lib_path)]
       end
 
       specify '-I and --load-path add their arguments to it' do
-        expect(parse(%w[-I f1 --load-path f2]).lib_options.load_path_dirs).to eq [lib_path, 'f1', 'f2']
+        expect(parse(%w[-I f1 --load-path f2]).lib_options.load_path_dirs).to eq [File.realpath(lib_path), 'f1', 'f2']
       end
 
       it 'sets an error if not provided with a dir' do
