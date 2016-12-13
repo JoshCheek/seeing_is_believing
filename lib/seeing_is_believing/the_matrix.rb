@@ -2,11 +2,20 @@ require_relative 'safe'
 require_relative 'version'
 require_relative 'event_stream/producer'
 require 'socket'
+require 'timeout'
 
 using SeeingIsBelieving::Safe
 
 sib_vars     = Marshal.load ENV["SIB_VARIABLES.MARSHAL.B64"].unpack('m0').first
-event_stream = Socket.tcp("localhost", sib_vars.fetch(:event_stream_port))
+event_stream = Timeout.timeout(1) do
+  begin
+    Socket.tcp("localhost", sib_vars.fetch(:event_stream_port))
+  rescue Errno::ECONNREFUSED
+    sleep 0.1
+    retry
+  end
+end
+
 $SiB = SeeingIsBelieving::EventStream::Producer.new(event_stream)
 $SiB.record_ruby_version      RUBY_VERSION
 $SiB.record_sib_version       SeeingIsBelieving::VERSION
@@ -15,6 +24,9 @@ $SiB.record_num_lines         sib_vars.fetch(:num_lines)
 $SiB.record_max_line_captures sib_vars.fetch(:max_line_captures)
 
 STDOUT.sync = true
+STDOUT.binmode
+STDERR.binmode
+STDIN.set_encoding "utf-8"
 stdout, stderr = STDOUT, STDERR
 
 finish = lambda do
@@ -32,7 +44,6 @@ fork_defn      = lambda do |*args|
   $SiB.send :forking_occurred_and_you_are_the_child, event_stream unless result
   result
 end
-
 Kernel.module_eval do
   private
 

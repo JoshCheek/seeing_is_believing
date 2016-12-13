@@ -258,6 +258,7 @@ Feature: Running the binary successfully
     """
     And the exit status is 0
 
+  @not-windows
   Scenario: Fork records data in parent and child, parent exec does not affect it.
     Given the file "fork_exec_parent.rb":
     """
@@ -289,6 +290,7 @@ Feature: Running the binary successfully
     # >> hello
     """
 
+  @not-windows
   Scenario: Fork records data in parent and child, child exec does not affect it.
     Given the file "fork_exec_child.rb":
     """

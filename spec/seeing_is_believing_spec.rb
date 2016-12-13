@@ -523,7 +523,7 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
-  it 'does not kill parent processes' do
+  it 'does not kill parent processes', :unless => RSpec::Support::OS.windows? do
     channel = IChannel.unix
     fork do
       # it's basically undocumented, but I think 0 makes it choose a new group id
@@ -558,7 +558,7 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
-  describe 'fork' do
+  describe 'fork', :unless => RSpec::Support::OS.windows? do
     it 'records results from both parent and child, without double reporting items that may have been left in the queue at the time of forking' do
       n = 100
       result = invoke <<-RUBY

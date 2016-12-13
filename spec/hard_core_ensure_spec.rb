@@ -41,7 +41,8 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     expect(ensure_invoked).to eq true
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler' do
+  it 'invokes the code even if an interrupt is sent and there is a default handler',
+     unless: RSpec::Support::OS.windows? do
     test = lambda do
       channel = IChannel.unix
       pid = fork do
@@ -64,7 +65,8 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     end
   end
 
-  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
+  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore',
+     unless: RSpec::Support::OS.windows? do
     test = lambda do
       channel = IChannel.unix
       pid = fork do

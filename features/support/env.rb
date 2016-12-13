@@ -41,3 +41,10 @@ end
 Given %q(the file '$filename' '$body') do |filename, body|
   Haiti::CommandLineHelpers.write_file filename, eval_curlies(body)
 end
+
+Given(/^the binary file "([^"]*)" "([^"]*)"$/) do |filename, body|
+  Haiti::CommandLineHelpers.in_proving_grounds do
+    FileUtils.mkdir_p File.dirname filename
+    File.open(filename, 'wb') { |file| file.write body }
+  end
+end

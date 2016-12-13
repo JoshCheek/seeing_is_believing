@@ -240,7 +240,7 @@ Feature:
 
 
   Scenario: Repeated invocations
-    When I run "echo 'puts 1' | seeing_is_believing | seeing_is_believing"
+    When I run "echo puts 1 | seeing_is_believing | seeing_is_believing"
     Then stdout is:
     """
     puts 1  # => nil
@@ -322,9 +322,11 @@ Feature:
   Scenario: A program overriding stdout/stderr
     Given the file "black_hole.rb":
     """
-    File.open '/dev/null', 'w' do |black_hole|
-      STDERR = $stderr = black_hole
-      STDOUT = $stdout = black_hole
+    require 'rubygems'
+    null_device = Gem.win_platform? ? 'NUL' : '/dev/null'; nil
+    File.open null_device, 'w' do |black_hole|
+      STDERR = $stderr = black_hole; nil
+      STDOUT = $stdout = black_hole; nil
       puts "You won't see this, it goes into the black hole"
       system %q(ruby -e '$stdout.puts "stdout gets past it b/c of dumb ruby bug"')
       system %q(ruby -e '$stderr.puts "stderr gets past it b/c of dumb ruby bug"')
@@ -335,9 +337,11 @@ Feature:
     And the exit status is 0
     And stdout is:
     """
-    File.open '/dev/null', 'w' do |black_hole|                                      # => File
-      STDERR = $stderr = black_hole                                                 # => #<File:/dev/null>
-      STDOUT = $stdout = black_hole                                                 # => #<File:/dev/null>
+    require 'rubygems'                                                              # => false
+    null_device = Gem.win_platform? ? 'NUL' : '/dev/null'; nil                      # => nil
+    File.open null_device, 'w' do |black_hole|                                      # => File
+      STDERR = $stderr = black_hole; nil                                            # => nil
+      STDOUT = $stdout = black_hole; nil                                            # => nil
       puts "You won't see this, it goes into the black hole"                        # => nil
       system %q(ruby -e '$stdout.puts "stdout gets past it b/c of dumb ruby bug"')  # => true
       system %q(ruby -e '$stderr.puts "stderr gets past it b/c of dumb ruby bug"')  # => true

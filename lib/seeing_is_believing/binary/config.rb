@@ -270,7 +270,8 @@ class SeeingIsBelieving
           add_error("Cannot give a program body and a filename to get the program body from.")
         elsif filename && file_class.exist?(filename)
           self.lib_options.stdin = stdin
-          self.body = file_class.read filename
+          # TODO: this doesn't seem like a safe assumption
+          self.body = file_class.read filename, external_encoding: "utf-8"
         elsif filename
           add_error("#{filename} does not exist!")
         elsif body

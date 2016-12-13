@@ -24,9 +24,9 @@ module SeeingIsBelieving::EventStream
     end
 
     before do
-      self.eventstream_consumer, self.eventstream_producer = IO.pipe
-      self.stdout_consumer,      self.stdout_producer      = IO.pipe
-      self.stderr_consumer,      self.stderr_producer      = IO.pipe
+      self.eventstream_consumer, self.eventstream_producer = IO.pipe("utf-8")
+      self.stdout_consumer,      self.stdout_producer      = IO.pipe("utf-8")
+      self.stderr_consumer,      self.stderr_producer      = IO.pipe("utf-8")
 
       self.producer = SeeingIsBelieving::EventStream::Producer.new eventstream_producer
       self.consumer = SeeingIsBelieving::EventStream::Consumer.new \
@@ -43,7 +43,7 @@ module SeeingIsBelieving::EventStream
     describe 'emitting an event' do
       def has_message?(io)
         io.read_nonblock(1)  # ~> IO::EAGAINWaitReadable: Resource temporarily unavailable - read would block
-      rescue Errno::EAGAIN
+      rescue Errno::EAGAIN, IO::EAGAINWaitReadable, IO::EWOULDBLOCKWaitReadable
         return false
       end
 

@@ -592,7 +592,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     before do
       allow(file_class).to receive(:exist?).with(existing_filename).and_return(true)
       allow(file_class).to receive(:exist?).with(nonexisting_filename).and_return(false)
-      allow(file_class).to receive(:read).with(existing_filename).and_return(file_body)
+      allow(file_class).to receive(:read).with(existing_filename, any_args).and_return(file_body)
     end
 
     def call(attrs={})

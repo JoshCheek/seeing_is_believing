@@ -154,7 +154,7 @@ Feature: Using flags
 
 
   Scenario: --encoding
-    Given the file "utf-8.rb" "'ç'"
+    Given the binary file "utf-8.rb" "'ç'"
     When I run "seeing_is_believing --encoding u utf-8.rb"
     Then stderr is empty
     And the exit status is 0
