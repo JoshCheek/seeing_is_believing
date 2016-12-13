@@ -79,7 +79,7 @@ task ci: [:install, :spec, :cuke]
 def which(exe)
   dirs = ENV["PATH"].split(File::PATH_SEPARATOR)
   exts = [""]
-  exts.concat(ENV["PathExt"].split(File::PATH_SEPARATOR))
+  exts.concat(ENV["PathExt"].to_s.split(File::PATH_SEPARATOR))
   candidates = dirs.product(exts) { |dir, ext| File.join(dir, exe + ext) }
   exe_path = candidates.find { |c| File.executable?(c) }
 end
