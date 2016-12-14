@@ -239,6 +239,10 @@ Feature:
     """
 
 
+  # Can't just pipe them, that assumes `sh` is the shell
+  # eg powershell might do something different, or it could be that I'm calling it wrong:
+  # https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/5#L2176
+  @not-windows
   Scenario: Repeated invocations
     When I run "echo puts 1 | seeing_is_believing | seeing_is_believing"
     Then stdout is:
