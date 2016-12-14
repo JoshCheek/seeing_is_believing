@@ -42,9 +42,8 @@ module SeeingIsBelieving::EventStream
 
     describe 'emitting an event' do
       def has_message?(io)
-        io.read_nonblock(1)  # ~> IO::EAGAINWaitReadable: Resource temporarily unavailable - read would block
-      rescue Errno::EAGAIN, IO::EAGAINWaitReadable, IO::EWOULDBLOCKWaitReadable
-        return false
+        readables, * = IO.select([io], [], [], 0.1) # 0.1 is the timeout
+        readables.to_a.any? # when it times out, IO.select may return nil...
       end
 
       it 'writes its events to the event stream' do
