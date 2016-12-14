@@ -23,8 +23,8 @@ install:
   - gem install bundler # Do I *actually* need this? using it in .travis.yml, but the Rakefile clearly wants to do it for me
   - bundler --version
   - rake install
+  # $ chocolatey install ansi conversion (ie let me see colour in windows)
   # https://github.com/rspec/rspec-core/blob/22ed96bb3dbb0214dc48d6b8490ade04cdf8eedd/features/configuration/color.feature
-  # I guess appveyor has this installed but not turned on?
   - cinst ansicon
 
 test_script:
