@@ -20,6 +20,15 @@ module Haiti
         end
       end
     end
+
+    def with_bin_in_path
+      original_path = ENV['PATH']
+      dirs          = ENV["PATH"].split(File::PATH_SEPARATOR)
+      ENV['PATH']   = [config.bin_dir, *dirs].join(File::PATH_SEPARATOR)
+      yield
+    ensure
+      ENV['PATH'] = original_path
+    end
   end
 end
 
@@ -39,8 +48,9 @@ end
 World SiBHelpers
 
 Haiti.configure do |config|
-  config.proving_grounds_dir = File.expand_path '../../../proving_grounds', __FILE__
-  config.bin_dir             = File.expand_path '../../../bin',             __FILE__
+  lib_root                   = File.join __FILE__, '..', '..', '..'
+  config.proving_grounds_dir = File.expand_path 'proving_grounds', lib_root
+  config.bin_dir             = File.expand_path 'bin',             lib_root
 end
 
 
