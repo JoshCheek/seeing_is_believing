@@ -1,0 +1,35 @@
+# Based this off of https://github.com/rspec/rspec-core/blob/22ed96bb3dbb0214dc48d6b8490ade04cdf8eedd/appveyor.yml
+# Docs are at https://www.appveyor.com/docs
+
+# I don't really understand what this is for
+version: "{build}"
+
+# This will build all PRs targetting matching branches.
+# Without this, each PR builds twice -- once for the PR branch HEAD,
+# and once for the merge commit that github creates for each mergable PR.
+branches:
+  only:
+    - windows # until https://github.com/JoshCheek/seeing_is_believing/pull/92 is merged
+    - master  # to see what fails on Windows
+    # - /.*-maintenance$/
+
+# Disable normal Windows builds in favor of our test script.
+build: off
+
+install:
+  - SET PATH=C:\Ruby%ruby_version%\bin;%PATH%
+  - ruby --version
+  - gem --version
+  - gem install bundler # Do I *actually* need this? using it in .travis.yml, but the Rakefile clearly wants to do it for me
+  - bundler --version
+  - rake install
+  # https://github.com/rspec/rspec-core/blob/22ed96bb3dbb0214dc48d6b8490ade04cdf8eedd/features/configuration/color.feature
+  # I guess appveyor has this installed but not turned on?
+  - cinst ansicon
+
+test_script:
+  - bundle exec rake ci # Uhm, again, shouldn't rake take care of the "bundle exec" bit? Can I just do `rake ci`?
+
+environment:
+  matrix:
+    - ruby_version: '21'
