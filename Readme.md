@@ -55,19 +55,19 @@ end             # => 5
 {"stdout":"","stderr":"","exitstatus":0,"exception":null,"lines":{"1":["5"],"2":["0","2","4","6","8"],"3":["5"]}}
 ```
 
-Protips
-=======
+Pro Tips
+========
 
 These things have been useful for integrating.
 
-If you want to execute from some specific dir (eg if your editor is in the wrong dir)
+If you want to execute from some specific directory (e.g. if your editor is in the wrong directory)
 try using `Dir.chdir` at the top of the script.
-Eg I used that [here](https://github.com/JoshCheek/seeing_is_believing/issues/58#issuecomment-91600783)
+E.g. I used that [here](https://github.com/JoshCheek/seeing_is_believing/issues/58#issuecomment-91600783)
 so I could run with a full Rails app available in "Completely against the real env".
 
 If you want some specific file to be available in that environment, require the fullpath to the file.
 Eg I used that [here](https://github.com/JoshCheek/seeing_is_believing/issues/58#issuecomment-91600783)
-to load up the Rils schema in "Running against the real schema".
+to load up the Rails schema in "Running against the real schema".
 
 You can also set the `$LOAD_PATH` to a gem you're working on and then require files as if
 it was installed.
@@ -140,7 +140,7 @@ result.exception # => nil
 Editor Integration
 ==================
 
-* [Atom](https://github.com/JoshCheek/atom-seeing-is-believing) (prob has best installation instructions, overall best integration, but config and filesystem events are iffy)
+* [Atom](https://github.com/JoshCheek/atom-seeing-is-believing) (prob has best installation instructions, overall best integration, but config and file system events are iffy)
 * [Sublime 2 and 3](https://github.com/JoshCheek/sublime-text-2-and-3-seeing-is-believing) (works reasonably, but isn't integrated with the package manager)
 * [TextMate 1](https://github.com/JoshCheek/text_mate_1-seeing-is_believing)
 * [TextMate 2](https://github.com/JoshCheek/text_mate_2-seeing-is_believing) (TM2 is actually looking really nice these days -- Josh Cheek, 18 Feb 2015)
@@ -210,10 +210,10 @@ Check the [features](features) directory.
 Known Issues
 ============
 
-* `begin; else; break; end` this code (an else without a resecue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
+* `begin; else; break; end` this code (an else without a rescue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
   As such, I doubt that anyone will ever write it. But if you were to write it, it would blow up, because SiB rewrites your code, wrapping every expression that could have a value.
-  This code will be wrapped. But using the value is **syntactically** invalid in Ruby, because it constitutes a "void value expression" (aka a pointless timesink and the cause of many bugs in SiB).
-  Unfortunately, I can't easily check it to seee if it's void since it's not in the parsed AST.  But it's so edge that I don't think it's worth worrying about.
+  This code will be wrapped. But using the value is **syntactically** invalid in Ruby, because it constitutes a "void value expression" (aka a pointless time sink and the cause of many bugs in SiB).
+  Unfortunately, I can't easily check it to see if it's void since it's not in the parsed AST.  But it's so edge that I don't think it's worth worrying about.
 
 Setting up Development
 ======================
@@ -238,7 +238,7 @@ Some stuff that might happen one day
   * Integrate with package managers where they are available
   * Expose options to use the streaming API (update as events are seen)
   * Ship with Traveling Ruby so that new users can just press a button and it works,
-    rather than having to figure out all the compmlex ecosystem around installing
+    rather than having to figure out all the complex ecosystem around installing
   * Would be nice to have real integration with Emacs
   * Would be nice to support Ruby Mine
 * How about if begin/rescue/end was able to record the result on the rescue section
@@ -247,13 +247,13 @@ Some stuff that might happen one day
 * What about recording the result of a line inside of a string interpolation,
   e.g. "a#{\n1\n}b" could record line 2 is 1 and line 3 is "a\n1\nb"
   This would require smarter annotators.
-* Allow debugger to take a filename (ie debug to a file insteaad of to stderr)
-* `--cd dir` cd to that dir before executing the code
-* `--cd -` cd to the dir of the file being executed before executing it
+* Allow debugger to take a filename (i.e. debug to a file instead of to stderr)
+* `--cd dir` cd to that directory before executing the code
+* `--cd -` cd to the directory of the file being executed before executing it
 * `--only-show-lines` output only on specified lines (doesn't change stdout/stderr/exceptions)
 * More alignment strategies e.g. `min=40` would align to 40, unless that was too short.
   Could have fallback strategies, so e.g. `-s min=40,fallback=line`
-* Package Ruby with the editor downloads so that they don't require you to know so fkn much to set it up.
+* Package Ruby with the editor downloads so that they don't require you to know so much to set it up.
 * Allow user to set marker
 * Maybe rename xmpfilter style, not many people know what that is, so the name doesn't help users
 
