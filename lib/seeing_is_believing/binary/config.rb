@@ -41,7 +41,6 @@ class SeeingIsBelieving
       attribute(:help_screen)           { |c| Binary.help_screen c.markers }
       attribute(:lib_options)           { SeeingIsBelieving::Options.new }
       attribute(:annotator_options)     { AnnotatorOptions.new }
-      attribute(:port)                  { 5158 }
 
       def add_error(explanation)
         errors << ErrorMessage.new(explanation: explanation)
@@ -210,14 +209,7 @@ class SeeingIsBelieving
             next_arg.call arg, "an encoding" do |encoding|
               self.lib_options.encoding = encoding
             end
-          when '-p', '--port'
-            next_arg.call arg, "port number to use for SiB events" do |port|
-              self.port = begin
-                Integer(port)
-              rescue ArgumentError
-                add_error("port must be an integer")
-              end
-            end
+
           when /^(-.|--.*)$/
             unknown_flags << arg
 

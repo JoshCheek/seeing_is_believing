@@ -28,7 +28,7 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :port
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
 
     def initialize(program, filename,  options={})
       options = options.dup
@@ -41,7 +41,6 @@ class SeeingIsBelieving
       self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
-      self.port              = (options.delete(:port))             || 5158
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
@@ -95,7 +94,7 @@ class SeeingIsBelieving
     # https://bugs.ruby-lang.org/issues/10699  they opened an issue
     # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
     def evaluate_file
-      event_server = TCPServer.new(port)
+      event_server = TCPServer.new(0) # dynamically allocates an available port
 
       # setup streams
       stdout,      child_stdout      = IO.pipe("utf-8")
@@ -104,7 +103,7 @@ class SeeingIsBelieving
       # setup environment variables
       env = ENV.to_hash.merge 'SIB_VARIABLES.MARSHAL.B64' =>
                                 [Marshal.dump(
-                                  event_stream_port: port,
+                                  event_stream_port: event_server.addr[1],
                                   max_line_captures: max_line_captures,
                                   num_lines:         program.lines.count,
                                   filename:          filename

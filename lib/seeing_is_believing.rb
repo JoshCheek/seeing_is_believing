@@ -21,7 +21,6 @@ class SeeingIsBelieving
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
     attribute(:rewrite_code)      { WrapExpressionsWithInspect }
-    attribute(:port)              { 5158 }
   end
 
   def self.call(*args)
@@ -51,8 +50,7 @@ class SeeingIsBelieving
         load_path_dirs:    options.load_path_dirs,
         encoding:          options.encoding,
         timeout_seconds:   options.timeout_seconds,
-        max_line_captures: options.max_line_captures,
-        port:              options.port
+        max_line_captures: options.max_line_captures
 
       options.event_handler
     }
