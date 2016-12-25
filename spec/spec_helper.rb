@@ -31,4 +31,8 @@ RSpec.configure do |c|
   c.disable_monkey_patching!
   c.include SibSpecHelpers
   c.filter_run_excluding :not_implemented
+
+  if RSpec::Support::OS.windows? || RSpec::Support::Ruby.jruby?
+    c.before(needs_fork: true) { skip 'Fork is not available on this system' }
+  end
 end

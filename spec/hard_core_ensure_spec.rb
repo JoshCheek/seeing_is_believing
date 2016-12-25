@@ -41,8 +41,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     expect(ensure_invoked).to eq true
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler',
-     unless: RSpec::Support::OS.windows? do
+  it 'invokes the code even if an interrupt is sent and there is a default handler', needs_fork: true do
     test = lambda do
       channel = IChannel.unix
       pid = fork do
@@ -57,16 +56,10 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
       expect(channel.get).to eq "old handler invoked"
       expect(channel).to_not be_readable
     end
-    if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-      pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
-      raise
-    else
-      test.call
-    end
+    test.call
   end
 
-  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore',
-     unless: RSpec::Support::OS.windows? do
+  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore', needs_fork: true do
     test = lambda do
       channel = IChannel.unix
       pid = fork do
@@ -83,12 +76,8 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
       expect(channel).to_not be_readable
     end
 
-    if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-      pending "Skipping this test on jruby b/c the JVM doesn't have a fork"
-      raise # new rspec will keep executing code and fail b/c nothing is raised
-    elsif (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby') && (RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2')
-      pending 'This test can\'t run on MRI (2.1.1 or 2.1.2) b/c of bug, see https://github.com/JoshCheek/seeing_is_believing/issues/26'
-      raise # new rspec will keep executing code and fail b/c nothing is raised
+    if (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby') && (RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2')
+      skip 'This test can\'t run on MRI (2.1.1 or 2.1.2) b/c of bug, see https://github.com/JoshCheek/seeing_is_believing/issues/26'
     else
       test.call # works on Rubinius
     end

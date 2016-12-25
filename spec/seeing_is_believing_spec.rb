@@ -510,7 +510,7 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
-  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them', needs_fork: true do
     # https://github.com/JoshCheek/seeing_is_believing/issues/53
     result = invoke <<-RUBY, timeout_seconds: 0.1
       read, write = IO.pipe
@@ -523,7 +523,7 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
-  it 'does not kill parent processes', :unless => RSpec::Support::OS.windows? do
+  it 'does not kill parent processes', needs_fork: true do
     channel = IChannel.unix
     fork do
       # it's basically undocumented, but I think 0 makes it choose a new group id
@@ -558,7 +558,7 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
-  describe 'fork', :unless => RSpec::Support::OS.windows? do
+  describe 'fork', needs_fork: true do
     it 'records results from both parent and child, without double reporting items that may have been left in the queue at the time of forking' do
       n = 100
       result = invoke <<-RUBY
@@ -594,7 +594,7 @@ RSpec.describe SeeingIsBelieving do
       expect(ones).to  eq ("1"*(n-1))
     end
 
-    it 'works for Kernel#fork, Kernel.fork, Process.fork' do
+    it 'works for Kernel#fork, Kernel.fork, Process.fork', needs_fork: true do
       result = invoke <<-RUBY
         $$
         if fork
@@ -810,7 +810,7 @@ RSpec.describe SeeingIsBelieving do
       expect(result.exception.class_name).to eq 'RuntimeError'
     end
 
-    specify 'when Thread does not have .new, .current, #join, #abort_on_exception' do
+    specify 'when Thread does not have .new, .current, #join, #abort_on_exception', needs_fork: true do
       expect(invoke('class << Thread
                        undef new
                        undef current if "2.0.0" != RUBY_VERSION && "1.9.3" != RUBY_VERSION
