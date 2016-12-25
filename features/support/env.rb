@@ -15,8 +15,21 @@ module Haiti
       env_vars   ||= {}
       in_proving_grounds do
         with_bin_in_path do
-          command = command_string.shellsplit
-          Invocation.new *Open3.capture3(env_vars, *command, stdin_data: stdin_data)
+          Invocation.new *Open3.capture3(env_vars, command_string, stdin_data: stdin_data)
+        end
+      end
+    end
+
+    def execute_pipeline(command_strings, stdin_data, env_vars)
+      stdin_data ||= ''
+      env_vars   ||= {}
+      in_proving_grounds do
+        with_bin_in_path do
+          ioin, ioout, pids = Open3.pipeline_rw *command_strings.map { |cmd| [env_vars, cmd] }
+          ioin.print stdin_data
+          ioin.close
+          stderr = "" # uh... how do I record it for real?
+          Invocation.new ioout.read, stderr, pids.last.value
         end
       end
     end
@@ -71,6 +84,14 @@ end
 
 Given %q(the file '$filename' '$body') do |filename, body|
   Haiti::CommandLineHelpers.write_file filename, eval_curlies(body)
+end
+
+Given /^I run the pipeline "([^"]*)"(?: *\| *"([^"]*)")*$/ do |*commands|
+  @last_executed = Haiti::CommandLineHelpers.execute_pipeline(
+    commands,
+    @stdin_data,
+    @env_vars_to_set
+  )
 end
 
 Given(/^the binary file "([^"]*)" "([^"]*)"$/) do |filename, body|

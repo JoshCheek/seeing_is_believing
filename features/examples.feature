@@ -296,7 +296,7 @@ Feature: Running the binary successfully
     """
     :both
     if fork #
-      sleep 1
+      sleep 1 #
       :parent
     else
       :child
@@ -311,7 +311,7 @@ Feature: Running the binary successfully
     """
     :both                   # => :both
     if fork #
-      sleep 1               # => 1
+      sleep 1 #
       :parent               # => :parent
     else
       :child                # => :child

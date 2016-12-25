@@ -90,13 +90,14 @@ Feature: Xmpfilter style
     #    "0123456789\n"
     """
 
+
   Scenario: --xmpfilter-style overrides previous multiline results
     Given the file "xmpfilter-prev-line2.rb":
     """
     {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
     # =>
     """
-    When I run "seeing_is_believing --xmpfilter-style xmpfilter-prev-line2.rb | seeing_is_believing --xmpfilter-style"
+    When I run the pipeline "seeing_is_believing --xmpfilter-style xmpfilter-prev-line2.rb" | "seeing_is_believing --xmpfilter-style"
     Then stdout is:
     """
     {foo: 42, bar: {baz: 1, buz: 2, fuz: 3}, wibble: {magic_word: "xyzzy"}}
@@ -272,7 +273,7 @@ Feature: Xmpfilter style
       #     :wibble=>{:magic_word=>"xyzzy"}}
     end
     """
-    When I run "seeing_is_believing -x mutltiline_output_repeatedly_invoked.rb | seeing_is_believing -x"
+    When I run the pipeline "seeing_is_believing -x mutltiline_output_repeatedly_invoked.rb" | "seeing_is_believing -x"
     Then stdout is:
     """
     3.times do
