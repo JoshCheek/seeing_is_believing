@@ -32,8 +32,8 @@ stdout, stderr = STDOUT, STDERR
 finish = lambda do
   $SiB.finish!
   event_stream.close
-  stdout.flush
-  stderr.flush
+  stdout.flush unless stdout.closed?
+  stderr.flush unless stderr.closed?
 end
 
 real_exec      = method :exec

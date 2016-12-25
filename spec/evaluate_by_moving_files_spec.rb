@@ -145,7 +145,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'can set a timeout, which interrupts the process group and then waits for the events to finish' do
     skip "TODO: This test needs a whole new approach now that we're using ChildProcess"
     expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
-    expect(Process).to receive(:kill).with("-INT", an_instance_of(Fixnum))
+    expect(Process).to receive(:kill).with("-INT", an_instance_of(Integer))
     result = invoke 'p gets', timeout_seconds: 123
     expect(result.timeout?).to eq true
     expect(result.timeout_seconds).to eq 123
@@ -154,5 +154,19 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   it 'raises an ArgumentError if given arguments it doesn\'t know' do
     expect { invoke '1', watisthis: :idontknow }
       .to raise_error ArgumentError, /watisthis/
+  end
+
+  it 'doesn\'t explode or do anything else obnoxious when the input stream is closed' do
+    infinite_string = Object.new
+    def infinite_string.each_char
+      loop { yield 'c' }
+    end
+    result = nil
+    expect {
+      result = invoke '$stdin.close', provided_input: infinite_string
+    }.to_not output.to_stderr
+    expect(result.exitstatus).to eq 0
+    expect(result.stderr).to be_empty
+    expect(result.stdout).to be_empty
   end
 end

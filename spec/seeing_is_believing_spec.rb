@@ -48,8 +48,8 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'only invokes inspect once' do
-    input = "class Fixnum; def inspect; 'NUM'\nend\nend\n1"
-    expect(invoke(input)[1]).to eq ['"NUM"']
+    input = "class Array; def inspect; 'INSPECTED'\nend\nend\n[]"
+    expect(invoke(input)[1]).to eq ['"INSPECTED"']
   end
 
   it 'makes the SiB version info available' do
@@ -701,18 +701,36 @@ RSpec.describe SeeingIsBelieving do
     end
 
     specify 'when Fixnum does not have <, <<, next, ==, inspect, to_s' do
-      result = invoke('class Fixnum
-                         undef <
-                         undef <<
-                         undef ==
-                         def next
-                           "redefining instead of undefing b/c it comes from Integer"
+      if defined? Fixnum
+        result = invoke('class Fixnum
+                           undef <
+                           undef <<
+                           undef ==
+                           def next
+                             "redefining instead of undefing b/c it comes from Integer"
+                           end
+                           undef to_s
+                           undef inspect
                          end
+                         "a"')
+        expect(result.stderr).to eq ''
+        expect(result.exitstatus).to eq 0
+        expect(result.to_a.last).to eq ['"a"']
+      end
+    end
+
+    specify 'when Integer does not have <, <<, next, ==, inspect, to_s' do
+      result = invoke('class Integer
+                         undef <
+                         undef << if instance_methods.include? :<<   # ruby 2.4+
+                         undef ==
+                         undef next
                          undef to_s
                          undef inspect
                        end
                        "a"')
       expect(result.stderr).to eq ''
+      expect(result.exitstatus).to eq 0
       expect(result.to_a.last).to eq ['"a"']
     end
 
