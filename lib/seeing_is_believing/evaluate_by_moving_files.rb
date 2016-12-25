@@ -164,11 +164,6 @@ class SeeingIsBelieving
          filename]
     end
 
-    def allow_error(error)
-      yield
-    rescue error
-    end
-
     def close_streams(*streams)
       streams.each { |io| io.close unless io.closed? }
     end
