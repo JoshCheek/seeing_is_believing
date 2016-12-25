@@ -669,3 +669,18 @@ Feature:
     """
     ObjectSpace.each_object { |o| o.object_id || p(obj: o) }#
     """
+
+
+  Scenario: Does not blow up when the program closes its stdin/stdout/stderr
+    Given the stdin content "input"
+    And the file "closed_pipes.rb":
+    """
+    [$stdin, $stdout, $stderr].each &:close#
+    """
+    When I run "seeing_is_believing closed_pipes.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    [$stdin, $stdout, $stderr].each &:close#
+    """

@@ -154,4 +154,18 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect { invoke '1', watisthis: :idontknow }
       .to raise_error ArgumentError, /watisthis/
   end
+
+  it 'doesn\'t explode or do anything else obnoxious when the input stream is closed' do
+    infinite_string = Object.new
+    def infinite_string.each_char
+      loop { yield 'c' }
+    end
+    result = nil
+    expect {
+      result = invoke '$stdin.close', provided_input: infinite_string
+    }.to_not output.to_stderr
+    expect(result.exitstatus).to eq 0
+    expect(result.stderr).to be_empty
+    expect(result.stdout).to be_empty
+  end
 end
