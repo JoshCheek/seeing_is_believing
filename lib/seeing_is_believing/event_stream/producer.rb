@@ -9,7 +9,7 @@ class SeeingIsBelieving
     class Producer
       module NullQueue
         extend self
-        Queue.instance_methods.each do |name|
+        Queue.instance_methods(false).each do |name|
           define_method(name) { |*| }
         end
       end

@@ -656,3 +656,16 @@ Feature:
     And  stdout includes 'Zomg                       # => lolol'
     And  stdout includes '# ~> ZeroDivisionError'
     And  stdout includes '# ~> divided by 0'
+
+
+  Scenario: All objects have an object id (Issue #91)
+    Given the file "object_ids.rb":
+    """
+    ObjectSpace.each_object { |o| o.object_id || p(obj: o) }#
+    """
+    When I run "seeing_is_believing object_ids.rb"
+    Then stderr is empty
+    And stdout is:
+    """
+    ObjectSpace.each_object { |o| o.object_id || p(obj: o) }#
+    """
