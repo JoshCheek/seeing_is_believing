@@ -323,8 +323,7 @@ Feature:
     Given the file "black_hole.rb":
     """
     require 'rubygems'
-    null_device = Gem.win_platform? ? 'NUL' : '/dev/null'; nil
-    File.open null_device, 'w' do |black_hole|
+    File.open IO::NULL, 'w' do |black_hole|
       STDERR = $stderr = black_hole; nil
       STDOUT = $stdout = black_hole; nil
       puts "You won't see this, it goes into the black hole"
@@ -338,8 +337,7 @@ Feature:
     And stdout is:
     """
     require 'rubygems'                                                              # => false
-    null_device = Gem.win_platform? ? 'NUL' : '/dev/null'; nil                      # => nil
-    File.open null_device, 'w' do |black_hole|                                      # => File
+    File.open IO::NULL, 'w' do |black_hole|                                         # => File
       STDERR = $stderr = black_hole; nil                                            # => nil
       STDOUT = $stdout = black_hole; nil                                            # => nil
       puts "You won't see this, it goes into the black hole"                        # => nil
