@@ -81,36 +81,38 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
   end
 
   it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
-    program = <<-RUBY
-      trap "INT", "IGNORE"
-      SeeingIsBelieving::HardCoreEnsure.new(
-        code:   -> {
-          puts "CODE1"
-          $stdout.flush
-          gets
-          puts "CODE2"
-        },
-        ensure: -> { puts "ENSURE" },
-      ).call
-    RUBY
-    ruby program do |ps, psout|
-      expect(psout.gets).to eq "CODE1\n" # we're in the code block
-      Process.kill 'INT', ps.pid         # should be ignored
+    # empty string isn't documented, but it causes ignore too
+    # https://github.com/ruby/ruby/blob/256d8c9ecffbcd8f4fe7562b866fcd55f1d445e7/signal.c#L1128-L1129
+    ignore_handlers = ['IGNORE', 'SIG_IGN', '']
 
-      # note that if we don't check this, the pipe on the next line may beat the signal
-      # to the process leading to nondeterministic printing
-      expect(ps).to be_alive
+    ignore_handlers.each do |handler|
+      program = <<-RUBY
+        trap "INT", #{handler.inspect}
+        SeeingIsBelieving::HardCoreEnsure.new(
+          code:   -> {
+            puts "CODE1"
+            $stdout.flush
+            gets
+            puts "CODE2"
+          },
+          ensure: -> { puts "ENSURE" },
+        ).call
+      RUBY
+      ruby program do |ps, psout|
+        expect(psout.gets).to eq "CODE1\n" # we're in the code block
+        Process.kill 'INT', ps.pid         # should be ignored
 
-      # TODO: uhhhhhhmmm... is this really what should happen?
-      # if it's set to ignore, it shouldn't get kicked out of sleep, right?
-      # so it should ignore the interrupt, then continue, print code2, and then ensure afterwards
-      # NOTE: we can fix this, it's buried so deep that nothing should depend on it
-      ps.io.stdin.puts "wake up!"
-      ps.wait
-      expect(ps.exit_code).to eq 0
-      expect(psout.gets).to eq "ENSURE\n"
-      expect(psout.gets).to eq "CODE2\n"
-      expect(psout.gets).to eq nil
+        # note that if we don't check this, the pipe on the next line may beat the signal
+        # to the process leading to nondeterministic printing
+        expect(ps).to be_alive
+
+        ps.io.stdin.puts "wake up!"
+        ps.wait
+        expect(ps.exit_code).to eq 0
+        expect(psout.gets).to eq "CODE2\n"
+        expect(psout.gets).to eq "ENSURE\n"
+        expect(psout.gets).to eq nil
+      end
     end
   end
 end

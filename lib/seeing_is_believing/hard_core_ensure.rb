@@ -25,6 +25,7 @@ class SeeingIsBelieving
         invoke_ensure
         Process.kill 'INT', $$
       end
+      trap 'INT', old_handler if ignore_interrupt? old_handler
     end
 
     def invoke_code
@@ -47,6 +48,11 @@ class SeeingIsBelieving
       elsif options.size > 3
         raise ArgumentError, "Unknown keys: #{unknown_keys.map(&:inspect).join(', ')}"
       end
+    end
+
+    def ignore_interrupt?(interrupt_handler)
+      # any handler that ignores gets normalized to IGNORE
+      interrupt_handler == 'IGNORE'
     end
   end
 end
