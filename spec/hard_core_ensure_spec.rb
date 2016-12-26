@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'ichannel'
 require 'seeing_is_believing/hard_core_ensure'
 
 RSpec.describe SeeingIsBelieving::HardCoreEnsure do
@@ -41,45 +40,77 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     expect(ensure_invoked).to eq true
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler', needs_fork: true do
-    test = lambda do
-      channel = IChannel.unix
-      pid = fork do
-        old_handler = trap('INT') { channel.put "old handler invoked" }
-        call code: -> { sleep 0.1 }, ensure: -> { channel.put "ensure invoked" }
-        trap 'INT', old_handler
-      end
-      sleep 0.05
-      Process.kill 'INT', pid
-      Process.wait pid
-      expect(channel.get).to eq "ensure invoked"
-      expect(channel.get).to eq "old handler invoked"
-      expect(channel).to_not be_readable
-    end
-    test.call
+  def ruby(program)
+    child = ChildProcess.build RbConfig.ruby,
+                               '-I', File.expand_path('../lib', __dir__),
+                               '-r', 'seeing_is_believing/hard_core_ensure',
+                               '-e', program
+    child.duplex = true
+    outread, outwrite = IO.pipe
+    errread, errwrite = IO.pipe
+    child.io.stdout = outwrite
+    child.io.stderr = errwrite
+    child.start
+    outwrite.close
+    errwrite.close
+    yield child, outread
+  ensure
+    child && child.stop
+    errread && !errread.closed? && expect(errread.read).to(be_empty)
   end
 
-  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore', needs_fork: true do
-    test = lambda do
-      channel = IChannel.unix
-      pid = fork do
-        old_handler = trap 'INT', 'IGNORE'
-        result = call code: -> { sleep 0.1; 'code result' }, ensure: -> { channel.put "ensure invoked" }
-        channel.put result
-        trap 'INT', old_handler
+  it 'invokes the code even if an interrupt is sent and there is a default handler' do
+    program = <<-RUBY
+      trap("INT") do
+        puts "CUSTOM-HANDLER"
+        exit
       end
-      sleep 0.05
-      Process.kill 'INT', pid
-      Process.wait pid
-      expect(channel.get).to eq "ensure invoked"
-      expect(channel.get).to eq 'code result'
-      expect(channel).to_not be_readable
+      SeeingIsBelieving::HardCoreEnsure.new(
+        code:   -> { puts "CODE"; $stdout.flush; sleep },
+        ensure: -> { puts "ENSURE" },
+      ).call
+    RUBY
+    ruby program do |ps, psout|
+      expect(psout.gets).to eq "CODE\n"
+      Process.kill 'INT', ps.pid
+      ps.wait
+      expect(ps.exit_code).to eq 0
+      expect(psout.gets).to eq "ENSURE\n"
+      expect(psout.gets).to eq "CUSTOM-HANDLER\n"
     end
+  end
 
-    if (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby') && (RUBY_VERSION == '2.1.1' || RUBY_VERSION == '2.1.2')
-      skip 'This test can\'t run on MRI (2.1.1 or 2.1.2) b/c of bug, see https://github.com/JoshCheek/seeing_is_believing/issues/26'
-    else
-      test.call # works on Rubinius
+  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
+    program = <<-RUBY
+      trap "INT", "IGNORE"
+      SeeingIsBelieving::HardCoreEnsure.new(
+        code:   -> {
+          puts "CODE1"
+          $stdout.flush
+          gets
+          puts "CODE2"
+        },
+        ensure: -> { puts "ENSURE" },
+      ).call
+    RUBY
+    ruby program do |ps, psout|
+      expect(psout.gets).to eq "CODE1\n" # we're in the code block
+      Process.kill 'INT', ps.pid         # should be ignored
+
+      # note that if we don't check this, the pipe on the next line may beat the signal
+      # to the process leading to nondeterministic printing
+      expect(ps).to be_alive
+
+      # TODO: uhhhhhhmmm... is this really what should happen?
+      # if it's set to ignore, it shouldn't get kicked out of sleep, right?
+      # so it should ignore the interrupt, then continue, print code2, and then ensure afterwards
+      # NOTE: we can fix this, it's buried so deep that nothing should depend on it
+      ps.io.stdin.puts "wake up!"
+      ps.wait
+      expect(ps.exit_code).to eq 0
+      expect(psout.gets).to eq "ENSURE\n"
+      expect(psout.gets).to eq "CODE2\n"
+      expect(psout.gets).to eq nil
     end
   end
 end

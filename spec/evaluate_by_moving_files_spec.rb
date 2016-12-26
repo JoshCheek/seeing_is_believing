@@ -4,6 +4,7 @@ require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/handlers/update_result'
 require 'fileutils'
+require 'childprocess'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   let(:filedir)  { File.expand_path '../../proving_grounds', __FILE__ }
@@ -143,12 +144,19 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'can set a timeout, which interrupts the process group and then waits for the events to finish' do
-    skip "TODO: This test needs a whole new approach now that we're using ChildProcess"
-    expect(Timeout).to receive(:timeout).with(123).and_raise(Timeout::Error)
-    expect(Process).to receive(:kill).with("-INT", an_instance_of(Integer))
-    result = invoke 'p gets', timeout_seconds: 123
+    pre    = Time.now
+    result = invoke <<-RUBY, timeout_seconds: 0.1
+    child_pid = spawn 'ruby', '-e', 'sleep' # child makes a grandchild which sleeps
+    puts Process.pid, child_pid             # print ids so we can check they got killed
+    sleep                                   # child sleeps
+    RUBY
+    post   = Time.now
     expect(result.timeout?).to eq true
-    expect(result.timeout_seconds).to eq 123
+    expect(result.timeout_seconds).to eq 0.1
+    expect(post - pre).to be > 0.1
+    child_id, grandchild_id = result.stdout.lines.map(&:to_i).each { |id| expect(id).to be > 0 }
+    expect { Process.wait child_id      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id } .to raise_error /no.*processes/i
   end
 
   it 'raises an ArgumentError if given arguments it doesn\'t know' do

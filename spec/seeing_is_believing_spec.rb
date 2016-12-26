@@ -4,7 +4,7 @@
 require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
-require 'ichannel'
+require 'childprocess'
 
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
@@ -510,31 +510,82 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
-  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them', needs_fork: true do
-    # https://github.com/JoshCheek/seeing_is_believing/issues/53
-    result = invoke <<-RUBY, timeout_seconds: 0.1
-      read, write = IO.pipe
-      fork               # child makes a grandchild
-      puts Process.pid   # print current pid
-      read.read          # block child and grandchild
+  # https://github.com/JoshCheek/seeing_is_believing/issues/53
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
+    pre    = Time.now
+    result = invoke <<-CHILD, timeout_seconds: 0.1
+      read, _ = IO.pipe
+
+      spawn 'ruby', '-e', <<-GRANDCHILD, in: read
+        puts Process.pid  # print grandchild id
+        $stdin.read       # block grandchild
+      GRANDCHILD
+
+      puts Process.pid    # print child pid
+      read.read           # block child
+    CHILD
+    post   = Time.now
+    expect(result.timeout?).to eq true
+    expect(result.timeout_seconds).to eq 0.1
+    expect(post - pre).to be > 0.1
+    child_id, grandchild_id = result.stdout.lines.map(&:to_i).each { |id| expect(id).to be > 0 }
+    expect { Process.wait child_id      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id } .to raise_error /no.*processes/i
+  end
+
+
+  # see https://github.com/JoshCheek/seeing_is_believing/pull/92
+  # and https://github.com/JoshCheek/seeing_is_believing/pull/94
+  it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up' do
+    # start SiB, it will make a child, use --stream so we can
+    # access individual events as they are emitted (to get the pids)
+    bin_path = File.realpath '../bin/seeing_is_believing', __dir__
+    sib = ChildProcess.build bin_path, '--stream', '-e', <<-RUBY
+      # the child makes a grandchild that ignores interrupts and sleeps
+      spawn 'ruby', '-e', <<-GRANDCHILD
+        trap 'INT', 'IGNORE'
+        sleep
+      GRANDCHILD
+
+      # the child ignores interrupts and sleeps
+      trap 'INT', 'IGNORE'
+      Process.pid
+      sleep
     RUBY
-    result.stdout.lines.map(&:to_i).each do |pid|
-      expect { Process.kill 0, pid }.to raise_error(Errno::ESRCH)
+
+    # Hook up the io and start the child process
+    read, write   = IO.pipe
+    sib.io.stdout = write
+    sib.io.stderr = write
+    sib.duplex    = true # otherwise it takes the real process's stdin, which will mess w/ pry
+    sib.start
+    write.close
+
+    # Get the child and grandchild ids. If we read too far, we lock up the test
+    pids = []
+    until pids.length == 2
+      event, data = JSON.parse read.gets
+      next unless event == 'line_result'
+      next unless data.fetch('inspected') =~ /\A\d+\z/
+      pids << data.fetch('inspected').to_i
+    end
+
+    # Interrupt SiB, it interrupts child and grandchild
+    expect(sib).to be_alive
+    Process.kill 'INT', sib.pid
+
+    # wait for it to finish cleaning up so we don't check pids before it gets around to killing them
+    sib.wait
+
+    # Apparently we can check if processes exist by sending them signal 0
+    # http://stackoverflow.com/questions/9152979/check-if-process-exists-given-its-pid
+    # ESRCH = "no such process", what we expect if SiB cleaned them up
+    # if they do exist, they will return `1` (in my experiments)
+    pids.each do |pid|
+      expect { Process.kill 0, pid }.to raise_error Errno::ESRCH
     end
   end
 
-  it 'does not kill parent processes', needs_fork: true do
-    channel = IChannel.unix
-    fork do
-      # it's basically undocumented, but I think 0 makes it choose a new group id
-      # this is so that we don't kill the test if it gets messed up
-      Process.setpgid(Process.pid, 0)
-      channel.put invoke("1"                          ).timeout_seconds
-      channel.put invoke("sleep", timeout_seconds: 0.1).timeout_seconds
-    end
-    expect(channel.get).to eq nil # child exited normally
-    expect(channel.get).to eq 0.1 # child timed out
-  end
 
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
