@@ -145,18 +145,21 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'can set a timeout, which interrupts the process group and then waits for the events to finish' do
     pre    = Time.now
-    result = invoke <<-RUBY, timeout_seconds: 0.1
+    result = invoke <<-RUBY, timeout_seconds: 0.5
     child_pid = spawn 'ruby', '-e', 'sleep' # child makes a grandchild which sleeps
     puts Process.pid, child_pid             # print ids so we can check they got killed
     sleep                                   # child sleeps
     RUBY
     post   = Time.now
     expect(result.timeout?).to eq true
-    expect(result.timeout_seconds).to eq 0.1
-    expect(post - pre).to be > 0.1
-    child_id, grandchild_id = result.stdout.lines.map(&:to_i).each { |id| expect(id).to be > 0 }
-    expect { Process.wait child_id      } .to raise_error /no.*processes/i
-    expect { Process.wait grandchild_id } .to raise_error /no.*processes/i
+    expect(result.timeout_seconds).to eq 0.5
+    expect(post - pre).to be > 0.5
+    child_id, grandchild_id, *rest = result.stdout.lines
+    expect(child_id).to match /^\d+$/
+    expect(grandchild_id).to match /^\d+$/
+    expect(rest).to be_empty
+    expect { Process.wait child_id.to_i      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id.to_i } .to raise_error /no.*processes/i
   end
 
   it 'raises an ArgumentError if given arguments it doesn\'t know' do

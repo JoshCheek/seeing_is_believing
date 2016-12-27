@@ -513,7 +513,7 @@ RSpec.describe SeeingIsBelieving do
   # https://github.com/JoshCheek/seeing_is_believing/issues/53
   it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
     pre    = Time.now
-    result = invoke <<-CHILD, timeout_seconds: 0.1
+    result = invoke <<-CHILD, timeout_seconds: 0.5
       read, _ = IO.pipe
 
       spawn 'ruby', '-e', <<-GRANDCHILD, in: read
@@ -526,11 +526,14 @@ RSpec.describe SeeingIsBelieving do
     CHILD
     post   = Time.now
     expect(result.timeout?).to eq true
-    expect(result.timeout_seconds).to eq 0.1
-    expect(post - pre).to be > 0.1
-    child_id, grandchild_id = result.stdout.lines.map(&:to_i).each { |id| expect(id).to be > 0 }
-    expect { Process.wait child_id      } .to raise_error /no.*processes/i
-    expect { Process.wait grandchild_id } .to raise_error /no.*processes/i
+    expect(result.timeout_seconds).to eq 0.5
+    expect(post - pre).to be > 0.5
+    child_id, grandchild_id, *rest = result.stdout.lines
+    expect(child_id).to match /^\d+$/
+    expect(grandchild_id).to match /^\d+$/
+    expect(rest).to be_empty
+    expect { Process.wait child_id.to_i      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id.to_i } .to raise_error /no.*processes/i
   end
 
 
