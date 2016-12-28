@@ -151,7 +151,13 @@ class SeeingIsBelieving
       child.stop
       consumer_thread.join
     ensure
-      child.stop
+      begin
+        child.stop
+      rescue ChildProcess::Error
+        # This can happen on Windows, eg: https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/15
+        # I don't have a test that fails for this on Unix. If I do some refactoring on it, then
+        # probably use stubbing or something to make one.
+      end
       close_streams(stdout, stderr, eventstream, event_server)
     end
 
