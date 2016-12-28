@@ -93,10 +93,3 @@ Given /^I run the pipeline "([^"]*)"(?: *\| *"([^"]*)")*$/ do |*commands|
     @env_vars_to_set
   )
 end
-
-Given(/^the binary file "([^"]*)" "([^"]*)"$/) do |filename, body|
-  Haiti::CommandLineHelpers.in_proving_grounds do
-    FileUtils.mkdir_p File.dirname filename
-    File.open(filename, 'wb') { |file| file.write body }
-  end
-end
