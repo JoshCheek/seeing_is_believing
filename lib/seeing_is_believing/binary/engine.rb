@@ -36,16 +36,11 @@ class SeeingIsBelieving
       end
 
       def evaluate!
-        @evaluated || begin
-          SeeingIsBelieving.call normalized_cleaned_body,
-                                 config.lib_options.merge(event_handler: record_exit_events)
-          @timed_out = false
-          @evaluated = true
-        end
-      rescue Timeout::Error
-        @timed_out = true
-        @evaluated = true
-      ensure return self unless $! # idk, maybe too tricky, but was really annoying putting it in three places
+        @evaluated ||= !!SeeingIsBelieving.call(
+          normalized_cleaned_body,
+          config.lib_options.merge(event_handler: record_exit_events)
+        )
+        self
       end
 
       def timed_out?
