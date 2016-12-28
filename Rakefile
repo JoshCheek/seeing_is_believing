@@ -44,7 +44,7 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/mrspec', '--colour'
+  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/rspec', '--colour', '--fail-fast'
 end
 
 desc 'Run cukes'
