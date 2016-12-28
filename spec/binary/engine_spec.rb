@@ -14,7 +14,7 @@ class SeeingIsBelieving
       end
 
       def assert_must_evaluate(message)
-        engine = call ''
+        engine = call '1+1'
         expect { engine.__send__ message }.to raise_error MustEvaluateFirst, /#{message}/
         engine.evaluate!
         engine.__send__ message
