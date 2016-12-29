@@ -152,7 +152,7 @@ class SeeingIsBelieving
       child.stop
       consumer_thread.join
     ensure
-      child.stop
+      child.alive? && child.stop
       close_streams(stdout, stderr, eventstream, event_server)
     end
 
