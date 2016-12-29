@@ -51,7 +51,7 @@ class SeeingIsBelieving
       end
 
       context 'before evaluating it raises if asked for' do
-        specify('result', t:true)          { assert_must_evaluate :result }
+        specify('result')          { assert_must_evaluate :result }
         specify('exitstatus')      { assert_must_evaluate :exitstatus }
         specify('timed_out?')      { assert_must_evaluate :timed_out? }
         specify('timeout_seconds') { assert_must_evaluate :timeout_seconds }

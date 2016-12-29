@@ -21,7 +21,6 @@ require 'seeing_is_believing/hard_core_ensure'
 require 'seeing_is_believing/event_stream/consumer'
 require 'rubygems'
 require "childprocess"
-$DEBUG = true
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
