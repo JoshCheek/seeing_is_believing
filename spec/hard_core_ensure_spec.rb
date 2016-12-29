@@ -55,8 +55,12 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     errwrite.close
     yield child, outread
   ensure
-    child && child.stop
     errread && !errread.closed? && expect(errread.read).to(be_empty)
+    begin
+      child && child.stop
+    rescue ChildProcess::Error
+      # noop
+    end
   end
 
   it 'invokes the code even if an interrupt is sent and there is a default handler' do
