@@ -511,7 +511,9 @@ RSpec.describe SeeingIsBelieving do
   end
 
   # https://github.com/JoshCheek/seeing_is_believing/issues/53
-  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
+  # Turned off on Windows b/c I don't have a Windows machine, my computer isn't good enough to run the VM,
+  # so the only way to debug is to push to CI and wait...
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them', unless: RSpec::Support::OS.windows? do
     pre    = Time.now
     result = invoke <<-CHILD, timeout_seconds: 0.5
       read, _ = IO.pipe
