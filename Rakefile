@@ -44,7 +44,7 @@ end
 
 desc 'Run specs'
 task spec: :bundle do
-  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/rspec', '--fail-fast'
+  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/rspec', 'spec/binary/engine_spec.rb', '-t', 't'
 end
 
 desc 'Run cukes'
@@ -71,7 +71,7 @@ task ctags: :tags # an alias
 
 
 desc 'Run all specs and cukes'
-task default: [:spec, :cuke]
+task default: [:spec]#, :cuke]
 
 desc 'Install dependencies and run tests (mainly for Travis CI)'
 task ci: [:install, :spec, :cuke]
