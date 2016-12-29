@@ -20,8 +20,6 @@ install:
   - SET PATH=C:\Ruby%ruby_version%\bin;%PATH%
   - ruby --version
   - gem --version
-  - gem install bundler # Do I *actually* need this? using it in .travis.yml, but the Rakefile clearly wants to do it for me
-  - bundler --version
   - rake install
 
 test_script:

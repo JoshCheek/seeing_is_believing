@@ -2,7 +2,7 @@ desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its 
 task :install do
   exe_path = which("bundle")
   unless exe_path
-    sh 'gem', 'install', 'bundler'
+    sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
   end
 
   unless Dir.exist? 'bundle'
