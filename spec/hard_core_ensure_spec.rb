@@ -63,7 +63,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     end
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler' do
+  it 'invokes the code even if an interrupt is sent and there is a default handler', unless: RSpec::Support::OS.windows? do
     program = <<-RUBY
       trap("INT") do
         puts "CUSTOM-HANDLER"
