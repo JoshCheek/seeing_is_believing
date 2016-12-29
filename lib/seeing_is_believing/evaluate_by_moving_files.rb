@@ -151,7 +151,7 @@ class SeeingIsBelieving
       child.stop
       consumer_thread.join
     ensure
-      child.alive? && child.stop
+      cleanup_run(child)
       close_streams(stdout, stderr, eventstream, event_server)
     end
 
@@ -167,6 +167,15 @@ class SeeingIsBelieving
 
     def close_streams(*streams)
       streams.each { |io| io.close unless io.closed? }
+    end
+
+    # On AppVeyor, I keep getting errors
+    #   The handle is invalid: https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/22
+    #   Access is denied:      https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/24
+    def cleanup_run(child, *streams)
+      child.alive? && child.stop
+    rescue ChildProcess::Error
+      # noop
     end
   end
 end
