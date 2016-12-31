@@ -63,7 +63,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     end
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler', unless: RSpec::Support::OS.windows? do
+  it 'invokes the code even if an interrupt is sent and there is a default handler' do
     program = <<-RUBY
       trap("INT") do
         puts "CUSTOM-HANDLER"
@@ -84,7 +84,7 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     end
   end
 
-  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore', unless: RSpec::Support::OS.windows? do
+  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
     # empty string isn't documented, but it causes ignore too
     # https://github.com/ruby/ruby/blob/256d8c9ecffbcd8f4fe7562b866fcd55f1d445e7/signal.c#L1128-L1129
     ignore_handlers = ['IGNORE', 'SIG_IGN', '']

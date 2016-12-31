@@ -510,10 +510,7 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
-  # https://github.com/JoshCheek/seeing_is_believing/issues/53
-  # Turned off on Windows b/c I don't have a Windows machine, my computer isn't good enough to run the VM,
-  # so the only way to debug is to push to CI and wait...
-  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them', unless: RSpec::Support::OS.windows? do
+  it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
     pre    = Time.now
     result = invoke <<-CHILD, timeout_seconds: 0.5
       read, _ = IO.pipe

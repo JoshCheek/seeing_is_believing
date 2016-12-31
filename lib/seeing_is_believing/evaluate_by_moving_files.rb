@@ -19,7 +19,6 @@ require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
 require 'seeing_is_believing/event_stream/consumer'
-require 'rubygems'
 require "childprocess"
 
 class SeeingIsBelieving
@@ -89,16 +88,13 @@ class SeeingIsBelieving
       File.open(filename, 'w', external_encoding: "utf-8") { |f| f.write program.to_s }
     end
 
-    # have to basically copy a bunch of Open3 code into here b/c keywords don't work right when the keys are not symbols
-    # https://github.com/ruby/ruby/pull/808    my PR
-    # https://bugs.ruby-lang.org/issues/10699  they opened an issue
-    # https://bugs.ruby-lang.org/issues/10118  weird feature vs bug conversation
+
     def evaluate_file
       event_server = TCPServer.new(0) # dynamically allocates an available port
 
       # setup streams
-      stdout,      child_stdout      = IO.pipe("utf-8")
-      stderr,      child_stderr      = IO.pipe("utf-8")
+      stdout, child_stdout = IO.pipe("utf-8")
+      stderr, child_stderr = IO.pipe("utf-8")
 
       # setup environment variables
       env = ENV.to_hash.merge 'SIB_VARIABLES.MARSHAL.B64' =>
@@ -118,12 +114,10 @@ class SeeingIsBelieving
 
       child.start
 
-      # close child streams b/c they won't emit EOF
-      # until both child and parent references are closed
+      # close child streams b/c they won't emit EOF if parent still has an open reference
       close_streams(child_stdout, child_stderr)
       child.io.stdin.binmode
       child.io.stdin.sync = true
-
 
       # Start receiving events from the child
       eventstream = event_server.accept
@@ -151,6 +145,15 @@ class SeeingIsBelieving
       child.stop
       consumer_thread.join
     ensure
+      # On Windows, we need to call stop if there is an error since it interrupted
+      # the previos waiting/polling. If we don't call stop, in that situation, it will
+      # leave orphan processes. On Unix, we need to always call stop or it may leave orphans
+      if ChildProcess.unix?
+        child.stop
+      elsif $!
+        child.stop
+        consumer.process_exitstatus(child.exit_code)
+      end
       cleanup_run(child)
       close_streams(stdout, stderr, eventstream, event_server)
     end
