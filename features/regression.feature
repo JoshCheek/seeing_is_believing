@@ -684,3 +684,28 @@ Feature:
     """
     [$stdin, $stdout, $stderr].each &:close#
     """
+
+  Scenario: Overriding Symbol#inspect
+    Given the file "overriding_symbol_inspect.rb":
+    """
+    :abc # =>
+    class Symbol
+      def inspect
+        "overridden"
+      end
+    end
+    :abc # =>
+    """
+    When I run "seeing_is_believing overriding_symbol_inspect.rb -x"
+    Then stderr is empty
+    And the exit status is 0
+    Then stdout is:
+    """
+    :abc # => :abc
+    class Symbol
+      def inspect
+        "overridden"
+      end
+    end
+    :abc # => overridden
+    """

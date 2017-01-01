@@ -21,7 +21,6 @@ class SeeingIsBelieving
     refine Symbol do
       alias ==      ==
       alias to_s    to_s
-      alias inspect inspect
     end
 
     refine Symbol.singleton_class do
