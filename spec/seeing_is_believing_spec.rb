@@ -30,12 +30,10 @@ RSpec.describe SeeingIsBelieving do
     invoke(input, options).to_a
   end
 
-  root_path       = File.expand_path("../..", __FILE__)
-  proving_grounds = File.expand_path('proving_grounds', root_path)
-  before(:all) { Dir.mkdir proving_grounds unless Dir.exist? proving_grounds }
-  around { |spec| Dir.chdir proving_grounds, &spec }
-
-  let(:proving_grounds_dir) { File.expand_path '../../proving_grounds', __FILE__ }
+  root_path            = File.realpath("../..", __FILE__)
+  proving_grounds_path = File.realdirpath('proving_grounds', root_path)
+  before(:all) { Dir.mkdir proving_grounds_path unless Dir.exist? proving_grounds_path }
+  around { |spec| Dir.chdir proving_grounds_path, &spec }
 
   it 'takes a string and returns a result of the line numbers (counting from 1) and each inspected result from that line' do
     input  = "10+10\n'2'+'2'"
@@ -301,21 +299,21 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'defaults the filename to temp_dir/program.rb' do
-    result = invoke('print File.expand_path __FILE__')
+    result = invoke('print File.realpath __FILE__')
     expect(File.basename(result.stdout)).to eq 'program.rb'
   end
 
   it 'can be told to run as a given file (in a given dir/with a given filename)' do
-    filename = File.join proving_grounds_dir, 'mah_file.rb'
+    filename = File.join proving_grounds_path, 'mah_file.rb'
     FileUtils.rm_f filename
-    result   = invoke 'print File.expand_path __FILE__', filename: filename
+    result   = invoke 'print File.realpath __FILE__', filename: filename
     expect(result.stdout).to eq filename
   end
 
   specify 'cwd of the file is the cwd of the evaluating program' do
-    filename = File.join proving_grounds_dir, 'mah_file.rb'
+    filename = File.join proving_grounds_path, 'mah_file.rb'
     FileUtils.rm_f filename
-    expect(invoke('print File.expand_path(Dir.pwd)', filename: filename).stdout).to eq Dir.pwd
+    expect(invoke('print File.realdirpath(Dir.pwd)', filename: filename).stdout).to eq Dir.pwd
   end
 
   it 'does not capture output from __END__ onward' do
