@@ -422,7 +422,7 @@ Feature:
     And stdout includes "zomg"
 
 
-  Scenario: Comments with makers elsewhere in them
+  Scenario: Comments with markers elsewhere in them
     Given the file "comments_with_markers_elsewhere.rb":
     """
     # a # => a

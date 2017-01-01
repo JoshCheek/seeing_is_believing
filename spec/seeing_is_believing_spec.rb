@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-
 require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
 require 'childprocess'
+require 'json'
 
 RSpec.describe SeeingIsBelieving do
   def method_result(name)
