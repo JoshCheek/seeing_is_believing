@@ -75,9 +75,8 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     ruby program do |ps, psout|
       expect(psout.gets.chomp).to eq "CODE"
       # is_alive = ChildProcess::Windows::Lib.alive?(ps.pid)
-      ps.stop
+      Process.kill 'INT', ps.pid
 
-      expect(ps.exit_code).to eq 0
       expect(psout.gets.chomp).to eq "ENSURE"
       expect(psout.gets.chomp).to eq "CUSTOM-HANDLER"
     end

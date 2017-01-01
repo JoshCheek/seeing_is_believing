@@ -550,10 +550,11 @@ RSpec.describe SeeingIsBelieving do
     bin_path = File.realpath '../bin/seeing_is_believing', __dir__
     sib = ChildProcess.build bin_path, '--stream', '-e', <<-RUBY
       # the child makes a grandchild that ignores interrupts and sleeps
-      spawn %[ruby], %[-e], %[trap %(INT), %(IGNORE); sleep]
+      spawn %(ruby), %(-e), %(trap %(INT), %(IGNORE); sleep)
 
       # the child ignores interrupts and sleeps
-      trap %[INT], %[IGNORE]
+      trap %(INT), %(IGNORE)
+      Process.pid
       sleep
     RUBY
 
