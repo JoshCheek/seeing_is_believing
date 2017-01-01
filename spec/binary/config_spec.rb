@@ -287,7 +287,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe'lib_options.load_path_dirs' do
-      let(:lib_path) { File.realpath '../../../lib', __FILE__ }
+      let(:lib_path) { File.realpath '../../lib', __dir__ }
 
       it 'defaults to sib\'s lib path' do
         expect(parse([]).lib_options.load_path_dirs).to eq [lib_path]
@@ -715,7 +715,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       context 'when debug? is a string' do
-        let(:proving_grounds_dir) { File.realpath '../../../proving_grounds', __FILE__  }
+        let(:proving_grounds_dir) { File.realpath '../../proving_grounds', __dir__  }
         let(:path)                { File.join proving_grounds_dir, 'test.log' }
         before                    { Dir.mkdir proving_grounds_dir unless Dir.exist? proving_grounds_dir }
 

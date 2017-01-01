@@ -18,8 +18,8 @@ end
 World SiBHelpers
 
 Haiti.configure do |config|
-  config.proving_grounds_dir = File.realdirpath  '../../../proving_grounds', __FILE__
-  config.bin_dir             = File.realpath     '../../../bin',             __FILE__
+  config.proving_grounds_dir = File.realdirpath  '../../proving_grounds', __dir__
+  config.bin_dir             = File.realpath     '../../bin',             __dir__
 end
 
 

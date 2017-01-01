@@ -30,7 +30,7 @@ RSpec.describe SeeingIsBelieving do
     invoke(input, options).to_a
   end
 
-  root_path            = File.realpath("../..", __FILE__)
+  root_path            = File.realpath("..", __dir__)
   proving_grounds_path = File.realdirpath('proving_grounds', root_path)
   before(:all) { Dir.mkdir proving_grounds_path unless Dir.exist? proving_grounds_path }
   around { |spec| Dir.chdir proving_grounds_path, &spec }

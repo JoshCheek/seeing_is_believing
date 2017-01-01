@@ -6,7 +6,7 @@ require 'seeing_is_believing/event_stream/handlers/update_result'
 require 'fileutils'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
-  let(:filedir)  { File.realdirpath '../../proving_grounds', __FILE__ }
+  let(:filedir)  { File.realdirpath '../proving_grounds', __dir__ }
   let(:filename) { File.join filedir, 'some_filename' }
 
   before { FileUtils.mkdir_p filedir }

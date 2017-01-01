@@ -151,7 +151,7 @@ class SeeingIsBelieving
       [RbConfig.ruby,
          '-W0',                                     # no warnings (b/c I hijack STDOUT/STDERR)
          *(encoding ? ["-K#{encoding}"] : []),      # allow the encoding to be set
-         '-I', File.realpath('../..', __FILE__),    # add lib to the load path
+         '-I', File.realpath('..', __dir__),        # add lib to the load path
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
          filename]

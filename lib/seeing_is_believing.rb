@@ -16,7 +16,7 @@ class SeeingIsBelieving
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
     attribute(:require_files)     { ['seeing_is_believing/the_matrix'] }
-    attribute(:load_path_dirs)    { [File.realpath('..', __FILE__)] }
+    attribute(:load_path_dirs)    { [File.realpath(__dir__)] }
     attribute(:timeout_seconds)   { 0 }
     attribute(:debugger)          { Debugger::Null }
     attribute(:max_line_captures) { Float::INFINITY }
