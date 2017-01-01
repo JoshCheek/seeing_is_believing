@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
+$:.push File.realpath("lib", __dir__)
 require "seeing_is_believing/version"
 
 Gem::Specification.new do |s|

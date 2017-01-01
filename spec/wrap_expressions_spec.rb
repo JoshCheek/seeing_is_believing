@@ -205,6 +205,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
 
     it 'wraps macros' do
+      expect(wrap("__dir__")).to eq "<__dir__>"
       expect(wrap("__FILE__")).to eq "<__FILE__>"
       expect(wrap("__LINE__")).to eq "<__LINE__>"
       expect(wrap("__ENCODING__")).to eq "<__ENCODING__>"

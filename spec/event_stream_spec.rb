@@ -591,6 +591,15 @@ module SeeingIsBelieving::EventStream
         expect(consumer.call).to eq Events::Exitstatus.new(value: 92)
       end
 
+      it 'translates missing statusses to 1 (eg this happens on my machine when the program segfaults, see #100)' do
+        # I'm not totally sure this is the right thing for it to do, but a segfault is the only way
+        # I know of to invoke this situation, and a segfault is printable, so until I get some info
+        # that proves this is the wrong thing to do, we're just going to give it a normal exit status
+        # since that's the easiest thing to do, and it's more correct in this one case.
+        consumer.process_exitstatus nil
+        expect(consumer.call).to eq Events::Exitstatus.new(value: 1)
+      end
+
       it 'emits a Finished event when all streams are closed and it has an exit status' do
         consumer.process_exitstatus 1
         close_streams eventstream_producer, stdout_producer, stderr_producer

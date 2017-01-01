@@ -61,7 +61,7 @@ end
 World SiBHelpers
 
 Haiti.configure do |config|
-  lib_root                   = File.join __FILE__, '..', '..', '..'
+  lib_root                   = File.join __dir__, '..', '..'
   config.proving_grounds_dir = File.expand_path 'proving_grounds', lib_root
   config.bin_dir             = File.expand_path 'bin',             lib_root
 end
