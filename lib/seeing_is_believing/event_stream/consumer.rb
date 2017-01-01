@@ -128,6 +128,7 @@ class SeeingIsBelieving
       # from within the same thread as the consumer, because if it
       # blocks, who will remove items from the queue?
       def process_exitstatus(status)
+        status ||= 1 # see #100
         queue << lambda {
           queue << Events::Exitstatus.new(value: status)
           finish_criteria.received_exitstatus!
