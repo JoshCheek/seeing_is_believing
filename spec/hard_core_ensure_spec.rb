@@ -56,50 +56,49 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
     yield child, outread
   ensure
     errread && !errread.closed? && expect(errread.read).to(be_empty)
-    begin
-      child && child.stop
-    rescue ChildProcess::Error
-      # noop
-    end
+    outread.close unless outread.closed?
   end
 
-  it 'invokes the code even if an interrupt is sent and there is a default handler' do
+
+  # for fuck sake, I can't get Windows to let me trap the interrupt
+  it 'invokes the code even if an interrupt is sent and there is a default handler', windows: false do
     program = <<-RUBY
       trap("INT") do
-        puts "CUSTOM-HANDLER"
+        puts %(CUSTOM-HANDLER)
         exit
       end
       SeeingIsBelieving::HardCoreEnsure.new(
-        code:   -> { puts "CODE"; $stdout.flush; sleep },
-        ensure: -> { puts "ENSURE" },
+        code:   -> { puts %(CODE); $stdout.flush; sleep },
+        ensure: -> { puts %(ENSURE) },
       ).call
     RUBY
     ruby program do |ps, psout|
-      expect(psout.gets).to eq "CODE\n"
-      Process.kill 'INT', ps.pid
-      ps.wait
+      expect(psout.gets.chomp).to eq "CODE"
+      # is_alive = ChildProcess::Windows::Lib.alive?(ps.pid)
+      ps.stop
+
       expect(ps.exit_code).to eq 0
-      expect(psout.gets).to eq "ENSURE\n"
-      expect(psout.gets).to eq "CUSTOM-HANDLER\n"
+      expect(psout.gets.chomp).to eq "ENSURE"
+      expect(psout.gets.chomp).to eq "CUSTOM-HANDLER"
     end
   end
 
-  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore' do
+  it 'invokes the code even if an interrupt is sent and interrupts are set to ignore', windows: false do
     # empty string isn't documented, but it causes ignore too
     # https://github.com/ruby/ruby/blob/256d8c9ecffbcd8f4fe7562b866fcd55f1d445e7/signal.c#L1128-L1129
     ignore_handlers = ['IGNORE', 'SIG_IGN', '']
 
     ignore_handlers.each do |handler|
       program = <<-RUBY
-        trap "INT", #{handler.inspect}
+        trap %(INT), #{handler.inspect}
         SeeingIsBelieving::HardCoreEnsure.new(
           code:   -> {
-            puts "CODE1"
+            puts %(CODE1)
             $stdout.flush
             gets
-            puts "CODE2"
+            puts %(CODE2)
           },
-          ensure: -> { puts "ENSURE" },
+          ensure: -> { puts %(ENSURE) },
         ).call
       RUBY
       ruby program do |ps, psout|

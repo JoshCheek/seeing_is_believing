@@ -35,4 +35,8 @@ RSpec.configure do |c|
   if RSpec::Support::OS.windows? || RSpec::Support::Ruby.jruby?
     c.before(needs_fork: true) { skip 'Fork is not available on this system' }
   end
+
+  if RSpec::Support::OS.windows?
+    c.before(windows: false) { skip "This either doesn't work or I can't figure out how to test it on Windows" }
+  end
 end

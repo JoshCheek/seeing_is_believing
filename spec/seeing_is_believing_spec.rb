@@ -515,12 +515,11 @@ RSpec.describe SeeingIsBelieving do
     result = invoke <<-CHILD, timeout_seconds: 0.5
       read, _ = IO.pipe
 
-      spawn 'ruby', '-e', <<-GRANDCHILD, in: read
-        puts Process.pid  # print grandchild id
-        $stdin.read       # block grandchild
-      GRANDCHILD
+      # bock grandchild
+      pid = spawn 'ruby', '-e', '$stdin.read', in: read
 
       puts Process.pid    # print child pid
+      puts pid            # print grandchild id
       read.read           # block child
     CHILD
     post   = Time.now
@@ -538,20 +537,23 @@ RSpec.describe SeeingIsBelieving do
 
   # see https://github.com/JoshCheek/seeing_is_believing/pull/92
   # and https://github.com/JoshCheek/seeing_is_believing/pull/94
-  it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up' do
+  # I can't figure out how to get it working on Windows. Not sure if
+  # this is because there's a problem with it, or because Windows
+  # handles traps differently, or because the feedback cycle is too painful.
+  # (I have to start a VM, clone the shit, setup a mediocre vim,
+  # use powershell which I don't know, just all the little things
+  # are off so someting as simple as dropping a pry into the test
+  # to figure out WTF is going on, it becomes prohibitively difficult)
+  it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up', windows: false do
     # start SiB, it will make a child, use --stream so we can
     # access individual events as they are emitted (to get the pids)
     bin_path = File.realpath '../bin/seeing_is_believing', __dir__
     sib = ChildProcess.build bin_path, '--stream', '-e', <<-RUBY
       # the child makes a grandchild that ignores interrupts and sleeps
-      spawn 'ruby', '-e', <<-GRANDCHILD
-        trap 'INT', 'IGNORE'
-        sleep
-      GRANDCHILD
+      spawn %[ruby], %[-e], %[trap %(INT), %(IGNORE); sleep]
 
       # the child ignores interrupts and sleeps
-      trap 'INT', 'IGNORE'
-      Process.pid
+      trap %[INT], %[IGNORE]
       sleep
     RUBY
 
