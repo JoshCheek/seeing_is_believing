@@ -69,6 +69,21 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
   end
 
+  shared_examples 'it can extract its argument from conjoined shortflags' do |flag, arg, verify|
+    it 'can be the only item (the argument has no space)' do
+      instance_exec parse(%W[-#{flag}#{arg}]), &verify
+
+      # sanity check the verifier by giving it someting it should fail on
+      expect { instance_exec parse(%W[-#{flag}#{arg}X]), &verify }.to raise_error RSpec::Expectations::ExpectationNotMetError
+    end
+
+    it 'can appear after another flag' do
+      expect(       parse(%W[-#{flag}#{arg}]  )[:debug]).to eq false
+      expect(       parse(%W[-g#{flag}#{arg}] )[:debug]).to eq true
+      instance_exec parse(%W[-g#{flag}#{arg}] ), &verify
+    end
+  end
+
   describe 'parsing from args' do
     it 'does not mutate the input array' do
       ary = ['a']
@@ -186,6 +201,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(%w[-a   ])).to have_error /-a/
         expect(parse(%w[--as ])).to have_error /--as/
       end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'a', 'some-filename.whatever', -> parsed do
+        expect(parsed.lib_options.filename).to eq 'some-filename.whatever'
+      end
     end
 
 
@@ -200,6 +219,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       it_behaves_like 'it requires a positive int argument', ['-D', '--result-length']
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'D', '12', -> parsed do
+        expect(parsed.annotator_options.max_result_length).to eq 12
+      end
     end
 
     describe 'annotator_options.max_line_length' do
@@ -213,6 +236,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       it_behaves_like 'it requires a positive int argument', ['-d', '--line-length']
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'd', '12', -> parsed do
+        expect(parsed.annotator_options.max_line_length).to eq 12
+      end
     end
 
     describe 'lib_options.require_files' do
@@ -232,6 +259,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
 
       specify '-r and --require add the filename into the result array' do
         expect(parse(%w[-r f1 --require f2]).lib_options.require_files).to eq [matrix_file, 'f1', 'f2']
+      end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'r', 'filename', -> parsed do
+        expect(parsed.lib_options.require_files).to include 'filename'
       end
     end
 
@@ -284,6 +315,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['--program', 'body'])).to_not have_error /--program/
         expect(parse(['--program'        ])).to     have_error /--program/
       end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'e', 'some program', -> parsed do
+        expect(parsed.body).to eq 'some program'
+      end
     end
 
     describe'lib_options.load_path_dirs' do
@@ -301,6 +336,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['--load-path', 'f'])).to_not have_error /--load-path/
         expect(parse(['-I'])).to have_error /-I\b/
         expect(parse(['--load-path'])).to have_error /--load-path\b/
+      end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'I', 'added-path', -> parsed do
+        expect(parsed.lib_options.load_path_dirs).to include 'added-path'
       end
     end
 
@@ -325,6 +364,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['--encoding', 'u'])).to_not have_error /--encoding/
         expect(parse(['-K'])).to have_error /-K/
         expect(parse(['--encoding'])).to have_error /--encoding/
+      end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'K', 'u', -> parsed do
+        expect(parsed.lib_options.encoding).to eq 'u'
       end
     end
 
@@ -368,6 +411,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       it_behaves_like 'it requires a non-negative float or int', ['-t', '--timeout-seconds', '--timeout']
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 't', '123', -> parsed do
+        expect(parsed.lib_options.timeout_seconds).to eq 123
+      end
     end
 
     describe 'annotator_options.alignment_strategy' do
@@ -402,6 +449,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it 'sets an error if provided with an unknown alignment strategy' do
         expect(parse(['-s', 'file'])).to_not have_error '-s'
         expect(parse(['-s', 'unknown'])).to have_error '-s', 'expected one of'
+      end
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 's', 'file', -> parsed do
+        expect(parsed.annotator_options.alignment_strategy).to eq align_file
       end
     end
 
@@ -499,6 +550,10 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       it_behaves_like 'it requires a positive int argument', ['-n', '--max-line-captures', '--number-of-captures']
+
+      it_behaves_like 'it can extract its argument from conjoined shortflags', 'n', '12', -> parsed do
+        expect(parsed.lib_options.max_line_captures).to eq 12
+      end
     end
 
     describe 'result_as_json?' do

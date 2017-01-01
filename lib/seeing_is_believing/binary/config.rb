@@ -214,7 +214,14 @@ class SeeingIsBelieving
             unknown_flags << arg
 
           when /^-[^-]/
-            args.unshift *arg.scan(/[^-]\+?/).map { |flag| "-#{flag}" }
+            needs_arg = 'adDeIKnrst'
+            arg.scan(/[#{needs_arg}].*|h\+|[^-]\+?/).reverse.each do |flag|
+              if flag =~ /([#{needs_arg}])(.+)/
+                args.unshift "-#{$1}", $2
+              else
+                args.unshift "-#{flag}"
+              end
+            end
 
           else
             filenames << arg
