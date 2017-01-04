@@ -10,7 +10,7 @@ version: "{build}"
 branches:
   only:
     - windows # until https://github.com/JoshCheek/seeing_is_believing/pull/92 is merged
-    - master  # to see what fails on Windows
+    # - master  # to see what fails on Windows
     # - /.*-maintenance$/
 
 # Disable normal Windows builds in favor of our test script.
