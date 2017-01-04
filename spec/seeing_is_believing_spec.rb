@@ -165,6 +165,29 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
+   # TODO: Dont' run on Windows
+  it 'allows multiple exceptions (eg because of a fork)' do
+    errors = [
+      { class_name: 'TypeError',     message: 'a', line_number: 2},
+      { class_name: 'ArgumentError', message: 'b', line_number: 4},
+    ]
+
+    result = invoke(<<-RUBY)
+      if fork
+        raise #{errors[0].fetch(:class_name)}, #{errors[0].fetch(:message).inspect}
+      else
+        raise #{errors[1].fetch(:class_name)}, #{errors[1].fetch(:message).inspect}
+      end
+    RUBY
+
+    expect(result.exceptions.length).to eq errors.length
+    result.exceptions.zip(errors).each do |actual, expected|
+      expected.each do |key, value|
+        expect(actual[key]).to eq value
+      end
+    end
+  end
+
   context 'exceptions in exit blocks' do
     # I'm punting on this because there is just no good way to stop that from happening without changing actual behaviour
     # see https://github.com/JoshCheek/seeing_is_believing/issues/24

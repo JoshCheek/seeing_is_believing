@@ -770,7 +770,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       end
 
       context 'when debug? is a string' do
-        let(:proving_grounds_dir) { File.realpath '../../proving_grounds', __dir__  }
+        let(:proving_grounds_dir) { File.realdirpath '../../proving_grounds', __dir__  }
         let(:path)                { File.join proving_grounds_dir, 'test.log' }
         before                    { Dir.mkdir proving_grounds_dir unless Dir.exist? proving_grounds_dir }
 

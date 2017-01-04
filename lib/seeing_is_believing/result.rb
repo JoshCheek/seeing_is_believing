@@ -3,14 +3,17 @@ class SeeingIsBelieving
     include Enumerable
     RecordedException = Struct.new :line_number, :class_name, :message, :backtrace
 
-    attr_accessor :stdout, :stderr, :exitstatus, :max_line_captures, :exception, :num_lines, :sib_version, :ruby_version, :filename, :timeout_seconds
+    attr_accessor :stdout, :stderr, :exitstatus, :max_line_captures, :exceptions, :num_lines, :sib_version, :ruby_version, :filename, :timeout_seconds
 
-    def initialize
-      self.stdout = ''
-      self.stderr = ''
+    def has_exception?
+      exceptions.any?
     end
 
-    alias has_exception? exception
+    def initialize
+      self.stdout     = ''
+      self.stderr     = ''
+      self.exceptions = []
+    end
 
     def has_stdout?
       stdout && !stdout.empty?
@@ -30,7 +33,11 @@ class SeeingIsBelieving
     end
 
     def record_exception(line_number, exception_class, exception_message, exception_backtrace)
-      self.exception = RecordedException.new line_number, exception_class, exception_message, exception_backtrace
+      self.exceptions << RecordedException.new(line_number, exception_class, exception_message, exception_backtrace)
+    end
+
+    def exception
+      exceptions.first
     end
 
     def [](line_number, type=:inspect)
