@@ -165,8 +165,7 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.backtrace).to be_a_kind_of Array
   end
 
-   # TODO: Dont' run on Windows
-  it 'allows multiple exceptions (eg because of a fork)' do
+  it 'allows multiple exceptions (eg because of a fork)', needs_fork: true do
     errors = [
       { class_name: 'TypeError',     message: 'a', line_number: 2},
       { class_name: 'ArgumentError', message: 'b', line_number: 4},
