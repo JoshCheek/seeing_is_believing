@@ -181,7 +181,7 @@ RSpec.describe SeeingIsBelieving do
     RUBY
 
     expect(result.exceptions.length).to eq errors.length
-    result.exceptions.zip(errors).each do |actual, expected|
+    result.exceptions.sort_by(&:line_number).zip(errors).each do |actual, expected|
       expected.each do |key, value|
         expect(actual[key]).to eq value
       end
