@@ -18,23 +18,24 @@ class SeeingIsBelieving
         @new_body ||= begin
           require 'seeing_is_believing/binary/comment_lines'
           require 'seeing_is_believing/binary/format_comment'
-          exception_text = @options[:markers][:exception][:prefix]
-          value_text     = @options[:markers][:value][:prefix]
+          exception_prefix = @options[:markers][:exception][:prefix]
+          value_prefix     = @options[:markers][:value][:prefix]
+          exceptions       = Hash.[] @results.exceptions.map { |e| [e.line_number, e] }
 
           alignment_strategy = @options[:alignment_strategy].new(@body)
-          exception_lineno   = @results.has_exception? ? @results.exception.line_number : -1
           new_body = CommentLines.call @body do |line, line_number|
-            options = @options.merge pad_to: alignment_strategy.line_length_for(line_number)
-            if exception_lineno == line_number
-              result = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-              FormatComment.call(line.size, exception_text, result, options)
+            exception = exceptions[line_number]
+            options   = @options.merge pad_to: alignment_strategy.line_length_for(line_number)
+            if exception
+              result = sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
+              FormatComment.call(line.size, exception_prefix, result, options)
             elsif @results[line_number].any?
               if @options[:interline_align]
                 result = @interline_align.call line_number, @results[line_number].map { |result| result.gsub "\n", '\n' }
               else
                 result = @results[line_number].map { |result| result.gsub "\n", '\n' }.join(', ')
               end
-              FormatComment.call(line.size, value_text, result, options)
+              FormatComment.call(line.size, value_prefix, result, options)
             else
               ''
             end

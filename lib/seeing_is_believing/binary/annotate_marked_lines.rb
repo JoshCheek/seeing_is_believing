@@ -94,23 +94,24 @@ class SeeingIsBelieving
         @new_body ||= begin
           require 'seeing_is_believing/binary/rewrite_comments'
           require 'seeing_is_believing/binary/format_comment'
-          include_lines = []
+          include_lines     = []
+          exception_results = {}
 
-          if @results.has_exception?
-            exception_result  = sprintf "%s: %s", @results.exception.class_name, @results.exception.message.gsub("\n", '\n')
-            exception_lineno  = @results.exception.line_number
-            include_lines << exception_lineno
+          @results.exceptions.each do |exception|
+            exception_results[exception.line_number] =
+              sprintf "%s: %s", exception.class_name, exception.message.gsub("\n", '\n')
+            include_lines << exception.line_number
           end
 
           _, pp_map = self.class.map_markers_to_linenos(@body, @options[:markers])
           new_body = RewriteComments.call @body, include_lines: include_lines do |comment|
-            exception_on_line  = exception_lineno == comment.line_number
+            exception_result   = exception_results[comment.line_number]
             annotate_this_line = comment.text[value_regex]
             pp_annotation      = annotate_this_line && comment.whitespace_col.zero?
             normal_annotation  = annotate_this_line && !pp_annotation
-            if exception_on_line && annotate_this_line
+            if exception_result && annotate_this_line
               [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, exception_result, @options)]
-            elsif exception_on_line
+            elsif exception_result
               whitespace = comment.whitespace
               whitespace = " " if whitespace.empty?
               [whitespace, FormatComment.call(0, exception_prefix, exception_result, @options)]
