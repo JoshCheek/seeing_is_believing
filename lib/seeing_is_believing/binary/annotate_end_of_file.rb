@@ -37,15 +37,17 @@ class SeeingIsBelieving
       def exception_output_for(results, options)
         return '' unless results.has_exception?
         exception_marker = options[:markers][:exception][:prefix]
-        exception = results.exception
-        output = "\n"
-        output << FormatComment.new(0, exception_marker, exception.class_name, options).call << "\n"
-        exception.message.each_line do |line|
-          output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
-        end
-        output << exception_marker.sub(/\s+$/, '') << "\n"
-        exception.backtrace.each do |line|
-          output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
+        output = ""
+        results.exceptions.each do |exception|
+          output << "\n"
+          output << FormatComment.new(0, exception_marker, exception.class_name, options).call << "\n"
+          exception.message.each_line do |line|
+            output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
+          end
+          output << exception_marker.sub(/\s+$/, '') << "\n"
+          exception.backtrace.each do |line|
+            output << FormatComment.new(0, exception_marker, line.chomp, options).call << "\n"
+          end
         end
         output
       end

@@ -54,17 +54,13 @@ class SeeingIsBelieving
     end
 
     def as_json
-      ex = has_exception? && {
-        line_number_in_this_file: exception.line_number,
-        class_name:               exception.class_name,
-        message:                  exception.message,
-        backtrace:                exception.backtrace,
-      }
-
+      # We have both an exception and a list of exceptions because multiple exceptions
+      # weren't added until #85, and I don't want to break backwards compatibility right now.
       { stdout:     stdout,
         stderr:     stderr,
         exitstatus: exitstatus,
-        exception:  ex,
+        exception:  exception_json(exception),
+        exceptions: exceptions.map { |e| exception_json e },
         lines:      each.with_object(Hash.new)
                         .with_index(1) { |(result, hash), line_number| hash[line_number] = result },
       }
@@ -79,6 +75,15 @@ class SeeingIsBelieving
 
     def results
       @results ||= Hash.new
+    end
+
+    def exception_json(exception)
+      return nil unless exception
+      { line_number_in_this_file: exception.line_number,
+        class_name:               exception.class_name,
+        message:                  exception.message,
+        backtrace:                exception.backtrace,
+      }
     end
   end
 end

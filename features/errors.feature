@@ -48,6 +48,63 @@ Feature: Running the binary unsuccessfully
     # ~> requires_exception_raising_code.rb:9:in `<main>'
     """
 
+  @not-windows
+  Scenario: Raising multiple exceptions
+    Given the file "multiple_exceptions.rb":
+    """
+    if pid = fork #
+      Process.wait pid #
+      raise "parent"
+    else
+      raise "child"
+    end
+
+    """
+    When I run "seeing_is_believing multiple_exceptions.rb"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    if pid = fork #
+      Process.wait pid #
+      raise "parent"  # ~> RuntimeError: parent
+    else
+      raise "child"   # ~> RuntimeError: child
+    end
+
+    # ~> RuntimeError
+    # ~> child
+    # ~>
+    # ~> multiple_exceptions.rb:5:in `<main>'
+
+    # ~> RuntimeError
+    # ~> parent
+    # ~>
+    # ~> multiple_exceptions.rb:3:in `<main>'
+    """
+    When I run "seeing_is_believing multiple_exceptions.rb -x"
+    Then stderr is empty
+    And the exit status is 1
+    And stdout is:
+    """
+    if pid = fork #
+      Process.wait pid #
+      raise "parent" # ~> RuntimeError: parent
+    else
+      raise "child" # ~> RuntimeError: child
+    end
+
+    # ~> RuntimeError
+    # ~> child
+    # ~>
+    # ~> multiple_exceptions.rb:5:in `<main>'
+
+    # ~> RuntimeError
+    # ~> parent
+    # ~>
+    # ~> multiple_exceptions.rb:3:in `<main>'
+    """
+
   Scenario: Syntactically invalid file
     Given the file "invalid_syntax.rb":
     """

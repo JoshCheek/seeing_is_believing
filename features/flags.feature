@@ -445,7 +445,32 @@ Feature: Using flags
     2  # => 2
     """
 
-  Scenario: --json
+  Scenario: --json without exceptions
+    Given the file "simple_json.rb":
+    """
+    3.times do |i|
+      i.to_s
+    end
+    """
+    When I run "seeing_is_believing --json simple_json.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is the JSON:
+    """
+      { "lines": {
+          "1": ["3"],
+          "2": ["\"0\"", "\"1\"", "\"2\""],
+          "3": ["3"]
+        },
+        "exception":  null,
+        "exceptions": [],
+        "stdout":     "",
+        "stderr":     "",
+        "exitstatus": 0
+      }
+    """
+
+  Scenario: --json with exceptions
     Given the file "all_kinds_of_output.rb":
     """
     3.times do |i|
@@ -458,6 +483,8 @@ Feature: Using flags
     When I run "seeing_is_believing --json all_kinds_of_output.rb"
     Then stderr is empty
     And  the exit status is 0
+    # Use the exceptions array rather than the singule exception, it's less correct
+    # as there can be multiple exceptions. It only exists for backwards compatibility.
     And  stdout is the JSON:
     """
       { "lines": {
@@ -474,6 +501,12 @@ Feature: Using flags
           "message":                  "omg",
           "backtrace":                ["all_kinds_of_output.rb:6:in `<main>'"]
         },
+        "exceptions": [{
+          "line_number_in_this_file": 6,
+          "class_name":               "RuntimeError",
+          "message":                  "omg",
+          "backtrace":                ["all_kinds_of_output.rb:6:in `<main>'"]
+        }],
         "stdout": "b\n",
         "stderr": "c\n",
         "exitstatus": 1
