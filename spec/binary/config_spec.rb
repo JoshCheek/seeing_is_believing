@@ -369,6 +369,12 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it_behaves_like 'it can extract its argument from conjoined shortflags', 'K', 'u', -> parsed do
         expect(parsed.lib_options.encoding).to eq 'u'
       end
+
+      it 'is deprecated' do
+        assert_deprecated '--encoding', 'u'
+        assert_deprecated '-K', 'u'
+        assert_deprecated '-Ku'
+      end
     end
 
     describe '.print_cleaned?' do

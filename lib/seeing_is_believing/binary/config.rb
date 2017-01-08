@@ -79,6 +79,11 @@ class SeeingIsBelieving
           self.deprecations << DeprecatedArgMessage.new(explanation: explanation, args: args)
         end
 
+        encodings_are_deprecated = lambda do |*args|
+          saw_deprecated.call "The ability to set encodings is deprecated. If you need this, details are at https://github.com/JoshCheek/seeing_is_believing/wiki/Encodings",
+                              *args
+        end
+
         next_arg = lambda do |flagname, argtype, &on_success|
           arg = args.shift
           arg ? on_success.call(arg) :
@@ -204,10 +209,12 @@ class SeeingIsBelieving
 
           when /\A-K(.+)/
             self.lib_options.encoding = $1
+            encodings_are_deprecated.call arg
 
           when '-K', '--encoding'
             next_arg.call arg, "an encoding" do |encoding|
               self.lib_options.encoding = encoding
+              encodings_are_deprecated.call arg, encoding
             end
 
           when /^(-.|--.*)$/
@@ -324,7 +331,6 @@ Options:
   -I,  --load-path dir           # a dir that should be added to the $LOAD_PATH
   -r,  --require file            # additional files to be required before running the program
   -e,  --program program-body    # pass the program body to execute as an argument
-  -K,  --encoding encoding       # sets file encoding, equivalent to Ruby's -Kx (see `man ruby` for valid values)
   -a,  --as filename             # run the program as if it was the specified filename
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
   -g,  --debug                   # print debugging information

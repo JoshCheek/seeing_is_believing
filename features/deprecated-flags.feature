@@ -70,3 +70,22 @@ Feature: Flags that are deprecated
     Error: not_a_file.rb does not exist!
     Deprecated: `--inherit-exit-status` Dash has been removed for consistency, use --inherit-exitstatus
     """
+
+  Scenario: -K without errors
+    Given the file "deprecated_K.rb" "__ENCODING__"
+    When I run "seeing_is_believing -Ke deprecated_K.rb"
+    Then stdout is '__ENCODING__  # => #<Encoding:EUC-JP>'
+    And stderr is empty
+    When I run "seeing_is_believing -Ku deprecated_K.rb"
+    Then stdout is '__ENCODING__  # => #<Encoding:UTF-8>'
+    And stderr is empty
+
+  Scenario: -K with errors
+    Given the file "deprecated_K.rb" "__ENCODING__"
+    When I run "seeing_is_believing -Ke not_a_file.rb"
+    Then stdout is empty
+    And stderr is:
+    """
+    Error: not_a_file.rb does not exist!
+    Deprecated: `-Ke` The ability to set encodings is deprecated. If you need this, details are at https://github.com/JoshCheek/seeing_is_believing/wiki/Encodings
+    """
