@@ -465,9 +465,13 @@ Feature:
     """
 
 
-  # not going to get too detailed on what it prints, b/c that message seems pretty fragile,
+  # See this issue for the issue we're testing for: https://github.com/JoshCheek/seeing_is_believing/issues/46
+  # See this issue for why we turn it off on 2.4: https://github.com/flori/json/issues/309
+  #
+  # Not going to get too detailed on what it prints, b/c that message seems pretty fragile,
   # but just generally that it doesn't fkn blow up
-  Scenario: https://github.com/JoshCheek/seeing_is_believing/issues/46
+  @not-2.4.0
+  Scenario: Old JSON bug
     Given the file "json_and_encodings.rb":
     """
     # encoding: utf-8

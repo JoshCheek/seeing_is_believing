@@ -74,7 +74,7 @@ desc 'Run all specs and cukes'
 task default: [:spec, :cuke]
 
 desc 'Install dependencies and run tests (mainly for Travis CI)'
-task ci: [:install, :spec, :cuke]
+task ci: [:spec, :cuke]
 
 def which(exe)
   dirs = ENV["PATH"].split(File::PATH_SEPARATOR)

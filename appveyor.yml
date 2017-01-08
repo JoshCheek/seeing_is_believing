@@ -9,9 +9,8 @@ version: "{build}"
 # and once for the merge commit that github creates for each mergable PR.
 branches:
   only:
-    - windows # until https://github.com/JoshCheek/seeing_is_believing/pull/92 is merged
-    # - master  # to see what fails on Windows
-    # - /.*-maintenance$/
+    - master
+    - /.*-maintenance$/
 
 # Disable normal Windows builds in favor of our test script.
 build: off
@@ -23,7 +22,7 @@ install:
   - rake install
 
 test_script:
-  - bundle exec rake ci # Uhm, again, shouldn't rake take care of the "bundle exec" bit? Can I just do `rake ci`?
+  - bundle exec rake ci
 
 environment:
   matrix:
