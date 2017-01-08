@@ -12,7 +12,6 @@
 # its body will be incorrect, anyway.
 
 require 'rbconfig'
-require 'timeout'
 require 'socket'
 require 'seeing_is_believing/error'
 require 'seeing_is_believing/result'
@@ -20,6 +19,7 @@ require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/hard_core_ensure'
 require 'seeing_is_believing/event_stream/consumer'
 require "childprocess"
+ChildProcess.posix_spawn = true # forking locks up for some reason when we run SiB inside of SiB
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles

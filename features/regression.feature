@@ -691,6 +691,7 @@ Feature:
     [$stdin, $stdout, $stderr].each &:close#
     """
 
+
   Scenario: Overriding Symbol#inspect
     Given the file "overriding_symbol_inspect.rb":
     """
@@ -714,4 +715,20 @@ Feature:
       end
     end
     :abc # => overridden
+    """
+
+
+  Scenario: SiB running SiB
+    Given the file "sib_running_sib.rb":
+    """
+    require 'seeing_is_believing'
+    SeeingIsBelieving.call("1+1").result[1][0]
+    """
+    When I run "seeing_is_believing sib_running_sib.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    require 'seeing_is_believing'               # => true
+    SeeingIsBelieving.call("1+1").result[1][0]  # => "2"
     """

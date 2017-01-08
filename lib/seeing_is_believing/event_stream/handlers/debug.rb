@@ -26,7 +26,7 @@ class SeeingIsBelieving
         attr_reader :debugger, :handler
 
         def finish
-          @debugger.context("EVENTS:") { @seen }
+          @debugger.context("EVENTS") { @seen }
         end
 
         def observe(event)
