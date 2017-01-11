@@ -641,7 +641,7 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
 
   describe '.finalize' do
     let(:stdin_data) { 'stdin data' }
-    let(:stdin)      { object_double $stdin, read: stdin_data }
+    let(:stdin)      { object_double $stdin, read: stdin_data, set_encoding: nil }
     let(:stdout)     { object_double $stdout }
     let(:stderr)     { object_double $stderr, :tty? => true }
 

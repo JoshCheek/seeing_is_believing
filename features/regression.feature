@@ -488,6 +488,27 @@ Feature:
     """
 
 
+  # https://github.com/JoshCheek/seeing_is_believing/wiki/Encodings
+  # https://github.com/JoshCheek/seeing_is_believing/issues/109
+  Scenario: Assumes utf-8 for files regardless of what Ruby thinks
+    Given the environment variable "LANG" is set to ''
+    And the file "utf8_file_without_magic_comment.rb" "縧 = 1"
+    When I run "seeing_is_believing utf8_file_without_magic_comment.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is "縧 = 1  # => 1"
+
+
+  # https://github.com/JoshCheek/seeing_is_believing/issues/109
+  Scenario: Assumes utf-8 for files regardless of what Ruby thinks
+    Given the environment variable "LANG" is set to ''
+    Given the stdin content "縧 = 1"
+    When I run "seeing_is_believing utf8_file_without_magic_comment.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is "縧 = 1  # => 1"
+
+
   Scenario: Correctly identify end of file
     Given the file "fake_data_segment.rb":
     """

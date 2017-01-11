@@ -263,6 +263,8 @@ class SeeingIsBelieving
           lib_options.event_handler = EventStream::Handlers::StreamJsonEvents.new(stdout)
         end
 
+        stdin.set_encoding 'utf-8'
+
         case debug
         when String
           debug_file    = File.open(debug, 'a').tap { |f| f.sync = true }
