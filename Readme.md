@@ -28,7 +28,7 @@ Examples
 
 * Watch a [longer video](http://vimeo.com/73866851).
 * Watch John Cinnamond use it in a [presentation](http://brightonruby.com/2016/the-point-of-objects-john-cinnamond/)
-  at the 10 minute mark.
+  at the 10:22 minute mark.
 * [Avdi](https://github.com/avdi) uses it in [Ruby Tapas](https://www.rubytapas.com/),
   an amazing resource for developers in general and Ruby Developers in particular!
 
