@@ -425,6 +425,12 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("a[1\n]=2")).to eq "<a[<1>\n]=2>"
       expect(wrap("a[1,\n2\n]=3")).to eq "<a[<1>,\n<2>\n]=3>"
     end
+
+    it 'wraps 2.4 style multiple assignment' do
+      next if ruby_version < '2.4'
+      expect(wrap("if (a,b=1,2)\nend")).to eq "<if <(a,b=1,2)>\nend>"
+      expect(wrap("if (a,b=1)\nend")).to eq "<if <(a,b=1)>\nend>"
+    end
   end
 
   describe 'conditionals' do
