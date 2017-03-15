@@ -23,6 +23,11 @@ module SeeingIsBelieving::EventStream
       consumer.join
     end
 
+    def inspected(obj)
+      Kernel.instance_method(:inspect).bind(obj).call
+    end
+
+
     before do
       self.eventstream_consumer, self.eventstream_producer = IO.pipe("utf-8")
       self.stdout_consumer,      self.stdout_producer      = IO.pipe("utf-8")
@@ -272,20 +277,23 @@ module SeeingIsBelieving::EventStream
       end
 
       context 'calls #inspect when no block is given' do
-        it "doesn't blow up when there is no #inspect available e.g. BasicObject" do
+        it 'uses Kernel\'s inspect if there is no #inspect available e.g. BasicObject' do
           obj = BasicObject.new
           producer.record_result :type, 1, obj
-          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: "#<no inspect available>")
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: inspected(obj))
         end
 
-
-        it "doesn't blow up when #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
+        it "uses Kernel's #inspect when the object\'s #inspect returns a not-String (e.g. pathalogical libraries like FactoryGirl)" do
           obj = BasicObject.new
           def obj.inspect
             nil
           end
           producer.record_result :type, 1, obj
-          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: "#<no inspect available>")
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: inspected(obj))
+        end
+
+        it "uses a null-inspect string when even Kernel's inspect doesn't work" do
+          skip 'uhm, no idea how to get it into such a state'
         end
 
         it 'only calls inspect once' do
@@ -311,13 +319,13 @@ module SeeingIsBelieving::EventStream
         it 'doesn\'t blow up if the block raises' do
           o = Object.new
           producer.record_result(:type, 1, o) { raise Exception, "zomg" }
-          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '#<no inspect available>')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: inspected(o))
         end
 
         it 'doesn\'t blow up if the block returns a non-string' do
           o = Object.new
           producer.record_result(:type, 1, o) { nil }
-          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: '#<no inspect available>')
+          expect(consumer.call).to eq Events::LineResult.new(type: :type, line_number: 1, inspected: inspected(o))
 
           stringish = Object.new
           def stringish.to_str() 'actual string' end

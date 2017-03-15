@@ -60,7 +60,11 @@ class SeeingIsBelieving
             # otherwise it looks like the bug is in SiB and not the user's program, see https://github.com/JoshCheek/seeing_is_believing/issues/37
             raise SystemStackError, "Calling inspect blew the stack (is it recursive w/o a base case?)"
           rescue Exception
-            inspected = "#<no inspect available>"
+            begin
+              inspected = Kernel.instance_method(:inspect).bind(value).call
+            rescue Exception
+              inspected = "#<no inspect available>"
+            end
           end
           queue << "result #{line_number.to_s} #{type.to_s} #{to_string_token inspected}"
         elsif count == max_line_captures

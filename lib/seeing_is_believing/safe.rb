@@ -5,6 +5,10 @@ class SeeingIsBelieving
       alias === ===
     end
 
+    refine Kernel do
+      alias inspect inspect
+    end
+
     refine Queue do
       alias <<    <<
       alias shift shift

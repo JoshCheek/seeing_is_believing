@@ -844,11 +844,12 @@ RSpec.describe SeeingIsBelieving do
     end
 
     # defined? is a macro, not a method, otherwise I'd test that here
-    specify 'when Kernel does not have kind_of?' do
+    specify 'when Kernel does not have kind_of?, inspect' do
       expect(invoke('module Kernel
                        undef kind_of?
+                       undef inspect
                      end
-                     1').to_a).to eq [[], [], ['nil'], ['1']]
+                     1').to_a).to eq [[], [], [], ['nil'], ['1']]
     end
 
     specify 'when Enumerable does not have map' do
