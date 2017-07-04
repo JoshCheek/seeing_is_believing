@@ -470,7 +470,7 @@ Feature:
   #
   # Not going to get too detailed on what it prints, b/c that message seems pretty fragile,
   # but just generally that it doesn't fkn blow up
-  @not-2.4.0
+  @not-2.4
   Scenario: Old JSON bug
     Given the file "json_and_encodings.rb":
     """

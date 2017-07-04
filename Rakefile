@@ -51,11 +51,13 @@ desc 'Run cukes'
 task cuke: :bundle do
   require 'bundler'
   platform_filter = Gem.win_platform? ? %W[--tags ~@not-windows] : []
+  ruby_version_without_patchlevel = RUBY_VERSION[/^\d+\.\d+/]
   sh 'ruby', '--disable-gem',
      *require_paths,
      '-S', 'bundle/bin/cucumber',
      '--tags', '~@not-implemented',
      '--tags', "~@not-#{RUBY_VERSION}",
+     '--tags', "~@not-#{ruby_version_without_patchlevel}",
       *platform_filter
 end
 
