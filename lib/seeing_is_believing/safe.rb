@@ -5,8 +5,13 @@ class SeeingIsBelieving
       alias === ===
     end
 
-    refine Kernel do
-      alias inspect inspect
+    begin
+      refine Kernel do
+        alias inspect inspect
+      end
+    rescue TypeError
+      # Ruby < 2.4 can't refine a module,
+      # so this optimization is only available on >= 2.4
     end
 
     refine Queue do
