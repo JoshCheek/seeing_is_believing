@@ -930,6 +930,36 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     end
   end
 
+  describe 'Perl style globals' do
+    # from English.rb
+    specify('$ERROR_INFO              $!')  { expect(wrap('$!')).to  eq '<$!>' }
+    specify('$ERROR_POSITION          $@')  { expect(wrap('$@')).to  eq '<$@>' }
+    specify('$FS                      $;')  { expect(wrap('$;')).to  eq '<$;>' }
+    specify('$FIELD_SEPARATOR         $;')  { expect(wrap('$;')).to  eq '<$;>' }
+    specify('$OFS                     $,')  { expect(wrap('$,')).to  eq '<$,>' }
+    specify('$OUTPUT_FIELD_SEPARATOR  $,')  { expect(wrap('$,')).to  eq '<$,>' }
+    specify('$RS                      $/')  { expect(wrap('$/')).to  eq '<$/>' }
+    specify('$INPUT_RECORD_SEPARATOR  $/')  { expect(wrap('$/')).to  eq '<$/>' }
+    specify('$ORS                     $\\') { expect(wrap('$\\')).to eq '<$\\>' }
+    specify('$OUTPUT_RECORD_SEPARATOR $\\') { expect(wrap('$\\')).to eq '<$\\>' }
+    specify('$INPUT_LINE_NUMBER       $.')  { expect(wrap('$.')).to  eq '<$.>' }
+    specify('$NR                      $.')  { expect(wrap('$.')).to  eq '<$.>' }
+    specify('$LAST_READ_LINE          $_')  { expect(wrap('$_')).to  eq '<$_>' }
+    specify('$DEFAULT_OUTPUT          $>')  { expect(wrap('$>')).to  eq '<$>>' }
+    specify('$DEFAULT_INPUT           $<')  { expect(wrap('$<')).to  eq '<$<>' }
+    specify('$PID                     $$')  { expect(wrap('$$')).to  eq '<$$>' }
+    specify('$PROCESS_ID              $$')  { expect(wrap('$$')).to  eq '<$$>' }
+    specify('$CHILD_STATUS            $?')  { expect(wrap('$?')).to  eq '<$?>' }
+    specify('$LAST_MATCH_INFO         $~')  { expect(wrap('$~')).to  eq '<$~>' }
+    specify('$IGNORECASE              $=')  { expect(wrap('$=')).to  eq '<$=>' }
+    specify('$ARGV                    $*')  { expect(wrap('$*')).to  eq '<$*>' }
+    specify('$MATCH                   $&')  { expect(wrap('$&')).to  eq '<$&>' }
+    specify('$PREMATCH                $`')  { expect(wrap('$`')).to  eq '<$`>' }
+    specify('$POSTMATCH               $\'') { expect(wrap("$'")).to  eq "<$'>" }
+    specify('$LAST_PAREN_MATCH        $+')  { expect(wrap('$+')).to  eq '<$+>' }
+  end
+
+
   # only checking on 2.2 b/c its hard to figure out when different pieces were introduced
   # we'll assume that if it passes on 2.2, it will pass on 2.0 or 2.1, if the feature is available on that Ruby
   major, minor, * = RUBY_VERSION.split(".").map(&:to_i)

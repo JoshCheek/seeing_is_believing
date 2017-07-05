@@ -52,8 +52,17 @@ class SeeingIsBelieving
       end
 
       def remove_lines_whose_newline_is_escaped(line_num_to_location)
-        line_num_to_location.select { |line_number, (index_of_newline, col)| code[index_of_newline-1] == '\\' }
-                            .each   { |line_number, (index_of_newline, col)| line_num_to_location.delete line_number }
+        ors_indexes = code_obj.indexes_of_ors_at_eol
+        line_num_to_location
+          .select { |line_number, (index_of_newline, col)|
+            code[index_of_newline-1] == '\\'
+          }
+          .reject { |line_number, (index_of_newline, col)|
+            ors_indexes.include? index_of_newline
+          }
+          .each { |line_number, (index_of_newline, col)|
+            line_num_to_location.delete line_number
+          }
       end
 
       def remove_lines_ending_in_comments(line_num_to_location, comments)

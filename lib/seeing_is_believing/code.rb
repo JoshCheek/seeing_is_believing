@@ -7,6 +7,7 @@ class << (Parser ||= Module.new)
   remove_method :warn
 end
 
+require 'set'
 require 'seeing_is_believing/hash_struct'
 
 class SeeingIsBelieving
@@ -85,6 +86,14 @@ class SeeingIsBelieving
                               .select { |char, index| char == "\n" }
                               .map    { |char, index| index },
                         ].freeze
+    end
+
+    def indexes_of_ors_at_eol
+      Set.new(
+        @tokens.select { |type, *| type == :tGVAR }
+               .select { |_, (var, range)| var == '$\\'.freeze }
+               .map    { |_, (var, range)| range.end_pos }
+      )
     end
 
     private

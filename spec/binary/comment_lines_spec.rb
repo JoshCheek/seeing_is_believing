@@ -17,6 +17,13 @@ RSpec.describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each comm
     expect(call("1 +\\\n2") { |_, line_number| "--#{line_number}--" }).to eq "1 +\\\n2--2--"
   end
 
+  it "doesn\'t confuse OUTPUT_RECORD_SEPARATOR with an escaped line" do
+    expect(call("$\\") { ';' }).to eq "$\\;"
+    expect(call("$\\\\\n1") { ';' }).to eq "$\\\\\n1;"
+    expect(call("1\n$\\") { ';' }).to eq "1;\n$\\;"
+    expect(call("1\n$var\\\n2") { ';' }).to eq "1;\n$var\\\n2;"
+  end
+
   it "doesn't comment lines inside of strings" do
     expect(call(<<-INPUT) { |_, line_number| "--#{line_number}--" }).to eq <<-OUTPUT
     "a\#{1+1
