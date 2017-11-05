@@ -1,5 +1,5 @@
 language: ruby
-before_install: gem install bundler
+before_install: gem install bundler rake
 install: rake install
 script: bundle exec rake ci
 rvm:
