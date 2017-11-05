@@ -326,7 +326,7 @@ Options:
                                    file            =>  the entire file is at the same alignment
                                    line            =>  each line is at its own alignment
        --[no-]-interline-align   # align results on adjacent lines when they have the same number of results
-                                   defautls to --align
+                                   defaults to --align
   -t,  --timeout-seconds s       # how long to evaluate the source file before timing out
                                    0 means it will never timeout (this is the default)
                                    accepts floating point values (e.g. 0.5 would timeout after half a second)
@@ -336,6 +336,7 @@ Options:
   -a,  --as filename             # run the program as if it was the specified filename
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
   -g,  --debug                   # print debugging information
+       --debug-to FILE           # print debugging information to FILE
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated

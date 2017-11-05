@@ -677,11 +677,11 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
     describe 'setting the body' do
-      it 'does not override the if already set e.g. with -e' do
+      it 'does not override the body if already set e.g. with -e' do
         expect(call(body: 'b', filename: nil).body).to eq 'b'
       end
 
-      it 'is the file body if the filename is provded and exists' do
+      it 'is the file body if the filename is provided and exists' do
         expect(call(body: nil, filename: existing_filename).body)
           .to eq file_body
       end
