@@ -753,3 +753,30 @@ Feature:
     require 'seeing_is_believing'               # => true
     SeeingIsBelieving.call("1+1").result[1][0]  # => "2"
     """
+
+
+  Scenario: Errors should not blow away comments
+    Given the file "sib_with_error_on_commented_line.rb":
+    """
+    dne # this doesn't exist!
+    """
+    When I run "seeing_is_believing -x sib_with_error_on_commented_line.rb"
+    And stdout is:
+    """
+    dne # this doesn't exist!
+
+    # ~> NameError
+    # ~> undefined local variable or method `dne' for main:Object
+    # ~>
+    # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
+    """
+    When I run "seeing_is_believing sib_with_error_on_commented_line.rb"
+    And stdout is:
+    """
+    dne # this doesn't exist!
+
+    # ~> NameError
+    # ~> undefined local variable or method `dne' for main:Object
+    # ~>
+    # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
+    """

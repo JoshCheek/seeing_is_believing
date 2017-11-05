@@ -111,7 +111,7 @@ class SeeingIsBelieving
             normal_annotation  = annotate_this_line && !pp_annotation
             if exception_result && annotate_this_line
               [comment.whitespace, FormatComment.call(comment.text_col, value_prefix, exception_result, @options)]
-            elsif exception_result
+            elsif exception_result && comment.text.empty?
               whitespace = comment.whitespace
               whitespace = " " if whitespace.empty?
               [whitespace, FormatComment.call(0, exception_prefix, exception_result, @options)]
