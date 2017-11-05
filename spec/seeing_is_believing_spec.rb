@@ -332,10 +332,23 @@ RSpec.describe SeeingIsBelieving do
     expect(result.stdout).to eq filename
   end
 
-  specify 'cwd of the file is the cwd of the evaluating program' do
-    filename = File.join proving_grounds_path, 'mah_file.rb'
-    FileUtils.rm_f filename
-    expect(invoke('print File.realdirpath(Dir.pwd)', filename: filename).stdout).to eq Dir.pwd
+  describe 'cwd' do
+    let(:filename) { File.join proving_grounds_path, 'mah_file.rb' }
+    before { FileUtils.rm_f filename }
+
+    it 'defaults to the cwd of the the evaluating program' do
+      dir = Dir.chdir '/' do
+        invoke('print File.realdirpath(Dir.pwd)', filename: filename).stdout
+      end
+      expect(dir).to eq '/'
+    end
+
+    it 'is the file\'s directory when local_cwd is set' do
+      dir = Dir.chdir '/' do
+        invoke('print File.realdirpath(Dir.pwd)', filename: filename, local_cwd: true).stdout
+      end
+      expect(dir).to eq proving_grounds_path
+    end
   end
 
   it 'does not capture output from __END__ onward' do

@@ -181,6 +181,9 @@ class SeeingIsBelieving
               as = filename
             end
 
+          when '--local-cwd'
+            self.lib_options.local_cwd = true
+
           when '-s', '--alignment-strategy'
             strategies     = {'file' => AlignFile, 'chunk' => AlignChunk, 'line' => AlignLine}
             strategy_names = strategies.keys.inspect
@@ -334,6 +337,7 @@ Options:
   -r,  --require file            # additional files to be required before running the program
   -e,  --program program-body    # pass the program body to execute as an argument
   -a,  --as filename             # run the program as if it was the specified filename
+       --local-cwd               # run the program from the file's directory instead of the calling program's CWD
   -c,  --clean                   # remove annotations from previous runs of seeing_is_believing
   -g,  --debug                   # print debugging information
        --debug-to FILE           # print debugging information to FILE

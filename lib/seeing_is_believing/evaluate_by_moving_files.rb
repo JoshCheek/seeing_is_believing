@@ -27,12 +27,13 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
+    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :local_cwd
 
     def initialize(program, filename,  options={})
       options = options.dup
       self.program           = program
       self.filename          = filename
+      self.local_cwd         = options.delete(:local_cwd)          || false
       self.encoding          = options.delete(:encoding)           || "u"
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
       self.provided_input    = options.delete(:provided_input)     || String.new
@@ -112,7 +113,11 @@ class SeeingIsBelieving
       child.io.stdout = child_stdout
       child.io.stderr = child_stderr
 
-      child.start
+      if local_cwd
+        Dir.chdir(file_directory) { child.start }
+      else
+        child.start
+      end
 
       # close child streams b/c they won't emit EOF if parent still has an open reference
       close_streams(child_stdout, child_stderr)
@@ -165,7 +170,7 @@ class SeeingIsBelieving
          '-I', File.realpath('..', __dir__),        # add lib to the load path
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
-         filename]
+         local_cwd ? File.basename(filename) : filename]
     end
 
     def close_streams(*streams)

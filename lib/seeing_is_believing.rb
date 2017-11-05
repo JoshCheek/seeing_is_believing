@@ -12,6 +12,7 @@ require 'seeing_is_believing/event_stream/handlers/update_result'
 class SeeingIsBelieving
   class Options < HashStruct
     predicate(:event_handler)     { EventStream::Handlers::UpdateResult.new Result.new }
+    predicate(:local_cwd)         { false }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
     attribute(:stdin)             { "" }
@@ -50,7 +51,8 @@ class SeeingIsBelieving
         load_path_dirs:    options.load_path_dirs,
         encoding:          options.encoding,
         timeout_seconds:   options.timeout_seconds,
-        max_line_captures: options.max_line_captures
+        max_line_captures: options.max_line_captures,
+        local_cwd:         options.local_cwd?
 
       options.event_handler
     }

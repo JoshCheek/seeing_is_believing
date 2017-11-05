@@ -600,3 +600,17 @@ Feature: Using flags
         .to_s         # => "0", "1", "2"
     end               # => 3
     """
+
+
+  Scenario: --local-cwd causes the current working directory to be the same as the file
+    Given the file "subdir/cwd_of_file_test.rb" "__FILE__"
+    When I run "seeing_is_believing subdir/cwd_of_file_test.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is '__FILE__  # => "subdir/cwd_of_file_test.rb"'
+    When I run "seeing_is_believing subdir/cwd_of_file_test.rb --local-cwd"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is '__FILE__  # => "cwd_of_file_test.rb"'
+
+

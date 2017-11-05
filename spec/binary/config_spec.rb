@@ -208,6 +208,16 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
     end
 
 
+    describe 'lib_options.local_cwd?' do
+      it 'defaults to false' do
+        expect(parse([]).lib_options.local_cwd?).to eq false
+      end
+      it 'is set to true by --local-cwd' do
+        expect(parse(['--local-cwd']).lib_options.local_cwd?).to eq true
+      end
+    end
+
+
     describe 'annotator_options.max_result_length' do
       it 'defaults to infinity' do
         expect(parse([]).annotator_options.max_result_length).to eq Float::INFINITY
