@@ -809,6 +809,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("def a\n1\nrescue\n2\nend")).to eq "<def a\n<1>\nrescue\n<2>\nend>"
       expect(wrap("def a\n1\nrescue\n2\nensure\n3\nend")).to eq "<def a\n<1>\nrescue\n<2>\nensure\n<3>\nend>"
       expect(wrap("def a\n1\nensure\n2\nend")).to eq "<def a\n<1>\nensure\n<2>\nend>"
+      expect(wrap("def a\n1\nelse 2\nend")).to eq "<def a\n<1>\nelse <2>\nend>"
     end
 
     it 'wrap a definition as a call to an invocation' do
