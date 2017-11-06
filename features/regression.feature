@@ -755,13 +755,13 @@ Feature:
     """
 
 
-  Scenario: Errors should not blow away comments
+  Scenario: Errors should not blow away comments (Issue #120)
     Given the file "sib_with_error_on_commented_line.rb":
     """
     dne # this doesn't exist!
     """
     When I run "seeing_is_believing -x sib_with_error_on_commented_line.rb"
-    And stdout is:
+    Then stdout is:
     """
     dne # this doesn't exist!
 
@@ -771,7 +771,7 @@ Feature:
     # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
     """
     When I run "seeing_is_believing sib_with_error_on_commented_line.rb"
-    And stdout is:
+    Then stdout is:
     """
     dne # this doesn't exist!
 
@@ -779,4 +779,26 @@ Feature:
     # ~> undefined local variable or method `dne' for main:Object
     # ~>
     # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
+    """
+
+
+  Scenario: Inspects strings even when they have a singleton class (Issue #118)
+    Given the file "result_of_inspect_has_a_singleton_class.rb":
+    """
+    str = "a string"
+    def str.inspect
+      self
+    end
+    str  # =>
+    """
+    When I run "seeing_is_believing -x result_of_inspect_has_a_singleton_class.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    str = "a string"
+    def str.inspect
+      self
+    end
+    str  # => a string
     """

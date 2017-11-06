@@ -305,6 +305,13 @@ module SeeingIsBelieving::EventStream
           producer.record_result :type, 1, obj
           expect(count).to eq 1
         end
+
+        it 'can deal with results of inspect that have singleton methods' do
+          str = "a string"
+          def str.inspect() self end
+          producer.record_result :type, 1, str
+          expect(consumer.call.inspected).to eq str
+        end
       end
 
       context 'inspect performed by the block' do

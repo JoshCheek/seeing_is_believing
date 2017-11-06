@@ -118,6 +118,9 @@ class SeeingIsBelieving
       # for a consideration of many different ways of doing this, see 5633064
       def to_string_token(string)
         [Marshal.dump(string.to_s)].pack('m0')
+      rescue TypeError => err
+        raise unless err.message =~ /singleton can't be dumped/
+        to_string_token string.to_s.dup
       end
 
       def build_producer_thread(resultstream)
