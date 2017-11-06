@@ -38,10 +38,6 @@ Known Issues
 ------------
 
 * Assumes utf-8 everywhere. If this is an issue, please see the [encodings](https://github.com/JoshCheek/seeing_is_believing/wiki/Encodings) section of the wiki.
-* `begin; else; break; end` this code (an else without a rescue) will emit a warning in Ruby, and is omitted from `Parser`'s AST.
-  As such, I doubt that anyone will ever write it. But if you were to write it, it would blow up, because SiB rewrites your code, wrapping every expression that could have a value.
-  This code will be wrapped. But using the value is **syntactically** invalid in Ruby, because it constitutes a "void value expression" (aka a pointless time sink and the cause of many bugs in SiB).
-  Unfortunately, I can't easily check it to see if it's void since it's not in the parsed AST.  But it's so edge that I don't think it's worth worrying about.
 
 
 Inspiration
