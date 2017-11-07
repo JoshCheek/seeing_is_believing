@@ -1,7 +1,5 @@
 language: ruby
-before_install:
-  - gem update --system 2.6.11 # trying to avoid hitting this issue: https://github.com/rubygems/rubygems/issues/2062
-  - gem install bundler
+before_install: gem install bundler
 install: rake install
 script: bundle exec rake ci
 rvm:
