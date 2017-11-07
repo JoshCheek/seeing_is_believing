@@ -1,26 +1,13 @@
 desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
 task :install do
-  exe_path = which("bundle")
-  unless exe_path
-    sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
-  end
-
-  unless Dir.exist? 'bundle'
-    # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
-    sh 'bundle', 'install', '--standalone', '--binstubs', 'bundle/bin'
-  end
+  # Running without rubygems  # http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
+  which("bundle")     or sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
+  Dir.exist? 'bundle' or sh 'bundle', 'install', '--standalone', '--binstubs', 'bundle/bin'
 end
 
 desc 'Remove generated and irrelevant files'
 task :clean do
-  rm_rf [
-            'bundle',
-            '.bundle',
-            'Gemfile.lock',
-            'proving_grounds',
-            'tags',
-            *Dir['*.gem'],
-        ]
+  rm_rf %w[bundle .bundle Gemfile.lock proving_grounds tags] + Dir['*.gem']
 end
 
 directory 'bundle' do
@@ -30,11 +17,11 @@ end
 
 def require_paths
   require 'bundler'
-  requrable_paths = Bundler.load.specs.flat_map { |spec|
-    spec.require_paths.map do |path|
-      File.join(spec.full_gem_path, path)
-    end
-  }.flat_map { |p| ['-I', p] }
+  Bundler.load.specs.flat_map do |spec|
+    spec.require_paths
+        .map { |path| File.join spec.full_gem_path, path }
+        .flat_map { |p| ['-I', p] }
+  end
 end
 
 desc 'Print the require paths for arbitrary binary execution'
@@ -78,7 +65,7 @@ task default: [:spec, :cuke]
 desc 'Install dependencies and run tests (mainly for Travis CI)'
 task ci: [:spec, :cuke]
 
-def which(exe)
+def self.which(exe)
   dirs = ENV["PATH"].split(File::PATH_SEPARATOR)
   exts = [""]
   exts.concat(ENV["PathExt"].to_s.split(File::PATH_SEPARATOR))
