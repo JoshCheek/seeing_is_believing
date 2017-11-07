@@ -31,7 +31,7 @@ RSpec.describe SeeingIsBelieving do
   end
 
   root_path            = File.realpath("..", __dir__)
-  proving_grounds_path = File.realdirpath('proving_grounds', root_path)
+  proving_grounds_path = File.expand_path('proving_grounds', root_path)
   before(:all) { Dir.mkdir proving_grounds_path unless Dir.exist? proving_grounds_path }
   around { |spec| Dir.chdir proving_grounds_path, &spec }
 
@@ -338,14 +338,14 @@ RSpec.describe SeeingIsBelieving do
 
     it 'defaults to the cwd of the the evaluating program' do
       dir = Dir.chdir '/' do
-        invoke('print File.realdirpath(Dir.pwd)', filename: filename).stdout
+        invoke('print File.expand_path(Dir.pwd)', filename: filename).stdout
       end
-      expect(dir).to eq File.realdirpath('/')
+      expect(dir).to eq File.expand_path('/')
     end
 
     it 'is the file\'s directory when local_cwd is set' do
       dir = Dir.chdir '/' do
-        invoke('print File.realdirpath(Dir.pwd)', filename: filename, local_cwd: true).stdout
+        invoke('print File.expand_path(Dir.pwd)', filename: filename, local_cwd: true).stdout
       end
       expect(dir).to eq proving_grounds_path
     end

@@ -7,7 +7,7 @@ require 'fileutils'
 require 'childprocess'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
-  let(:filedir)  { File.realdirpath '../proving_grounds', __dir__ }
+  let(:filedir)  { File.expand_path '../proving_grounds', __dir__ }
   let(:filename) { File.join filedir, 'some_filename' }
 
   before { FileUtils.mkdir_p filedir }
@@ -122,9 +122,9 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'sets the program\'s working directory to the file\'s directory, when given local_cwd' do
     Dir.chdir '/' do
-      result = invoke 'print File.realdirpath(Dir.pwd)'
-      expect(result.stdout).to eq File.realdirpath('/')
-      result = invoke 'print File.realdirpath(Dir.pwd)', local_cwd: true
+      result = invoke 'print File.expand_path(Dir.pwd)'
+      expect(result.stdout).to eq File.expand_path('/')
+      result = invoke 'print File.expand_path(Dir.pwd)', local_cwd: true
       expect(result.stdout).to eq File.dirname(result.filename)
     end
   end
