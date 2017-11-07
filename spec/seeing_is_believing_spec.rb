@@ -340,7 +340,7 @@ RSpec.describe SeeingIsBelieving do
       dir = Dir.chdir '/' do
         invoke('print File.realdirpath(Dir.pwd)', filename: filename).stdout
       end
-      expect(dir).to eq '/'
+      expect(dir).to eq File.realdirpath('/')
     end
 
     it 'is the file\'s directory when local_cwd is set' do
