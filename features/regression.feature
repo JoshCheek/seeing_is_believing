@@ -756,9 +756,17 @@ Feature:
 
 
   Scenario: Errors should not blow away comments (Issue #120)
-    Given the file "sib_with_error_on_commented_line.rb":
+    Given the file "sib_with_error_on_uncommented_line.rb" "dne"
+    And   the file "sib_with_error_on_commented_line.rb" "dne # this doesn't exist!"
+    When I run "seeing_is_believing -x sib_with_error_on_uncommented_line.rb"
+    Then stdout is:
     """
-    dne # this doesn't exist!
+    dne # ~> NameError: undefined local variable or method `dne' for main:Object
+
+    # ~> NameError
+    # ~> undefined local variable or method `dne' for main:Object
+    # ~>
+    # ~> sib_with_error_on_uncommented_line.rb:1:in `<main>'
     """
     When I run "seeing_is_believing -x sib_with_error_on_commented_line.rb"
     Then stdout is:
@@ -770,6 +778,16 @@ Feature:
     # ~>
     # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
     """
+    When I run "seeing_is_believing sib_with_error_on_uncommented_line.rb"
+    Then stdout is:
+    """
+    dne  # ~> NameError: undefined local variable or method `dne' for main:Object
+
+    # ~> NameError
+    # ~> undefined local variable or method `dne' for main:Object
+    # ~>
+    # ~> sib_with_error_on_uncommented_line.rb:1:in `<main>'
+    """
     When I run "seeing_is_believing sib_with_error_on_commented_line.rb"
     Then stdout is:
     """
@@ -780,6 +798,12 @@ Feature:
     # ~>
     # ~> sib_with_error_on_commented_line.rb:1:in `<main>'
     """
+
+
+  Scenario: Errors on files read from stdin with --local-cwd are matched to the correct lines
+    Given the file "local_cwd_and_error_on_uncommented_line.rb" "dne"
+    When I run "seeing_is_believing --local-cwd < local_cwd_and_error_on_uncommented_line.rb"
+    Then stdout includes "dne  # ~> NameError: undefined local variable or method `dne' for main:Object"
 
 
   Scenario: Inspects strings even when they have a singleton class (Issue #118)

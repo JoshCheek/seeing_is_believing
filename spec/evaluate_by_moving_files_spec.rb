@@ -122,10 +122,17 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'sets the program\'s working directory to the file\'s directory, when given local_cwd' do
     Dir.chdir '/' do
-      result = invoke 'print File.expand_path(Dir.pwd)'
-      expect(result.stdout).to eq File.expand_path('/')
-      result = invoke 'print File.expand_path(Dir.pwd)', local_cwd: true
-      expect(result.stdout).to eq File.dirname(result.filename)
+      root   = File.expand_path '/'
+      result = invoke 'print Dir.pwd'
+      expect(result.stdout).to eq root
+      dir, cwd, file_path = invoke(<<-RUBY, local_cwd: true).stdout.lines.map(&:chomp)
+        puts File.expand_path(__dir__)
+        puts Dir.pwd
+        puts __FILE__
+      RUBY
+      expect(dir).to_not eq root
+      expect(cwd).to eq dir
+      expect(file_path).to eq File.basename(filename)
     end
   end
 

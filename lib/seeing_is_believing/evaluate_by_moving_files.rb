@@ -27,12 +27,12 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :filename, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :local_cwd
+    attr_accessor :program, :file_path, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :local_cwd
 
-    def initialize(program, filename,  options={})
+    def initialize(program, file_path,  options={})
       options = options.dup
       self.program           = program
-      self.filename          = filename
+      self.file_path         = file_path
       self.local_cwd         = options.delete(:local_cwd)          || false
       self.encoding          = options.delete(:encoding)           || "u"
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
@@ -58,35 +58,35 @@ class SeeingIsBelieving
     end
 
     def file_directory
-      File.dirname filename
+      File.dirname file_path
     end
 
     def backup_filename
-      File.join file_directory, "seeing_is_believing_backup.#{File.basename filename}"
+      File.join file_directory, "seeing_is_believing_backup.#{File.basename file_path}"
     end
 
     private
 
     def we_will_not_overwrite_existing_backup_file!
-      raise TempFileAlreadyExists.new(filename, backup_filename) if File.exist? backup_filename
+      raise TempFileAlreadyExists.new(file_path, backup_filename) if File.exist? backup_filename
     end
 
     def backup_existing_file
-      return unless File.exist? filename
-      File.rename filename, backup_filename
+      return unless File.exist? file_path
+      File.rename file_path, backup_filename
       @was_backed_up = true
     end
 
     def set_back_to_initial_conditions
       if @was_backed_up
-        File.rename(backup_filename, filename)
+        File.rename(backup_filename, file_path)
       else
-        File.delete(filename)
+        File.delete(file_path)
       end
     end
 
     def write_program_to_file
-      File.open(filename, 'w', external_encoding: "utf-8") { |f| f.write program.to_s }
+      File.open(file_path, 'w', external_encoding: "utf-8") { |f| f.write program.to_s }
     end
 
 
@@ -103,21 +103,18 @@ class SeeingIsBelieving
                                   event_stream_port: event_server.addr[1],
                                   max_line_captures: max_line_captures,
                                   num_lines:         program.lines.count,
-                                  filename:          filename
+                                  filename:          local_cwd ? File.basename(file_path) : file_path,
                                 )].pack('m0')
 
       child = ChildProcess.build(*popen_args)
+      child.cwd    = file_directory if local_cwd
       child.leader = true
       child.duplex = true
       child.environment.merge!(env)
       child.io.stdout = child_stdout
       child.io.stderr = child_stderr
 
-      if local_cwd
-        Dir.chdir(file_directory) { child.start }
-      else
-        child.start
-      end
+      child.start
 
       # close child streams b/c they won't emit EOF if parent still has an open reference
       close_streams(child_stdout, child_stderr)
@@ -170,7 +167,7 @@ class SeeingIsBelieving
          '-I', File.realpath('..', __dir__),        # add lib to the load path
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
-         local_cwd ? File.basename(filename) : filename]
+         local_cwd ? File.basename(file_path) : file_path]
     end
 
     def close_streams(*streams)

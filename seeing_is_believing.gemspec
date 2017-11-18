@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency             "parser",      "~> 2.4.0"
-  s.add_dependency             "childprocess","~> 0.7.1"
+  s.add_dependency             "childprocess","~> 0.8.0"
 
   s.add_development_dependency "pry"
   s.add_development_dependency "haiti",       ">= 0.1", "< 0.3"
