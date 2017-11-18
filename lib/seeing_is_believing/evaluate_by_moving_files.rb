@@ -13,12 +13,13 @@
 
 require 'rbconfig'
 require 'socket'
-require 'seeing_is_believing/error'
+require "childprocess"
+
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/hard_core_ensure'
+require 'seeing_is_believing/backup_file'
 require 'seeing_is_believing/event_stream/consumer'
-require "childprocess"
+
 ChildProcess.posix_spawn = true # forking locks up for some reason when we run SiB inside of SiB
 
 class SeeingIsBelieving
@@ -27,13 +28,13 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :file_path, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures, :local_cwd
+    attr_accessor :program, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
+
+    attr_accessor :file_directory, :file_path, :local_cwd, :relative_filename, :backup_filename
 
     def initialize(program, file_path,  options={})
       options = options.dup
       self.program           = program
-      self.file_path         = file_path
-      self.local_cwd         = options.delete(:local_cwd)          || false
       self.encoding          = options.delete(:encoding)           || "u"
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
       self.provided_input    = options.delete(:provided_input)     || String.new
@@ -41,49 +42,24 @@ class SeeingIsBelieving
       self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
       self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
+      self.local_cwd         = options.delete(:local_cwd)          || false
+      self.file_path         = file_path
+      self.file_directory    = File.dirname file_path
+      file_name              = File.basename file_path
+      self.relative_filename = local_cwd ? file_name : file_path
+      self.backup_filename   = File.join file_directory, "seeing_is_believing_backup.#{file_name}"
+
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
     def call
-      HardCoreEnsure.call \
-        code: -> {
-          we_will_not_overwrite_existing_backup_file!
-          backup_existing_file
-          write_program_to_file
-          evaluate_file
-        },
-        ensure: -> {
-          set_back_to_initial_conditions
-        }
-    end
-
-    def file_directory
-      File.dirname file_path
-    end
-
-    def backup_filename
-      File.join file_directory, "seeing_is_believing_backup.#{File.basename file_path}"
+      BackupFile.call file_path, backup_filename do
+        write_program_to_file
+        evaluate_file
+      end
     end
 
     private
-
-    def we_will_not_overwrite_existing_backup_file!
-      raise TempFileAlreadyExists.new(file_path, backup_filename) if File.exist? backup_filename
-    end
-
-    def backup_existing_file
-      return unless File.exist? file_path
-      File.rename file_path, backup_filename
-      @was_backed_up = true
-    end
-
-    def set_back_to_initial_conditions
-      if @was_backed_up
-        File.rename(backup_filename, file_path)
-      else
-        File.delete(file_path)
-      end
-    end
 
     def write_program_to_file
       File.open(file_path, 'w', external_encoding: "utf-8") { |f| f.write program.to_s }
@@ -103,7 +79,7 @@ class SeeingIsBelieving
                                   event_stream_port: event_server.addr[1],
                                   max_line_captures: max_line_captures,
                                   num_lines:         program.lines.count,
-                                  filename:          local_cwd ? File.basename(file_path) : file_path,
+                                  filename:          relative_filename,
                                 )].pack('m0')
 
       child = ChildProcess.build(*popen_args)
@@ -167,7 +143,7 @@ class SeeingIsBelieving
          '-I', File.realpath('..', __dir__),        # add lib to the load path
          *load_path_flags,                          # users can inject dirs to be added to the load path
          *require_flags,                            # users can inject files to be required
-         local_cwd ? File.basename(file_path) : file_path]
+         relative_filename]
     end
 
     def close_streams(*streams)
