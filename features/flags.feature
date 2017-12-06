@@ -638,6 +638,7 @@ Feature: Using flags
     And the exit status is 0
     And stdout is "1\n2 + 2\n"
 
+
   @wip
   Scenario: --toggle-mark removes a mark from the line if it is marked and exists
     Given the file "marked.rb":
@@ -661,6 +662,47 @@ Feature: Using flags
     Then stderr is empty
     And the exit status is 0
     And stdout is "1 # =>\n2 + 2 # =>\n"
+
+
+  @wip
+  Scenario: --toggle-mark removes error lines, and stdout/stderr output
+    Given the file "output_to_toggle_off.rb":
+    """
+    1 + "a" # ~> b
+    # >> c
+    # !> d
+    # ~> e
+    """
+    When I run "seeing_is_believing output_to_toggle_off.rb --toggle-mark 1"
+    Then stdout is:
+    """
+    1 + "a"
+    # >> c
+    # !> d
+    # ~> e
+    """
+    When I run "seeing_is_believing output_to_toggle_off.rb --toggle-mark 2"
+    Then stdout is:
+    """
+    1 + "a" # ~> b
+    # !> d
+    # ~> e
+    """
+    When I run "seeing_is_believing output_to_toggle_off.rb --toggle-mark 3"
+    Then stdout is:
+    """
+    1 + "a" # ~> b
+    # >> c
+    # ~> e
+    """
+    When I run "seeing_is_believing output_to_toggle_off.rb --toggle-mark 4"
+    Then stdout is:
+    """
+    1 + "a" # ~> b
+    # >> c
+    # !> d
+    """
+
 
 
   @wip
