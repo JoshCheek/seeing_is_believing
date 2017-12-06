@@ -645,6 +645,25 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
         expect(parse(['--no-interline-align']).annotator_options.interline_align?).to eq false
       end
     end
+
+    describe 'toggle_mark/toggle_mark?' do
+      it 'defaults to nil/false' do
+        expect(parse([]).toggle_mark).to eq nil
+        expect(parse([]).toggle_mark?).to eq false
+      end
+      it 'can be set to true/linenum with --toggle-mark' do
+        expect(parse(['--toggle-mark', '123']).toggle_mark).to eq 123
+        expect(parse(['--toggle-mark', '123']).toggle_mark?).to eq true
+      end
+      it_behaves_like 'it requires a positive int argument', ['--toggle-mark']
+      it 'adds an error if used with --json or --stream' do
+        # expect(parse(['--toggle-mark', '123'])).to_not have_error /--toggle-mark/
+        expect(parse(['--stream', '--toggle-mark', '123'])).to have_error /--toggle-mark/
+        expect(parse(['--toggle-mark', '123', '--stream'])).to have_error /--toggle-mark/
+        expect(parse(['--json', '--toggle-mark', '123'])).to have_error /--toggle-mark/
+        expect(parse(['--toggle-mark', '123', '--json'])).to have_error /--toggle-mark/
+      end
+    end
   end
 
 

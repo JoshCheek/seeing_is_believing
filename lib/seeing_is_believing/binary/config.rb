@@ -30,6 +30,7 @@ class SeeingIsBelieving
       predicate(:remove_value_prefixes) { true  }
       predicate(:debug)                 { false }
       predicate(:ignore_unknown_flags)  { false }
+      predicate(:toggle_mark)           { nil }
       attribute(:body)                  { nil }
       attribute(:filename)              { nil }
       attribute(:errors)                { [] }
@@ -108,6 +109,11 @@ class SeeingIsBelieving
             self.remove_value_prefixes     = false
             self.lib_options.require_files << 'pp'
             self.lib_options.require_files << 'seeing_is_believing/customize_pp'
+
+          when '--toggle-mark'
+            extract_positive_int_for.call arg do |n|
+              self.toggle_mark = n
+            end
 
           when '-i', '--inherit-exitstatus', '--inherit-exit-status'
             self.inherit_exitstatus = true
@@ -251,6 +257,13 @@ class SeeingIsBelieving
 
         print_event_stream? && (result_as_json? || annotator == AnnotateMarkedLines) &&
           add_error("can only have one output format, --stream is not compatible with --json, -x, and --xmpfilter-style")
+
+        toggle_mark? && print_event_stream? &&
+          add_error("--toggle-mark and --stream are mutually exclusive")
+
+        toggle_mark? && result_as_json? &&
+          add_error("--toggle-mark and --json are mutually exclusive")
+
 
         self.filename                  = filenames.first
         self.lib_options.filename      = as || filename
