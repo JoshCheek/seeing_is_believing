@@ -18,10 +18,62 @@ class SeeingIsBelieving
 
       def cleaned_body
         @cleaned_body ||= if missing_newline?
-                            normalized_cleaned_body.chomp!
+                            normalized_cleaned_body.chomp
                           else
                             normalized_cleaned_body
                           end
+      end
+
+
+      require 'seeing_is_believing/binary/rewrite_comments'
+      require 'seeing_is_believing/binary/format_comment'
+      require 'pry'
+      module ToggleMark
+        def self.call(body:, line:, markers:, alignment_strategy:, options:)
+          marker_regexes = markers.values.map(&:regex)
+          RewriteComments.call body, include_lines: [line] do |comment|
+            if line == comment.line_number && marker_regexes.any? { |r| r =~ comment.text }
+              new_comment = ''
+            elsif line == comment.line_number && comment.text.empty?
+              new_comment = FormatComment.call(
+                comment.whitespace_col,
+                markers.value.prefix,
+                '',
+                options.merge(
+                  pad_to: alignment_strategy.line_length_for(comment.line_number)
+                ),
+              )
+            elsif line == comment.line_number
+              new_comment = comment.whitespace + comment.text
+            elsif match = markers.value.regex.match(comment.text)
+              new_comment = FormatComment.call(
+                comment.whitespace_col,
+                markers.value.prefix,
+                match.post_match,
+                options.merge(
+                  pad_to: alignment_strategy.line_length_for(comment.line_number)
+                )
+              )
+            else
+              new_comment = comment.whitespace + comment.text
+            end
+            [new_comment[/^\s*/], new_comment.lstrip]
+          end
+        end
+      end
+
+      def toggled_mark
+        body = config.body
+        body         += "\n" if missing_newline?
+        toggled = ToggleMark.call(
+          body:               body,
+          line:               config.toggle_mark,
+          markers:            config.markers,
+          alignment_strategy: config.annotator_options.alignment_strategy.new(normalized_cleaned_body),
+          options:            config.annotator_options.to_h,
+        )
+        toggled.chomp! if missing_newline?
+        toggled
       end
 
       def syntax_error?

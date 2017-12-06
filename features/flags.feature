@@ -614,57 +614,82 @@ Feature: Using flags
     And stdout is '__FILE__  # => "cwd_of_file_test.rb"'
 
 
-  @wip
   Scenario: --toggle-mark adds a mark to the line if it is unmarked and exists
     Given the file "unmarked.rb":
     """
     1
-    2 + 2
+    2
     """
-    When I run "seeing_is_believing unmarked.rb --toggle-mark 0"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is "1\n2 + 2\n"
     When I run "seeing_is_believing unmarked.rb --toggle-mark 1"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1 # => \n2 + 2\n"
+    And stdout is '{{"1  # => \n2"}}'
     When I run "seeing_is_believing unmarked.rb --toggle-mark 2"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1\n2 + 2 # => \n"
+    And stdout is '{{"1\n2  # => "}}'
     When I run "seeing_is_believing unmarked.rb --toggle-mark 3"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1\n2 + 2\n"
+    And stdout is '{{"1\n2"}}'
 
 
-  @wip
+  Scenario: --toggle-mark doesn't add a mark to the line if it has a comment or can't be commented
+    Given the file "no_toggle_line_here.rb":
+    """
+    1 # comment
+    "2
+    "
+    """
+    When I run "seeing_is_believing no_toggle_line_here.rb --toggle-mark 1"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 # comment
+    "2
+    "
+    """
+    When I run "seeing_is_believing no_toggle_line_here.rb --toggle-mark 2"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 # comment
+    "2
+    "
+    """
+    When I run "seeing_is_believing no_toggle_line_here.rb --toggle-mark 3"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    1 # comment
+    "2
+    "  # =>{{" "}}
+    """
+
+
   Scenario: --toggle-mark removes a mark from the line if it is marked and exists
     Given the file "marked.rb":
     """
-    1 # =>
-    2 + 2 # =>
+    1      # =>
+    2 + 2  # =>
     """
-    When I run "seeing_is_believing marked.rb --toggle-mark 0"
-    Then stderr is empty
-    And the exit status is 0
-    And stdout is "1 # =>\n2 + 2 # =>\n"
     When I run "seeing_is_believing marked.rb --toggle-mark 1"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1\n2 + 2 # =>\n"
+    And stdout is '{{"1\n2 + 2  # => "}}'
     When I run "seeing_is_believing marked.rb --toggle-mark 2"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1 # =>\n2 + 2\n"
+    And stdout is '{{"1      # => \n2 + 2"}}'
     When I run "seeing_is_believing marked.rb --toggle-mark 3"
     Then stderr is empty
     And the exit status is 0
-    And stdout is "1 # =>\n2 + 2 # =>\n"
+    And stdout is '{{"1      # => \n2 + 2  # => "}}'
 
 
-  @wip
   Scenario: --toggle-mark removes error lines, and stdout/stderr output
     Given the file "output_to_toggle_off.rb":
     """
@@ -685,6 +710,7 @@ Feature: Using flags
     Then stdout is:
     """
     1 + "a" # ~> b
+
     # !> d
     # ~> e
     """
@@ -693,6 +719,7 @@ Feature: Using flags
     """
     1 + "a" # ~> b
     # >> c
+
     # ~> e
     """
     When I run "seeing_is_believing output_to_toggle_off.rb --toggle-mark 4"
@@ -704,8 +731,6 @@ Feature: Using flags
     """
 
 
-
-  @wip
   Scenario: --toggle-mark respects the --alignment-strategy of file and updates any existing annotations to respect it
     Given the file "toggle_mark_with_file_alignment.rb":
     """
@@ -720,7 +745,7 @@ Feature: Using flags
     And the exit status is 0
     And stdout is:
     """
-    1              # =>
+    1              # =>{{" "}}
 
     1 + 1          # => 2
     1 + 1 + 1      # => 3
@@ -739,7 +764,6 @@ Feature: Using flags
     """
 
 
-  @wip
   Scenario: --toggle-mark respects the --alignment-strategy of chunk and updates any existing annotations to respect it
     Given the file "toggle_mark_with_chunk_alignments.rb":
     """
@@ -747,26 +771,24 @@ Feature: Using flags
     1+1+1
     1+1+1+1
 
-
     1 + 1
     # comment in the middle!
     1
     """
-    When I run "seeing_is_believing --toggle-mark 2 --alignment-strategy chunk chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 2 --alignment-strategy chunk toggle_mark_with_chunk_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
     1+1      # => 2
-    1+1+1    # =>
+    1+1+1    # =>{{" "}}
     1+1+1+1
-
 
     1 + 1
     # comment in the middle!
     1
     """
-    When I run "seeing_is_believing --toggle-mark 3 --alignment-strategy chunk chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 5 --alignment-strategy chunk toggle_mark_with_chunk_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -775,12 +797,11 @@ Feature: Using flags
     1+1+1
     1+1+1+1
 
-
-    1 + 1  # =>
+    1 + 1  # =>{{" "}}
     # comment in the middle!
     1
     """
-    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy chunk chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy chunk toggle_mark_with_chunk_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -789,30 +810,29 @@ Feature: Using flags
     1+1+1
     1+1+1+1
 
-
     1 + 1
     # comment in the middle!
     1
     """
 
-  @wip
+
   Scenario: --toggle-mark respects the --alignment-strategy of line and updates any existing annotations to respect it
     Given the file "toggle_mark_with_line_alignments.rb":
     """
     1
-    1 + 1# =>
+    1 + 1# => x
     1 + 1 + 1
     """
-    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy line chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy line toggle_mark_with_line_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
-    1  # =>
-    1 + 1  # =>
+    1  # =>{{" "}}
+    1 + 1  # => x
     1 + 1 + 1
     """
-    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy line chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 2 --alignment-strategy line toggle_mark_with_line_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
@@ -821,12 +841,12 @@ Feature: Using flags
     1 + 1
     1 + 1 + 1
     """
-    When I run "seeing_is_believing --toggle-mark 1 --alignment-strategy line chunk_alignments.rb"
+    When I run "seeing_is_believing --toggle-mark 3 --alignment-strategy line toggle_mark_with_line_alignments.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
     1
-    1 + 1  # =>
-    1 + 1 + 1  # =>
+    1 + 1  # => x
+    1 + 1 + 1  # =>{{" "}}
     """

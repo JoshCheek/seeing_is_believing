@@ -7,7 +7,8 @@ class SeeingIsBelieving
       def call(body, options={})
         timeout  = options.fetch :timeout, 0
         filename = options.fetch :filename, "program.rb"
-        config   = Config.new body: body, timeout_seconds: timeout
+        toggle   = options.fetch :toggled_mark, nil
+        config   = Config.new body: body, timeout_seconds: timeout, toggle_mark: toggle
         config.lib_options.timeout_seconds = timeout
         config.lib_options.filename        = filename
         Engine.new config
@@ -47,6 +48,15 @@ class SeeingIsBelieving
         it 'ends in a newline if the body ended in a newline' do
           expect(call("1").cleaned_body).to eq "1"
           expect(call("1\n").cleaned_body).to eq "1\n"
+        end
+      end
+
+      context 'toggled_mark' do
+        it 'has the mark toggled and doesn\'t change the newline' do
+          expect(call("1",        toggled_mark: 1).toggled_mark).to eq "1  # => "
+          expect(call("1 # => ",  toggled_mark: 1).toggled_mark).to eq "1"
+          expect(call("1\n",      toggled_mark: 1).toggled_mark).to eq "1  # => \n"
+          expect(call("1 # =>\n", toggled_mark: 1).toggled_mark).to eq "1\n"
         end
       end
 

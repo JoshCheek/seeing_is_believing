@@ -32,6 +32,11 @@ class SeeingIsBelieving
         return SUCCESS_STATUS
       end
 
+      if config.toggle_mark?
+        stdout.print engine.toggled_mark
+        return SUCCESS_STATUS
+      end
+
       if engine.syntax_error?
         stderr.puts engine.syntax_error
         return NONDISPLAYABLE_ERROR_STATUS

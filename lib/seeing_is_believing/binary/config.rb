@@ -355,6 +355,7 @@ Options:
   -g,  --debug                   # print debugging information
        --debug-to FILE           # print debugging information to FILE
   -x,  --xmpfilter-style         # annotate marked lines instead of every line
+       --toggle-mark n           # add / remove annotation on line n
   -j,  --json                    # print results in json format (i.e. so another program can consume them)
   -i,  --inherit-exitstatus      # exit with the exit status of the program being evaluated
        --stream                  # a JSON stream of every event ias it is seen (such as recording a line)
