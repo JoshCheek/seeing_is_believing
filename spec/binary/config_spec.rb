@@ -611,40 +611,39 @@ RSpec.describe SeeingIsBelieving::Binary::Config do
       it('defaults :stdout    to "# >> "') { expect(default_markers.stdout   .prefix).to eq "# >> " }
       it('defaults :stderr    to "# !> "') { expect(default_markers.stderr   .prefix).to eq "# !> " }
     end
-  end
 
-  describe 'print_event_stream?' do
-    it 'print_event_stream? is false by default' do
-      expect(parse([]).print_event_stream?).to eq false
+    describe 'print_event_stream?' do
+      it 'print_event_stream? is false by default' do
+        expect(parse([]).print_event_stream?).to eq false
+      end
+      it 'print_event_stream? can be turned on with --stream' do
+        expect(parse(['--stream']).print_event_stream?).to eq true
+      end
+      it 'adds an error if --stream is used with --json' do
+        expect(parse(['--stream'])).to_not have_error '--stream'
+        expect(parse(['--stream', '--json'])).to have_error '--stream'
+        expect(parse(['--json', '--stream'])).to have_error '--stream'
+      end
+      it 'adds an error if --stream is used with -x or --xmpfilter-style' do
+        expect(parse(['--stream'])).to_not have_error '--stream'
+        expect(parse(['--stream', '-x'])).to have_error '--stream'
+        expect(parse(['-x', '--stream'])).to have_error '--stream'
+        expect(parse(['--xmpfilter-style', '--stream'])).to have_error '--stream'
+      end
     end
-    it 'print_event_stream? can be turned on with --stream' do
-      expect(parse(['--stream']).print_event_stream?).to eq true
-    end
-    it 'adds an error if --stream is used with --json' do
-      expect(parse(['--stream'])).to_not have_error '--stream'
-      expect(parse(['--stream', '--json'])).to have_error '--stream'
-      expect(parse(['--json', '--stream'])).to have_error '--stream'
-    end
-    it 'adds an error if --stream is used with -x or --xmpfilter-style' do
-      expect(parse(['--stream'])).to_not have_error '--stream'
-      expect(parse(['--stream', '-x'])).to have_error '--stream'
-      expect(parse(['-x', '--stream'])).to have_error '--stream'
-      expect(parse(['--xmpfilter-style', '--stream'])).to have_error '--stream'
-    end
-  end
 
-
-  describe 'align_results?' do
-    it 'defaults to true' do
-      expect(parse([]).annotator_options.interline_align?).to eq true
-    end
-    it 'can be turned on with --interline-align' do
-      expect(parse(['--interline-align'])).to_not have_error '--interline-align'
-      expect(parse(['--interline-align']).annotator_options.interline_align?).to eq true
-    end
-    it 'can be turned off with --no-interline-align' do
-      expect(parse(['--no-interline-align'])).to_not have_error '--no-interline-align'
-      expect(parse(['--no-interline-align']).annotator_options.interline_align?).to eq false
+    describe 'align_results?' do
+      it 'defaults to true' do
+        expect(parse([]).annotator_options.interline_align?).to eq true
+      end
+      it 'can be turned on with --interline-align' do
+        expect(parse(['--interline-align'])).to_not have_error '--interline-align'
+        expect(parse(['--interline-align']).annotator_options.interline_align?).to eq true
+      end
+      it 'can be turned off with --no-interline-align' do
+        expect(parse(['--no-interline-align'])).to_not have_error '--no-interline-align'
+        expect(parse(['--no-interline-align']).annotator_options.interline_align?).to eq false
+      end
     end
   end
 
