@@ -47,8 +47,6 @@ class SeeingIsBelieving
           WrapExpressions.call \
             program,
             before_each: -> line_number {
-              # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
-              # 79 - "# => ".length # => 4
               inspect        = "$SiB.record_result(:inspect, #{line_number}, ("
               pp             = "$SiB.record_result(:pp, #{line_number}, ("
 
@@ -62,6 +60,10 @@ class SeeingIsBelieving
               end
             },
             after_each:  -> line_number {
+              # 74 b/c pretty print_defaults to 79 (guessing 80 chars with 1 reserved for newline), and
+              # 79 - "# => ".length # => 4
+              # ALSO: This should be configurable, b/c otherwise you have to go into the guts of `pp`
+              #       https://gist.github.com/JoshCheek/6472c8f334ae493f4ab1f7865e2470e5
               inspect = "))"
               pp      = ")) { |v| PP.pp v, '', 74 }"
 
