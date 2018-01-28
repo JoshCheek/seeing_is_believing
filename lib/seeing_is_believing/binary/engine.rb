@@ -27,9 +27,14 @@ class SeeingIsBelieving
 
       require 'seeing_is_believing/binary/rewrite_comments'
       require 'seeing_is_believing/binary/format_comment'
-      require 'pry'
       module ToggleMark
-        def self.call(body:, line:, markers:, alignment_strategy:, options:)
+        def self.call(options)
+          options = options.dup
+          body    = options.delete :body
+          line    = options.delete :line
+          markers = options.delete :markers
+          alignment_strategy = options.delete :alignment_strategy
+
           marker_regexes = markers.values.map(&:regex)
           RewriteComments.call body, include_lines: [line] do |comment|
             if line == comment.line_number && marker_regexes.any? { |r| r =~ comment.text }
