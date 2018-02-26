@@ -109,7 +109,7 @@ class SeeingIsBelieving
       (name, (_, range)) = tokens.max_by { |name, (data, range)| range.end_pos } ||
                             [nil, [nil, range_for(0, 1)]]
       end_pos = range.end_pos
-      end_pos += 1 if name == :tCOMMENT || name == :tSTRING_END #
+      end_pos += 1 if name == :tCOMMENT || name == :tSTRING_END || name == :tSEMI
       range_for 0, end_pos
     end
 

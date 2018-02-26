@@ -826,3 +826,10 @@ Feature:
     end
     str  # => a string
     """
+
+
+  Scenario: The last line can end in a semicolon
+    When I run "seeing_is_believing -e '1'"
+    Then stdout is "1  # => 1"
+    When I run "seeing_is_believing -e '1;'"
+    Then stdout is "1;  # => 1"
