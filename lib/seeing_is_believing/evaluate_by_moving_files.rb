@@ -102,8 +102,13 @@ class SeeingIsBelieving
 
       # send stdin (char at a time b/c input could come from a stream)
       Thread.new do
-        provided_input.each_char { |char| child.io.stdin.write char }
-        child.io.stdin.close
+        begin
+          provided_input.each_char { |char| child.io.stdin.write char }
+        rescue
+          # don't explode if child closes IO
+        ensure
+          child.io.stdin.close
+        end
       end
 
       # set up the event consumer
