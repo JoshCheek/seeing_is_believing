@@ -30,20 +30,20 @@ class SeeingIsBelieving
           when :total_fucking_failure
             rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
           when :match_current_line
-            rewriter.insert_before_multi range, '~' # Regexp#~
+            rewriter.insert_before range, '~' # Regexp#~
           end
         end
 
         wrappings.each do |line_num, (range, last_col, meta)|
-          rewriter.insert_before_multi range, before_each.call(line_num)
+          rewriter.insert_before range, before_each.call(line_num)
         end
 
         wrappings.each do |line_num, (range, last_col, meta)|
-          rewriter.insert_after_multi range, after_each.call(line_num)
+          rewriter.insert_after range, after_each.call(line_num)
         end
 
-        rewriter.insert_before_multi root_range, before_all.call
-        rewriter.insert_after_multi  root_range, after_all_text
+        rewriter.insert_before root_range, before_all.call
+        rewriter.insert_after  root_range, after_all_text
         rewriter.process
       end
     end
