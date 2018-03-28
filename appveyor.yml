@@ -29,5 +29,5 @@ environment:
     - ruby_version: '21'
     - ruby_version: '22'
     - ruby_version: '23'
-    - ruby_version: '24'
-    - ruby_version: '25'
+    # - ruby_version: '24'
+    # - ruby_version: '25'
