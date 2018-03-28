@@ -531,6 +531,10 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.message).to match /recursive/i
   end
 
+  it 'does not blow up when the first line looks like it might have a magic comment in it (#126)' do
+    expect(values_for "1+1 # and a comment with 'Accept-Encoding: gzip' in it").to eq [['2']]
+  end
+
   it 'makes the SeeingIsBelieving::VERSION available to the program' do
     expect(values_for "SeeingIsBelieving::VERSION").to eq [[SeeingIsBelieving::VERSION.inspect]]
   end
