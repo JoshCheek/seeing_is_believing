@@ -39,7 +39,7 @@ class SeeingIsBelieving
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
       self.provided_input    = options.delete(:provided_input)     || String.new
       self.event_handler     = options.delete(:event_handler)      || raise(ArgumentError, "must provide an :event_handler")
-      self.load_path_flags   = (options.delete(:load_path_dirs)    || []).map { |dir| ['-I', dir] }.flatten
+      self.load_path_flags   = (options.delete(:load_path_dirs)    || []).flat_map { |dir| ['-I', dir] }
       self.require_flags     = (options.delete(:require_files)     || ['seeing_is_believing/the_matrix']).map { |filename| ['-r', filename] }.flatten
       self.max_line_captures = (options.delete(:max_line_captures) || Float::INFINITY) # (optimization: child stops producing results at this number, even though it might make more sense for the consumer to stop emitting them)
       self.local_cwd         = options.delete(:local_cwd)          || false
