@@ -628,7 +628,13 @@ RSpec.describe SeeingIsBelieving do
     # Get the child and grandchild ids. If we read too far, we lock up the test
     pids = []
     until pids.length == 2
-      event, data = JSON.parse read.gets
+      json = read.gets
+      begin
+        event, data = JSON.parse json
+      rescue JSON::ParserError
+        p json: json # failed on 2.0.0 for some unknown reason: https://travis-ci.org/JoshCheek/seeing_is_believing/jobs/423683461#L1212
+        raise
+      end
       next unless event == 'line_result'
       next unless data.fetch('inspected') =~ /\A\d+\z/
       pids << data.fetch('inspected').to_i
