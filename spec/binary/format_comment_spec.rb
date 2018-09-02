@@ -60,7 +60,10 @@ RSpec.describe SeeingIsBelieving::Binary::FormatComment do
 
   def assert_printed(c, printed)
     c = c.force_encoding 'utf-8'
-    expect(result_for 0, '', c).to eq printed
+    result = result_for 0, '', c
+    expect(result).to eq printed
+    expect(result.encoding).to eq Encoding::UTF_8
+    expect(result).to be_valid_encoding
   end
 
   it 'escapes any non-printable characters' do
@@ -192,6 +195,7 @@ RSpec.describe SeeingIsBelieving::Binary::FormatComment do
     assert_printed 124.chr , "|"
     assert_printed 125.chr , "}"
     assert_printed 126.chr , "~"
+    assert_printed 127.chr, "\u007F"
   end
 
   it 'can be given a list of characters to not escape' do

@@ -64,12 +64,11 @@ class SeeingIsBelieving
       end
 
       def escape_non_printable(str, omissions)
-        str.each_char
-          .map { |char|
-            next char if 0x20 <= char.ord # above this has a printable representation
-            next char if omissions.include? char
-            char.inspect[1...-1]
-          }.join('')
+        str.scrub { |c| c.inspect[1...-1] }
+           .gsub(/[\u0000-\u0020]/) { |char|
+              next char if omissions.include? char
+              char.inspect[1...-1]
+           }
       end
     end
   end
