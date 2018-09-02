@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -W0
 
 lib_dir = File.realpath('../lib', __dir__)
 $LOAD_PATH.unshift lib_dir
