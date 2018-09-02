@@ -169,51 +169,51 @@ class SeeingIsBelieving
         end
       end
 
-      def extract_token(line)
+      def shift_token(line)
         event_name = line[/[^ ]+/]
         line.sub!(/^\s*[^ ]+\s*/, '')
         event_name
       end
 
       # For a consideration of many different ways of passing the message, see 5633064
-      def extract_string(line)
-        str = Marshal.load extract_token(line).unpack('m0').first
+      def shift_string(line)
+        str = Marshal.load shift_token(line).unpack('m0').first
         Consumer.fix_encoding(str)
       end
 
       def event_for(original_line)
         line       = original_line.chomp
-        event_name = extract_token(line).intern
+        event_name = shift_token(line).intern
         case event_name
         when :result
-          line_number = extract_token(line).to_i
-          type        = extract_token(line).intern
-          inspected   = extract_string(line)
+          line_number = shift_token(line).to_i
+          type        = shift_token(line).intern
+          inspected   = shift_string(line)
           Events::LineResult.new(type: type, line_number: line_number, inspected: inspected)
         when :maxed_result
-          line_number = extract_token(line).to_i
-          type        = extract_token(line).intern
+          line_number = shift_token(line).to_i
+          type        = shift_token(line).intern
           Events::ResultsTruncated.new(type: type, line_number: line_number)
         when :exception
           Events::Exception.new \
-            line_number: extract_token(line).to_i,
-            class_name:  extract_string(line),
-            message:     extract_string(line),
-            backtrace:   extract_token(line).to_i.times.map { extract_string line }
+            line_number: shift_token(line).to_i,
+            class_name:  shift_string(line),
+            message:     shift_string(line),
+            backtrace:   shift_token(line).to_i.times.map { shift_string line }
         when :max_line_captures
-          token = extract_token(line)
+          token = shift_token(line)
           value = token =~ /infinity/i ? Float::INFINITY : token.to_i
           Events::MaxLineCaptures.new(value: value)
         when :num_lines
-          Events::NumLines.new(value: extract_token(line).to_i)
+          Events::NumLines.new(value: shift_token(line).to_i)
         when :sib_version
-          Events::SiBVersion.new(value: extract_string(line))
+          Events::SiBVersion.new(value: shift_string(line))
         when :ruby_version
-          Events::RubyVersion.new(value: extract_string(line))
+          Events::RubyVersion.new(value: shift_string(line))
         when :filename
-          Events::Filename.new(value: extract_string(line))
+          Events::Filename.new(value: shift_string(line))
         when :exec
-          Events::Exec.new(args: extract_string(line))
+          Events::Exec.new(args: shift_string(line))
         else
           raise UnknownEvent, original_line.inspect
         end
