@@ -43,6 +43,10 @@ class SeeingIsBelieving
       alias to_str to_str
     end
 
+    refine String.singleton_class do
+      alias === ===
+    end
+
     # in 2.4 we should use Integer instead, but it's not obvious to me how
     # to detect this. eg defined?(Fixnum) returns "constant". Accessing it
     # leads to a warning, but SiB turns warnings off so you don't see it.

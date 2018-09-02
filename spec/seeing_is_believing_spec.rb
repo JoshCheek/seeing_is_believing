@@ -531,6 +531,13 @@ RSpec.describe SeeingIsBelieving do
     expect(result.exception.message).to match /recursive/i
   end
 
+  it 'does not blow up when returning an object that recursively responds to everything' do
+    result = invoke('obj = BasicObject.new
+                     def obj.method_missing(*) self; end
+                     obj')
+    expect(result[3][0]).to start_with '#<BasicObject:'
+  end
+
   it 'does not blow up when the first line looks like it might have a magic comment in it (#126)' do
     expect(values_for "1+1 # and a comment with 'Accept-Encoding: gzip' in it").to eq [['2']]
   end
@@ -783,14 +790,18 @@ RSpec.describe SeeingIsBelieving do
                      end').stderr).to eq ''
     end
 
-    specify 'when String does not have ==, to_s, inspect, to_i' do
+    specify 'when String does not have ==, to_s, inspect, to_i, ===' do
       expect(invoke('class String
                        undef ==
                        undef to_s
                        undef to_str
                        undef inspect
                        undef to_i
-                     end').stderr).to eq ''
+                     end
+                     class << String
+                       undef ===
+                     end
+                    ').stderr).to eq ''
     end
 
     specify 'when Fixnum does not have <, <<, next, ==, inspect, to_s' do

@@ -834,3 +834,24 @@ Feature:
     Then stdout is "1  # => 1"
     When I run "seeing_is_believing -e '1;'"
     Then stdout is "1;  # => 1"
+
+
+  Scenario: A spy / proxy class (Issue #136)
+    Given the file "spy_class.rb":
+    """
+    class String
+      def self.===(obj)
+        true
+      end
+    end
+    class Spy < BasicObject
+      def method_missing(name, *args, &block)
+        self
+      end
+    end
+    Spy.new  # =>
+    """
+    When I run "seeing_is_believing -x spy_class.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout includes "Spy.new  # => #<Spy:"

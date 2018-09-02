@@ -49,9 +49,13 @@ class SeeingIsBelieving
         if count < max_line_captures
           begin
             if block_given?
-              inspected = yield(value).to_str
+              inspected = yield(value)
             else
-              inspected = value.inspect.to_str
+              inspected = value.inspect
+            end
+            unless String === inspected
+              inspected = inspected.to_str
+              raise unless String === inspected
             end
           rescue *StackErrors
             # this is necessary because SystemStackError won't show the backtrace of the method we tried to call
