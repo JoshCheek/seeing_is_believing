@@ -860,43 +860,58 @@ Feature:
   Scenario: Refined inspect
     Given the file "refined_inspect.rb":
     """
-    module BinMeUp
-      refine Fixnum do
+    module Humanize
+      refine Float do
         def inspect
-          "%08b" % self
+          rounded = "%.2f" % self
+          rounded.reverse!
+          rounded.gsub! /(\d{3})/, '\1,'
+          rounded.chomp! ","
+          rounded.reverse!
+          rounded
         end
       end
     end
-    using BinMeUp
-    5  # =>
+    using Humanize
+    12345.6789  # =>
     """
     When I run "seeing_is_believing refined_inspect.rb"
     Then stderr is empty
     And the exit status is 0
     And stdout is:
     """
-    module BinMeUp
-      refine Fixnum do
+    module Humanize
+      refine Float do
         def inspect
-          "%08b" % self  # => "00000101"
-        end              # => :inspect
-      end                # => #<refinement:Integer@BinMeUp>
-    end                  # => #<refinement:Integer@BinMeUp>
-    using BinMeUp        # => main
-    5                    # => 00000101
+          rounded = "%.2f" % self         # => "12345.68"
+          rounded.reverse!                # => "86.54321"
+          rounded.gsub! /(\d{3})/, '\1,'  # => "86.543,21"
+          rounded.chomp! ","              # => nil
+          rounded.reverse!                # => "12,345.68"
+          rounded                         # => "12,345.68"
+        end                               # => :inspect
+      end                                 # => #<refinement:Float@Humanize>
+    end                                   # => #<refinement:Float@Humanize>
+    using Humanize                        # => main
+    12345.6789                            # => 12,345.68
     """
     When I run "seeing_is_believing refined_inspect.rb -x"
     Then stderr is empty
     And the exit status is 0
     Then stdout is:
     """
-    module BinMeUp
-      refine Fixnum do
+    module Humanize
+      refine Float do
         def inspect
-          "%08b" % self
+          rounded = "%.2f" % self
+          rounded.reverse!
+          rounded.gsub! /(\d{3})/, '\1,'
+          rounded.chomp! ","
+          rounded.reverse!
+          rounded
         end
       end
     end
-    using BinMeUp
-    5  # => 00000101
+    using Humanize
+    12345.6789  # => 12,345.68
     """

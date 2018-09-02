@@ -1,6 +1,13 @@
 # require this before anything else, b/c it expects the world to be sane when it is loaded
 class SeeingIsBelieving
   module Safe
+
+    # Subclasses must refine before superclasses in older Rubies, otherwise
+    # it finds the superclass method and behaves unexpectedly.
+    refine String.singleton_class do
+      alias === ===
+    end
+
     refine Class do
       alias === ===
     end
@@ -41,10 +48,6 @@ class SeeingIsBelieving
       alias ==     ==
       alias to_s   to_s
       alias to_str to_str
-    end
-
-    refine String.singleton_class do
-      alias === ===
     end
 
     # in 2.4 we should use Integer instead, but it's not obvious to me how
