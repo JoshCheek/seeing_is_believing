@@ -80,9 +80,11 @@ class SeeingIsBelieving
       # records the exception, returns the exitstatus for that exception
       def record_exception(line_number, exception)
         return exception.status if SystemExit === exception # TODO === is not in the list
-        if !line_number && filename
-          begin line_number = exception.backtrace.grep(/#{filename.to_s}/).first[/:\d+/][1..-1].to_i
-          rescue NoMethodError
+        unless line_number
+          if filename
+            begin line_number = exception.backtrace.grep(/#{filename.to_s}/).first[/:\d+/][1..-1].to_i
+            rescue NoMethodError
+            end
           end
         end
         line_number ||= -1

@@ -437,6 +437,13 @@ module SeeingIsBelieving::EventStream
         end
       end
 
+      it 'works with objects whose boolean inquiries have been messed with (#131)' do
+        exception = begin; raise; rescue; $!; end
+        bad_bool  = Object.new
+        def bad_bool.!(*) raise; end
+        producer.record_exception bad_bool, exception # should not explode
+      end
+
       context 'recorded line number | line num is provided | it knows the file | exception comes from within file' do
         let(:exception) { begin; raise "zomg"; rescue; $!; end }
         let(:linenum)   { __LINE__ - 1 }
