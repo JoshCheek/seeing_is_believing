@@ -616,6 +616,7 @@ RSpec.describe SeeingIsBelieving do
       Process.pid
       sleep
     RUBY
+    sib.environment.merge! 'RUBYOPT' => "#{ENV['RUBYOPT']} -W0" # fkn 2.0.0
 
     # Hook up the io and start the child process
     read, write   = IO.pipe
