@@ -1,4 +1,6 @@
+# Polyfill String#scrub on Ruby 2.0.0
 require 'seeing_is_believing/compatibility'
+using SeeingIsBelieving::Compatibility
 
 class SeeingIsBelieving
   module Binary
@@ -65,7 +67,6 @@ class SeeingIsBelieving
         options.fetch :dont_escape, []
       end
 
-      using SeeingIsBelieving::Compatibility
       def escape_non_printable(str, omissions)
         str.scrub { |c| c.inspect[1...-1] }
            .gsub(/[\u0000-\u0020]/) { |char|

@@ -2,8 +2,11 @@
 
 require 'seeing_is_believing/event_stream/events'
 require 'seeing_is_believing/error'
-require 'seeing_is_believing/compatibility'
 require 'thread'
+
+# Polyfill String#scrub on Ruby 2.0.0
+require 'seeing_is_believing/compatibility'
+using SeeingIsBelieving::Compatibility
 
 class SeeingIsBelieving
   module EventStream
@@ -55,7 +58,6 @@ class SeeingIsBelieving
       end
 
       # https://github.com/JoshCheek/seeing_is_believing/issues/46
-      using SeeingIsBelieving::Compatibility
       def self.fix_encoding(str)
         begin
           str.encode! Encoding::UTF_8
