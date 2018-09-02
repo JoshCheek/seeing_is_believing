@@ -869,7 +869,7 @@ Feature:
           rounded.chomp! ","
           rounded.reverse!
           rounded
-        end
+        end #
       end
     end
     using Humanize
@@ -889,7 +889,7 @@ Feature:
           rounded.chomp! ","              # => nil
           rounded.reverse!                # => "12,345.68"
           rounded                         # => "12,345.68"
-        end                               # => :inspect
+        end #
       end                                 # => #<refinement:Float@Humanize>
     end                                   # => #<refinement:Float@Humanize>
     using Humanize                        # => main
@@ -909,7 +909,7 @@ Feature:
           rounded.chomp! ","
           rounded.reverse!
           rounded
-        end
+        end #
       end
     end
     using Humanize
