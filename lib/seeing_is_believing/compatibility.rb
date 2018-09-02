@@ -1,7 +1,7 @@
 class SeeingIsBelieving
   module Compatibility
     refine String do
-      unless String.instance_methods.indlude? :scrub
+      unless String.instance_methods.include? :scrub
         # b/c it's not implemented on 2.0.0
         def scrub(char=nil, &block)
           char && block = lambda { |c| char }
