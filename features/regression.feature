@@ -855,3 +855,48 @@ Feature:
     Then stderr is empty
     And the exit status is 0
     And stdout includes "Spy.new  # => #<Spy:"
+
+
+  Scenario: Refined inspect
+    Given the file "refined_inspect.rb":
+    """
+    module BinMeUp
+      refine Fixnum do
+        def inspect
+          "%08b" % self
+        end
+      end
+    end
+    using BinMeUp
+    5  # =>
+    """
+    When I run "seeing_is_believing refined_inspect.rb"
+    Then stderr is empty
+    And the exit status is 0
+    And stdout is:
+    """
+    module BinMeUp
+      refine Fixnum do
+        def inspect
+          "%08b" % self  # => "00000101"
+        end              # => :inspect
+      end                # => #<refinement:Integer@BinMeUp>
+    end                  # => #<refinement:Integer@BinMeUp>
+    using BinMeUp        # => main
+    5                    # => 00000101
+    """
+    When I run "seeing_is_believing refined_inspect.rb -x"
+    Then stderr is empty
+    And the exit status is 0
+    Then stdout is:
+    """
+    module BinMeUp
+      refine Fixnum do
+        def inspect
+          "%08b" % self
+        end
+      end
+    end
+    using BinMeUp
+    5  # => 00000101
+    """

@@ -7,7 +7,7 @@ require 'seeing_is_believing/code'
 
 class SeeingIsBelieving
   module Binary
-    # Based on the behaviour of xmpfilger (a binary in the rcodetools gem)
+    # Based on the behaviour of xmpfilter (a binary in the rcodetools gem)
     # See https://github.com/JoshCheek/seeing_is_believing/issues/44 for more details
     class AnnotateMarkedLines
       def self.map_markers_to_linenos(program, markers)
@@ -64,7 +64,7 @@ class SeeingIsBelieving
               # 79 - "# => ".length # => 4
               # ALSO: This should be configurable, b/c otherwise you have to go into the guts of `pp`
               #       https://gist.github.com/JoshCheek/6472c8f334ae493f4ab1f7865e2470e5
-              inspect = "))"
+              inspect = ")) { |v| v.inspect }"
               pp      = ")) { |v| PP.pp v, '', 74 }"
 
               should_inspect = inspect_linenos.include? line_number

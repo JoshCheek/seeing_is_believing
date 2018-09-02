@@ -554,6 +554,21 @@ RSpec.describe SeeingIsBelieving do
     expect(values_for 'o = BasicObject.new; def o.inspect; "some obj"; end; o').to eq [['some obj']]
   end
 
+  it 'sees refined inspect (#128)' do
+    result = invoke <<-RUBY
+    module BinMeUp
+      refine Fixnum do
+        def inspect
+          "%08b" % self
+        end
+      end
+    end
+    using BinMeUp
+    5
+    RUBY
+    expect(result[9]).to eq ['00000101']
+  end
+
   it 'respects timeout, even when children do semi-ridiculous things, it cleans up children rather than orphaning them' do
     pre    = Time.now
     result = invoke <<-CHILD, timeout_seconds: 0.5

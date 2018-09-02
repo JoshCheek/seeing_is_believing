@@ -9,7 +9,7 @@ class SeeingIsBelieving
           "$SiB.record_result(:inspect, #{line_number}, ("
         },
         after_each:  -> line_number {
-          "))"
+          ")) { |v| v.inspect }"
         }
     end
   end
