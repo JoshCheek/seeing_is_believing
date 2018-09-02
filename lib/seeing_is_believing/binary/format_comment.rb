@@ -1,3 +1,5 @@
+require 'seeing_is_believing/compatibility'
+
 class SeeingIsBelieving
   module Binary
     # not sure I like this name, it formats comments that show results
@@ -63,6 +65,7 @@ class SeeingIsBelieving
         options.fetch :dont_escape, []
       end
 
+      using SeeingIsBelieving::Compatibility
       def escape_non_printable(str, omissions)
         str.scrub { |c| c.inspect[1...-1] }
            .gsub(/[\u0000-\u0020]/) { |char|

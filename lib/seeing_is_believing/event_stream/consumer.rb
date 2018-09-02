@@ -2,6 +2,7 @@
 
 require 'seeing_is_believing/event_stream/events'
 require 'seeing_is_believing/error'
+require 'seeing_is_believing/compatibility'
 require 'thread'
 
 class SeeingIsBelieving
@@ -54,21 +55,14 @@ class SeeingIsBelieving
       end
 
       # https://github.com/JoshCheek/seeing_is_believing/issues/46
+      using SeeingIsBelieving::Compatibility
       def self.fix_encoding(str)
         begin
           str.encode! Encoding::UTF_8
         rescue EncodingError
           str = str.force_encoding(Encoding::UTF_8)
         end
-        return str.scrub('�') if str.respond_to? :scrub
-        # basically reimplement scrub, b/c it's not implemented on 2.0.0
-        str.each_char.inject("") do |new_str, char|
-          if char.valid_encoding?
-            new_str << char
-          else
-            new_str << '�'
-          end
-        end
+        str.scrub('�')
       end
 
       def initialize(streams)
