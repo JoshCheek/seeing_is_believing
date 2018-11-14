@@ -40,6 +40,10 @@ class SeeingIsBelieving
         queue << "max_line_captures #{max_line_captures}"
       end
 
+      def file_loaded
+        queue << "file_loaded"
+      end
+
       StackErrors = [SystemStackError]
       StackErrors << Java::JavaLang::StackOverflowError if defined?(RUBY_PLATFORM) && RUBY_PLATFORM == 'java'
       def record_result(type, line_number, value)

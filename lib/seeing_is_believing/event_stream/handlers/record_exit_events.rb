@@ -7,8 +7,8 @@ class SeeingIsBelieving
         attr_reader :exitstatus
         attr_reader :timeout_seconds
 
-        def initialize(next_observer)
-          @next_observer = next_observer
+        def initialize(next_handler)
+          @next_handler = next_handler
         end
 
         def call(event)
@@ -18,7 +18,7 @@ class SeeingIsBelieving
           when Events::Timeout
             @timeout_seconds = event.seconds
           end
-          @next_observer.call(event)
+          @next_handler.call(event)
         end
       end
     end

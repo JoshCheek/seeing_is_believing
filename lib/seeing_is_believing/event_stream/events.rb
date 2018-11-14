@@ -58,6 +58,13 @@ class SeeingIsBelieving
         attributes :value
       end
 
+      # For knowing when you can perform certain tasks (eg moving the file back)
+      class FileLoaded < Event
+        def self.event_name
+          :file_loaded
+        end
+      end
+
       # Number of lines in the program.
       class NumLines < Event
         def self.event_name

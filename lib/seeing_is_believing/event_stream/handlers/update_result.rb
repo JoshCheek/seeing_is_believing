@@ -29,7 +29,8 @@ class SeeingIsBelieving
                Finished,
                StdoutClosed,
                StderrClosed,
-               EventStreamClosed
+               EventStreamClosed,
+               FileLoaded
                # no op
           else raise "Unknown event: #{event.inspect}"
           end

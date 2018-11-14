@@ -208,6 +208,8 @@ class SeeingIsBelieving
           Events::RubyVersion.new(value: shift_string(line))
         when :filename
           Events::Filename.new(value: shift_string(line))
+        when :file_loaded
+          Events::FileLoaded.new
         when :exec
           Events::Exec.new(args: shift_string(line))
         else

@@ -664,6 +664,7 @@ module SeeingIsBelieving::EventStream
           [Events::StderrClosed     , :stderr_closed],
           [Events::EventStreamClosed, :event_stream_closed],
           [Events::Finished         , :finished],
+          [Events::FileLoaded       , :file_loaded],
         ]
         pairs.each { |klass, name| expect(klass.event_name).to eq name }
 

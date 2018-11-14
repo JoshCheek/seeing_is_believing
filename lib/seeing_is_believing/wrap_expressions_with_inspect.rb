@@ -5,6 +5,9 @@ class SeeingIsBelieving
       # NOTE: if it received the AST, it could figure out if it needs
       # to always wrap the expression in parentheses
       WrapExpressions.call program,
+        before_all: -> {
+          "BEGIN { $SiB.file_loaded };"
+        },
         before_each: -> line_number {
           "$SiB.record_result(:inspect, #{line_number}, ("
         },
