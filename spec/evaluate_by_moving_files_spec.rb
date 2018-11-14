@@ -29,12 +29,16 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     result
   end
 
-  it 'evaluates the code when the file DNE' do
+  it 'evaluates the code as the given file' do
+    expect(invoke('print __FILE__').stdout).to eq filename
+  end
+
+  it 'evaluates the code when the given file DNE' do
     FileUtils.rm_f filename
     expect(invoke('print 1').stdout).to eq '1'
   end
 
-  it 'evaluates the code when the file Exists' do
+  it 'evaluates the code when the given file Exists' do
     FileUtils.touch filename
     expect(invoke('print 1').stdout).to eq '1'
   end
@@ -43,10 +47,6 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     evaluator = described_class.new('', filename, null_options)
     FileUtils.touch evaluator.backup_filename
     expect { evaluator.call }.to raise_error SeeingIsBelieving::TempFileAlreadyExists
-  end
-
-  it 'evaluates the code as the given file' do
-    expect(invoke('print __FILE__').stdout).to eq filename
   end
 
   it 'does not change the original file' do
