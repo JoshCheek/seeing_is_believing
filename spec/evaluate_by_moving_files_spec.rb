@@ -23,8 +23,8 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   def invoke(program, options={})
     result = SeeingIsBelieving::Result.new
     options[:event_handler] ||= SeeingIsBelieving::EventStream::Handlers::UpdateResult.new(result)
-    evaluator = described_class.new(program, filename, options)
-    FileUtils.rm_f evaluator.backup_filename
+    evaluator = described_class.new(filename, program, program, options)
+    FileUtils.rm_f evaluator.backup_path
     evaluator.call
     result
   end
@@ -43,9 +43,9 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(invoke('print 1').stdout).to eq '1'
   end
 
-  it 'raises an error when the temp file already exists' do
-    evaluator = described_class.new('', filename, null_options)
-    FileUtils.touch evaluator.backup_filename
+  it 'raises an error when the temp file already exists', t:true do
+    evaluator = described_class.new(filename, '', '', null_options)
+    FileUtils.touch evaluator.backup_path
     expect { evaluator.call }.to raise_error SeeingIsBelieving::TempFileAlreadyExists
   end
 
@@ -56,29 +56,29 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   end
 
   it 'uses HardCoreEnsure to move the file back' do
-    evaluator = described_class.new 'PROGRAM', filename, null_options
+    evaluator = described_class.new filename, 'PROGRAM', 'PROGRAM', null_options
     File.open(filename, 'w') { |f| f.write 'ORIGINAL' }
-    FileUtils.rm_rf evaluator.backup_filename
+    FileUtils.rm_rf evaluator.backup_path
     expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
-      expect(File.exist? evaluator.backup_filename).to eq false
+      expect(File.exist? evaluator.backup_path).to eq false
       expect(File.read filename).to eq 'ORIGINAL'
 
       # after code
       options[:code].call rescue nil
-      expect(File.read evaluator.backup_filename).to eq 'ORIGINAL'
+      expect(File.read evaluator.backup_path).to eq 'ORIGINAL'
       expect(File.read filename).to eq 'PROGRAM'
 
       # after ensure
       options[:ensure].call
       expect(File.read filename).to eq 'ORIGINAL'
-      expect(File.exist? evaluator.backup_filename).to eq false
+      expect(File.exist? evaluator.backup_path).to eq false
     end
     evaluator.call
   end
 
   it 'uses HardCoreEnsure to delete the file if it wrote it where one did not previously exist' do
-    evaluator = described_class.new 'PROGRAM', filename, null_options
+    evaluator = described_class.new filename, 'PROGRAM', 'PROGRAM', null_options
     FileUtils.rm_rf filename
     expect(SeeingIsBelieving::HardCoreEnsure).to receive(:call) do |options|
       # initial state
@@ -149,7 +149,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
 
   it 'must provide an event handler, which receives the process\'s events' do
     # raises error
-    expect { described_class.new("", filename, {}) }
+    expect { described_class.new(filename, "", "", {}) }
       .to raise_error ArgumentError, /event_handler/
 
     # sees all the events

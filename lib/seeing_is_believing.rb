@@ -43,9 +43,10 @@ class SeeingIsBelieving
       options.debugger.context("REWRITTEN PROGRAM") { new_program }
 
       EvaluateByMovingFiles.call \
-        new_program,
         filename,
-        event_handler:     event_handler(options.debugger, options.event_handler, filename, @program),
+        @program,
+        new_program,
+        event_handler:     event_handler(options.debugger, options.event_handler),
         provided_input:    options.stdin,
         require_files:     options.require_files,
         load_path_dirs:    options.load_path_dirs,
@@ -60,25 +61,9 @@ class SeeingIsBelieving
 
   private
 
-  # require 'seeing_is_believing/event_stream/handlers/swap_file_on_load'
-  module EventStream
-    module Handlers
-      class SwapFileOnLoad
-        def initialize(next_handler, filename, original_source)
-          @next_handler, @filename, @original_source = next_handler, filename, original_source
-        end
-        def call(event)
-          File.write @filename, @original_source if event.is_a? Events::FileLoaded
-          @next_handler.call(event)
-        end
-      end
-    end
-  end
-
   # If we need debugging, wrap a debugging handler around the current handler
-  def event_handler(debugger, current_handler, filename, program)
-    handler = EventStream::Handlers::SwapFileOnLoad.new current_handler, filename, program
-    return handler unless debugger.enabled?
-    EventStream::Handlers::Debug.new debugger, handler
+  def event_handler(debugger, current_handler)
+    return current_handler unless debugger.enabled?
+    EventStream::Handlers::Debug.new debugger, current_handler
   end
 end

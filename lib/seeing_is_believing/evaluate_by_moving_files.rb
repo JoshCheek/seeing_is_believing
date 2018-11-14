@@ -17,8 +17,9 @@ require "childprocess"
 
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
-require 'seeing_is_believing/backup_file'
+require 'seeing_is_believing/swap_files'
 require 'seeing_is_believing/event_stream/consumer'
+require 'seeing_is_believing/event_stream/events'
 
 ChildProcess.posix_spawn = true # forking locks up for some reason when we run SiB inside of SiB
 
@@ -28,13 +29,14 @@ class SeeingIsBelieving
       new(*args).call
     end
 
-    attr_accessor :program, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
+    attr_accessor :user_program, :rewritten_program, :provided_input, :require_flags, :load_path_flags, :encoding, :timeout_seconds, :debugger, :event_handler, :max_line_captures
 
-    attr_accessor :file_directory, :file_path, :local_cwd, :relative_filename, :backup_filename
+    attr_accessor :file_directory, :file_path, :local_cwd, :relative_filename, :backup_path
 
-    def initialize(program, file_path,  options={})
+    def initialize(file_path, user_program, rewritten_program, options={})
       options = options.dup
-      self.program           = program
+      self.user_program      = user_program
+      self.rewritten_program = rewritten_program
       self.encoding          = options.delete(:encoding)           || "u"
       self.timeout_seconds   = options.delete(:timeout_seconds)    || 0 # 0 is the new infinity
       self.provided_input    = options.delete(:provided_input)     || String.new
@@ -47,26 +49,20 @@ class SeeingIsBelieving
       self.file_directory    = File.dirname file_path
       file_name              = File.basename file_path
       self.relative_filename = local_cwd ? file_name : file_path
-      self.backup_filename   = File.join file_directory, "seeing_is_believing_backup.#{file_name}"
+      self.backup_path       = File.join file_directory, "seeing_is_believing_backup.#{file_name}"
 
       options.any? && raise(ArgumentError, "Unknown options: #{options.inspect}")
     end
 
     def call
-      BackupFile.call file_path, backup_filename do
-        write_program_to_file
-        evaluate_file
+      SwapFiles.call file_path, backup_path, user_program, rewritten_program do |swap_files|
+        evaluate_file swap_files
       end
     end
 
     private
 
-    def write_program_to_file
-      File.open(file_path, 'w', external_encoding: "utf-8") { |f| f.write program.to_s }
-    end
-
-
-    def evaluate_file
+    def evaluate_file(swap_files)
       event_server = TCPServer.new(0) # dynamically allocates an available port
 
       # setup streams
@@ -78,7 +74,7 @@ class SeeingIsBelieving
                                 [Marshal.dump(
                                   event_stream_port: event_server.addr[1],
                                   max_line_captures: max_line_captures,
-                                  num_lines:         program.lines.count,
+                                  num_lines:         user_program.lines.count,
                                   filename:          relative_filename,
                                 )].pack('m0')
 
@@ -113,7 +109,12 @@ class SeeingIsBelieving
 
       # set up the event consumer
       consumer = EventStream::Consumer.new(events: eventstream, stdout: stdout, stderr: stderr)
-      consumer_thread = Thread.new { consumer.each { |e| event_handler.call e } }
+      consumer_thread = Thread.new do
+        consumer.each do |e|
+          swap_files.show_user_program if e.is_a? SeeingIsBelieving::EventStream::Events::FileLoaded
+          event_handler.call e
+        end
+      end
 
       # wait for completion
       if timeout_seconds == 0
