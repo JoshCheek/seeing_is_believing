@@ -708,7 +708,6 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("begin\nrescue Exception\n$!\nend")).to eq "<begin\nrescue Exception\n<$!>\nend>"
     end
     it 'wraps inline rescues' do
-      pending "can't figure out how to identify these as different from begin/rescue/end"
       expect(wrap("1 rescue nil")).to eq "<1 rescue nil>"
     end
     it 'wraps the bodies' do

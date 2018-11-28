@@ -107,7 +107,10 @@ class SeeingIsBelieving
       when :defs, :module
         add_to_wrappings ast
         add_children ast, true
-      when :rescue, :ensure, :return, :break, :next, :splat, :kwsplat
+      when :ensure, :return, :break, :next, :splat, :kwsplat
+        add_children ast
+      when :rescue
+        add_to_wrappings ast if inline_rescue? ast
         add_children ast
       when :class
         name,      * = ast.children
@@ -247,5 +250,11 @@ class SeeingIsBelieving
         add_children ast
       end
     end
+
+      def inline_rescue?(ast)
+        primary_code, rescue_body, else_body = ast.children
+        return false unless primary_code
+        primary_code.loc.expression.last_line == rescue_body.loc.expression.first_line
+      end
+    end
   end
-end
