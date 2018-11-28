@@ -43,7 +43,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(invoke('print 1').stdout).to eq '1'
   end
 
-  it 'raises an error when the temp file already exists', t:true do
+  it 'raises an error when the temp file already exists' do
     evaluator = described_class.new(filename, '', '', null_options)
     FileUtils.touch evaluator.backup_path
     expect { evaluator.call }.to raise_error SeeingIsBelieving::TempFileAlreadyExists
