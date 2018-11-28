@@ -251,8 +251,8 @@ RSpec.describe SeeingIsBelieving do
     # Currently we dont' differentiate between inline and multiline if statements,
     # also, we can't wrap the whole statement since it's void value, which means we'd have to introduce
     # the idea of multiple wrappings for the same line, which I just don't care enough about to consider
-    expect(values_for("def meth \n return 1 if true  \n end \n meth")).to eq [[], ['1'], [], ['1']]   # records true instead of 1
-    expect(values_for("def meth \n return 1 if false \n end \n meth")).to eq [[], ['nil'], [], ['nil']] # records false instead of nil
+    expect(values_for("def meth \n return 1 if true  \n end \n meth")).to eq [[], ['1'], [':meth'], ['1']]   # records true instead of 1
+    expect(values_for("def meth \n return 1 if false \n end \n meth")).to eq [[], ['nil'], [':meth'], ['nil']] # records false instead of nil
   end
 
   it 'does not try to record the keyword next' do
