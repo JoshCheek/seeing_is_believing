@@ -53,8 +53,13 @@ class SeeingIsBelieving
     attr_accessor :before_all, :after_all, :before_each, :after_each
     attr_accessor :code, :wrappings
 
-    def buffer()          code.buffer            end
-    def rewriter()        code.rewriter          end
+    def buffer
+      code.buffer
+    end
+
+    def rewriter
+      code.rewriter
+    end
 
     def root_range
       code.root.location.expression
