@@ -334,6 +334,14 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
     it 'wraps the array equivalent' do
       expect(wrap("a,* =[1,2,3]")).to eq "<a,* =[1,2,3]>"
       expect(wrap("a,* = [ 1,2,3 ] ")).to eq "<a,* = [ 1,2,3 ]> "
+      expect(wrap("a,* = 1,2,3")).to eq "<a,* = 1,2,3>"
+    end
+
+    it 'wraps the array elements' do
+      expect(wrap("a,* = [ 1,2,\n3 ] ")).to eq "<a,* = [ 1,<2>,\n3 ]> "
+      expect(wrap("a,* = 1,2,\n3")).to eq "<a,* = 1,<2>,\n3>"
+      expect(wrap("a = [ 1,2,\n3 ] ")).to eq "<a = [ 1,<2>,\n3 ]> "
+      expect(wrap("a = 1,2,\n3")).to eq "<a = 1,<2>,\n3>"
     end
 
     it 'wraps repeated assignments' do
@@ -586,7 +594,7 @@ RSpec.describe SeeingIsBelieving::WrapExpressions do
       expect(wrap("%w[\n1\n]")).to eq "<%w[\n1\n]>"
     end
 
-    it 'does wraps splat elements' do
+    it 'wraps splat elements' do
       expect(wrap("[1,\n*2..3,\n4\n]")).to eq "<[<1>,\n*<2..3>,\n<4>\n]>"
     end
   end

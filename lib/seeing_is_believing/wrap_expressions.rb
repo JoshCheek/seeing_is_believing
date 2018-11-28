@@ -138,8 +138,8 @@ class SeeingIsBelieving
         add_to_wrappings ast
         the_begin = ast.location.begin
         if !the_begin
-          # uhhhh, idk, nothing seems to hit this branch (at least in its spec)
-          # maybe this is 'a = 1,2,3'? (I'd try it out, but have to call the folks)
+          # a = 1,2,3
+          add_children ast
         elsif the_begin.source !~ /\A%/
           # normal array
           add_children ast
