@@ -1,5 +1,4 @@
 # Based this off of https://github.com/rspec/rspec-core/blob/22ed96bb3dbb0214dc48d6b8490ade04cdf8eedd/appveyor.yml
-# Modified based on https://github.com/ffi/ffi/blob/d976d4ac9845a008ac8637457565a350328a4b44/appveyor.yml
 # Docs are at https://www.appveyor.com/docs
 
 # I don't really understand what this is for
@@ -16,14 +15,10 @@ branches:
 # Disable normal Windows builds in favor of our test script.
 build: off
 
-# not really sure what the RAKEOPT does, I did it b/c FFI uses it
-# and it's build is passing on AppVeyor but failing on mine
 install:
   - SET PATH=C:\Ruby%ruby_version%\bin;%PATH%
-  - SET RAKEOPT=-rdevkit
   - ruby --version
   - gem --version
-  - gem install ffi -v '1.10.0' --source 'http://rubygems.org/' # try installing this explicitly since its failing https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/job/gh0afcwa64xitosv
   - rake install
 
 test_script:
@@ -31,8 +26,6 @@ test_script:
 
 environment:
   matrix:
-    - ruby_version: '21'
-    - ruby_version: '22'
     - ruby_version: '23'
     # - ruby_version: '24'
     # - ruby_version: '25'

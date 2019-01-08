@@ -1,14 +1,7 @@
-root = File.expand_path __dir__
-
 desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
 task :install do
   # Running without rubygems http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
-  which 'bundle' or begin
-    require File.join(root, 'spec', 'sib_spec_helpers', 'version.rb')
-    args = %w[gem install bundler --no-ri --no-rdoc]
-    args += %w[--verison 1.17] if RUBY_VERSION < SibSpecHelpers::Version.new('2.3.0') # https://github.com/bundler/bundler/commit/28798c7a3
-    sh *args
-  end
+  which("bundle")     or sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
   Dir.exist? 'bundle' or sh 'bundle', 'install', '--standalone', '--binstubs', 'bundle/bin'
 end
 
