@@ -42,6 +42,7 @@ task cuke: :bundle do
   sh 'ruby', '--disable-gem',
      *require_paths,
      '-S', 'bundle/bin/cucumber',
+     '--quiet', # omit stepdefs, which are usually spammy for me https://twitter.com/josh_cheek/status/1082767053071765504
      '--tags', '~@not-implemented',
      '--tags', "~@not-#{RUBY_VERSION}",
      '--tags', "~@not-#{ruby_version_without_patchlevel}",
