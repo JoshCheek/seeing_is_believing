@@ -43,9 +43,8 @@ class SeeingIsBelieving
       options.debugger.context("REWRITTEN PROGRAM") { new_program }
 
       EvaluateByMovingFiles.call \
-        filename,
-        @program,
         new_program,
+        filename,
         event_handler:     event_handler(options.debugger, options.event_handler),
         provided_input:    options.stdin,
         require_files:     options.require_files,

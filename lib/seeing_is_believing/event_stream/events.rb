@@ -59,6 +59,8 @@ class SeeingIsBelieving
       end
 
       # For knowing when you can perform certain tasks (eg moving the file back)
+      # Sadly, I implemented this functionality and it failed on Windows >.<
+      # But I figured there's no reason to not caputre the event, so here it is :)
       class FileLoaded < Event
         def self.event_name
           :file_loaded
