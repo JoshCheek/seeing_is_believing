@@ -164,6 +164,7 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     result = invoke <<-RUBY, timeout_seconds: 0.5
     child_pid = spawn 'ruby', '-e', 'sleep' # child makes a grandchild which sleeps
     puts Process.pid, child_pid             # print ids so we can check they got killed
+    $stdout.flush
     sleep                                   # child sleeps
     RUBY
     post   = Time.now
