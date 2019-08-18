@@ -27,6 +27,5 @@ test_script:
 environment:
   matrix:
     - ruby_version: '23'
-    - ruby_version: '24'
-    - ruby_version: '25'
+    # not testing in Windows against 2.4 and 2.5 because it hits this bug https://bugs.ruby-lang.org/issues/16110
     - ruby_version: '26'
