@@ -108,7 +108,6 @@ class SeeingIsBelieving
             self.lib_options.rewrite_code  = AnnotateMarkedLines.code_rewriter(markers)
             self.remove_value_prefixes     = false
             self.lib_options.require_files << 'pp'
-            self.lib_options.require_files << 'seeing_is_believing/customize_pp'
 
           when '--toggle-mark'
             extract_positive_int_for.call arg do |n|
