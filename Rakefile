@@ -42,7 +42,8 @@ task cuke: :bundle do
   sh 'ruby', '--disable-gem',
      *require_paths,
      '-S', 'bundle/bin/cucumber',
-     '--quiet', # omit stepdefs, which are usually spammy for me https://twitter.com/josh_cheek/status/1082767053071765504
+     '--quiet',     # omit stepdefs, which are usually spammy for me https://twitter.com/josh_cheek/status/1082767053071765504
+     '--fail-fast', # stop as soon as we see an error (don't waste CI time, don't make it hard to find error info later)
      '--tags', '~@not-implemented',
      '--tags', "~@not-#{RUBY_VERSION}",
      '--tags', "~@not-#{ruby_version_without_patchlevel}",
