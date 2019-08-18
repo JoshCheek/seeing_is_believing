@@ -132,13 +132,19 @@ class SeeingIsBelieving
       # On Windows, we need to call stop if there is an error since it interrupted
       # the previos waiting/polling. If we don't call stop, in that situation, it will
       # leave orphan processes. On Unix, we need to always call stop or it may leave orphans
-      if ChildProcess.unix?
-        child.stop
-      elsif $!
-        child.stop
-        consumer.process_exitstatus(child.exit_code)
+      begin
+        if ChildProcess.unix?
+          child.stop
+        elsif $!
+          child.stop
+          consumer.process_exitstatus(child.exit_code)
+        end
+        child.alive? && child.stop
+      rescue ChildProcess::Error
+        # On AppVeyor, I keep getting errors
+        #   The handle is invalid: https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/22
+        #   Access is denied:      https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/24
       end
-      cleanup_run(child)
       close_streams(stdout, stderr, eventstream, event_server)
     end
 
@@ -154,15 +160,6 @@ class SeeingIsBelieving
 
     def close_streams(*streams)
       streams.each { |io| io.close unless io.closed? }
-    end
-
-    # On AppVeyor, I keep getting errors
-    #   The handle is invalid: https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/22
-    #   Access is denied:      https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/24
-    def cleanup_run(child, *streams)
-      child.alive? && child.stop
-    rescue ChildProcess::Error
-      # noop
     end
   end
 end
