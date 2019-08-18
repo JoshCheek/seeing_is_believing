@@ -72,6 +72,7 @@ Feature: Xmpfilter style
     #     :wibble=>{:magic_word=>"xyzzy"}}
     """
 
+  @not-2.3
   Scenario: --xmpfilter-style, when displayed on the next line, prints the string across multiple lines
     Given the file "xmpfilter-prev-line-is-multiline-string.rb":
     """
