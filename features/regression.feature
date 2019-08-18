@@ -267,6 +267,8 @@ Feature:
     """
 
 
+  # ChildProcess doesn't seem to handle this well in Windows. IDK.
+  @not-2.3
   Scenario: Long DATA segment in a valid file
     Given the file "long_valid_data_segment.rb":
     """
@@ -434,6 +436,9 @@ Feature:
     """
 
 
+  # 2.4 and 2.5 don't correclty detect deadlock on Windows: https://bugs.ruby-lang.org/issues/16110
+  @not-2.4
+  @not-2.5
   Scenario: Deadlocked
     Given the file "deadlocked.rb":
     """
@@ -472,6 +477,7 @@ Feature:
   # but just generally that it doesn't fkn blow up
   @not-2.4
   @not-2.5
+  @not-2.6
   Scenario: Old JSON bug
     Given the file "json_and_encodings.rb":
     """
