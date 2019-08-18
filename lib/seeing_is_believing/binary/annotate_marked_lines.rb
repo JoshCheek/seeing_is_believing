@@ -46,6 +46,7 @@ class SeeingIsBelieving
           should_pp      = false
           WrapExpressions.call \
             program,
+            before_all: -> { "BEGIN { $SiB.file_loaded };" },
             before_each: -> line_number {
               inspect        = "$SiB.record_result(:inspect, #{line_number}, ("
               pp             = "$SiB.record_result(:pp, #{line_number}, ("
