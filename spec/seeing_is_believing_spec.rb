@@ -650,6 +650,19 @@ RSpec.describe SeeingIsBelieving do
     end
   end
 
+  # Okay, doesn't totally belong here, b/c there could be another implementation which doesn't overwrite files,
+  # but it requires coordination between the rewritten code and the evaluator, so isn't really an evaluator unit test,
+  # so putting this here.
+  context 'cleaning up files' do
+    it 'replaces the rewritten source with the original source as soon as it sees a result' do
+      program = "sleep 0.01 while File.read(__FILE__).include?('RECORD_RESULT'.downcase); File.read __FILE__\n"
+      result  = invoke program
+      expect(result[1]).to eq [program.inspect]
+      expect(File.exist? result.filename).to eq false
+    end
+  end
+
+
   context 'when given a debugger' do
     let(:stream)   { StringIO.new }
     let(:debugger) { SeeingIsBelieving::Debugger.new stream: stream }
