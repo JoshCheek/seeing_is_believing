@@ -74,10 +74,14 @@ symbol_to_s         = Symbol.instance_method(:to_s)
 exception_message   = Exception.instance_method(:message)
 exception_backtrace = Exception.instance_method(:backtrace)
 
+# Guarding against hostile users (e.g. me) that do ridiculous things like blowing away these constants
+exception_class = Exception
+symbol_class    = Symbol
+
 at_exit do
-  Exception.class_eval { define_method :message,   exception_message }
-  Exception.class_eval { define_method :backtrace, exception_backtrace }
-  Symbol.class_eval    { define_method :to_s,      symbol_to_s }
+  exception_class.class_eval { define_method :message,   exception_message }
+  exception_class.class_eval { define_method :backtrace, exception_backtrace }
+  symbol_class.class_eval    { define_method :to_s,      symbol_to_s }
   exitstatus = ($! ? $SiB.record_exception(nil, $!) : 0)
   finish.call
   real_exit_bang.call(exitstatus) # clears exceptions so they don't print to stderr and change the processes actual exit status (we recorded what it should be)

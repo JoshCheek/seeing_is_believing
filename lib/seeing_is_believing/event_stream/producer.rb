@@ -7,6 +7,14 @@ using SeeingIsBelieving::Safe
 class SeeingIsBelieving
   module EventStream
     class Producer
+
+      # Guarding against hostile users (e.g. me) that do ridiculous things like blowing away these constants
+      Object.constants.each do |name|
+        const_set name, Object.const_get(name)
+      end
+
+      ErrnoEPIPE = Errno::EPIPE # not actually tested, but we can see it is referenced below
+
       module NullQueue
         extend self
         Queue.instance_methods(false).each do |name|

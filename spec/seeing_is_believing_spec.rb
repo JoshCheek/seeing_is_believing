@@ -1023,5 +1023,76 @@ RSpec.describe SeeingIsBelieving do
                      end
                     ').stderr).to eq ''
     end
+
+    def executes_without_error!(code)
+      result = invoke(code)
+      expect(result.stderr).to eq ''
+      begin
+        expect(result).to_not have_exception, result.exception.pretty_inspect
+      rescue NoMethodError
+        require 'pp'
+        retry
+      end
+      result
+    end
+
+    specify 'when constants are reassigned' do
+      result = executes_without_error!('
+         # producer
+         Hash            = "fake Hash"
+         String          = "fake String"
+         class << String
+           undef ===
+         end
+         Exception       = "fake Exception"
+
+         kernel          = Kernel
+         Kernel          = "fake Kernel"
+         SystemExit      = "fake SystemExit"
+         NoMethodError   = "fake NoMethodError"
+         Marshal         = "fake Marshal"
+         TypeError       = "fake TypeError"
+
+         # only matter when forking
+         Thread          = "fake Thread"
+         IOError         = "fake IOError"
+         Errno::EPIPE    = "fake Errno::EPIPE" # we don\'t actually put it in a situation to hit this
+         Errno           = "fake Errno"
+
+         # the matrix
+         Exception = "Exception"
+         Symbol    = "Symbol"
+
+         # normal inspect
+         1 + 1
+
+         # force it down the sad path
+         obj = Object.new
+         def obj.inspect
+           "pass"
+         end
+         obj
+         puts __LINE__-1 # so we know where to assert
+
+         NotAString = Module.new
+         def obj.inspect
+           NotAString
+         end
+         obj
+
+         def obj.inspect
+           raise "whoops"
+         end
+         obj
+         puts __LINE__-1 # should be replaced with Kernel#inspect
+
+         kernel.exit 0
+      ')
+
+      pass_str, kernel_inspect = result.stdout.lines.map(&:to_i)
+      expect(result[pass_str]).to eq ['pass']
+      expect(result[kernel_inspect].size).to eq 1
+      expect(result[kernel_inspect][0]).to match /^#<Object/
+    end
   end
 end
