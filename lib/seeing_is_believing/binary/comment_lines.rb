@@ -17,7 +17,7 @@ class SeeingIsBelieving
       def call
         @call ||= begin
           commentable_lines = CommentableLines.new raw_code
-          commentable_lines.call.each do |line_number, (index_of_newline, col)|
+          commentable_lines.call.each do |line_number, (index_of_newline, _col)|
             first_index  = last_index = index_of_newline
             first_index -= 1 while first_index > 0 && raw_code[first_index-1] != "\n"
             comment_text = commenter.call raw_code[first_index...last_index], line_number

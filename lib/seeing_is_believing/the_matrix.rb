@@ -48,7 +48,7 @@ Kernel.module_eval do
   private
 
   define_method :warn do |*args, &block|
-    $stderr.puts *args
+    $stderr.puts(*args)
   end
 
   define_method :exec do |*args, &block|

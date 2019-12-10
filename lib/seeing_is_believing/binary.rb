@@ -23,7 +23,7 @@ class SeeingIsBelieving
       end
 
       if config.errors.any?
-        stderr.puts *config.errors, *config.deprecations
+        stderr.puts(*config.errors, *config.deprecations)
         return NONDISPLAYABLE_ERROR_STATUS
       end
 

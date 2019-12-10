@@ -91,8 +91,8 @@ class SeeingIsBelieving
     def indexes_of_ors_at_eol
       Set.new(
         @tokens.select { |type, *| type == :tGVAR }
-               .select { |_, (var, range)| var == '$\\'.freeze }
-               .map    { |_, (var, range)| range.end_pos }
+               .select { |_, (var, _range)| var == '$\\'.freeze }
+               .map    { |_, (_var, range)| range.end_pos }
       )
     end
 
@@ -106,7 +106,7 @@ class SeeingIsBelieving
 
     def body_range_from_tokens(tokens)
       return range_for(0, 0) if raw.start_with? "__END__\n"
-      (name, (_, range)) = tokens.max_by { |name, (data, range)| range.end_pos } ||
+      (name, (_, range)) = tokens.max_by { |name, (_data, range)| range.end_pos } ||
                             [nil, [nil, range_for(0, 1)]]
       end_pos = range.end_pos
       end_pos += 1 if name == :tCOMMENT || name == :tSTRING_END || name == :tSEMI
