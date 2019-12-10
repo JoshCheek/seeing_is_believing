@@ -557,7 +557,7 @@ RSpec.describe SeeingIsBelieving do
   it 'sees refined inspect (#128)' do
     result = invoke <<-RUBY
     module BinMeUp
-      refine Fixnum do
+      refine Integer do
         def inspect
           "%08b" % self
         end
@@ -831,23 +831,21 @@ RSpec.describe SeeingIsBelieving do
                     ').stderr).to eq ''
     end
 
-    specify 'when Fixnum does not have <, <<, next, ==, inspect, to_s' do
-      if defined? Fixnum
-        result = invoke('class Fixnum
-                           undef <
-                           undef <<
-                           undef ==
-                           def next
-                             "redefining instead of undefing b/c it comes from Integer"
-                           end
-                           undef to_s
-                           undef inspect
+    specify 'when Integer does not have <, <<, next, ==, inspect, to_s' do
+      result = invoke('class Integer
+                         undef <
+                         undef <<
+                         undef ==
+                         def next
+                           "redefining instead of undefing b/c it comes from Integer"
                          end
-                         "a"')
-        expect(result.stderr).to eq ''
-        expect(result.exitstatus).to eq 0
-        expect(result.to_a.last).to eq ['"a"']
-      end
+                         undef to_s
+                         undef inspect
+                       end
+                       "a"')
+      expect(result.stderr).to eq ''
+      expect(result.exitstatus).to eq 0
+      expect(result.to_a.last).to eq ['"a"']
     end
 
     specify 'when Integer does not have <, <<, next, ==, inspect, to_s' do
