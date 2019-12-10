@@ -9,9 +9,11 @@ class SeeingIsBelieving
     class Producer
 
       # Guarding against hostile users (e.g. me) that do ridiculous things like blowing away these constants
+      old_w, $-w = $-w, nil
       Object.constants.each do |name|
         const_set name, Object.const_get(name)
       end
+      $-w = old_w
 
       ErrnoEPIPE = Errno::EPIPE # not actually tested, but we can see it is referenced below
 
