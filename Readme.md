@@ -8,7 +8,7 @@ Evaluates Ruby code, recording the results of each line.
 Integrates with any extensible editor (I've integrated it with many already, see [the list](https://github.com/JoshCheek/seeing_is_believing/wiki/Editor-Integration)).
 If you like Swift Playgrounds, you'll like SiB.
 
-![example](https://s3.amazonaws.com/josh.cheek/images/scratch/sib-example1.gif)
+![example](docs/example.gif)
 
 
 Helpful links
