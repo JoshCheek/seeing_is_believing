@@ -54,13 +54,13 @@ class SeeingIsBelieving
       def remove_lines_whose_newline_is_escaped(line_num_to_location)
         ors_indexes = code_obj.indexes_of_ors_at_eol
         line_num_to_location
-          .select { |line_number, (index_of_newline, col)|
+          .select { |line_number, (index_of_newline, _col)|
             code[index_of_newline-1] == '\\'
           }
-          .reject { |line_number, (index_of_newline, col)|
+          .reject { |line_number, (index_of_newline, _col)|
             ors_indexes.include? index_of_newline
           }
-          .each { |line_number, (index_of_newline, col)|
+          .each { |line_number, (_index_of_newline, _col)|
             line_num_to_location.delete line_number
           }
       end
@@ -73,8 +73,8 @@ class SeeingIsBelieving
             begin_pos = comment.location.expression.begin_pos
             end_pos   = comment.location.expression.end_pos
             range     = begin_pos...end_pos
-            line_num_to_location.select { |line_number, (index_of_newline, col)| range.include? index_of_newline }
-                                .each   { |line_number, (index_of_newline, col)| line_num_to_location.delete line_number }
+            line_num_to_location.select { |line_number, (index_of_newline, _col)| range.include? index_of_newline }
+                                .each   { |line_number, (_index_of_newline, _col)| line_num_to_location.delete line_number }
           end
         end
       end
@@ -82,8 +82,8 @@ class SeeingIsBelieving
       def remove_lines_inside_of_strings_and_things(line_num_to_location, ast)
         invalid_boundaries = ranges_of_atomic_expressions ast, []
         invalid_boundaries.each do |invalid_boundary|
-          line_num_to_location.select { |line_number, (index_of_newline, col)| invalid_boundary.include? index_of_newline }
-                              .each   { |line_number, (index_of_newline, col)| line_num_to_location.delete line_number }
+          line_num_to_location.select { |line_number, (index_of_newline, _col)| invalid_boundary.include? index_of_newline }
+                              .each   { |line_number, (_index_of_newline, _col)| line_num_to_location.delete line_number }
         end
       end
 

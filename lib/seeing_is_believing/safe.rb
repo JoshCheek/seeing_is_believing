@@ -50,13 +50,7 @@ class SeeingIsBelieving
       alias to_str to_str
     end
 
-    # in 2.4 we should use Integer instead, but it's not obvious to me how
-    # to detect this. eg defined?(Fixnum) returns "constant". Accessing it
-    # leads to a warning, but SiB turns warnings off so you don't see it.
-    # So.... for now, it incidentally doesn't do anything annoying, but would
-    # be good to figure out something better (eg if we ever wanted to allow the
-    # user to decide whether warnings should display or not)
-    refine Fixnum do
+    refine Integer do
       alias to_s to_s
       alias next next
       alias <    <

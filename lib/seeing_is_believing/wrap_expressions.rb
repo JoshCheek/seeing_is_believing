@@ -25,7 +25,7 @@ class SeeingIsBelieving
 
         wrappings = wrappings().sort_by(&:first)
 
-        wrappings.each do |line_num, (range, last_col, meta)|
+        wrappings.each do |line_num, (range, _last_col, meta)|
           case meta
           when :total_fucking_failure
             rewriter.replace range,  '.....TOTAL FUCKING FAILURE!.....'
@@ -34,11 +34,11 @@ class SeeingIsBelieving
           end
         end
 
-        wrappings.each do |line_num, (range, last_col, meta)|
+        wrappings.each do |line_num, (range, _last_col, _meta)|
           rewriter.insert_before range, before_each.call(line_num)
         end
 
-        wrappings.each do |line_num, (range, last_col, meta)|
+        wrappings.each do |line_num, (range, _last_col, _meta)|
           rewriter.insert_after range, after_each.call(line_num)
         end
 
@@ -256,10 +256,10 @@ class SeeingIsBelieving
       end
     end
 
-      def inline_rescue?(ast)
-        primary_code, rescue_body, else_body = ast.children
-        return false unless primary_code
-        primary_code.loc.expression.last_line == rescue_body.loc.expression.first_line
-      end
+    def inline_rescue?(ast)
+      primary_code, rescue_body, _else_body = ast.children
+      return false unless primary_code
+      primary_code.loc.expression.last_line == rescue_body.loc.expression.first_line
     end
   end
+end

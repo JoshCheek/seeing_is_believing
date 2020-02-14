@@ -48,21 +48,30 @@ Kernel.module_eval do
   private
 
   define_method :warn do |*args, &block|
-    $stderr.puts *args
+    $stderr.puts(*args)
   end
 
+  alias :exec :exec # disable warning
   define_method :exec do |*args, &block|
     $SiB.record_exec(args)
     finish.call
     real_exec.call(*args, &block)
   end
 
+  alias :exit! :exit! # disable warning
   define_method :exit! do |status=false|
     finish.call
     real_exit_bang.call(status)
   end
 
+  alias :fork :fork
   define_method :fork, &fork_defn
+end
+
+module Process
+  class << self
+    alias :fork :fork
+  end
 end
 
 Kernel.define_singleton_method  :fork, &fork_defn
