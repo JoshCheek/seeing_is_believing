@@ -312,8 +312,7 @@ class SeeingIsBelieving
   end
 
   def Binary.help_screen(markers)
-    value  = markers[:value][:prefix]
-    _stdout = markers[:stdout][:prefix]
+    value = markers[:value][:prefix]
 
     <<FLAGS
 Usage: seeing_is_believing [options] [filename]

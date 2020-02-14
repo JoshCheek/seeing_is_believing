@@ -836,9 +836,7 @@ RSpec.describe SeeingIsBelieving do
                          undef <
                          undef <<
                          undef ==
-                         def next
-                           "redefining instead of undefing b/c it comes from Integer"
-                         end
+                         undef next
                          undef to_s
                          undef inspect
                        end

@@ -9,7 +9,7 @@ class SeeingIsBelieving
     class Producer
 
       # Guarding against hostile users (e.g. me) that do ridiculous things like blowing away these constants
-      old_w, $-w = $-w, nil
+      old_w, $-w = $-w, nil # Ruby warns about accessing deprecated constants
       Object.constants.each do |name|
         const_set name, Object.const_get(name)
       end
