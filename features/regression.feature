@@ -478,6 +478,7 @@ Feature:
   @not-2.4
   @not-2.5
   @not-2.6
+  @not-2.7
   Scenario: Old JSON bug
     Given the file "json_and_encodings.rb":
     """
