@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency             "parser",      "~> 2.7.0"
-  s.add_dependency             "childprocess","~> 2.0.0"
+  s.add_dependency             "childprocess","~> 3.0.0"
   s.add_dependency             "ffi",         "~> 1.11.1"
 
   s.add_development_dependency "pry"
