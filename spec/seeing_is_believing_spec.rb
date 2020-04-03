@@ -555,7 +555,6 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'sees refined inspect (#128)' do
-    skip if RUBY_VERSION.start_with? '2.3' # FIXME: remove after removing support for the now deprecated Ruby 2.3
     result = invoke <<-RUBY
     module BinMeUp
       refine Integer do

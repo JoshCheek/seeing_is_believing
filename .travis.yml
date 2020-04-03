@@ -2,7 +2,6 @@ language: ruby
 install: rake install
 script: bundle exec rake ci
 rvm:
-  - 2.3.1
   - 2.4.1
   - 2.5.0
   - 2.6.3
