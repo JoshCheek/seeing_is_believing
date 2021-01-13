@@ -1,12 +1,6 @@
 https://github.com/JoshCheek/seeing_is_believing/workflows/Ruby/badge.svg
 
-Unix/Mac: [
-![Unix Build Status](
-    https://github.com/JoshCheek/seeing_is_believing/workflows/Test/badge.svg
-  )
-](
-    https://github.com/JoshCheek/seeing_is_believing/actions?query=workflow%3ATest
-)
+Unix/Mac: [![Unix Build Status](https://github.com/JoshCheek/seeing_is_believing/workflows/Test/badge.svg)](https://github.com/JoshCheek/seeing_is_believing/actions?query=workflow%3ATest)
 &nbsp;&nbsp;
 Appveyor:  [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/JoshCheek/seeing_is_believing?branch=master&svg=true)](https://ci.appveyor.com/project/JoshCheek/seeing-is-believing)
 
