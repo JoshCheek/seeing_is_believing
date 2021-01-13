@@ -11,6 +11,7 @@ class SeeingIsBelieving
       # Guarding against hostile users (e.g. me) that do ridiculous things like blowing away these constants
       old_w, $-w = $-w, nil # Ruby warns about accessing deprecated constants
       Object.constants.each do |name|
+        next if name == :SortedSet # Removed in 3.0, but apparently the constant still exists, it just explodes if you reference it
         const_set name, Object.const_get(name)
       end
       $-w = old_w

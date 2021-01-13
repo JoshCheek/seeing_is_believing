@@ -470,32 +470,6 @@ Feature:
     """
 
 
-  # See this issue for the issue we're testing for: https://github.com/JoshCheek/seeing_is_believing/issues/46
-  # See this issue for why we turn it off on 2.4: https://github.com/flori/json/issues/309
-  #
-  # Not going to get too detailed on what it prints, b/c that message seems pretty fragile,
-  # but just generally that it doesn't fkn blow up
-  @not-2.4
-  @not-2.5
-  @not-2.6
-  @not-2.7
-  Scenario: Old JSON bug
-    Given the file "json_and_encodings.rb":
-    """
-    # encoding: utf-8
-    require 'json'
-    JSON.parse JSON.dump("√")
-    """
-    When I run "seeing_is_believing json_and_encodings.rb"
-    Then stderr is empty
-    And the exit status is 1
-    And stdout includes:
-    """
-    require 'json'             # => true
-    JSON.parse JSON.dump("√")
-    """
-
-
   # https://github.com/JoshCheek/seeing_is_believing/wiki/Encodings
   # https://github.com/JoshCheek/seeing_is_believing/issues/109
   Scenario: Assumes utf-8 for files regardless of what Ruby thinks
