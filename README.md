@@ -1,5 +1,14 @@
-Unix/Mac: [![Unix Build Status](https://secure.travis-ci.org/JoshCheek/seeing_is_believing.svg?branch=master)](http://travis-ci.org/JoshCheek/seeing_is_believing) &nbsp;&nbsp;
-Windows:  [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/JoshCheek/seeing_is_believing?branch=master&svg=true)](https://ci.appveyor.com/project/JoshCheek/seeing-is-believing)
+https://github.com/JoshCheek/seeing_is_believing/workflows/Ruby/badge.svg
+
+Unix/Mac: [
+![Unix Build Status](
+    https://github.com/JoshCheek/seeing_is_believing/workflows/Test/badge.svg
+  )
+](
+    https://github.com/JoshCheek/seeing_is_believing/actions?query=workflow%3ATest
+)
+&nbsp;&nbsp;
+Appveyor:  [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/JoshCheek/seeing_is_believing?branch=master&svg=true)](https://ci.appveyor.com/project/JoshCheek/seeing-is-believing)
 
 Seeing Is Believing
 ===================
@@ -49,12 +58,10 @@ Inspiration
 
 
 Shout outs
-----------
+-----------
 
-* Whitequark for all the work on [Parser](http://github.com/whitequark/parser/), which dramatically dramatically improved SiB (I used to have my own horribly shitty line-based parser)
-* [Travis CI](https://travis-ci.org/JoshCheek/seeing_is_believing)... I love you times a million! So many difficult bugs have been caught by this.
-  It's so easy to work with, astoundingly convenient, helps me guarantee that SiB works on everyone else's computers, too. And it's free since SiB is open source.
-  I literally have a Travis CI sticker on my laptop, I love you that much.
+* Whitequark for all the work on [Parser](http://github.com/whitequark/parser/)
+
 
 License
 -------
