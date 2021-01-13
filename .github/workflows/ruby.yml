@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['2.6', '2.7', '3.0']
+        ruby-version: ['2.7']
 
     steps:
     - uses: actions/checkout@v2
@@ -33,5 +33,7 @@ jobs:
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
       run: rake install
-    - name: Run tests
-      run: rake
+    - name: Run rspec tests
+      run: rake spec
+    - name: Run cucumber features
+      run: rake cuke
