@@ -21,7 +21,19 @@ require 'seeing_is_believing/swap_files'
 require 'seeing_is_believing/event_stream/consumer'
 require 'seeing_is_believing/event_stream/events'
 
-ChildProcess.posix_spawn = true # forking locks up for some reason when we run SiB inside of SiB
+# Forking locks up for some reason when we run SiB inside of SiB, so use `spawn`
+ChildProcess.posix_spawn = true
+
+# ChildProcess works on the M1 ("Apple Silicon"),
+# but it emits a bunch of logs that wind up back in the editors.
+# I opened an issue https://github.com/enkessler/childprocess/issues/176
+# but haven't heard back about it. Ultimately decided it's better to mess with
+# their logging than to leave it broken. Eg see these issues:
+# * https://github.com/JoshCheek/seeing_is_believing/issues/161
+# * https://github.com/JoshCheek/seeing_is_believing/issues/160
+if RbConfig::CONFIG['host'] =~ /arm/ && RbConfig::CONFIG['host'] =~ /darwin/
+  ChildProcess.logger.level = Logger::FATAL
+end
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
