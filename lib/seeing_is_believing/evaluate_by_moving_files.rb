@@ -75,15 +75,15 @@ class SeeingIsBelieving
                                   filename:          relative_filename,
                                 )].pack('m0')
 
-      pid = spawn(
-        env,
-        *popen_args,
-        chdir: (local_cwd ? file_directory : Dir.pwd),
-        in:  child_stdin,
-        out: child_stdout,
-        err: child_stderr,
-        pgroup: true,
-      )
+      opts = { in: child_stdin, out: child_stdout, err: child_stderr }
+      opts[:chdir] = file_directory if local_cwd
+      if RbConfig::CONFIG['host_os'] =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+        opts[:new_pgroup] = true # windows
+      else
+        opts[:pgroup] = true
+      end
+
+      pid = spawn env, *popen_args, **opts
       waiting = true
       started_at = Time.now
 
