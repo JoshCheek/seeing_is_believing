@@ -119,7 +119,7 @@ class SeeingIsBelieving
       end
 
       if timeout_seconds == 0
-        _pid, status = Process.wait2 -pid
+        _pid, status = Process.waitpid2 -pid, Process::WUNTRACED
         waiting = false
         consumer.process_exitstatus(status.exitstatus)
       else
@@ -134,7 +134,7 @@ class SeeingIsBelieving
           if stop_at <= Time.now
             consumer.process_timeout timeout_seconds
             Process.kill 9, -pid# rescue Errno::ESRCH
-            _pid, _status = Process.wait2 -pid
+            _pid, _status = Process.wait2 -pid, Process::WUNTRACED
             waiting = false
             break
           end

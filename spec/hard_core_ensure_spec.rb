@@ -110,10 +110,10 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
         # note that if we don't check this, the pipe on the next line may beat the signal
         # to the process leading to nondeterministic printing
         # p __LINE__
-        expect(Process.waitpid pid, Process::WNOHANG).to eq nil
+        expect(Process.waitpid pid, Process::WUNTRACED|Process::WNOHANG).to eq nil
 
         psin.puts "wake up!"
-        _, status = Process.wait2 pid
+        _, status = Process.wait2 pid, Process::WUNTRACED
         expect(status.exitstatus).to eq 0
         expect(psout.gets).to eq "CODE2\n"
         expect(psout.gets).to eq "ENSURE\n"

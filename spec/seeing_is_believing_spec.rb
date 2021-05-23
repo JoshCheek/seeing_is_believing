@@ -588,8 +588,8 @@ RSpec.describe SeeingIsBelieving do
     expect(child_id).to match /^\d+$/
     expect(grandchild_id).to match /^\d+$/
     expect(rest).to be_empty
-    expect { Process.wait child_id.to_i      } .to raise_error /no.*processes/i
-    expect { Process.wait grandchild_id.to_i } .to raise_error /no.*processes/i
+    expect { Process.waitpid child_id.to_i,      Process::WUNTRACED } .to raise_error /no.*processes/i
+    expect { Process.waitpid grandchild_id.to_i, Process::WUNTRACED } .to raise_error /no.*processes/i
   end
 
 
@@ -633,7 +633,7 @@ RSpec.describe SeeingIsBelieving do
     Process.kill 'INT', pid
 
     # wait for it to finish cleaning up so we don't check pids before it gets around to killing them
-    Process.wait pid
+    Process.waitpid pid, Process::WUNTRACED
 
     # Apparently we can check if processes exist by sending them signal 0
     # http://stackoverflow.com/questions/9152979/check-if-process-exists-given-its-pid
