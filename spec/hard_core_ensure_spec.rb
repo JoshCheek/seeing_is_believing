@@ -41,19 +41,22 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
   end
 
   def ruby(program)
-    child = ChildProcess.build RbConfig.ruby,
-                               '-I', File.expand_path('../lib', __dir__),
-                               '-r', 'seeing_is_believing/hard_core_ensure',
-                               '-e', program
-    child.duplex = true
     outread, outwrite = IO.pipe
     errread, errwrite = IO.pipe
-    child.io.stdout = outwrite
-    child.io.stderr = errwrite
-    child.start
+    inread,  inwrite  = IO.pipe
+    pid = spawn(
+      RbConfig.ruby,
+      '-I', File.expand_path('../lib', __dir__),
+      '-r', 'seeing_is_believing/hard_core_ensure',
+      '-e', program,
+      in:  inread,
+      out: outwrite,
+      err: errwrite,
+    )
+    inread.close
     outwrite.close
     errwrite.close
-    yield child, outread
+    yield pid, inwrite, outread
   ensure
     errread && !errread.closed? && expect(errread.read).to(be_empty)
     outread.close unless outread.closed?
@@ -72,10 +75,10 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
         ensure: -> { puts %(ENSURE) },
       ).call
     RUBY
-    ruby program do |ps, psout|
-      expect(psout.gets.chomp).to eq "CODE"
+    ruby program do |pid, _psin, psout|
+      expect(psout.readpartial(1000).to_s.chomp).to eq "CODE"
       # is_alive = ChildProcess::Windows::Lib.alive?(ps.pid)
-      Process.kill 'INT', ps.pid
+      Process.kill 'INT', pid
 
       expect(psout.gets.chomp).to eq "ENSURE"
       expect(psout.gets.chomp).to eq "CUSTOM-HANDLER"
@@ -100,17 +103,18 @@ RSpec.describe SeeingIsBelieving::HardCoreEnsure do
           ensure: -> { puts %(ENSURE) },
         ).call
       RUBY
-      ruby program do |ps, psout|
+      ruby program do |pid, psin, psout|
         expect(psout.gets).to eq "CODE1\n" # we're in the code block
-        Process.kill 'INT', ps.pid         # should be ignored
+        Process.kill 'INT', pid            # should be ignored
 
         # note that if we don't check this, the pipe on the next line may beat the signal
         # to the process leading to nondeterministic printing
-        expect(ps).to be_alive
+        # p __LINE__
+        expect(Process.waitpid pid, Process::WNOHANG).to eq nil
 
-        ps.io.stdin.puts "wake up!"
-        ps.wait
-        expect(ps.exit_code).to eq 0
+        psin.puts "wake up!"
+        _, status = Process.wait2 pid
+        expect(status.exitstatus).to eq 0
         expect(psout.gets).to eq "CODE2\n"
         expect(psout.gets).to eq "ENSURE\n"
         expect(psout.gets).to eq nil

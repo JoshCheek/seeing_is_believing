@@ -10,30 +10,14 @@
 # if you  did something like File.read(__FILE__) it would
 # read the wrong file... of course, since we rewrite the file,
 # its body will be incorrect, anyway.
-
 require 'rbconfig'
 require 'socket'
-require "childprocess"
 
 require 'seeing_is_believing/result'
 require 'seeing_is_believing/debugger'
 require 'seeing_is_believing/swap_files'
 require 'seeing_is_believing/event_stream/consumer'
 require 'seeing_is_believing/event_stream/events'
-
-# Forking locks up for some reason when we run SiB inside of SiB, so use `spawn`
-ChildProcess.posix_spawn = true
-
-# ChildProcess works on the M1 ("Apple Silicon"),
-# but it emits a bunch of logs that wind up back in the editors.
-# I opened an issue https://github.com/enkessler/childprocess/issues/176
-# but haven't heard back about it. Ultimately decided it's better to mess with
-# their logging than to leave it broken. Eg see these issues:
-# * https://github.com/JoshCheek/seeing_is_believing/issues/161
-# * https://github.com/JoshCheek/seeing_is_believing/issues/160
-if RbConfig::CONFIG['host'] =~ /arm/ && RbConfig::CONFIG['host'] =~ /darwin/
-  ChildProcess.logger.level = Logger::FATAL
-end
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
@@ -78,6 +62,7 @@ class SeeingIsBelieving
       event_server = TCPServer.new(0) # dynamically allocates an available port
 
       # setup streams
+      child_stdin, stdin   = IO.pipe("utf-8")
       stdout, child_stdout = IO.pipe("utf-8")
       stderr, child_stderr = IO.pipe("utf-8")
 
@@ -90,20 +75,25 @@ class SeeingIsBelieving
                                   filename:          relative_filename,
                                 )].pack('m0')
 
-      child = ChildProcess.build(*popen_args)
-      child.cwd    = file_directory if local_cwd
-      child.leader = true
-      child.duplex = true
-      child.environment.merge!(env)
-      child.io.stdout = child_stdout
-      child.io.stderr = child_stderr
+      pid = spawn(
+        env,
+        *popen_args,
+        chdir: (local_cwd ? file_directory : Dir.pwd),
+        in:  child_stdin,
+        out: child_stdout,
+        err: child_stderr,
+        pgroup: true,
+      )
+      waiting = true
+      started_at = Time.now
 
-      child.start
+      # child.leader = true
+      # child.start
 
       # close child streams b/c they won't emit EOF if parent still has an open reference
-      close_streams(child_stdout, child_stderr)
-      child.io.stdin.binmode
-      child.io.stdin.sync = true
+      stdin.binmode
+      stdin.sync = true
+      close_streams(child_stdin, child_stdout, child_stderr)
 
       # Start receiving events from the child
       eventstream = event_server.accept
@@ -111,11 +101,11 @@ class SeeingIsBelieving
       # send stdin (char at a time b/c input could come from a stream)
       Thread.new do
         begin
-          provided_input.each_char { |char| child.io.stdin.write char }
+          provided_input.each_char { |char| stdin.write char }
         rescue
           # don't explode if child closes IO
         ensure
-          child.io.stdin.close
+          stdin.close
         end
       end
 
@@ -128,36 +118,34 @@ class SeeingIsBelieving
         end
       end
 
-      # wait for completion
       if timeout_seconds == 0
-        child.wait
+        _pid, status = Process.wait2 -pid
+        waiting = false
+        consumer.process_exitstatus(status.exitstatus)
       else
-        child.poll_for_exit(timeout_seconds)
-      end
-      consumer.process_exitstatus(child.exit_code)
-      consumer_thread.join
-    rescue ChildProcess::TimeoutError
-      consumer.process_timeout(timeout_seconds)
-      child.stop
-      consumer_thread.join
-    ensure
-      # On Windows, we need to call stop if there is an error since it interrupted
-      # the previos waiting/polling. If we don't call stop, in that situation, it will
-      # leave orphan processes. On Unix, we need to always call stop or it may leave orphans
-      begin
-        if ChildProcess.unix?
-          child.stop
-        elsif $!
-          child.stop
-          consumer.process_exitstatus(child.exit_code)
+        stop_at = started_at + timeout_seconds
+        loop do
+          _pid, status = Process.waitpid2 -pid, Process::WUNTRACED|Process::WNOHANG
+          if status
+            waiting = false
+            consumer.process_exitstatus(status.exitstatus)
+            break
+          end
+          if stop_at <= Time.now
+            consumer.process_timeout timeout_seconds
+            Process.kill 9, -pid# rescue Errno::ESRCH
+            _pid, _status = Process.wait2 -pid
+            waiting = false
+            break
+          end
+          sleep 0.01
         end
-        child.alive? && child.stop
-      rescue ChildProcess::Error
-        # On AppVeyor, I keep getting errors
-        #   The handle is invalid: https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/22
-        #   Access is denied:      https://ci.appveyor.com/project/JoshCheek/seeing-is-believing/build/24
       end
-      close_streams(stdout, stderr, eventstream, event_server)
+      consumer_thread.join
+
+    ensure
+      Process.kill 9, -pid if waiting
+      close_streams(stdin, stdout, stderr, eventstream, event_server)
     end
 
     def popen_args

@@ -267,8 +267,8 @@ Feature:
     """
 
 
-  # ChildProcess doesn't seem to handle this well in Windows. IDK.
-  @not-windows
+  # # ChildProcess doesn't seem to handle this well in Windows. IDK.
+  # @not-windows
   Scenario: Long DATA segment in a valid file
     Given the file "long_valid_data_segment.rb":
     """

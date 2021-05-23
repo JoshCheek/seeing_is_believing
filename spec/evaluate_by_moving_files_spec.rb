@@ -4,7 +4,6 @@ require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/handlers/update_result'
 require 'fileutils'
-require 'childprocess'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   let(:filedir)  { File.expand_path '../proving_grounds', __dir__ }
