@@ -4,6 +4,7 @@ require 'spec_helper'
 require 'seeing_is_believing/evaluate_by_moving_files'
 require 'seeing_is_believing/event_stream/handlers/update_result'
 require 'fileutils'
+require 'childprocess'
 
 RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
   let(:filedir)  { File.expand_path '../proving_grounds', __dir__ }
@@ -178,8 +179,8 @@ RSpec.describe SeeingIsBelieving::EvaluateByMovingFiles do
     expect(child_id).to match /^\d+$/
     expect(grandchild_id).to match /^\d+$/
     expect(rest).to be_empty
-    expect { Process.wait child_id.to_i,      Process::WUNTRACED} .to raise_error /no.*processes/i
-    expect { Process.wait grandchild_id.to_i, Process::WUNTRACED} .to raise_error /no.*processes/i
+    expect { Process.wait child_id.to_i      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id.to_i } .to raise_error /no.*processes/i
   end
 
   it 'raises an ArgumentError if given arguments it doesn\'t know' do

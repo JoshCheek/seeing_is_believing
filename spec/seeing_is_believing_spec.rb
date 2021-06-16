@@ -3,6 +3,7 @@
 require 'spec_helper'
 require 'stringio'
 require 'seeing_is_believing'
+require 'childprocess'
 require 'json'
 
 RSpec.describe SeeingIsBelieving do
@@ -588,8 +589,8 @@ RSpec.describe SeeingIsBelieving do
     expect(child_id).to match /^\d+$/
     expect(grandchild_id).to match /^\d+$/
     expect(rest).to be_empty
-    expect { Process.waitpid child_id.to_i,      Process::WUNTRACED } .to raise_error /no.*processes/i
-    expect { Process.waitpid grandchild_id.to_i, Process::WUNTRACED } .to raise_error /no.*processes/i
+    expect { Process.wait child_id.to_i      } .to raise_error /no.*processes/i
+    expect { Process.wait grandchild_id.to_i } .to raise_error /no.*processes/i
   end
 
 
@@ -602,13 +603,11 @@ RSpec.describe SeeingIsBelieving do
   # use powershell which I don't know, just all the little things
   # are off so someting as simple as dropping a pry into the test
   # to figure out WTF is going on, it becomes prohibitively difficult)
-  it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up' do
-  # it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up', windows: false do
+  it 'kills the child and all of its children when the main SiB process gets killed, even if they\'re nonsensing it up', windows: false do
     # start SiB, it will make a child, use --stream so we can
     # access individual events as they are emitted (to get the pids)
-    read, write = IO.pipe
     bin_path = File.realpath '../bin/seeing_is_believing', __dir__
-    pid = spawn bin_path, '--stream', '-e', <<-RUBY, out: write, err: write
+    sib = ChildProcess.build bin_path, '--stream', '-e', <<-RUBY
       # the child makes a grandchild that ignores interrupts and sleeps
       spawn %(ruby), %(-e), %(trap %(INT), %(IGNORE); sleep)
 
@@ -618,6 +617,12 @@ RSpec.describe SeeingIsBelieving do
       sleep
     RUBY
 
+    # Hook up the io and start the child process
+    read, write   = IO.pipe
+    sib.io.stdout = write
+    sib.io.stderr = write
+    sib.duplex    = true # otherwise it takes the real process's stdin, which will mess w/ pry
+    sib.start
     write.close
 
     # Get the child and grandchild ids. If we read too far, we lock up the test
@@ -630,10 +635,11 @@ RSpec.describe SeeingIsBelieving do
     end
 
     # Interrupt SiB, it interrupts child and grandchild
-    Process.kill 'INT', pid
+    expect(sib).to be_alive
+    Process.kill 'INT', sib.pid
 
     # wait for it to finish cleaning up so we don't check pids before it gets around to killing them
-    Process.waitpid pid, Process::WUNTRACED
+    sib.wait
 
     # Apparently we can check if processes exist by sending them signal 0
     # http://stackoverflow.com/questions/9152979/check-if-process-exists-given-its-pid
