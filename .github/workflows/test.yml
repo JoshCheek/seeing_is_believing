@@ -42,14 +42,24 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-    - name: Just looking at what these values are
-      run:  |
-        ruby -e 'p PWD: ARGV[0], GITHUB_PATH: ARGV[1]' "$PWD" "$GITHUB_PATH"
-    - name: Use installed executables
-      run:  echo "$PWD/bundle/bin" >> $GITHUB_PATH
+
+    # This is honestly super confusing for me. 
+    # https://github.com/JoshCheek/seeing_is_believing/runs/2870747499?check_suite_focus=true
+    - name: Fuckit, try installing bundler explicitly
+      run:  gem install bundler
+
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
       run:  rake install
+
+    - name: Just looking at what these values are
+      run:  |
+        ruby -e 'p ENV["PATH"], Dir["bundle/bin/*"]'
+
+    - name: Use installed executables
+      run:  echo "$PWD/bundle/bin" >> $GITHUB_PATH
+
     - name: Run rspec tests
       run:  rake spec
+
     - name: Run cucumber features
       run:  rake cuke
