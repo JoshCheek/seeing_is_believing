@@ -10,7 +10,8 @@
 
 name: Test
 
-on:
+# quoting because https://twitter.com/josh_cheek/status/1406699258649190403
+"on":
   push:
     branches: [ master ]
   pull_request:
@@ -20,11 +21,15 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ 'ubuntu-20.04', 'macos-10.15', 'macos-11.0', 'windows-2019' ]
+        os:
+        - 'ubuntu-20.04'
+        - 'windows-2019'
+        - 'macos-10.15'
+        # This is currently unavailable: https://github.com/actions/virtual-environments/issues/2486
+        # - 'macos-11.0'
         ruby: [ '2.5', '2.6', '2.7', '3.0' ]
 
-
-    name: ${{ matrix.os }} ${{ matrix.ruby }}
+    name: MRI ${{ matrix.ruby }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
