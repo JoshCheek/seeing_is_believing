@@ -51,10 +51,31 @@ jobs:
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
       run:  rake install
 
-    - name: Just looking at what these values are
-      run:  |
-        ruby -r pp -e 'pp ENV["PATH"], Dir[File.join("bundle", "bin", "*")]'
+    - name: POKIN AROUND
+      run: |
+        pwd
+        echo "$PWD/bundle/bin"
+        echo 'Process.pid'
+        echo 'Process.ppid'
+        echo --------------
+        ls
+        echo --------------
+        ps aux
+        echo --------------
 
+
+    # https://github.com/JoshCheek/seeing_is_believing/runs/2870747499?check_suite_focus=true
+    #
+    # ```
+    # Run ruby -e 'p PWD: ARGV[0], GITHUB_PATH: ARGV[1]' "$PWD" "$GITHUB_PATH"
+    # {:***"D:\\a\\seeing_is_believing\\seeing_is_believing", :GITHUB_PATH=>nil}
+    # ```
+    #
+    # Can we just admit that this shell script makes no fkn sense?
+    #
+    # This is supposed to be bash, yeah? But the variable wasn't set, so it
+    # should have come in as empty string, but it came in as `nil`. And if the
+    # variable isn't set, then what file are we appending into?
     - name: Use installed executables
       run:  echo "$PWD/bundle/bin" >> $GITHUB_PATH
 
