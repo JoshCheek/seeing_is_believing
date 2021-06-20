@@ -27,13 +27,31 @@ ChildProcess.posix_spawn = true
 # ChildProcess works on the M1 ("Apple Silicon"),
 # but it emits a bunch of logs that wind up back in the editors.
 # I opened an issue https://github.com/enkessler/childprocess/issues/176
-# but haven't heard back about it. Ultimately decided it's better to mess with
-# their logging than to leave it broken. Eg see these issues:
-# * https://github.com/JoshCheek/seeing_is_believing/issues/161
+#
+# Nothing happened for 3 months, and I eventually switched it over to use `Kernel.spawn`
+# But that only worked on my local machine, and failed in CI on Oses I don't have access to
+# https://github.com/JoshCheek/seeing_is_believing/commit/f32929637625aece8ccb020c58470a5b4f659fbe
+#
+# Then Ryan patched it for me during a Seattle.rb meetup
+# https://github.com/enkessler/childprocess/pull/177
+#
+# But their `arch` detection code gets back different values between Ruby 2.7.2 and 2.7.3:
+# https://github.com/enkessler/childprocess/issues/179
+#
+# My gem has been broken on the M1 for... prob the entire life of the M1
 # * https://github.com/JoshCheek/seeing_is_believing/issues/160
+# * https://github.com/JoshCheek/seeing_is_believing/issues/161
+#
+# Sooooo... in order to unbreak it, I'm going to try to detect this situation
+# and guerilla patch Childprocess so that it doesn't depend on `RbConfig::CONFIG['host_cpu']`
+# we're essentially blowing away this method:
+# https://github.com/enkessler/childprocess/blob/v4.1.0/lib/childprocess.rb#L131-L150
 if RbConfig::CONFIG['host'] =~ /arm/ && RbConfig::CONFIG['host'] =~ /darwin/
-  ChildProcess.logger.level = Logger::FATAL
+  def ChildProcess.arch
+    'arm64'
+  end
 end
+
 
 class SeeingIsBelieving
   class EvaluateByMovingFiles
