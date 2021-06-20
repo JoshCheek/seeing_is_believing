@@ -1,19 +1,29 @@
-desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its faster and safer'
+desc 'Have Bundler setup a standalone environment -- run tests in this, b/c its much faster'
 task :install do
   # Running without rubygems http://myronmars.to/n/dev-blog/2012/03/faster-test-boot-times-with-bundler-standalone
-  which("bundle")     or sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
-  Dir.exist? 'bundle' or sh 'bundle', 'install', '--standalone', '--binstubs', 'bundle/bin'
+  which("bundle") or sh 'gem', 'install', 'bundler', '--no-ri', '--no-rdoc'
+
+  next if Dir.exist? 'bundle'
+
+  # Install gems locally, into the directory "bundle" so that we can run without rubygems
+  sh 'bundle', 'install', '--standalone'
+
+  # Generate "binstubs" (wrappers around the gems executable files) that are configured to understand the standalone location
+  sh 'bundle', 'binstubs', '--all', '--path', 'bundle/bin'
 end
+
 
 desc 'Remove generated and irrelevant files'
 task :clean do
   rm_rf %w[bundle .bundle Gemfile.lock proving_grounds tags] + Dir['*.gem']
 end
 
+
 directory 'bundle' do
   $stderr.puts "\e[31mLooks like the gems aren\'t installed, run `rake install` to install them\e[39m"
   exit 1
 end
+
 
 def require_paths
   require 'bundler'
