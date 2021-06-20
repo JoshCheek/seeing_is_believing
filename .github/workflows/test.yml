@@ -4,6 +4,9 @@
 # documentation.
 # This workflow will download a prebuilt Ruby version, install dependencies and run tests with Rake
 # For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
+#
+# This file is heavily based on this example:
+# https://github.com/ruby/setup-ruby/blob/477b21f02be01bcb8030d50f37cfec92bfa615b6/.github/workflows/test.yml
 
 name: Test
 
@@ -17,10 +20,12 @@ jobs:
   test:
     strategy:
       matrix:
-        runs-on: ['ubuntu-latest', 'windows-latest', 'macos-10.15', 'macos-11']
-        ruby-version: ['2.5', '2.6', '2.7', '3.0']
+        os: [ 'ubuntu-20.04', 'macos-10.15', 'macos-11.0', 'windows-2019' ]
+        ruby: [ '2.5', '2.6', '2.7', '3.0' ]
 
-    runs-on: ${{ matrix.runs-on }}
+
+    name: ${{ matrix.os }} ${{ matrix.ruby }}
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
@@ -30,7 +35,7 @@ jobs:
     # uses: ruby/setup-ruby@v1
       uses: ruby/setup-ruby@477b21f02be01bcb8030d50f37cfec92bfa615b6
       with:
-        ruby-version: ${{ matrix.ruby-version }}
+        ruby-version: ${{ matrix.ruby }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
       run: rake install
