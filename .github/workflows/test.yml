@@ -53,7 +53,7 @@ jobs:
 
     - name: Just looking at what these values are
       run:  |
-        ruby -e 'p ENV["PATH"], Dir["bundle/bin/*"]'
+        ruby -r pp -e 'pp ENV["PATH"], Dir[File.join("bundle", "bin", "*")]'
 
     - name: Use installed executables
       run:  echo "$PWD/bundle/bin" >> $GITHUB_PATH
