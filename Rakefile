@@ -25,8 +25,8 @@ def require_paths
 end
 
 desc 'Print the require paths for arbitrary binary execution'
-task :require_paths, [:delimiter] => :bundle do |delimiter: ' '|
-  puts require_paths.join(delimiter)
+task :require_paths, [:delimiter] => :bundle do |*, options|
+  puts require_paths.join(options.fetch(:delimiter, ' '))
 end
 
 desc 'Run specs'
