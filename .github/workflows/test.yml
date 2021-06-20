@@ -43,7 +43,7 @@ jobs:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-    # This is honestly super confusing for me. 
+    # This is honestly super confusing for me.
     # https://github.com/JoshCheek/seeing_is_believing/runs/2870747499?check_suite_focus=true
     - name: Fuckit, try installing bundler explicitly
       run:  gem install bundler
