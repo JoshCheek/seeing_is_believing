@@ -46,7 +46,7 @@ jobs:
     # This is honestly super confusing for me.
     # https://github.com/JoshCheek/seeing_is_believing/runs/2870747499?check_suite_focus=true
     - name: Fuckit, try installing bundler explicitly
-      run:  gem install rake bundler
+      run:  gem install bundler
 
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
       run:  rake install
