@@ -20,6 +20,7 @@ name: Test
 jobs:
   test:
     strategy:
+      fail-fast: false # Just to see where we're at outside of Windows
       matrix:
         os:
         - 'ubuntu-20.04'
@@ -29,7 +30,6 @@ jobs:
         # This is currently unavailable: https://github.com/actions/virtual-environments/issues/2486
         # - 'macos-11.0'
         ruby: [ '2.5', '2.6', '2.7', '3.0' ]
-        fail-fast: false # Just to see where we're at outside of Windows
 
     name: MRI ${{ matrix.ruby }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
