@@ -4,10 +4,14 @@
 # documentation.
 # This workflow will download a prebuilt Ruby version, install dependencies and run tests with Rake
 # For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
+#
+# This file is heavily based on this example:
+# https://github.com/ruby/setup-ruby/blob/477b21f02be01bcb8030d50f37cfec92bfa615b6/.github/workflows/test.yml
 
 name: Test
 
-on:
+# quoting because https://twitter.com/josh_cheek/status/1406699258649190403
+"on":
   push:
     branches: [ master ]
   pull_request:
@@ -15,11 +19,20 @@ on:
 
 jobs:
   test:
-
-    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # Just to see where we're at outside of Windows
       matrix:
-        ruby-version: ['2.5', '2.6', '2.7', '3.0']
+        os:
+        - 'ubuntu-20.04'
+        - 'windows-2016'
+        - 'windows-2019'
+        - 'macos-10.15'
+        # This is currently unavailable: https://github.com/actions/virtual-environments/issues/2486
+        # - 'macos-11.0'
+        ruby: [ '2.5', '2.6', '2.7', '3.0' ]
+
+    name: MRI ${{ matrix.ruby }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
@@ -27,13 +40,21 @@ jobs:
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
     # uses: ruby/setup-ruby@v1
-      uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
+      uses: ruby/setup-ruby@477b21f02be01bcb8030d50f37cfec92bfa615b6
       with:
-        ruby-version: ${{ matrix.ruby-version }}
+        ruby-version: ${{ matrix.ruby }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    # This is honestly super confusing for me.
+    # https://github.com/JoshCheek/seeing_is_believing/runs/2870747499?check_suite_focus=true
+    - name: Fuckit, try installing bundler explicitly
+      run:  gem install bundler
+
     - name: Install binstubs (no rubygems / bundler at runtime, makes tests much much faster)
-      run: rake install
+      run:  rake install
+
     - name: Run rspec tests
-      run: rake spec
+      run:  bundle/bin/rake spec
+
     - name: Run cucumber features
-      run: rake cuke
+      run:  bundle/bin/rake cuke
