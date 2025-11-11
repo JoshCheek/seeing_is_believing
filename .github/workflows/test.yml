@@ -54,7 +54,7 @@ jobs:
       run:  rake install
 
     - name: Run rspec tests
-      run:  RUBYOPT="${{ matrix.rubyopt }}" bundle/bin/rake spec
+      run:  RUBYOPT="${{ matrix.rubyopt }}" bundle/bin/rake spec:ci
 
     - name: Run cucumber features
       run:  RUBYOPT="${{ matrix.rubyopt }}" bundle/bin/rake cuke

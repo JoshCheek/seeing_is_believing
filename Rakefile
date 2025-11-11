@@ -44,6 +44,11 @@ task spec: :bundle do
   sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/rspec', '--fail-fast'
 end
 
+desc 'Run specs'
+task "spec:ci": :bundle do
+  sh 'ruby', '--disable-gem', *require_paths, '-S', 'bundle/bin/rspec'
+end
+
 desc 'Run cukes'
 task cuke: :bundle do
   require 'bundler'
