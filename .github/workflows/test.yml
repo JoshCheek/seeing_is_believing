@@ -12,10 +12,8 @@ name: Test
 
 # quoting because https://twitter.com/josh_cheek/status/1406699258649190403
 "on":
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  - push
+  - pull_request
 
 jobs:
   test:
@@ -23,24 +21,26 @@ jobs:
       fail-fast: false # Just to see where we're at outside of Windows
       matrix:
         os:
-        - 'ubuntu-20.04'
-        - 'windows-2016'
-        - 'windows-2019'
-        - 'macos-10.15'
-        # This is currently unavailable: https://github.com/actions/virtual-environments/issues/2486
-        # - 'macos-11.0'
-        ruby: [ '2.5', '2.6', '2.7', '3.0' ]
-
+          - 'ubuntu-latest'
+        ruby:
+          - '3.2'
+          - '3.3'
+          - '3.4'
+        include:
+          - os: windows-latest
+            ruby: ruby
+          - os: macos-latest
+            ruby: ruby
+          - os: ubuntu-latest
+            ruby: ruby
+            rubyopt: "--enable-frozen-string-literal"
     name: MRI ${{ matrix.ruby }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Ruby
-    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
-    # change this to (see https://github.com/ruby/setup-ruby#versioning):
-    # uses: ruby/setup-ruby@v1
-      uses: ruby/setup-ruby@477b21f02be01bcb8030d50f37cfec92bfa615b6
+      uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
@@ -54,7 +54,7 @@ jobs:
       run:  rake install
 
     - name: Run rspec tests
-      run:  bundle/bin/rake spec
+      run:  RUBYOPT="${{ matrix.rubyopt }}" bundle/bin/rake spec
 
     - name: Run cucumber features
-      run:  bundle/bin/rake cuke
+      run:  RUBYOPT="${{ matrix.rubyopt }}" bundle/bin/rake cuke
