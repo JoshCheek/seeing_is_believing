@@ -45,7 +45,7 @@ class SeeingIsBelieving
             whitespace_col:   whitespace_col-line_begin_col,
             whitespace:       code.raw[whitespace_col...nextline_begin_col]||"",
             text_col:         nextline_begin_col-line_begin_col,
-            text:             "",
+            text:             +"",
             full_range:       whitespace_range,
             whitespace_range: whitespace_range,
             comment_range:    comment_range

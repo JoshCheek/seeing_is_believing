@@ -6,6 +6,7 @@ class SeeingIsBelieving
     def initialize(options={})
       @coloured = options[:colour]
       @stream   = options[:stream]
+      @stream = +@stream if @stream.is_a?(String) && @stream.frozen?
     end
 
     Null = new stream: nil

@@ -13,7 +13,7 @@ is_v2_0 && begin
     refine String do
       def scrub(char=nil, &block)
         char && block = lambda { |c| char }
-        each_char.inject("") do |new_str, char|
+        each_char.inject(+"") do |new_str, char|
           if char.valid_encoding?
             new_str << char
           else

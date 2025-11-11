@@ -96,7 +96,7 @@ module SeeingIsBelieving::EventStream
       end
 
       def ascii8bit(str)
-        str.force_encoding Encoding::ASCII_8BIT
+        (+str).force_encoding Encoding::ASCII_8BIT
       end
 
       it 'force encodes the message to UTF8 when it can\'t validly transcode' do
@@ -307,7 +307,7 @@ module SeeingIsBelieving::EventStream
         end
 
         it 'can deal with results of inspect that have singleton methods' do
-          str = "a string"
+          str = +"a string"
           def str.inspect() self end
           producer.record_result :type, 1, str
           expect(consumer.call.inspected).to eq str
@@ -684,7 +684,7 @@ module SeeingIsBelieving::EventStream
     require 'seeing_is_believing/event_stream/handlers/stream_json_events'
     describe Handlers::StreamJsonEvents do
       it 'writes each event\'s json representation to the stream' do
-        stream  = ""
+        stream  = +"" # TODO: push unfreezing upstream but fix final expect
         handler = described_class.new stream
 
         handler.call Events::Stdout.new(value: "abc")
@@ -712,7 +712,7 @@ module SeeingIsBelieving::EventStream
     end
 
     describe Handlers::Debug do
-      let(:stream)          { "" }
+      let(:stream)          { +"" }
       let(:events_seen)     { [] }
       let(:debugger)        { SeeingIsBelieving::Debugger.new stream: stream }
       let(:parent_observer) { lambda { |event| events_seen << event } }

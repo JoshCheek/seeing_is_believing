@@ -20,7 +20,7 @@ class SeeingIsBelieving
         }
         string =~ %r{\A/(.*)/([mxi]*)\Z}
         body  = $1 || string
-        flags = ($2 || "").each_char.inject(0) { |bits, flag| bits | flag_to_bit[flag] }
+        flags = ($2 || +"").each_char.inject(0) { |bits, flag| bits | flag_to_bit[flag] }
         Regexp.new body, flags
       end
 

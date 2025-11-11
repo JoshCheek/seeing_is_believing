@@ -91,7 +91,7 @@ RSpec.describe SeeingIsBelieving do
   end
 
   it 'records the value immediately, so that it is correct even if the result is mutated' do
-    expect(values_for("a = 'a'\na << 'b'")).to eq [['"a"'], ['"ab"']]
+    expect(values_for("a = +'a'\na << 'b'")).to eq [['"a"'], ['"ab"']]
   end
 
   it 'records each value when a line is evaluated multiple times' do
@@ -1038,7 +1038,7 @@ RSpec.describe SeeingIsBelieving do
       result = executes_without_error!('
          # producer
          Hash            = "fake Hash"
-         String          = "fake String"
+         String          = +"fake String"
          class << String
            undef ===
          end

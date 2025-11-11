@@ -152,7 +152,7 @@ class SeeingIsBelieving
             loop do
               to_publish = queue.shift
               break if :break == to_publish
-              resultstream << (to_publish << "\n")
+              resultstream << to_publish << "\n"
             end
           rescue IOError, Errno::EPIPE
             queue.clear

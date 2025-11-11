@@ -59,7 +59,7 @@ RSpec.describe SeeingIsBelieving::Binary::FormatComment do
   end
 
   def assert_printed(c, printed)
-    c = c.force_encoding 'utf-8'
+    c = (+c).force_encoding 'utf-8'
     result = result_for 0, '', c
     expect(result).to eq printed
     expect(result.encoding).to eq Encoding::UTF_8
