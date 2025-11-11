@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency             "parser",      "~> 2.7"
   s.add_dependency             "childprocess","~> 4.1"
   s.add_dependency             "ffi",         "~> 1.15"
+  s.add_dependency             "racc",        "~> 1.8.0"
 
   s.add_development_dependency "pry"
   s.add_development_dependency "haiti",       ">= 0.1", "< 0.3"
