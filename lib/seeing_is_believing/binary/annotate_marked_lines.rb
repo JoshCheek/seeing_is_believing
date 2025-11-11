@@ -57,7 +57,7 @@ class SeeingIsBelieving
               if    should_inspect && should_pp then "#{pp}#{inspect}"
               elsif should_inspect              then inspect
               elsif should_pp                   then pp
-              else                                   ""
+              else                                   +""
               end
             },
             after_each:  -> line_number {
@@ -74,7 +74,7 @@ class SeeingIsBelieving
               if    should_inspect && should_pp then "#{inspect}#{pp}"
               elsif should_inspect              then inspect
               elsif should_pp                   then pp
-              else                                   ""
+              else                                   +""
               end
             }
         end

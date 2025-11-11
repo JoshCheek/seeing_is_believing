@@ -17,8 +17,8 @@ class SeeingIsBelieving
       end
 
       def stdout_ouptut_for(results, options)
-        return '' unless results.has_stdout?
-        output = "\n"
+        return +'' unless results.has_stdout?
+        output = +"\n"
         results.stdout.each_line do |line|
           output << FormatComment.call(0, options[:markers][:stdout][:prefix], line.chomp, options) << "\n"
         end
@@ -27,7 +27,7 @@ class SeeingIsBelieving
 
       def stderr_ouptut_for(results, options)
         return '' unless results.has_stderr?
-        output = "\n"
+        output = +"\n"
         results.stderr.each_line do |line|
           output << FormatComment.call(0, options[:markers][:stderr][:prefix], line.chomp, options) << "\n"
         end
@@ -37,7 +37,7 @@ class SeeingIsBelieving
       def exception_output_for(results, options)
         return '' unless results.has_exception?
         exception_marker = options[:markers][:exception][:prefix]
-        output = ""
+        output = +""
         results.exceptions.each do |exception|
           output << "\n"
           output << FormatComment.new(0, exception_marker, exception.class_name, options).call << "\n"

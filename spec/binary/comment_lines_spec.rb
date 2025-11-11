@@ -4,6 +4,7 @@ require 'seeing_is_believing/binary/comment_lines'
 RSpec.describe SeeingIsBelieving::Binary::CommentLines, 'passes in the each commentable line and the line number, and adds the returned text (whitespace+comment) to the end' do
   def call(code, &block)
     return described_class.call(code, &block) if code.end_with? "\n"
+    code = +code
     code << "\n"
     described_class.call(code, &block).chomp
   end

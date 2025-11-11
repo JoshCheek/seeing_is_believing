@@ -9,7 +9,7 @@ class SeeingIsBelieving
         def initialize(debugger, handler)
           @debugger   = debugger
           @handler    = handler
-          @seen       = ""
+          @seen       = +""
           @line_width = 150 # debugger is basically for me, so giving it a nice wide width
           @name_width = 20
           @attr_width = @line_width - @name_width

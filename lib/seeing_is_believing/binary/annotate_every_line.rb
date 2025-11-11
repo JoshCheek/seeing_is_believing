@@ -37,7 +37,7 @@ class SeeingIsBelieving
               end
               FormatComment.call(line.size, value_prefix, result, options)
             else
-              ''
+              +''
             end
           end
 

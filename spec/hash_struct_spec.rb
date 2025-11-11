@@ -31,10 +31,10 @@ RSpec.describe SeeingIsBelieving::HashStruct do
       end
 
       specify 'the block value is not cached' do
-        klass.attribute(:a,   "a" ).new.a << "-modified"
+        klass.attribute(:a,   +"a" ).new.a << "-modified"
         eq! "a-modified", klass.new.a
 
-        klass.attribute(:b) { "b" }.new.b << "-modified"
+        klass.attribute(:b) { +"b" }.new.b << "-modified"
         eq! "b",          klass.new.b
       end
 
@@ -405,7 +405,7 @@ RSpec.describe SeeingIsBelieving::HashStruct do
       it 'is enumerable, iterating over each attribute(as symbol)/value pair' do
         klass.attributes(a: 1, b: 2)
         eq! [[:a, 1], [:b, 2]], klass.new.to_a
-        eq! "a1b2", klass.new.each.with_object("") { |(k, v), s| s << "#{k}#{v}" }
+        eq! "a1b2", klass.new.each.with_object(+"") { |(k, v), s| s << "#{k}#{v}" }
       end
     end
 

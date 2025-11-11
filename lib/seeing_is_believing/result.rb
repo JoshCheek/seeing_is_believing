@@ -10,8 +10,8 @@ class SeeingIsBelieving
     end
 
     def initialize
-      self.stdout     = ''
-      self.stderr     = ''
+      self.stdout     = +''
+      self.stderr     = +''
       self.exceptions = []
     end
 

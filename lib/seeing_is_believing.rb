@@ -15,7 +15,7 @@ class SeeingIsBelieving
     predicate(:local_cwd)         { false }
     attribute(:filename)          { nil }
     attribute(:encoding)          { nil }
-    attribute(:stdin)             { "" }
+    attribute(:stdin)             { +"" }
     attribute(:require_files)     { ['seeing_is_believing/the_matrix'] }
     attribute(:load_path_dirs)    { [File.realpath(__dir__)] }
     attribute(:timeout_seconds)   { 0 }
