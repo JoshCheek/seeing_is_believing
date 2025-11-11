@@ -224,8 +224,10 @@ RSpec.describe SeeingIsBelieving do
   it 'does not fuck up the __ENCODING__ macro' do
     expect(values_for("# encoding: utf-8
                       __ENCODING__")).to eq [[], ["#<Encoding:UTF-8>"]]
+    # matches: "#<Encoding:ASCII-8BIT>", which I think is an older format
+    # and "#<Encoding:BINARY (ASCII-8BIT)>", which it's showing me on 3.4.5
     expect(values_for("# encoding: ascii-8bit
-                      __ENCODING__")).to eq [[], ["#<Encoding:ASCII-8BIT>"]]
+                      __ENCODING__")).to match [[], [/#<Encoding:(?:BINARY \()?.*?ASCII-8BIT\)?>/]]
   end
 
   it 'does not fuck up __LINE__ macro' do
